@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation, useParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { useApp } from '../context/AppContext';
+import { AlertCircle, BarChart2, GitBranch, Calendar, CheckCircle, FileText } from 'lucide-react';
 
 const A3Analysis = () => {
   const location = useLocation();
@@ -11,12 +12,12 @@ const A3Analysis = () => {
   const title = selectedCase ? selectedCase.title : 'A3 Problem Solving';
 
   const tabs = [
-    { path: 'problem-statement', label: 'Problem Statement' },
-    { path: 'data-analysis', label: 'Data Analysis' },
-    { path: 'why-analysis', label: 'Why Analysis' },
-    { path: 'action-plan', label: 'Action Plan' },
-    { path: 'result', label: 'Result' },
-    { path: 'summary', label: 'Summary' },
+    { path: 'problem-statement', label: 'Problem Statement', icon: AlertCircle },
+    { path: 'data-analysis', label: 'Data Analysis', icon: BarChart2 },
+    { path: 'why-analysis', label: 'Why Analysis', icon: GitBranch },
+    { path: 'action-plan', label: 'Action Plan', icon: Calendar },
+    { path: 'result', label: 'Result', icon: CheckCircle },
+    { path: 'summary', label: 'Summary', icon: FileText },
   ];
 
   if (!id && a3Cases.length > 0) {
@@ -47,13 +48,15 @@ const A3Analysis = () => {
                 key={tab.path}
                 to={tab.path}
                 className={clsx(
-                  'py-2 px-3 md:py-3 md:px-6 border-b-2 font-medium text-sm transition-all duration-200 whitespace-nowrap',
+                  'py-2 px-3 md:py-3 md:px-6 border-b-2 font-medium text-sm transition-all duration-200 whitespace-nowrap flex items-center',
                   isActive
                     ? 'border-blue-600 text-blue-600 bg-blue-50/50'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50'
                 )}
+                title={tab.label}
               >
-                {tab.label}
+                <tab.icon className={clsx("w-5 h-5 md:w-4 md:h-4 md:mr-2")} />
+                <span className="hidden md:inline">{tab.label}</span>
               </Link>
             );
           })}
