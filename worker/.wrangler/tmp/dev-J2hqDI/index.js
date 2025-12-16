@@ -66,12 +66,14 @@ var index_default = {
         }
         if (bowlers && Array.isArray(bowlers)) {
           for (const bowler of bowlers) {
-            await env.BOWLER_DATA.put(`user:${userId}:bowler:${bowler.id}`, JSON.stringify(bowler));
+            const bowlerToSave = { ...bowler, userAccountId: userId };
+            await env.BOWLER_DATA.put(`user:${userId}:bowler:${bowler.id}`, JSON.stringify(bowlerToSave));
           }
         }
         if (a3Cases && Array.isArray(a3Cases)) {
           for (const a3 of a3Cases) {
-            await env.BOWLER_DATA.put(`user:${userId}:a3:${a3.id}`, JSON.stringify(a3));
+            const a3ToSave = { ...a3, userAccountId: userId };
+            await env.BOWLER_DATA.put(`user:${userId}:a3:${a3.id}`, JSON.stringify(a3ToSave));
           }
         }
         return new Response(JSON.stringify({ success: true, message: "Data saved successfully" }), {
