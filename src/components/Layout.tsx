@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, Plus, BarChart3, Target } from 'lucide-react';
+import { LayoutDashboard, FileText, Plus, BarChart3, Target, ChevronLeft, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp } from '../context/AppContext';
 import { useState } from 'react';
@@ -14,6 +14,7 @@ const Layout = () => {
 
   const [newItemName, setNewItemName] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const handleAddItem = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,22 +78,48 @@ const Layout = () => {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Dynamic Sidebar */}
-        <aside className="w-64 bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out">
-          <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-            <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wider">
-              {isMetricBowler ? 'Bowler Lists' : 'A3 Cases'}
-            </h2>
-            <button 
-              onClick={() => setIsAdding(!isAdding)}
-              className="p-1 rounded-md hover:bg-blue-100 text-blue-600 transition-colors"
-              title="Add New"
-            >
-              <Plus className="w-5 h-5" />
-            </button>
+        <aside className={clsx(
+          "bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out relative",
+          isSidebarOpen ? "w-64" : "w-16"
+        )}>
+          {/* Toggle Button */}
+          <button
+             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+             className="absolute -right-3 top-16 bg-white border border-gray-200 rounded-full p-1 shadow-sm hover:bg-gray-50 z-20 text-gray-500"
+          >
+             {isSidebarOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+          </button>
+
+          <div className={clsx(
+             "p-4 border-b border-gray-100 flex items-center bg-gray-50/50 h-14 overflow-hidden",
+             isSidebarOpen ? "justify-between" : "justify-center"
+          )}>
+            {isSidebarOpen ? (
+              <>
+                <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wider truncate">
+                  {isMetricBowler ? 'Bowler Lists' : 'A3 Cases'}
+                </h2>
+                <button 
+                  onClick={() => setIsAdding(!isAdding)}
+                  className="p-1 rounded-md hover:bg-blue-100 text-blue-600 transition-colors"
+                  title="Add New"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              </>
+            ) : (
+               <button 
+                  onClick={() => { setIsSidebarOpen(true); setIsAdding(true); }}
+                  className="p-1 rounded-md hover:bg-blue-100 text-blue-600 transition-colors"
+                  title="Add New"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+            )}
           </div>
 
           {/* Add Item Form */}
-          {isAdding && (
+          {isAdding && isSidebarOpen && (
             <div className="p-3 border-b border-gray-100 bg-blue-50">
               <form onSubmit={handleAddItem}>
                 <input
@@ -114,15 +141,17 @@ const Layout = () => {
                 key={bowler.id}
                 to={`/metric-bowler/${bowler.id}`}
                 className={clsx(
-                  "group flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all",
+                  "group flex items-center py-2.5 text-sm font-medium rounded-lg transition-all",
+                  isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
                   location.pathname === `/metric-bowler/${bowler.id}`
                     ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
                     : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                 )}
+                title={!isSidebarOpen ? bowler.name : undefined}
               >
-                <div className="flex items-center truncate">
-                   <Target className={clsx("w-4 h-4 mr-3 flex-shrink-0", location.pathname === `/metric-bowler/${bowler.id}` ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
-                   <span className="truncate">{bowler.name}</span>
+                <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
+                   <Target className={clsx("w-4 h-4 flex-shrink-0", isSidebarOpen ? "mr-3" : "mr-0", location.pathname === `/metric-bowler/${bowler.id}` ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
+                   {isSidebarOpen && <span className="truncate">{bowler.name}</span>}
                 </div>
               </Link>
             ))}
@@ -132,22 +161,24 @@ const Layout = () => {
                 key={a3.id}
                 to={`/a3-analysis/${a3.id}/problem-statement`}
                 className={clsx(
-                  "group flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all",
+                  "group flex items-center py-2.5 text-sm font-medium rounded-lg transition-all",
+                  isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
                   location.pathname.includes(`/a3-analysis/${a3.id}`)
                     ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
                     : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                 )}
+                title={!isSidebarOpen ? a3.title : undefined}
               >
-                 <div className="flex items-center truncate">
-                   <FileText className={clsx("w-4 h-4 mr-3 flex-shrink-0", location.pathname.includes(`/a3-analysis/${a3.id}`) ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
-                   <span className="truncate">{a3.title}</span>
+                 <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
+                   <FileText className={clsx("w-4 h-4 flex-shrink-0", isSidebarOpen ? "mr-3" : "mr-0", location.pathname.includes(`/a3-analysis/${a3.id}`) ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
+                   {isSidebarOpen && <span className="truncate">{a3.title}</span>}
                 </div>
               </Link>
             ))}
 
             {((isMetricBowler && bowlers.length === 0) || (isA3Analysis && a3Cases.length === 0)) && !isAdding && (
-               <div className="text-center py-8 px-4 text-gray-400 text-sm italic">
-                  No items yet. Click + to add one.
+               <div className={clsx("text-center py-8 text-gray-400 text-sm italic", isSidebarOpen ? "px-4" : "px-1 text-xs")}>
+                  {isSidebarOpen ? "No items yet. Click + to add one." : "Empty"}
                </div>
             )}
           </div>
