@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, FileText, Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon, Save } from 'lucide-react';
+import { LayoutDashboard, FileText, Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon, Save, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case, Bowler } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
@@ -13,7 +13,7 @@ const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { bowlers, a3Cases, addBowler, updateBowler, addA3Case, updateA3Case, deleteBowler, deleteA3Case } = useApp();
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   
   // Identify active module based on path
   const isMetricBowler = location.pathname.includes('/metric-bowler');
@@ -142,9 +142,9 @@ const Layout = () => {
             onClick={handleSaveData}
             disabled={isSaving}
             className="flex items-center px-3 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
+            title="Save Data"
           >
-            <Save className="w-4 h-4 mr-2" />
-            {isSaving ? 'Saving...' : 'Save Data'}
+            <Save className="w-4 h-4" />
           </button>
 
           {user ? (
@@ -157,18 +157,20 @@ const Layout = () => {
               </div>
               <button 
                 onClick={logout}
-                className="text-gray-500 hover:text-red-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+                disabled={isLoading}
+                className="text-gray-500 hover:text-red-600 transition-colors p-1 rounded-full hover:bg-gray-100 disabled:opacity-50"
                 title="Logout"
               >
-                <LogOut className="w-4 h-4" />
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
               </button>
             </div>
           ) : (
             <button
               onClick={() => setIsLoginModalOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              title="Login"
             >
-              Login
+              <UserIcon className="w-4 h-4" />
             </button>
           )}
         </div>

@@ -19,20 +19,27 @@ export default {
 
     if (request.method === 'POST' && url.pathname === '/save') {
       try {
-        const data = await request.json() as { bowlers: any[], a3Cases: any[] };
-        const { bowlers, a3Cases } = data;
+        const data = await request.json() as { bowlers: any[], a3Cases: any[], userId: string };
+        const { bowlers, a3Cases, userId } = data;
+
+        if (!userId) {
+           return new Response(JSON.stringify({ success: false, error: 'User ID is required' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
 
         // Save bowlers
         if (bowlers && Array.isArray(bowlers)) {
           for (const bowler of bowlers) {
-            await env.BOWLER_DATA.put(`bowler:${bowler.id}`, JSON.stringify(bowler));
+            await env.BOWLER_DATA.put(`user:${userId}:bowler:${bowler.id}`, JSON.stringify(bowler));
           }
         }
 
         // Save A3 Cases
         if (a3Cases && Array.isArray(a3Cases)) {
           for (const a3 of a3Cases) {
-            await env.BOWLER_DATA.put(`a3:${a3.id}`, JSON.stringify(a3));
+            await env.BOWLER_DATA.put(`user:${userId}:a3:${a3.id}`, JSON.stringify(a3));
           }
         }
 

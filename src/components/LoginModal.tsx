@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mail, Lock, User, Info } from 'lucide-react';
+import { Mail, Lock, User, Info, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import clsx from 'clsx';
 
@@ -22,15 +22,17 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
   const [plant, setPlant] = useState('');
   const [team, setTeam] = useState('');
   const [isPublicProfile, setIsPublicProfile] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   
   const [error, setError] = useState('');
-  const { login, signup } = useAuth();
+  const { login, signup, isLoading } = useAuth();
 
   if (!isOpen) return null;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
     try {
       await login({ username, password });
       onClose();
@@ -42,6 +44,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
 
     if (signupPassword !== confirmPassword) {
       setError('Passwords do not match');
@@ -71,7 +74,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
       // Auto switch to login or show success
       setActiveTab('login');
       setUsername(payload.username);
-      setError('Signup successful! Please login.');
+      setSuccessMessage('Signup successful! Please login.');
       
     } catch (err: any) {
       setError(err.message || 'An error occurred');
@@ -83,6 +86,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
       onClick={() => {
         setActiveTab(id);
         setError('');
+        setSuccessMessage('');
       }}
       className={clsx(
         "flex-1 py-4 text-sm font-medium transition-colors border-b-2",
@@ -111,6 +115,11 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
           {error && (
             <div className="bg-red-50 text-red-600 p-3 rounded-md mb-6 text-sm">
               {error}
+            </div>
+          )}
+          {successMessage && (
+            <div className="bg-green-50 text-green-600 p-3 rounded-md mb-6 text-sm">
+              {successMessage}
             </div>
           )}
 
@@ -164,9 +173,10 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-blue-600 text-white py-2.5 rounded-md hover:bg-blue-700 transition-colors font-medium"
+                  disabled={isLoading}
+                  className="flex-1 bg-blue-600 text-white py-2.5 rounded-md hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center"
                 >
-                  Login
+                  {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Login'}
                 </button>
               </div>
             </form>
@@ -345,9 +355,10 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition-colors font-medium text-lg"
+                  disabled={isLoading}
+                  className="flex-1 bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition-colors font-medium text-lg disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center"
                 >
-                  Sign Up
+                  {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign Up'}
                 </button>
               </div>
             </form>

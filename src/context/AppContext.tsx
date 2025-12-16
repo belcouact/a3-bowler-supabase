@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
+import { dataService } from '../services/dataService';
+import { useAuth } from './AuthContext';
 
 // Types
 export interface MetricData {
@@ -55,6 +57,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 // Provider
 export const AppProvider = ({ children }: { children: ReactNode }) => {
+  const { user } = useAuth();
   const [bowlers, setBowlers] = useState<Bowler[]>([
     { id: '1', name: 'Plant A - Operations' },
     { id: '2', name: 'Plant A - Safety' },
@@ -65,16 +68,28 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     { id: '2', title: 'Improve Delivery Time to West Coast' },
   ]);
 
+  const persistData = (newBowlers: Bowler[], newA3Cases: A3Case[]) => {
+    if (user) {
+      dataService.saveData(newBowlers, newA3Cases, user.id).catch(err => {
+        console.error("Failed to save data:", err);
+      });
+    }
+  };
+
   const addBowler = (data: Omit<Bowler, 'id'>) => {
     const newBowler = {
       id: crypto.randomUUID(),
       ...data,
     };
-    setBowlers([...bowlers, newBowler]);
+    const newBowlers = [...bowlers, newBowler];
+    setBowlers(newBowlers);
+    persistData(newBowlers, a3Cases);
   };
 
   const updateBowler = (updatedBowler: Bowler) => {
-    setBowlers(bowlers.map(b => b.id === updatedBowler.id ? updatedBowler : b));
+    const newBowlers = bowlers.map(b => b.id === updatedBowler.id ? updatedBowler : b);
+    setBowlers(newBowlers);
+    persistData(newBowlers, a3Cases);
   };
 
   const addA3Case = (caseData: Omit<A3Case, 'id'>) => {
@@ -82,19 +97,27 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       id: crypto.randomUUID(),
       ...caseData
     };
-    setA3Cases([...a3Cases, newCase]);
+    const newA3Cases = [...a3Cases, newCase];
+    setA3Cases(newA3Cases);
+    persistData(bowlers, newA3Cases);
   };
 
   const updateA3Case = (updatedCase: A3Case) => {
-    setA3Cases(a3Cases.map(c => c.id === updatedCase.id ? updatedCase : c));
+    const newA3Cases = a3Cases.map(c => c.id === updatedCase.id ? updatedCase : c);
+    setA3Cases(newA3Cases);
+    persistData(bowlers, newA3Cases);
   };
 
   const deleteBowler = (id: string) => {
-    setBowlers(bowlers.filter((b) => b.id !== id));
+    const newBowlers = bowlers.filter((b) => b.id !== id);
+    setBowlers(newBowlers);
+    persistData(newBowlers, a3Cases);
   };
 
   const deleteA3Case = (id: string) => {
-    setA3Cases(a3Cases.filter((c) => c.id !== id));
+    const newA3Cases = a3Cases.filter((c) => c.id !== id);
+    setA3Cases(newA3Cases);
+    persistData(bowlers, newA3Cases);
   };
 
   return (
