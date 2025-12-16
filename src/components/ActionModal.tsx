@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { generateShortId } from '../utils/idUtils';
 
 export interface ActionTask {
   id: string;

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, MouseEvent as ReactMouseEvent, useLayoutEf
 import { Plus, Trash2, MousePointer2, ZoomIn, ZoomOut, Palette } from 'lucide-react';
 import clsx from 'clsx';
 import { MindMapNodeData } from '../context/AppContext';
+import { generateShortId } from '../utils/idUtils';
 
 type Node = MindMapNodeData;
 
