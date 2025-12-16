@@ -60,9 +60,15 @@ const A3Analysis = () => {
         </div>
       </div>
       
-      <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 min-h-[500px]">
-        <Outlet />
-      </div>
+      {location.pathname.includes('action-plan') ? (
+        <div className="h-[600px]">
+          <Outlet />
+        </div>
+      ) : (
+        <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 min-h-[500px]">
+          <Outlet />
+        </div>
+      )}
     </div>
   );
 };
