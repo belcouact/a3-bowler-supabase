@@ -394,27 +394,6 @@ export const MindMap = () => {
 
   return (
     <div className="flex flex-col h-full space-y-2">
-         {/* Controls */}
-        <div className="flex justify-end space-x-2">
-             <div className="flex items-center bg-gray-100 rounded-md p-1">
-                <button 
-                    onClick={() => setScale(Math.max(0.5, scale - 0.1))} 
-                    className="p-1 hover:bg-white rounded shadow-sm"
-                    title="Zoom Out"
-                >
-                    <ZoomOut className="w-4 h-4 text-gray-600" />
-                </button>
-                <span className="text-xs text-gray-500 w-12 text-center">{Math.round(scale * 100)}%</span>
-                <button 
-                    onClick={() => setScale(Math.min(2, scale + 0.1))} 
-                    className="p-1 hover:bg-white rounded shadow-sm"
-                    title="Zoom In"
-                >
-                    <ZoomIn className="w-4 h-4 text-gray-600" />
-                </button>
-             </div>
-        </div>
-
         <div 
           ref={containerRef}
           className="w-full min-h-[600px] bg-slate-50 relative overflow-hidden border border-slate-200 rounded-lg cursor-grab active:cursor-grabbing resize-y"
@@ -425,6 +404,24 @@ export const MindMap = () => {
           <div className="absolute top-4 left-4 z-10 bg-white/80 p-2 rounded shadow backdrop-blur-sm text-xs text-slate-500 pointer-events-none">
             <p className="flex items-center"><MousePointer2 className="w-3 h-3 mr-1"/> Drag nodes to organize</p>
             <p className="flex items-center mt-1"><Plus className="w-3 h-3 mr-1"/> Add 'Why' to drill down</p>
+          </div>
+
+          <div className="absolute top-4 right-4 z-10 flex items-center bg-white/80 rounded-md p-1 shadow backdrop-blur-sm border border-slate-200">
+                <button 
+                    onClick={() => setScale(Math.max(0.5, scale - 0.1))} 
+                    className="p-1 hover:bg-gray-100 rounded"
+                    title="Zoom Out"
+                >
+                    <ZoomOut className="w-4 h-4 text-gray-600" />
+                </button>
+                <span className="text-xs text-gray-500 w-12 text-center select-none">{Math.round(scale * 100)}%</span>
+                <button 
+                    onClick={() => setScale(Math.min(2, scale + 0.1))} 
+                    className="p-1 hover:bg-gray-100 rounded"
+                    title="Zoom In"
+                >
+                    <ZoomIn className="w-4 h-4 text-gray-600" />
+                </button>
           </div>
 
           <div style={{ transform: `scale(${scale})`, transformOrigin: '0 0', width: '100%', height: '100%' }}>

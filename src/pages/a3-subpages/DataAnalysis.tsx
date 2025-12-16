@@ -1,5 +1,7 @@
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useParams } from 'react-router-dom';
+import { useApp } from '../../context/AppContext';
 
 const data = [
   { name: 'Week 1', defects: 12 },
@@ -10,6 +12,10 @@ const data = [
 ];
 
 const DataAnalysis = () => {
+  const { id } = useParams();
+  const { a3Cases, updateA3Case } = useApp();
+  const currentCase = a3Cases.find(c => c.id === id);
+
   return (
     <div className="space-y-6">
       <div>
@@ -37,13 +43,18 @@ const DataAnalysis = () => {
           </ResponsiveContainer>
         </div>
         
-        <div className="mt-4">
-          <h4 className="font-medium text-gray-900">Key Observations</h4>
-          <ul className="list-disc pl-5 mt-2 text-gray-600 space-y-1">
-            <li>Spike in defects observed in Week 2.</li>
-            <li>Significant reduction in Week 3 and 5.</li>
-            <li>Average defect rate is 8.2 per week.</li>
-          </ul>
+        <div className="mt-6">
+          <label htmlFor="observations" className="block text-sm font-medium text-gray-700 mb-2">
+            Key Observations from Data
+          </label>
+          <textarea
+            id="observations"
+            rows={4}
+            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border"
+            placeholder="What patterns or insights do you see in the data?"
+            value={currentCase?.dataAnalysisObservations || ''}
+            onChange={(e) => currentCase && updateA3Case({ ...currentCase, dataAnalysisObservations: e.target.value })}
+          />
         </div>
       </div>
     </div>

@@ -2,7 +2,6 @@ import { useState } from 'react';
 
 const Result = () => {
   const [results, setResults] = useState('');
-  const [impact, setImpact] = useState('');
 
   return (
     <div className="space-y-6 max-w-3xl">

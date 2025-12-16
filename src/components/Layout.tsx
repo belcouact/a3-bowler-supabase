@@ -8,7 +8,7 @@ import BowlerModal from './BowlerModal';
 
 const Layout = () => {
   const location = useLocation();
-  const { bowlers, a3Cases, addBowler, updateBowler, addA3Case } = useApp();
+  const { bowlers, a3Cases, addBowler, updateBowler, addA3Case, updateA3Case } = useApp();
   
   // Identify active module based on path
   const isMetricBowler = location.pathname.includes('/metric-bowler');
@@ -16,6 +16,7 @@ const Layout = () => {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isA3ModalOpen, setIsA3ModalOpen] = useState(false);
+  const [editingA3Case, setEditingA3Case] = useState<A3Case | null>(null);
   const [isBowlerModalOpen, setIsBowlerModalOpen] = useState(false);
   const [editingBowler, setEditingBowler] = useState<Bowler | null>(null);
 
@@ -24,12 +25,21 @@ const Layout = () => {
         setEditingBowler(null);
         setIsBowlerModalOpen(true);
     } else {
+        setEditingA3Case(null);
         setIsA3ModalOpen(true);
     }
   };
 
   const handleSaveA3Case = (data: Omit<A3Case, 'id'>) => {
-      addA3Case(data);
+      if (editingA3Case) {
+        updateA3Case({
+            ...editingA3Case,
+            ...data
+        });
+      } else {
+        addA3Case(data);
+      }
+      setEditingA3Case(null);
   };
 
   const handleSaveBowler = (data: Omit<Bowler, 'id'>) => {
@@ -167,6 +177,11 @@ const Layout = () => {
                 <Link
                   key={a3.id}
                   to={`/a3-analysis/${a3.id}/problem-statement`}
+                  onDoubleClick={(e) => {
+                    e.preventDefault();
+                    setEditingA3Case(a3);
+                    setIsA3ModalOpen(true);
+                  }}
                   className={clsx(
                     "group flex items-center py-2.5 text-sm font-medium rounded-lg transition-all",
                     isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
@@ -200,8 +215,12 @@ const Layout = () => {
 
       <A3CaseModal 
         isOpen={isA3ModalOpen} 
-        onClose={() => setIsA3ModalOpen(false)} 
+        onClose={() => {
+            setIsA3ModalOpen(false);
+            setEditingA3Case(null);
+        }}
         onSave={handleSaveA3Case} 
+        initialData={editingA3Case || undefined}
       />
 
       <BowlerModal 
