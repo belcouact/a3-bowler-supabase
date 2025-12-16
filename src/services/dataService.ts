@@ -26,4 +26,19 @@ export const dataService = {
 
     return response.json();
   },
+
+  async loadData(userId: string) {
+    const response = await fetch(`${API_BASE_URL}/load?userId=${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to load data');
+    }
+
+    return response.json();
+  },
 };

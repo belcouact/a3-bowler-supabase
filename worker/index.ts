@@ -54,6 +54,48 @@ export default {
       }
     }
 
+    if (request.method === 'GET' && url.pathname === '/load') {
+      const userId = url.searchParams.get('userId');
+
+      if (!userId) {
+        return new Response(JSON.stringify({ success: false, error: 'User ID is required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      try {
+        const bowlers: any[] = [];
+        const a3Cases: any[] = [];
+
+        // List keys for the user
+        const bowlerList = await env.BOWLER_DATA.list({ prefix: `user:${userId}:bowler:` });
+        for (const key of bowlerList.keys) {
+          const value = await env.BOWLER_DATA.get(key.name);
+          if (value) {
+            bowlers.push(JSON.parse(value));
+          }
+        }
+
+        const a3List = await env.BOWLER_DATA.list({ prefix: `user:${userId}:a3:` });
+        for (const key of a3List.keys) {
+          const value = await env.BOWLER_DATA.get(key.name);
+          if (value) {
+            a3Cases.push(JSON.parse(value));
+          }
+        }
+
+        return new Response(JSON.stringify({ success: true, bowlers, a3Cases }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     return new Response('Not Found', { status: 404, headers: corsHeaders });
   },
 };

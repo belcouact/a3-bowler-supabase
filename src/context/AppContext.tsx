@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { dataService } from '../services/dataService';
 import { useAuth } from './AuthContext';
 
@@ -67,6 +67,39 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     { id: '1', title: 'Reduce Scrap Rate in Line 4' },
     { id: '2', title: 'Improve Delivery Time to West Coast' },
   ]);
+
+  useEffect(() => {
+    if (user) {
+      // Load user data
+      dataService.loadData(user.id)
+        .then(data => {
+          if (data.success) {
+            setBowlers(data.bowlers || []);
+            setA3Cases(data.a3Cases || []);
+          }
+        })
+        .catch(err => {
+          console.error("Failed to load user data:", err);
+        });
+    } else {
+        // Reset to default/empty if no user is logged in
+        // Or keep defaults. Let's keep defaults for now or reset to initial demo data
+        // For a real app, you might want to clear data on logout.
+        // But since we initialized with demo data, maybe revert to that or keep empty?
+        // Let's assume we keep demo data for non-logged in users or just don't clear it yet.
+        // Actually, if we want to show empty or demo data when logged out, we should decide.
+        // For now, let's not clear it to avoid flashing empty states if it was demo usage.
+        // But typically:
+        setBowlers([
+            { id: '1', name: 'Plant A - Operations' },
+            { id: '2', name: 'Plant A - Safety' },
+        ]);
+        setA3Cases([
+            { id: '1', title: 'Reduce Scrap Rate in Line 4' },
+            { id: '2', title: 'Improve Delivery Time to West Coast' },
+        ]);
+    }
+  }, [user]);
 
   const persistData = (newBowlers: Bowler[], newA3Cases: A3Case[]) => {
     if (user) {
