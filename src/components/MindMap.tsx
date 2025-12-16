@@ -9,6 +9,8 @@ interface Node {
   y: number;
   width?: number;
   height?: number;
+  customWidth?: number;
+  customHeight?: number;
   parentId: string | null;
   type?: 'root' | 'child';
   color?: string;
@@ -45,67 +47,75 @@ const MindMapNode = ({
 
   // Auto-resize textarea
   useLayoutEffect(() => {
-    if (textareaRef.current) {
+    if (textareaRef.current && !node.customHeight) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
     }
-  }, [node.text]);
+  }, [node.text, node.customHeight]);
 
-  // Observe node size changes
+  // Observe node size changes (only update model if size changes significantly and not resizing manually)
+  // Actually, we can skip this if we trust our manual resize and text auto-grow.
+  // But we need it for initial render or text changes to update the connections.
   useEffect(() => {
     if (!nodeRef.current) return;
     
     const observer = new ResizeObserver(entries => {
       for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        // Only update if significantly different to avoid loops (though contentRect should be stable)
-        if (Math.abs((node.width || DEFAULT_WIDTH) - width) > 1 || Math.abs((node.height || DEFAULT_HEIGHT) - height) > 1) {
-             // We need to be careful not to cause infinite render loops.
-             // Updating state inside observer callback.
-             // Use a debounce or check if the update is needed.
-             // Actually, for line drawing we need the full box size (border-box).
-             // entry.borderBoxSize is available in newer browsers, or use getBoundingClientRect
-             
-             // We need unscaled dimensions?
-             // getBoundingClientRect returns scaled dimensions if transform is applied.
-             // But the node itself doesn't have scale transform, the parent container does.
-             // So node dimensions should be unscaled relative to the container.
-             // However, if the observer fires, it sees the element size.
-             // Let's use offsetWidth/offsetHeight.
-             const el = entry.target as HTMLElement;
-             if (el.offsetWidth !== node.width || el.offsetHeight !== node.height) {
-                 onUpdate(node.id, { width: el.offsetWidth, height: el.offsetHeight });
-             }
+        const el = entry.target as HTMLElement;
+        // Only update if difference is significant and we are not in the middle of a manual resize (implied by rapid updates, but here we just check values)
+        // If node.width is set, el.offsetWidth should match it.
+        // If node.width is undefined, we sync el.offsetWidth to it?
+        // Actually, we should just sync the actual DOM size to the store so lines draw correctly.
+        if (Math.abs((node.width || DEFAULT_WIDTH) - el.offsetWidth) > 2 || Math.abs((node.height || DEFAULT_HEIGHT) - el.offsetHeight) > 2) {
+             onUpdate(node.id, { width: el.offsetWidth, height: el.offsetHeight });
         }
       }
     });
 
     observer.observe(nodeRef.current);
     return () => observer.disconnect();
-  }, [node.id, node.width, node.height, onUpdate]); // Dependencies might cause loop if not careful.
+  }, [node.id, node.width, node.height, onUpdate]);
 
-  // Actually, ResizeObserver loop is a common issue. 
-  // Simplified approach: Update size only when text changes (in layout effect).
-  // But resizing the node manually isn't supported yet, only auto-resize by content.
-  // So relying on text change is enough.
-  
-  useLayoutEffect(() => {
-      if (nodeRef.current) {
-          const w = nodeRef.current.offsetWidth;
-          const h = nodeRef.current.offsetHeight;
-          if (w !== node.width || h !== node.height) {
-              onUpdate(node.id, { width: w, height: h });
-          }
-      }
-  }, [node.text, node.width, node.height, onUpdate]);
+  const handleResizeStart = (e: ReactMouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startWidth = nodeRef.current?.offsetWidth || DEFAULT_WIDTH;
+    const startHeight = nodeRef.current?.offsetHeight || DEFAULT_HEIGHT;
 
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+        const deltaX = moveEvent.clientX - startX;
+        const deltaY = moveEvent.clientY - startY;
+        
+        const newWidth = Math.max(100, startWidth + deltaX);
+        const newHeight = Math.max(50, startHeight + deltaY);
+        
+        onUpdate(node.id, { 
+            customWidth: newWidth, 
+            customHeight: newHeight,
+            width: newWidth, 
+            height: newHeight 
+        });
+    };
+
+    const handleMouseUp = () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  };
 
   return (
     <div
       ref={nodeRef}
       style={{
         transform: `translate(${node.x}px, ${node.y}px)`,
-        width: DEFAULT_WIDTH, // Fixed width for now, grows vertically
+        width: node.customWidth || DEFAULT_WIDTH,
+        height: node.customHeight,
         backgroundColor: node.color || (node.type === 'root' ? '#eff6ff' : '#ffffff'),
         borderColor: node.color ? COLORS.find(c => c.value === node.color)?.border : undefined,
       }}
@@ -179,11 +189,27 @@ const MindMapNode = ({
         ref={textareaRef}
         value={node.text}
         onChange={(e) => onUpdate(node.id, { text: e.target.value })}
-        className="w-full text-sm bg-transparent border-none resize-none focus:ring-0 p-0 text-slate-700 font-medium overflow-hidden"
+        style={{ 
+            height: node.customHeight ? '100%' : undefined,
+            resize: 'none'
+        }}
+        className={clsx(
+            "w-full text-sm bg-transparent border-none focus:ring-0 p-0 text-slate-700 font-medium overflow-hidden",
+            node.customHeight ? "flex-1" : ""
+        )}
         rows={1}
         placeholder={node.type === 'root' ? "Describe the problem..." : "Ask why..."}
         onMouseDown={(e) => e.stopPropagation()} // Allow text selection
       />
+
+      {/* Resize Handle */}
+      <div 
+        className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize flex items-center justify-center opacity-0 group-hover:opacity-100 z-20"
+        onMouseDown={handleResizeStart}
+        title="Resize"
+      >
+         <div className="w-2 h-2 border-r-2 border-b-2 border-slate-300"></div>
+      </div>
 
       {/* Add Below Button */}
       <button 

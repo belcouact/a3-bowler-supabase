@@ -34,6 +34,8 @@ export interface A3Case {
   priority?: 'Low' | 'Medium' | 'High';
   startDate?: string;
   endDate?: string;
+  status?: string;
+  dataAnalysisObservations?: string;
 }
 
 interface AppContextType {
@@ -42,6 +44,7 @@ interface AppContextType {
   addBowler: (data: Omit<Bowler, 'id'>) => void;
   updateBowler: (bowler: Bowler) => void;
   addA3Case: (caseData: Omit<A3Case, 'id'>) => void;
+  updateA3Case: (a3Case: A3Case) => void;
   deleteBowler: (id: string) => void;
   deleteA3Case: (id: string) => void;
 }
@@ -81,6 +84,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setA3Cases([...a3Cases, newCase]);
   };
 
+  const updateA3Case = (updatedCase: A3Case) => {
+    setA3Cases(a3Cases.map(c => c.id === updatedCase.id ? updatedCase : c));
+  };
+
   const deleteBowler = (id: string) => {
     setBowlers(bowlers.filter((b) => b.id !== id));
   };
@@ -90,7 +97,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AppContext.Provider value={{ bowlers, a3Cases, addBowler, updateBowler, addA3Case, deleteBowler, deleteA3Case }}>
+    <AppContext.Provider value={{ bowlers, a3Cases, addBowler, updateBowler, addA3Case, updateA3Case, deleteBowler, deleteA3Case }}>
       {children}
     </AppContext.Provider>
   );

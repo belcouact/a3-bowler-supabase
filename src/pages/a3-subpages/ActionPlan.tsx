@@ -39,7 +39,7 @@ const ActionPlan = () => {
   
   // View Options
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [timeScale, setTimeScale] = useState<'day' | 'week' | 'month'>('day');
+  const [timeScale, setTimeScale] = useState<'day' | 'week' | 'month'>('week');
   
   // Dragging State
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -526,20 +526,26 @@ const ActionPlan = () => {
                 <div className="flex h-[60px] border-b border-gray-200 bg-gray-50 sticky top-0 z-10">
                     {gridColumns.map((col, i) => {
                         const isToday = timeScale === 'day' ? formatDate(col.date) === formatDate(new Date()) : false;
-                        // For Week/Month mode, maybe highlight current week/month?
                         
                         return (
                             <div 
                                 key={i} 
                                 className={clsx(
-                                    "flex-shrink-0 border-r border-gray-200 flex flex-col items-center justify-center text-xs overflow-hidden px-1",
+                                    "flex-shrink-0 border-r border-gray-200 flex flex-col items-center justify-center overflow-hidden px-0.5",
                                     isToday ? "bg-blue-50" : ""
                                 )}
                                 style={{ width: cellWidth }}
                                 title={col.fullLabel}
                             >
-                                <span className="font-semibold text-gray-700 whitespace-nowrap">{col.label}</span>
-                                {timeScale === 'day' && (
+                                <span className={clsx(
+                                    "font-semibold text-gray-700 whitespace-nowrap",
+                                    cellWidth < 45 ? "text-[10px]" : "text-xs"
+                                )}>
+                                    {cellWidth < 40 && timeScale === 'week' 
+                                        ? `${col.date.getMonth() + 1}/${col.date.getDate()}` 
+                                        : col.label}
+                                </span>
+                                {timeScale === 'day' && cellWidth >= 30 && (
                                     <span className="text-gray-400 text-[10px]">{col.date.toLocaleDateString('en-US', { weekday: 'narrow' })}</span>
                                 )}
                             </div>
