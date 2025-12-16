@@ -39,6 +39,7 @@ const ActionPlan = () => {
   
   // View Options
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [timeScale, setTimeScale] = useState<'day' | 'week' | 'month'>('day');
   
   // Dragging State
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -47,9 +48,9 @@ const ActionPlan = () => {
   const [dragStartTask, setDragStartTask] = useState<ActionTask | null>(null);
 
   // --- Computed ---
-  const cellWidth = BASE_CELL_WIDTH * zoomLevel;
+  const cellWidth = (timeScale === 'month' ? 100 : (timeScale === 'week' ? 60 : BASE_CELL_WIDTH)) * zoomLevel;
 
-  const visibleDates = useMemo(() => {
+  const gridColumns = useMemo(() => {
     const start = new Date(dateRange.start);
     const end = new Date(dateRange.end);
     
@@ -58,79 +59,192 @@ const ActionPlan = () => {
         return [];
     }
 
-    const dates = [];
-    let current = start;
-    
-    while (current <= end) {
-        if (!isWeekend(current)) {
-            dates.push(new Date(current));
+    const cols = [];
+    let current = new Date(start);
+
+    if (timeScale === 'day') {
+        while (current <= end) {
+            if (!isWeekend(current)) {
+                cols.push({
+                    date: new Date(current),
+                    label: current.getDate().toString(),
+                    fullLabel: formatDate(current),
+                    id: formatDate(current)
+                });
+            }
+            current = addDays(current, 1);
         }
-        current = addDays(current, 1);
+    } else if (timeScale === 'week') {
+        // Align first column to the start of the week of 'start' date?
+        // Or just iterate weeks from start.
+        // Let's iterate weeks. 
+        // We need to handle "No Weekends" conceptually? 
+        // In week mode, a column is a week. We don't hide weekends, we just show the week block.
+        
+        // Find Monday of the starting week
+        // current.setDate(current.getDate() - current.getDay() + 1); // Monday
+        // Actually, let's just start from 'start' date and jump 7 days?
+        // Standard Gantt: Columns are weeks starting Monday/Sunday.
+        // Let's align to Monday for consistency.
+        const day = current.getDay();
+        const diff = current.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+        // current.setDate(diff); // This might go before dateRange.start
+        
+        // Let's just list weeks that overlap with the range.
+        // But for simplicity, let's just step by 7 days from start, OR align to calendar weeks.
+        // Aligning to calendar weeks is better.
+        
+        let iter = new Date(current);
+        // Align to previous Monday
+        const d = iter.getDay();
+        const dist = d === 0 ? 6 : d - 1;
+        iter.setDate(iter.getDate() - dist);
+
+        while (iter <= end) {
+            // Only add if the week overlaps with range (it definitely does if we start at/before start)
+            // Actually, we want columns that cover the range.
+            const weekEnd = addDays(iter, 6);
+            
+            // Format label: "Oct 2"
+            const label = `${iter.toLocaleString('default', { month: 'short' })} ${iter.getDate()}`;
+            
+            cols.push({
+                date: new Date(iter),
+                label: label,
+                fullLabel: `Week of ${formatDate(iter)}`,
+                id: formatDate(iter) // identify by start of week
+            });
+            
+            iter = addDays(iter, 7);
+        }
+    } else if (timeScale === 'month') {
+        // Align to 1st of month
+        let iter = new Date(current);
+        iter.setDate(1);
+
+        while (iter <= end) {
+            cols.push({
+                date: new Date(iter),
+                label: iter.toLocaleString('default', { month: 'short' }),
+                fullLabel: `${iter.toLocaleString('default', { month: 'long' })} ${iter.getFullYear()}`,
+                id: `${iter.getFullYear()}-${iter.getMonth()}`
+            });
+            
+            // Next month
+            iter = new Date(iter.getFullYear(), iter.getMonth() + 1, 1);
+        }
     }
     
-    return dates;
+    return cols;
 
-  }, [dateRange]);
+  }, [dateRange, timeScale]);
 
   // Helper to find visual start/end for a task
-  // If a task starts on a hidden day (e.g. Sat), we map it to the next visible day for start?
-  // Or purely by index lookup.
   const getTaskVisualMetrics = (task: ActionTask) => {
-    const taskStartStr = task.startDate;
-    const taskEndStr = task.endDate;
-
-    // Find exact match
-    let startIndex = visibleDates.findIndex(d => formatDate(d) === taskStartStr);
-    let endIndex = visibleDates.findIndex(d => formatDate(d) === taskEndStr);
-
-    // Handling hidden dates:
-    // If start is hidden, maybe it started before? 
-    // For now, let's just accept exact matches. If -1, it might be off screen.
-    // However, if the task spans the view but start/end are off-screen/hidden, we need to handle it.
-    
     const taskStart = new Date(task.startDate);
     const taskEnd = new Date(task.endDate);
-    const viewStart = visibleDates[0];
-    const viewEnd = visibleDates[visibleDates.length - 1];
-
-    if (!viewStart || !viewEnd) return null;
-
-    // If completely out of view
-    if (taskEnd < viewStart || taskStart > viewEnd) return null;
-
-    // Clamp start/end to view range for rendering if exact match not found
-    // This handles "started before view" or "starts on hidden weekend"
     
-    if (startIndex === -1) {
-        // If before view, clamp to 0
-        if (taskStart < viewStart) startIndex = 0;
-        else {
-            // Started inside view but on hidden day? Find next visible day
-            // Or just don't render start?
-            // Simple approach: Find first visible date >= taskStart
-            startIndex = visibleDates.findIndex(d => d >= taskStart);
-        }
+    // We need to find where taskStart and taskEnd fall within the gridColumns.
+    
+    let startIndex = -1;
+    let endIndex = -1;
+
+    if (timeScale === 'day') {
+        // Exact match or closest for days
+        // Logic similar to before, but using gridColumns[i].date
+        // We can optimize by string matching id if we want
+        startIndex = gridColumns.findIndex(c => c.id === task.startDate);
+        endIndex = gridColumns.findIndex(c => c.id === task.endDate);
+
+        // Fallback for hidden days (weekends) or out of bounds
+        // ... (Similar clamping logic needed) ...
+    } else if (timeScale === 'week') {
+        // Find week column that contains taskStart
+        startIndex = gridColumns.findIndex((c, i) => {
+            const nextCol = gridColumns[i+1];
+            // If taskStart is within this week
+            // This week starts at c.date
+            // Ends at nextCol.date (exclusive) or c.date + 7
+            const weekStart = c.date;
+            const weekEnd = addDays(weekStart, 6);
+            return taskStart >= weekStart && taskStart <= weekEnd;
+        });
+
+        // Find week column that contains taskEnd
+        endIndex = gridColumns.findIndex((c, i) => {
+            const weekStart = c.date;
+            const weekEnd = addDays(weekStart, 6);
+            return taskEnd >= weekStart && taskEnd <= weekEnd;
+        });
+    } else if (timeScale === 'month') {
+        // Find month column
+        startIndex = gridColumns.findIndex(c => 
+            c.date.getMonth() === taskStart.getMonth() && c.date.getFullYear() === taskStart.getFullYear()
+        );
+        endIndex = gridColumns.findIndex(c => 
+            c.date.getMonth() === taskEnd.getMonth() && c.date.getFullYear() === taskEnd.getFullYear()
+        );
     }
 
-    if (endIndex === -1) {
-        // If after view, clamp to end
-        if (taskEnd > viewEnd) endIndex = visibleDates.length - 1;
+    // --- Common Clamping Logic ---
+    const viewStartCol = gridColumns[0];
+    const viewEndCol = gridColumns[gridColumns.length - 1];
+
+    if (!viewStartCol || !viewEndCol) return null;
+
+    // Convert columns to time boundaries for bounds checking
+    // Note: For day view, column date is the day.
+    // For week view, column date is Monday.
+    // For month view, column date is 1st.
+    
+    // We need precise bounds check.
+    // If task is completely before first column or after last column
+    const gridStartTime = viewStartCol.date.getTime();
+    
+    // Calculate grid end time
+    let gridEndTime = viewEndCol.date.getTime();
+    if (timeScale === 'week') gridEndTime = addDays(viewEndCol.date, 6).getTime();
+    if (timeScale === 'month') gridEndTime = new Date(viewEndCol.date.getFullYear(), viewEndCol.date.getMonth() + 1, 0).getTime();
+    
+    if (taskEnd.getTime() < gridStartTime || taskStart.getTime() > gridEndTime) return null;
+
+    // Clamp Indices
+    if (startIndex === -1) {
+        if (taskStart.getTime() < gridStartTime) startIndex = 0;
         else {
-             // Ends on hidden day? Find last visible date <= taskEnd
-             // We iterate backwards
-             for (let i = visibleDates.length - 1; i >= 0; i--) {
-                 if (visibleDates[i] <= taskEnd) {
+             // Started inside view but maybe in a gap? (unlikely for week/month, possible for day/weekend)
+             // Find first column > taskStart
+             startIndex = gridColumns.findIndex(c => c.date >= taskStart);
+             if (startIndex === -1) startIndex = 0; // Should not happen if bounds check passed
+        }
+    }
+    
+    if (endIndex === -1) {
+        if (taskEnd.getTime() > gridEndTime) endIndex = gridColumns.length - 1;
+        else {
+            // Find last column <= taskEnd
+            // Iterate backwards
+             for (let i = gridColumns.length - 1; i >= 0; i--) {
+                 if (gridColumns[i].date <= taskEnd) {
                      endIndex = i;
                      break;
                  }
              }
         }
     }
-    
+
     if (startIndex === -1 || endIndex === -1) return null;
-    if (startIndex > endIndex) return null;
+    if (startIndex > endIndex) {
+        // Can happen if start > end (invalid task) or clamping weirdness
+        return null; 
+    }
 
     const left = startIndex * cellWidth;
+    // Width: (endIndex - startIndex + 1) columns
+    // BUT: In week/month view, if task starts mid-week, should we offset 'left'?
+    // For simple grid, we snap to columns.
+    // For better visuals, we'd calculate percent offset.
+    // Let's stick to SNAP TO GRID for now for simplicity, as requested "change timeline display".
     const width = (endIndex - startIndex + 1) * cellWidth;
 
     return { left, width };
@@ -183,32 +297,7 @@ const ActionPlan = () => {
   };
 
   const handleSetViewMode = (mode: 'week' | 'month') => {
-      const start = new Date(dateRange.start);
-      // Align start to nice boundary?
-      // For week: Start on Sunday/Monday?
-      // For month: Start on 1st?
-      // Let's keep "Start Date" as anchor for now to be less disruptive, or align?
-      // Usually "Month View" implies "This Month".
-      
-      let newStart = start;
-      let newEnd = start;
-
-      if (mode === 'week') {
-          // Align to start of week (Sunday)
-          const day = newStart.getDay();
-          newStart = addDays(newStart, -day);
-          newEnd = addDays(newStart, 6);
-      } else {
-          // Align to start of month
-          newStart.setDate(1);
-          // End of month
-          newEnd = new Date(newStart.getFullYear(), newStart.getMonth() + 1, 0);
-      }
-
-      setDateRange({
-          start: formatDate(newStart),
-          end: formatDate(newEnd)
-      });
+      setTimeScale(mode);
   };
 
   // --- Drag Logic ---
@@ -234,11 +323,42 @@ const ActionPlan = () => {
       const newTasks = tasks.map(t => {
         if (t.id !== draggingId) return t;
 
-        // We need to calculate based on VISIBLE indices
-        const startIdx = visibleDates.findIndex(d => formatDate(d) === dragStartTask.startDate);
-        const endIdx = visibleDates.findIndex(d => formatDate(d) === dragStartTask.endDate);
+        // We need to calculate based on VISIBLE indices (gridColumns)
+        // Find start/end index in gridColumns
+        let startIdx = -1;
+        let endIdx = -1;
+
+        if (timeScale === 'day') {
+             startIdx = gridColumns.findIndex(c => c.id === dragStartTask.startDate);
+             endIdx = gridColumns.findIndex(c => c.id === dragStartTask.endDate);
+        } else if (timeScale === 'week') {
+            // Find week containing start/end
+            const taskStart = new Date(dragStartTask.startDate);
+            const taskEnd = new Date(dragStartTask.endDate);
+            
+            startIdx = gridColumns.findIndex((c) => {
+                 const weekStart = c.date;
+                 const weekEnd = addDays(weekStart, 6);
+                 return taskStart >= weekStart && taskStart <= weekEnd;
+            });
+            endIdx = gridColumns.findIndex((c) => {
+                 const weekStart = c.date;
+                 const weekEnd = addDays(weekStart, 6);
+                 return taskEnd >= weekStart && taskEnd <= weekEnd;
+            });
+        } else if (timeScale === 'month') {
+             const taskStart = new Date(dragStartTask.startDate);
+             const taskEnd = new Date(dragStartTask.endDate);
+             
+             startIdx = gridColumns.findIndex(c => 
+                 c.date.getMonth() === taskStart.getMonth() && c.date.getFullYear() === taskStart.getFullYear()
+             );
+             endIdx = gridColumns.findIndex(c => 
+                 c.date.getMonth() === taskEnd.getMonth() && c.date.getFullYear() === taskEnd.getFullYear()
+             );
+        }
         
-        // If original task was off-grid (hidden), dragging is weird. Abort or snap?
+        // If original task was off-grid (hidden), dragging is weird. Abort.
         if (startIdx === -1 || endIdx === -1) return t; 
 
         let newStartIdx = startIdx;
@@ -257,15 +377,46 @@ const ActionPlan = () => {
 
         // Bound checks
         if (newStartIdx < 0) newStartIdx = 0;
-        if (newEndIdx >= visibleDates.length) newEndIdx = visibleDates.length - 1;
+        if (newEndIdx >= gridColumns.length) newEndIdx = gridColumns.length - 1;
         
-        // If we hit the bounds of the rendered view, we stop.
-        // Ideally we'd scroll or load more, but for now clamp.
+        // Convert back to Date Strings
+        // For day: easy.
+        // For week/month: We snap to the start/end of that column?
+        // Or we maintain the relative offset?
+        // Simplicity: Snap to column boundaries.
+        // Start date = Start of Column
+        // End date = End of Column? Or Start of Column?
+        // Usually tasks are inclusive.
+        
+        let newStartDate = '';
+        let newEndDate = '';
+        
+        const startCol = gridColumns[newStartIdx];
+        const endCol = gridColumns[newEndIdx];
+        
+        if (!startCol || !endCol) return t; // Should not happen due to bounds check
+
+        if (timeScale === 'day') {
+            newStartDate = startCol.id;
+            newEndDate = endCol.id;
+        } else if (timeScale === 'week') {
+            // Snap to week start/end?
+            // If I drag a 2 day task to a week, does it become 1 week long?
+            // Yes, if grid is weeks, granularity is weeks.
+            newStartDate = formatDate(startCol.date);
+            // End date should be end of that week?
+            newEndDate = formatDate(addDays(endCol.date, 6));
+        } else if (timeScale === 'month') {
+            newStartDate = formatDate(startCol.date); // 1st of month
+            // End date = end of month
+            const e = new Date(endCol.date.getFullYear(), endCol.date.getMonth() + 1, 0);
+            newEndDate = formatDate(e);
+        }
 
         return {
           ...t,
-          startDate: formatDate(visibleDates[newStartIdx]),
-          endDate: formatDate(visibleDates[newEndIdx])
+          startDate: newStartDate,
+          endDate: newEndDate
         };
       });
 
@@ -289,7 +440,7 @@ const ActionPlan = () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [draggingId, dragType, dragStartX, dragStartTask, tasks, visibleDates, cellWidth]);
+  }, [draggingId, dragType, dragStartX, dragStartTask, tasks, gridColumns, cellWidth, timeScale]);
 
 
   return (
@@ -406,20 +557,24 @@ const ActionPlan = () => {
             <div className="relative">
                 {/* Header: Dates */}
                 <div className="flex h-[60px] border-b border-gray-200 bg-gray-50 sticky top-0 z-10">
-                    {visibleDates.map((date, i) => {
-                        const isToday = formatDate(date) === formatDate(new Date());
-                        const isWeekendDay = isWeekend(date);
+                    {gridColumns.map((col, i) => {
+                        const isToday = timeScale === 'day' ? formatDate(col.date) === formatDate(new Date()) : false;
+                        // For Week/Month mode, maybe highlight current week/month?
+                        
                         return (
                             <div 
                                 key={i} 
                                 className={clsx(
-                                    "flex-shrink-0 border-r border-gray-200 flex flex-col items-center justify-center text-xs",
-                                    isToday ? "bg-blue-50" : isWeekendDay ? "bg-gray-100" : ""
+                                    "flex-shrink-0 border-r border-gray-200 flex flex-col items-center justify-center text-xs overflow-hidden px-1",
+                                    isToday ? "bg-blue-50" : ""
                                 )}
                                 style={{ width: cellWidth }}
+                                title={col.fullLabel}
                             >
-                                <span className="font-semibold text-gray-700">{date.getDate()}</span>
-                                <span className="text-gray-400 text-[10px]">{date.toLocaleDateString('en-US', { weekday: 'narrow' })}</span>
+                                <span className="font-semibold text-gray-700 whitespace-nowrap">{col.label}</span>
+                                {timeScale === 'day' && (
+                                    <span className="text-gray-400 text-[10px]">{col.date.toLocaleDateString('en-US', { weekday: 'narrow' })}</span>
+                                )}
                             </div>
                         )
                     })}
@@ -429,10 +584,10 @@ const ActionPlan = () => {
                 <div className="relative">
                     {/* Vertical Lines Background */}
                     <div className="absolute inset-0 flex pointer-events-none">
-                        {visibleDates.map((date, i) => (
+                        {gridColumns.map((col, i) => (
                             <div key={i} className={clsx(
                                 "flex-shrink-0 border-r border-gray-100 h-full",
-                                isWeekend(date) ? "bg-gray-50/50" : ""
+                                // Highlight weekends in day view only if we were showing them, but we aren't.
                             )} style={{ width: cellWidth }}></div>
                         ))}
                     </div>
@@ -452,8 +607,8 @@ const ActionPlan = () => {
                                         const rect = e.currentTarget.getBoundingClientRect();
                                         const clickX = e.clientX - rect.left;
                                         const colIndex = Math.floor(clickX / cellWidth);
-                                        if (colIndex >= 0 && colIndex < visibleDates.length) {
-                                            handleGridClick(formatDate(visibleDates[colIndex]));
+                                        if (colIndex >= 0 && colIndex < gridColumns.length) {
+                                            handleGridClick(formatDate(gridColumns[colIndex].date));
                                         }
                                     }}
                                 />
@@ -496,8 +651,8 @@ const ActionPlan = () => {
                                         const rect = e.currentTarget.getBoundingClientRect();
                                         const clickX = e.clientX - rect.left;
                                         const colIndex = Math.floor(clickX / cellWidth);
-                                        if (colIndex >= 0 && colIndex < visibleDates.length) {
-                                            handleGridClick(formatDate(visibleDates[colIndex]));
+                                        if (colIndex >= 0 && colIndex < gridColumns.length) {
+                                            handleGridClick(formatDate(gridColumns[colIndex].date));
                                         }
                                     }}
                                 />
