@@ -3,31 +3,39 @@ import { Plus, ZoomIn, ZoomOut } from 'lucide-react';
 import clsx from 'clsx';
 import { addDays, formatDate, isWeekend } from '../../utils/dateUtils';
 import ActionModal, { ActionTask } from '../../components/ActionModal';
+import { useParams } from 'react-router-dom';
+import { useApp } from '../../context/AppContext';
 
 const BASE_CELL_WIDTH = 40;
 
+const getDefaultTasks = (): ActionTask[] => [
+  { 
+    id: '1', 
+    name: 'Define problem scope', 
+    owner: 'Alice', 
+    startDate: new Date().toISOString().split('T')[0], 
+    endDate: addDays(new Date(), 4).toISOString().split('T')[0],
+    status: 'In Progress',
+    progress: 40
+  },
+  { 
+    id: '2', 
+    name: 'Gather initial data', 
+    owner: 'Bob', 
+    startDate: addDays(new Date(), 2).toISOString().split('T')[0], 
+    endDate: addDays(new Date(), 6).toISOString().split('T')[0],
+    status: 'Not Started',
+    progress: 0
+  },
+];
+
 const ActionPlan = () => {
+  const { id } = useParams();
+  const { a3Cases, updateA3Case } = useApp();
+  const currentCase = a3Cases.find(c => c.id === id);
+
   // --- State ---
-  const [tasks, setTasks] = useState<ActionTask[]>([
-    { 
-      id: '1', 
-      name: 'Define problem scope', 
-      owner: 'Alice', 
-      startDate: new Date().toISOString().split('T')[0], 
-      endDate: addDays(new Date(), 4).toISOString().split('T')[0],
-      status: 'In Progress',
-      progress: 40
-    },
-    { 
-      id: '2', 
-      name: 'Gather initial data', 
-      owner: 'Bob', 
-      startDate: addDays(new Date(), 2).toISOString().split('T')[0], 
-      endDate: addDays(new Date(), 6).toISOString().split('T')[0],
-      status: 'Not Started',
-      progress: 0
-    },
-  ]);
+  const [tasks, setTasks] = useState<ActionTask[]>(getDefaultTasks());
 
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
     start: formatDate(new Date()),
@@ -46,6 +54,20 @@ const ActionPlan = () => {
   const [dragType, setDragType] = useState<'move' | 'resize-left' | 'resize-right' | null>(null);
   const [dragStartX, setDragStartX] = useState(0);
   const [dragStartTask, setDragStartTask] = useState<ActionTask | null>(null);
+
+  useEffect(() => {
+    if (!currentCase) return;
+    if (currentCase.actionPlanTasks && currentCase.actionPlanTasks.length > 0) {
+      setTasks(currentCase.actionPlanTasks as ActionTask[]);
+    } else {
+      setTasks(getDefaultTasks());
+    }
+  }, [currentCase?.id]);
+
+  const persistTasks = (updatedTasks: ActionTask[]) => {
+    if (!currentCase) return;
+    updateA3Case({ ...currentCase, actionPlanTasks: updatedTasks });
+  };
 
   // --- Computed ---
   const cellWidth = (timeScale === 'month' ? 100 : (timeScale === 'week' ? 60 : BASE_CELL_WIDTH)) * zoomLevel;
@@ -266,15 +288,20 @@ const ActionPlan = () => {
   };
 
   const handleSaveTask = (task: ActionTask) => {
+    let updated: ActionTask[];
     if (editingTask) {
-      setTasks(tasks.map(t => t.id === task.id ? task : t));
+      updated = tasks.map(t => t.id === task.id ? task : t);
     } else {
-      setTasks([...tasks, task]);
+      updated = [...tasks, task];
     }
+    setTasks(updated);
+    persistTasks(updated);
   };
 
-  const handleDeleteTask = (id: string) => {
-    setTasks(tasks.filter(t => t.id !== id));
+  const handleDeleteTask = (taskId: string) => {
+    const updated = tasks.filter(t => t.id !== taskId);
+    setTasks(updated);
+    persistTasks(updated);
   };
 
   const handleSetViewMode = (mode: 'week' | 'month') => {
@@ -402,6 +429,7 @@ const ActionPlan = () => {
       });
 
       setTasks(newTasks);
+      persistTasks(newTasks);
     };
 
     const handleMouseUp = () => {

@@ -1,20 +1,9 @@
 import { useState, useRef, useEffect, MouseEvent as ReactMouseEvent, useLayoutEffect } from 'react';
 import { Plus, Trash2, MousePointer2, ZoomIn, ZoomOut, Palette } from 'lucide-react';
 import clsx from 'clsx';
+import { MindMapNodeData } from '../context/AppContext';
 
-interface Node {
-  id: string;
-  text: string;
-  x: number;
-  y: number;
-  width?: number;
-  height?: number;
-  customWidth?: number;
-  customHeight?: number;
-  parentId: string | null;
-  type?: 'root' | 'child';
-  color?: string;
-}
+type Node = MindMapNodeData;
 
 const DEFAULT_WIDTH = 200;
 const DEFAULT_HEIGHT = 80;
@@ -223,15 +212,39 @@ const MindMapNode = ({
   );
 };
 
-export const MindMap = () => {
-  const [nodes, setNodes] = useState<Node[]>([
-    { id: 'root', text: 'Define the Problem', x: 50, y: 250, width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT, parentId: null, type: 'root' },
-  ]);
+interface MindMapProps {
+  initialNodes?: MindMapNodeData[];
+  onChange?: (nodes: MindMapNodeData[]) => void;
+}
+
+export const MindMap = ({ initialNodes, onChange }: MindMapProps) => {
+  const [nodes, setNodes] = useState<Node[]>(
+    initialNodes && initialNodes.length > 0
+      ? initialNodes
+      : [
+          {
+            id: 'root',
+            text: 'Define the Problem',
+            x: 50,
+            y: 250,
+            width: DEFAULT_WIDTH,
+            height: DEFAULT_HEIGHT,
+            parentId: null,
+            type: 'root',
+          },
+        ]
+  );
   
   const [scale, setScale] = useState(1);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (onChange) {
+      onChange(nodes);
+    }
+  }, [nodes, onChange]);
 
   const handleMouseDown = (e: ReactMouseEvent, id: string) => {
     e.stopPropagation();

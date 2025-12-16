@@ -29,6 +29,30 @@ export interface Bowler {
   metrics?: Metric[];
 }
 
+export interface MindMapNodeData {
+  id: string;
+  text: string;
+  x: number;
+  y: number;
+  width?: number;
+  height?: number;
+  customWidth?: number;
+  customHeight?: number;
+  parentId: string | null;
+  type?: 'root' | 'child';
+  color?: string;
+}
+
+export interface ActionPlanTaskData {
+  id: string;
+  name: string;
+  owner: string;
+  startDate: string;
+  endDate: string;
+  status: 'Not Started' | 'In Progress' | 'Completed';
+  progress: number;
+}
+
 export interface A3Case {
   id: string;
   title: string;
@@ -40,6 +64,8 @@ export interface A3Case {
   status?: string;
   problemStatement?: string;
   results?: string;
+  mindMapNodes?: MindMapNodeData[];
+  actionPlanTasks?: ActionPlanTaskData[];
   dataAnalysisObservations?: string;
 }
 
