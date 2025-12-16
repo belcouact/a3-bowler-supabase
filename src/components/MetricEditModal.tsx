@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { X } from 'lucide-react';
 import { Metric, MetricData } from '../context/AppContext';
 
@@ -7,31 +7,49 @@ interface MetricEditModalProps {
   onClose: () => void;
   metric: Metric | null;
   onSave: (metricId: string, data: Record<string, MetricData>) => void;
+  startDate: string;
 }
 
-const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-const MetricEditModal = ({ isOpen, onClose, metric, onSave }: MetricEditModalProps) => {
+const MetricEditModal = ({ isOpen, onClose, metric, onSave, startDate }: MetricEditModalProps) => {
   const [monthlyData, setMonthlyData] = useState<Record<string, MetricData>>({});
+
+  const displayMonths = useMemo(() => {
+    const [yearStr, monthStr] = startDate.split('-');
+    const startYear = parseInt(yearStr, 10);
+    const startMonthIndex = parseInt(monthStr, 10) - 1;
+
+    const months = [];
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(startYear, startMonthIndex + i, 1);
+      const monthIndex = date.getMonth();
+      const year = date.getFullYear();
+      const monthName = monthNames[monthIndex];
+      const key = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
+      const label = `${year}/${monthName}`;
+      months.push({ key, label });
+    }
+    return months;
+  }, [startDate]);
 
   useEffect(() => {
     if (isOpen && metric) {
-      // Initialize with existing data or empty strings
       const initialData: Record<string, MetricData> = {};
-      months.forEach(month => {
-        initialData[month] = metric.monthlyData?.[month] || { target: '', actual: '' };
+      displayMonths.forEach((month) => {
+        initialData[month.key] = metric.monthlyData?.[month.key] || { target: '', actual: '' };
       });
       setMonthlyData(initialData);
     }
-  }, [isOpen, metric]);
+  }, [isOpen, metric, displayMonths]);
 
   if (!isOpen || !metric) return null;
 
-  const handleChange = (month: string, field: 'target' | 'actual', value: string) => {
+  const handleChange = (monthKey: string, field: 'target' | 'actual', value: string) => {
     setMonthlyData(prev => ({
       ...prev,
-      [month]: {
-        ...prev[month],
+      [monthKey]: {
+        ...prev[monthKey],
         [field]: value
       }
     }));
@@ -68,17 +86,19 @@ const MetricEditModal = ({ isOpen, onClose, metric, onSave }: MetricEditModalPro
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[60vh] overflow-y-auto p-1">
-                {months.map(month => (
-                  <div key={month} className="border border-gray-200 rounded-md p-3 bg-gray-50">
-                    <h4 className="font-medium text-gray-700 mb-2 border-b border-gray-200 pb-1">{month}</h4>
+                {displayMonths.map((month) => (
+                  <div key={month.key} className="border border-gray-200 rounded-md p-3 bg-gray-50">
+                    <h4 className="font-medium text-gray-700 mb-2 border-b border-gray-200 pb-1">
+                      {month.label}
+                    </h4>
                     <div className="space-y-3">
                       <div>
                         <label className="block text-xs font-medium text-gray-500 uppercase">Target</label>
                         <input
                           type="text"
                           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1 px-2 text-sm focus:ring-blue-500 focus:border-blue-500"
-                          value={monthlyData[month]?.target || ''}
-                          onChange={(e) => handleChange(month, 'target', e.target.value)}
+                          value={monthlyData[month.key]?.target || ''}
+                          onChange={(e) => handleChange(month.key, 'target', e.target.value)}
                         />
                       </div>
                       <div>
@@ -86,8 +106,8 @@ const MetricEditModal = ({ isOpen, onClose, metric, onSave }: MetricEditModalPro
                         <input
                           type="text"
                           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1 px-2 text-sm focus:ring-blue-500 focus:border-blue-500"
-                          value={monthlyData[month]?.actual || ''}
-                          onChange={(e) => handleChange(month, 'actual', e.target.value)}
+                          value={monthlyData[month.key]?.actual || ''}
+                          onChange={(e) => handleChange(month.key, 'actual', e.target.value)}
                         />
                       </div>
                     </div>

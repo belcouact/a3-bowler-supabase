@@ -12,21 +12,25 @@ const MetricBowler = () => {
   
   const [editingMetric, setEditingMetric] = useState<Metric | null>(null);
   
-  // Start date state - defaults to January of current year
   const [startDate, setStartDate] = useState(() => {
     const today = new Date();
-    return `${today.getFullYear()}-01`;
+    return `${today.getFullYear()}-04`;
   });
 
-  // Calculate 12 months based on start date
   const displayMonths = useMemo(() => {
-    const [, monthStr] = startDate.split('-');
+    const [yearStr, monthStr] = startDate.split('-');
+    const startYear = parseInt(yearStr, 10);
     const startMonthIndex = parseInt(monthStr, 10) - 1;
-    
+
     const months = [];
     for (let i = 0; i < 12; i++) {
-        const monthIndex = (startMonthIndex + i) % 12;
-        months.push(allMonths[monthIndex]);
+      const date = new Date(startYear, startMonthIndex + i, 1);
+      const monthIndex = date.getMonth();
+      const year = date.getFullYear();
+      const monthName = allMonths[monthIndex];
+      const key = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
+      const label = `${year}/${monthName}`;
+      months.push({ key, label });
     }
     return months;
   }, [startDate]);
@@ -96,8 +100,12 @@ const MetricBowler = () => {
                 Type
               </th>
               {displayMonths.map((month) => (
-                <th key={month} scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider text-gray-300">
-                  {month}
+                <th
+                  key={month.key}
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider text-gray-300"
+                >
+                  {month.label}
                 </th>
               ))}
             </tr>
@@ -148,11 +156,16 @@ const MetricBowler = () => {
                     </td>
 
                     {displayMonths.map((month) => (
-                        <td key={`${month}-target`} className="px-3 py-2 whitespace-nowrap text-xs text-gray-500 bg-gray-50/30 border-b border-gray-100 h-8">
-                            <div className="flex justify-center items-center">
-                                <span className="font-medium text-gray-700">{metric.monthlyData?.[month]?.target || '-'}</span>
-                            </div>
-                        </td>
+                      <td
+                        key={`${month.key}-target`}
+                        className="px-3 py-2 whitespace-nowrap text-xs text-gray-500 bg-gray-50/30 border-b border-gray-100 h-8"
+                      >
+                        <div className="flex justify-center items-center">
+                          <span className="font-medium text-gray-700">
+                            {metric.monthlyData?.[month.key]?.target || '-'}
+                          </span>
+                        </div>
+                      </td>
                     ))}
                   </tr>
 
@@ -162,17 +175,21 @@ const MetricBowler = () => {
                         Actual
                      </td>
                      {displayMonths.map((month) => (
-                        <td key={`${month}-actual`} className="px-3 py-2 whitespace-nowrap text-xs text-gray-500 h-8">
-                             <div className="flex justify-center items-center">
-                                <span className={`font-semibold ${
-                                  !metric.monthlyData?.[month]?.actual ? 'text-gray-400' : 
-                                  'text-gray-900'
-                                }`}>
-                                  {metric.monthlyData?.[month]?.actual || '-'}
-                                </span>
-                            </div>
-                        </td>
-                    ))}
+                       <td
+                         key={`${month.key}-actual`}
+                         className="px-3 py-2 whitespace-nowrap text-xs text-gray-500 h-8"
+                       >
+                         <div className="flex justify-center items-center">
+                           <span
+                             className={`font-semibold ${
+                               !metric.monthlyData?.[month.key]?.actual ? 'text-gray-400' : 'text-gray-900'
+                             }`}
+                           >
+                             {metric.monthlyData?.[month.key]?.actual || '-'}
+                           </span>
+                         </div>
+                       </td>
+                     ))}
                   </tr>
                   </>
                 ))
@@ -186,6 +203,7 @@ const MetricBowler = () => {
         onClose={() => setEditingMetric(null)}
         metric={editingMetric}
         onSave={handleSaveMetricData}
+        startDate={startDate}
       />
     </div>
   );

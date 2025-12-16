@@ -146,9 +146,13 @@ const Layout = () => {
             onClick={handleSaveData}
             disabled={isSaving}
             className="flex items-center px-3 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
-            title="Save Data"
+            title={isSaving ? "Saving..." : "Save Data"}
           >
-            <Save className="w-4 h-4" />
+            {isSaving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
           </button>
 
           {user ? (
@@ -157,7 +161,9 @@ const Layout = () => {
                 <div className="h-8 w-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-700 font-bold text-xs">
                   {user.username ? user.username.substring(0, 2).toUpperCase() : <UserIcon className="w-4 h-4" />}
                 </div>
-                <span className="hidden md:inline font-medium text-gray-700">{user.username}</span>
+                <span className="hidden md:inline font-medium text-gray-700">
+                  {user.username && user.username.split('@')[0]}
+                </span>
               </div>
               <button 
                 onClick={logout}
