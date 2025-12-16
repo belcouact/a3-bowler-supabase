@@ -1,6 +1,11 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 
 // Types
+export interface MetricData {
+  target: string;
+  actual: string;
+}
+
 export interface Metric {
   id: string;
   name: string;
@@ -8,6 +13,7 @@ export interface Metric {
   owner: string;
   scope: string;
   attribute: string;
+  monthlyData?: Record<string, MetricData>;
 }
 
 export interface Bowler {
@@ -34,6 +40,7 @@ interface AppContextType {
   bowlers: Bowler[];
   a3Cases: A3Case[];
   addBowler: (data: Omit<Bowler, 'id'>) => void;
+  updateBowler: (bowler: Bowler) => void;
   addA3Case: (caseData: Omit<A3Case, 'id'>) => void;
   deleteBowler: (id: string) => void;
   deleteA3Case: (id: string) => void;
@@ -62,6 +69,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setBowlers([...bowlers, newBowler]);
   };
 
+  const updateBowler = (updatedBowler: Bowler) => {
+    setBowlers(bowlers.map(b => b.id === updatedBowler.id ? updatedBowler : b));
+  };
+
   const addA3Case = (caseData: Omit<A3Case, 'id'>) => {
     const newCase = {
       id: Date.now().toString(),
@@ -79,7 +90,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AppContext.Provider value={{ bowlers, a3Cases, addBowler, addA3Case, deleteBowler, deleteA3Case }}>
+    <AppContext.Provider value={{ bowlers, a3Cases, addBowler, updateBowler, addA3Case, deleteBowler, deleteA3Case }}>
       {children}
     </AppContext.Provider>
   );

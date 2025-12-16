@@ -1,0 +1,120 @@
+import { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
+import { Metric, MetricData } from '../context/AppContext';
+
+interface MetricEditModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  metric: Metric | null;
+  onSave: (metricId: string, data: Record<string, MetricData>) => void;
+}
+
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+const MetricEditModal = ({ isOpen, onClose, metric, onSave }: MetricEditModalProps) => {
+  const [monthlyData, setMonthlyData] = useState<Record<string, MetricData>>({});
+
+  useEffect(() => {
+    if (isOpen && metric) {
+      // Initialize with existing data or empty strings
+      const initialData: Record<string, MetricData> = {};
+      months.forEach(month => {
+        initialData[month] = metric.monthlyData?.[month] || { target: '', actual: '' };
+      });
+      setMonthlyData(initialData);
+    }
+  }, [isOpen, metric]);
+
+  if (!isOpen || !metric) return null;
+
+  const handleChange = (month: string, field: 'target' | 'actual', value: string) => {
+    setMonthlyData(prev => ({
+      ...prev,
+      [month]: {
+        ...prev[month],
+        [field]: value
+      }
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(metric.id, monthlyData);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div className="fixed inset-0 transition-opacity" aria-hidden="true" onClick={onClose}>
+          <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+
+        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+          <form onSubmit={handleSubmit}>
+            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    Edit Data: {metric.name}
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">Enter Target and Actual values for each month.</p>
+                </div>
+                <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-500">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[60vh] overflow-y-auto p-1">
+                {months.map(month => (
+                  <div key={month} className="border border-gray-200 rounded-md p-3 bg-gray-50">
+                    <h4 className="font-medium text-gray-700 mb-2 border-b border-gray-200 pb-1">{month}</h4>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 uppercase">Target</label>
+                        <input
+                          type="text"
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1 px-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                          value={monthlyData[month]?.target || ''}
+                          onChange={(e) => handleChange(month, 'target', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 uppercase">Actual</label>
+                        <input
+                          type="text"
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1 px-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                          value={monthlyData[month]?.actual || ''}
+                          onChange={(e) => handleChange(month, 'actual', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+              <button
+                type="submit"
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+              >
+                Save Changes
+              </button>
+              <button
+                type="button"
+                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                onClick={onClose}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MetricEditModal;
