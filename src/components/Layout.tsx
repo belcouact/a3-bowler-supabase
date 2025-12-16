@@ -95,7 +95,7 @@ const Layout = () => {
         {/* Dynamic Sidebar */}
         <aside className={clsx(
           "bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out relative",
-          isSidebarOpen ? "w-64" : "w-16"
+          isSidebarOpen ? "w-64 absolute z-20 h-full md:relative" : "w-0 md:w-16"
         )}>
           {/* Toggle Button */}
           <button
@@ -105,87 +105,89 @@ const Layout = () => {
              {isSidebarOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
           </button>
 
-          <div className={clsx(
-             "p-4 border-b border-gray-100 flex items-center bg-gray-50/50 h-14 overflow-hidden",
-             isSidebarOpen ? "justify-between" : "justify-center"
-          )}>
-            {isSidebarOpen ? (
-              <>
-                <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wider truncate">
-                  {isMetricBowler ? 'Bowler Lists' : 'A3 Cases'}
-                </h2>
+          <div className="flex flex-col w-full h-full overflow-hidden">
+            <div className={clsx(
+              "p-4 border-b border-gray-100 flex items-center bg-gray-50/50 h-14 overflow-hidden flex-shrink-0",
+              isSidebarOpen ? "justify-between" : "justify-center"
+            )}>
+              {isSidebarOpen ? (
+                <>
+                  <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wider truncate">
+                    {isMetricBowler ? 'Bowler Lists' : 'A3 Cases'}
+                  </h2>
+                  <button 
+                    onClick={handlePlusClick}
+                    className="p-1 rounded-md hover:bg-blue-100 text-blue-600 transition-colors"
+                    title="Add New"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </>
+              ) : (
                 <button 
-                  onClick={handlePlusClick}
-                  className="p-1 rounded-md hover:bg-blue-100 text-blue-600 transition-colors"
-                  title="Add New"
+                    onClick={handlePlusClick}
+                    className="p-1 rounded-md hover:bg-blue-100 text-blue-600 transition-colors"
+                    title="Add New"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+              )}
+            </div>
+
+            {/* Add Item Form */}
+            
+            <div className="flex-1 overflow-y-auto p-3 space-y-1">
+              {isMetricBowler && bowlers.map((bowler) => (
+                <Link
+                  key={bowler.id}
+                  to={`/metric-bowler/${bowler.id}`}
+                  onDoubleClick={(e) => {
+                      e.preventDefault();
+                      setEditingBowler(bowler);
+                      setIsBowlerModalOpen(true);
+                  }}
+                  className={clsx(
+                    "group flex items-center py-2.5 text-sm font-medium rounded-lg transition-all",
+                    isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
+                    location.pathname === `/metric-bowler/${bowler.id}`
+                      ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                      : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                  )}
+                  title={!isSidebarOpen ? bowler.name : undefined}
                 >
-                  <Plus className="w-5 h-5" />
-                </button>
-              </>
-            ) : (
-               <button 
-                  onClick={handlePlusClick}
-                  className="p-1 rounded-md hover:bg-blue-100 text-blue-600 transition-colors"
-                  title="Add New"
+                  <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
+                    <Target className={clsx("w-4 h-4 flex-shrink-0", isSidebarOpen ? "mr-3" : "mr-0", location.pathname === `/metric-bowler/${bowler.id}` ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
+                    {isSidebarOpen && <span className="truncate">{bowler.name}</span>}
+                  </div>
+                </Link>
+              ))}
+
+              {isA3Analysis && a3Cases.map((a3) => (
+                <Link
+                  key={a3.id}
+                  to={`/a3-analysis/${a3.id}/problem-statement`}
+                  className={clsx(
+                    "group flex items-center py-2.5 text-sm font-medium rounded-lg transition-all",
+                    isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
+                    location.pathname.includes(`/a3-analysis/${a3.id}`)
+                      ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                      : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                  )}
+                  title={!isSidebarOpen ? a3.title : undefined}
                 >
-                  <Plus className="w-5 h-5" />
-                </button>
-            )}
-          </div>
+                  <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
+                    <FileText className={clsx("w-4 h-4 flex-shrink-0", isSidebarOpen ? "mr-3" : "mr-0", location.pathname.includes(`/a3-analysis/${a3.id}`) ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
+                    {isSidebarOpen && <span className="truncate">{a3.title}</span>}
+                  </div>
+                </Link>
+              ))}
 
-          {/* Add Item Form */}
-          
-          <div className="flex-1 overflow-y-auto p-3 space-y-1">
-            {isMetricBowler && bowlers.map((bowler) => (
-              <Link
-                key={bowler.id}
-                to={`/metric-bowler/${bowler.id}`}
-                onDoubleClick={(e) => {
-                    e.preventDefault();
-                    setEditingBowler(bowler);
-                    setIsBowlerModalOpen(true);
-                }}
-                className={clsx(
-                  "group flex items-center py-2.5 text-sm font-medium rounded-lg transition-all",
-                  isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
-                  location.pathname === `/metric-bowler/${bowler.id}`
-                    ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                )}
-                title={!isSidebarOpen ? bowler.name : undefined}
-              >
-                <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
-                   <Target className={clsx("w-4 h-4 flex-shrink-0", isSidebarOpen ? "mr-3" : "mr-0", location.pathname === `/metric-bowler/${bowler.id}` ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
-                   {isSidebarOpen && <span className="truncate">{bowler.name}</span>}
+              {((isMetricBowler && bowlers.length === 0) || (isA3Analysis && a3Cases.length === 0)) && (
+                <div className={clsx("text-center py-8 text-gray-400 text-sm italic", isSidebarOpen ? "px-4" : "px-1 text-xs")}>
+                    {isSidebarOpen ? "No items yet. Click + to add one." : "Empty"}
                 </div>
-              </Link>
-            ))}
-
-            {isA3Analysis && a3Cases.map((a3) => (
-              <Link
-                key={a3.id}
-                to={`/a3-analysis/${a3.id}/problem-statement`}
-                className={clsx(
-                  "group flex items-center py-2.5 text-sm font-medium rounded-lg transition-all",
-                  isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
-                  location.pathname.includes(`/a3-analysis/${a3.id}`)
-                    ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                )}
-                title={!isSidebarOpen ? a3.title : undefined}
-              >
-                 <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
-                   <FileText className={clsx("w-4 h-4 flex-shrink-0", isSidebarOpen ? "mr-3" : "mr-0", location.pathname.includes(`/a3-analysis/${a3.id}`) ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
-                   {isSidebarOpen && <span className="truncate">{a3.title}</span>}
-                </div>
-              </Link>
-            ))}
-
-            {((isMetricBowler && bowlers.length === 0) || (isA3Analysis && a3Cases.length === 0)) && (
-               <div className={clsx("text-center py-8 text-gray-400 text-sm italic", isSidebarOpen ? "px-4" : "px-1 text-xs")}>
-                  {isSidebarOpen ? "No items yet. Click + to add one." : "Empty"}
-               </div>
-            )}
+              )}
+            </div>
           </div>
         </aside>
 
