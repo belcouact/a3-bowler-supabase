@@ -200,7 +200,7 @@ const MindMapNode = ({
       </button>
 
       <button
-        className="absolute top-1/2 -right-3 transform -translate-y-1/2 bg-white border border-slate-200 rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-50 text-slate-400 hover:text-blue-500 z-10"
+        className="absolute top-2 -right-3 bg-white border border-slate-200 rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-50 text-slate-400 hover:text-blue-500 z-10"
         onClick={() => onAdd(node.id, 'right')}
         title="Add next Why (Right)"
       >
