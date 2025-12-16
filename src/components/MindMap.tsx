@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, MouseEvent as ReactMouseEvent, useLayoutEffect } from 'react';
-import { Plus, Trash2, MousePointer2, ZoomIn, ZoomOut } from 'lucide-react';
+import { Plus, Trash2, MousePointer2, ZoomIn, ZoomOut, Palette } from 'lucide-react';
 import clsx from 'clsx';
 
 interface Node {
@@ -11,10 +11,20 @@ interface Node {
   height?: number;
   parentId: string | null;
   type?: 'root' | 'child';
+  color?: string;
 }
 
 const DEFAULT_WIDTH = 200;
 const DEFAULT_HEIGHT = 80;
+
+const COLORS = [
+  { name: 'White', value: '#ffffff', border: '#e2e8f0' },
+  { name: 'Blue', value: '#eff6ff', border: '#bfdbfe' },
+  { name: 'Green', value: '#f0fdf4', border: '#bbf7d0' },
+  { name: 'Yellow', value: '#fefce8', border: '#fef08a' },
+  { name: 'Red', value: '#fef2f2', border: '#fecaca' },
+  { name: 'Purple', value: '#faf5ff', border: '#e9d5ff' },
+];
 
 const MindMapNode = ({ 
   node, 
@@ -31,6 +41,7 @@ const MindMapNode = ({
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const nodeRef = useRef<HTMLDivElement>(null);
+  const [showColorPicker, setShowColorPicker] = useState(false);
 
   // Auto-resize textarea
   useLayoutEffect(() => {
@@ -95,21 +106,56 @@ const MindMapNode = ({
       style={{
         transform: `translate(${node.x}px, ${node.y}px)`,
         width: DEFAULT_WIDTH, // Fixed width for now, grows vertically
+        backgroundColor: node.color || (node.type === 'root' ? '#eff6ff' : '#ffffff'),
+        borderColor: node.color ? COLORS.find(c => c.value === node.color)?.border : undefined,
       }}
       className={clsx(
         "absolute flex flex-col p-3 rounded-lg shadow-sm border transition-shadow group select-none",
-        node.type === 'root' ? "bg-blue-50 border-blue-200" : "bg-white border-slate-200 hover:border-blue-300"
+        !node.color && (node.type === 'root' ? "bg-blue-50 border-blue-200" : "bg-white border-slate-200 hover:border-blue-300")
       )}
     >
       {/* Header / Drag Handle */}
       <div 
-        className="flex justify-between items-center mb-2 cursor-grab active:cursor-grabbing border-b border-transparent group-hover:border-slate-100 pb-1"
+        className="flex justify-between items-center mb-2 cursor-grab active:cursor-grabbing border-b border-transparent group-hover:border-slate-100 pb-1 relative"
         onMouseDown={(e) => onMouseDown(e, node.id)}
       >
          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
             {node.type === 'root' ? 'PROBLEM' : 'WHY?'}
          </span>
-         <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+         <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity items-center">
+            {/* Color Picker Trigger */}
+            <div className="relative">
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setShowColorPicker(!showColorPicker);
+                    }}
+                    className="p-1 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded"
+                    title="Change Color"
+                >
+                    <Palette className="w-3 h-3" />
+                </button>
+                
+                {/* Color Picker Popup */}
+                {showColorPicker && (
+                    <div className="absolute top-full right-0 mt-1 p-2 bg-white rounded-lg shadow-xl border border-gray-200 flex gap-1 z-50 min-w-[140px] flex-wrap" onMouseDown={e => e.stopPropagation()}>
+                        {COLORS.map((color) => (
+                            <button
+                                key={color.name}
+                                className="w-6 h-6 rounded-full border border-gray-200 hover:scale-110 transition-transform"
+                                style={{ backgroundColor: color.value }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onUpdate(node.id, { color: color.value });
+                                    setShowColorPicker(false);
+                                }}
+                                title={color.name}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
+
             {node.type !== 'root' && (
                 <button 
                     onClick={() => onDelete(node.id)}
