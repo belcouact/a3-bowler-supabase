@@ -438,20 +438,22 @@ export const MindMap = ({ initialNodes, onChange }: MindMapProps) => {
           </div>
 
           <div style={{ transform: `scale(${scale})`, transformOrigin: '0 0', width: '100%', height: '100%' }}>
-              <svg className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-visible">
+              <svg className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-visible z-0">
                 {renderConnections()}
               </svg>
 
-              {nodes.map(node => (
-                <MindMapNode
-                    key={node.id}
-                    node={node}
-                    onUpdate={updateNode}
-                    onAdd={addNode}
-                    onDelete={deleteNode}
-                    onMouseDown={handleMouseDown}
-                />
-              ))}
+              <div className="z-10 relative">
+                {nodes.map(node => (
+                    <MindMapNode
+                        key={node.id}
+                        node={node}
+                        onUpdate={updateNode}
+                        onAdd={addNode}
+                        onDelete={deleteNode}
+                        onMouseDown={handleMouseDown}
+                    />
+                ))}
+              </div>
           </div>
         </div>
     </div>
