@@ -1,14 +1,17 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, Plus, BarChart3, Target, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, FileText, Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case, Bowler } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
 import A3CaseModal from './A3CaseModal';
 import BowlerModal from './BowlerModal';
+import LoginModal from './LoginModal';
 
 const Layout = () => {
   const location = useLocation();
   const { bowlers, a3Cases, addBowler, updateBowler, addA3Case, updateA3Case } = useApp();
+  const { user, logout } = useAuth();
   
   // Identify active module based on path
   const isMetricBowler = location.pathname.includes('/metric-bowler');
@@ -19,6 +22,7 @@ const Layout = () => {
   const [editingA3Case, setEditingA3Case] = useState<A3Case | null>(null);
   const [isBowlerModalOpen, setIsBowlerModalOpen] = useState(false);
   const [editingBowler, setEditingBowler] = useState<Bowler | null>(null);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const handlePlusClick = () => {
     if (isMetricBowler) {
@@ -96,9 +100,30 @@ const Layout = () => {
         </div>
         
         <div className="flex items-center space-x-4">
-          <div className="h-8 w-8 rounded-full bg-gray-200 border border-gray-300 flex items-center justify-center text-gray-600 font-bold text-xs">
-            JD
-          </div>
+          {user ? (
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 text-sm">
+                <div className="h-8 w-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-700 font-bold text-xs">
+                  {user.username ? user.username.substring(0, 2).toUpperCase() : <UserIcon className="w-4 h-4" />}
+                </div>
+                <span className="hidden md:inline font-medium text-gray-700">{user.username}</span>
+              </div>
+              <button 
+                onClick={logout}
+                className="text-gray-500 hover:text-red-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+                title="Logout"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setIsLoginModalOpen(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              Login
+            </button>
+          )}
         </div>
       </header>
 
@@ -231,6 +256,11 @@ const Layout = () => {
         }}
         onSave={handleSaveBowler} 
         initialData={editingBowler || undefined}
+      />
+
+      <LoginModal 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)} 
       />
     </div>
   );
