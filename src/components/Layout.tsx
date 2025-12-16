@@ -175,10 +175,8 @@ const Layout = () => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto bg-gray-50 p-6">
-          <div className="max-w-6xl mx-auto">
-             <Outlet />
-          </div>
+        <main className="flex-1 overflow-auto bg-gray-50">
+           <Outlet />
         </main>
       </div>
 
