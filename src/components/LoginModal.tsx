@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { Mail, Lock, User, Users, Globe, Building2, Info } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import clsx from 'clsx';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -8,128 +9,349 @@ interface LoginModalProps {
 }
 
 const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [activeTab, setActiveTab] = useState<'login' | 'signup'>('signup');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [email, setEmail] = useState(''); // Assuming email is needed for signup, though prompt only mentioned username for fetching profile. Usually signup needs username/password at least.
+  
+  // Signup specific states
+  const [signupEmail, setSignupEmail] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState('Common user');
+  const [country, setCountry] = useState('');
+  const [plant, setPlant] = useState('');
+  const [team, setTeam] = useState('');
+  const [isPublicProfile, setIsPublicProfile] = useState(false);
+  
   const [error, setError] = useState('');
   const { login, signup } = useAuth();
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
     try {
-      if (isLogin) {
-        await login({ username, password });
-      } else {
-        await signup({ username, password, email });
-        // Switch to login or auto-login (logic inside context or here)
-        // If signup doesn't auto-login, we might want to tell user to login
-        if (!error) {
-           setIsLogin(true); // Switch to login view after successful signup
-           setError('Signup successful! Please login.');
-           return;
-        }
-      }
+      await login({ username, password });
       onClose();
     } catch (err: any) {
-      // Alert user if strictly requested, though UI error message is usually better.
-      // The user prompt said: "alert user if account not exist, or password incorrect."
-      // Since we also display it in the red box, I'll add window.alert for explicit compliance if that's what "alert" implies,
-      // but "alert user" can also mean "show an alert message in UI".
-      // Given the previous error display was just "Login failed", showing the specific message "Invalid credentials" in the UI is a huge improvement.
-      // However, to be safe with "alert user", I will stick to the UI message which is the standard "alert" in web apps unless window.alert is explicitly asked.
-      // But I will make sure the message is clear.
-      
-      const message = err.message || 'An error occurred';
-      setError(message);
+      setError(err.message || 'An error occurred');
     }
   };
 
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (signupPassword !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    try {
+      // Assuming email is used as username for now, or we can add a username field if strictly required
+      // But the design only shows Email Address.
+      // We'll send email as username or just send email if backend supports it.
+      // Based on previous code, username was required.
+      // Let's use email as username for now to match the design.
+      
+      const payload = {
+        username: signupEmail.split('@')[0], // Fallback username from email
+        email: signupEmail,
+        password: signupPassword,
+        role,
+        country,
+        plant,
+        team,
+        isPublicProfile
+      };
+
+      await signup(payload);
+      
+      // Auto switch to login or show success
+      setActiveTab('login');
+      setUsername(payload.username);
+      setError('Signup successful! Please login.');
+      
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+    }
+  };
+
+  const TabButton = ({ id, label }: { id: 'login' | 'signup', label: string }) => (
+    <button
+      onClick={() => {
+        setActiveTab(id);
+        setError('');
+      }}
+      className={clsx(
+        "flex-1 py-4 text-sm font-medium transition-colors border-b-2",
+        activeTab === id
+          ? "border-blue-600 text-blue-600"
+          : "border-transparent text-gray-500 hover:text-gray-700"
+      )}
+    >
+      {label}
+    </button>
+  );
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-md p-6 relative shadow-xl">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-        >
-          <X className="w-5 h-5" />
-        </button>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className={clsx(
+        "bg-white rounded-lg w-full shadow-xl overflow-hidden transition-all",
+        activeTab === 'signup' ? "max-w-4xl" : "max-w-md"
+      )}>
+        {/* Tabs */}
+        <div className="flex border-b border-gray-200">
+          <TabButton id="login" label="Login" />
+          <TabButton id="signup" label="Create Account" />
+        </div>
 
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">
-          {isLogin ? 'Login' : 'Sign Up'}
-        </h2>
-
-        {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4 text-sm">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Username
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          {!isLogin && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                // Making email optional if not strictly required by backend, but usually good practice
-              />
+        <div className="p-8">
+          {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-md mb-6 text-sm">
+              {error}
             </div>
           )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
+          {activeTab === 'login' ? (
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Username
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <User className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter username"
+                    required
+                  />
+                </div>
+              </div>
 
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors font-medium"
-          >
-            {isLogin ? 'Login' : 'Sign Up'}
-          </button>
-        </form>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter password"
+                    required
+                  />
+                </div>
+              </div>
 
-        <div className="mt-4 text-center text-sm text-gray-600">
-          {isLogin ? "Don't have an account? " : "Already have an account? "}
-          <button
-            onClick={() => {
-                setIsLogin(!isLogin);
-                setError('');
-            }}
-            className="text-blue-600 hover:underline font-medium"
-          >
-            {isLogin ? 'Sign up' : 'Login'}
-          </button>
+              <div className="flex space-x-3 pt-2">
+                 <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-md hover:bg-gray-200 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-blue-600 text-white py-2.5 rounded-md hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Login
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleSignup}>
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Join us</h2>
+                <p className="text-gray-500 mt-1">Create a new User in Cloudflare DB.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Left Column - Account Details */}
+                <div className="space-y-6">
+                  <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Account Details</h3>
+                  
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Mail className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="email"
+                        value={signupEmail}
+                        onChange={(e) => setSignupEmail(e.target.value)}
+                        className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="name@example.com"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Lock className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="password"
+                        value={signupPassword}
+                        onChange={(e) => setSignupPassword(e.target.value)}
+                        className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter password"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      Confirm Password
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Lock className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Confirm password"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column - Profile Information */}
+                <div className="space-y-6">
+                  <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Profile Information</h3>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      Role
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <User className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        value={role}
+                        onChange={(e) => setRole(e.target.value)}
+                        className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Role"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        Country
+                      </label>
+                      <div className="relative">
+                         {/* Using simple select for now */}
+                        <select
+                          value={country}
+                          onChange={(e) => setCountry(e.target.value)}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                        >
+                          <option value="">Select Country</option>
+                          <option value="USA">USA</option>
+                          <option value="China">China</option>
+                          <option value="Germany">Germany</option>
+                          <option value="Mexico">Mexico</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        Plant
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={plant}
+                          onChange={(e) => setPlant(e.target.value)}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                        >
+                          <option value="">Select Plant</option>
+                          <option value="Plant A">Plant A</option>
+                          <option value="Plant B">Plant B</option>
+                          <option value="Plant C">Plant C</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      Team
+                    </label>
+                    <div className="relative">
+                       <select
+                          value={team}
+                          onChange={(e) => setTeam(e.target.value)}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                        >
+                          <option value="">Select Team</option>
+                          <option value="Operations">Operations</option>
+                          <option value="Safety">Safety</option>
+                          <option value="Quality">Quality</option>
+                          <option value="Logistics">Logistics</option>
+                        </select>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <label className="flex items-center space-x-3 p-3 border border-gray-200 rounded-md bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={isPublicProfile}
+                        onChange={(e) => setIsPublicProfile(e.target.checked)}
+                        className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <span className="text-gray-700 font-medium flex-1">Public Profile</span>
+                      <Info className="h-4 w-4 text-gray-400" />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex space-x-4 mt-8">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-md hover:bg-gray-200 transition-colors font-medium text-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition-colors font-medium text-lg"
+                >
+                  Sign Up
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       </div>
     </div>

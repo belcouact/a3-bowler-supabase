@@ -1,7 +1,11 @@
 export interface User {
   username: string;
+  email?: string;
   role?: string;
+  country?: string;
+  plant?: string;
   team?: string;
+  isPublicProfile?: boolean;
   [key: string]: any;
 }
 
