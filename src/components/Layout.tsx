@@ -1,12 +1,11 @@
-import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { LayoutDashboard, FileText, Plus, ChevronRight, BarChart3, Target } from 'lucide-react';
+import { Link, Outlet, useLocation } from 'react-router-dom';
+import { LayoutDashboard, FileText, Plus, BarChart3, Target } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp } from '../context/AppContext';
 import { useState } from 'react';
 
 const Layout = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const { bowlers, a3Cases, addBowler, addA3Case } = useApp();
   
   // Identify active module based on path
