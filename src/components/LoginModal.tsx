@@ -103,7 +103,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className={clsx(
         "bg-white rounded-lg w-full shadow-xl overflow-hidden transition-all",
-        activeTab === 'signup' ? "max-w-4xl" : "max-w-md"
+        activeTab === 'signup' ? "max-w-2xl" : "max-w-md"
       )}>
         {/* Tabs */}
         <div className="flex border-b border-gray-200">
@@ -111,14 +111,14 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
           <TabButton id="signup" label="Create Account" />
         </div>
 
-        <div className="p-8">
+        <div className="p-6">
           {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-md mb-6 text-sm">
+            <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4 text-sm">
               {error}
             </div>
           )}
           {successMessage && (
-            <div className="bg-green-50 text-green-600 p-3 rounded-md mb-6 text-sm">
+            <div className="bg-green-50 text-green-600 p-3 rounded-md mb-4 text-sm">
               {successMessage}
             </div>
           )}
@@ -182,14 +182,14 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
             </form>
           ) : (
             <form onSubmit={handleSignup}>
-              <div className="mb-6">
+              <div className="mb-4">
                 <h2 className="text-2xl font-bold text-gray-900">Join us</h2>
                 <p className="text-gray-500 mt-1">Create a new User in Cloudflare DB.</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Left Column - Account Details */}
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Account Details</h3>
                   
                   <div>
@@ -251,7 +251,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                 </div>
 
                 {/* Right Column - Profile Information */}
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Profile Information</h3>
 
                   <div>
@@ -345,18 +345,18 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                 </div>
               </div>
 
-              <div className="flex space-x-4 mt-8">
+              <div className="flex space-x-3 mt-6">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-md hover:bg-gray-200 transition-colors font-medium text-lg"
+                  className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-md hover:bg-gray-200 transition-colors font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="flex-1 bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition-colors font-medium text-lg disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center"
+                  className="flex-1 bg-blue-600 text-white py-2.5 rounded-md hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center"
                 >
                   {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign Up'}
                 </button>
