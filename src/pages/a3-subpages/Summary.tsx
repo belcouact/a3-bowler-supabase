@@ -36,10 +36,10 @@ const Summary = () => {
             <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">3. Root Cause Analysis (5 Whys)</h4>
             <div className="text-sm text-gray-600">
               <ul className="list-decimal list-inside space-y-1">
-                <li>Machine stopped suddenly. (Why?) -> Fuse blew.</li>
-                <li>Fuse blew. (Why?) -> Overloaded motor.</li>
-                <li>Overloaded motor. (Why?) -> Bearing seized.</li>
-                <li>Bearing seized. (Why?) -> Lack of lubrication.</li>
+                <li>Machine stopped suddenly. (Why?) &rarr; Fuse blew.</li>
+                <li>Fuse blew. (Why?) &rarr; Overloaded motor.</li>
+                <li>Overloaded motor. (Why?) &rarr; Bearing seized.</li>
+                <li>Bearing seized. (Why?) &rarr; Lack of lubrication.</li>
                 <li><span className="font-medium text-red-600">Root Cause:</span> Lubrication pump failed due to worn seal.</li>
               </ul>
             </div>
