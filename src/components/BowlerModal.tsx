@@ -7,9 +7,10 @@ interface BowlerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: Omit<Bowler, 'id'>) => void;
+  initialData?: Bowler;
 }
 
-const BowlerModal = ({ isOpen, onClose, onSave }: BowlerModalProps) => {
+const BowlerModal = ({ isOpen, onClose, onSave, initialData }: BowlerModalProps) => {
   const [activeTab, setActiveTab] = useState<'General' | 'Metrics'>('General');
   
   // General State
@@ -27,19 +28,31 @@ const BowlerModal = ({ isOpen, onClose, onSave }: BowlerModalProps) => {
 
   useEffect(() => {
     if (isOpen) {
-      // Reset form
       setActiveTab('General');
-      setGeneralData({
-        name: '',
-        description: '',
-        objective: '',
-        champion: '',
-        commitment: '',
-        tag: '',
-      });
-      setMetrics([]);
+      if (initialData) {
+        setGeneralData({
+          name: initialData.name,
+          description: initialData.description || '',
+          objective: initialData.objective || '',
+          champion: initialData.champion || '',
+          commitment: initialData.commitment || '',
+          tag: initialData.tag || '',
+        });
+        setMetrics(initialData.metrics || []);
+      } else {
+        // Reset form
+        setGeneralData({
+          name: '',
+          description: '',
+          objective: '',
+          champion: '',
+          commitment: '',
+          tag: '',
+        });
+        setMetrics([]);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, initialData]);
 
   if (!isOpen) return null;
 
@@ -89,7 +102,7 @@ const BowlerModal = ({ isOpen, onClose, onSave }: BowlerModalProps) => {
           <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <div className="flex justify-between items-start mb-4">
               <h3 className="text-lg leading-6 font-medium text-gray-900">
-                New Metric Bowler
+                {initialData ? 'Edit Metric Bowler' : 'New Metric Bowler'}
               </h3>
               <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
                 <X className="w-5 h-5" />

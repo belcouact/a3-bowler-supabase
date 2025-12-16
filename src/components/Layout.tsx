@@ -8,7 +8,7 @@ import BowlerModal from './BowlerModal';
 
 const Layout = () => {
   const location = useLocation();
-  const { bowlers, a3Cases, addBowler, addA3Case } = useApp();
+  const { bowlers, a3Cases, addBowler, updateBowler, addA3Case } = useApp();
   
   // Identify active module based on path
   const isMetricBowler = location.pathname.includes('/metric-bowler');
@@ -17,9 +17,11 @@ const Layout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isA3ModalOpen, setIsA3ModalOpen] = useState(false);
   const [isBowlerModalOpen, setIsBowlerModalOpen] = useState(false);
+  const [editingBowler, setEditingBowler] = useState<Bowler | null>(null);
 
   const handlePlusClick = () => {
     if (isMetricBowler) {
+        setEditingBowler(null);
         setIsBowlerModalOpen(true);
     } else {
         setIsA3ModalOpen(true);
@@ -31,7 +33,15 @@ const Layout = () => {
   };
 
   const handleSaveBowler = (data: Omit<Bowler, 'id'>) => {
-      addBowler(data);
+      if (editingBowler) {
+        updateBowler({
+            ...editingBowler,
+            ...data
+        });
+      } else {
+        addBowler(data);
+      }
+      setEditingBowler(null);
   };
 
   const navItems = [
@@ -130,6 +140,11 @@ const Layout = () => {
               <Link
                 key={bowler.id}
                 to={`/metric-bowler/${bowler.id}`}
+                onDoubleClick={(e) => {
+                    e.preventDefault();
+                    setEditingBowler(bowler);
+                    setIsBowlerModalOpen(true);
+                }}
                 className={clsx(
                   "group flex items-center py-2.5 text-sm font-medium rounded-lg transition-all",
                   isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
@@ -188,8 +203,12 @@ const Layout = () => {
 
       <BowlerModal 
         isOpen={isBowlerModalOpen} 
-        onClose={() => setIsBowlerModalOpen(false)} 
+        onClose={() => {
+            setIsBowlerModalOpen(false);
+            setEditingBowler(null);
+        }}
         onSave={handleSaveBowler} 
+        initialData={editingBowler || undefined}
       />
     </div>
   );
