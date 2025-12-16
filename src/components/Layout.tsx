@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon } from 'lucide-react';
+import { LayoutDashboard, FileText, Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon, Save } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case, Bowler } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
@@ -7,6 +7,7 @@ import { useState } from 'react';
 import A3CaseModal from './A3CaseModal';
 import BowlerModal from './BowlerModal';
 import LoginModal from './LoginModal';
+import { dataService } from '../services/dataService';
 
 const Layout = () => {
   const location = useLocation();
@@ -23,6 +24,20 @@ const Layout = () => {
   const [isBowlerModalOpen, setIsBowlerModalOpen] = useState(false);
   const [editingBowler, setEditingBowler] = useState<Bowler | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSaveData = async () => {
+    setIsSaving(true);
+    try {
+      await dataService.saveData(bowlers, a3Cases);
+      alert('Data saved successfully!');
+    } catch (error) {
+      console.error('Save error:', error);
+      alert('Failed to save data. Please check if the backend is running.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handlePlusClick = () => {
     if (isMetricBowler) {
@@ -100,6 +115,15 @@ const Layout = () => {
         </div>
         
         <div className="flex items-center space-x-4">
+          <button
+            onClick={handleSaveData}
+            disabled={isSaving}
+            className="flex items-center px-3 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
+          >
+            <Save className="w-4 h-4 mr-2" />
+            {isSaving ? 'Saving...' : 'Save Data'}
+          </button>
+
           {user ? (
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-2 text-sm">

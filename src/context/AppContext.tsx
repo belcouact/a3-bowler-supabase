@@ -67,7 +67,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const addBowler = (data: Omit<Bowler, 'id'>) => {
     const newBowler = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       ...data,
     };
     setBowlers([...bowlers, newBowler]);
@@ -79,7 +79,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const addA3Case = (caseData: Omit<A3Case, 'id'>) => {
     const newCase = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       ...caseData
     };
     setA3Cases([...a3Cases, newCase]);

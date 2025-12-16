@@ -1,0 +1,8 @@
+name = "kv-bowler-data-worker"
+main = "index.ts"
+compatibility_date = "2023-10-02"
+
+[[kv_namespaces]]
+binding = "BOWLER_DATA"
+id = "16589ade07c44137ac0d25ff0d6ef12f"
+preview_id = "16589ade07c44137ac0d25ff0d6ef12f" # Assuming same for now or user can update
