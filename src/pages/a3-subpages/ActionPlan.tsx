@@ -466,7 +466,6 @@ const ActionPlan = () => {
         </div>
 
         <div className="flex items-center space-x-3">
-             {/* Zoom Controls */}
              <div className="flex items-center bg-gray-100 rounded-md p-1">
                 <button onClick={() => setZoomLevel(Math.max(0.5, zoomLevel - 0.25))} className="p-1 hover:bg-white rounded shadow-sm">
                     <ZoomOut className="w-4 h-4 text-gray-600" />
@@ -477,25 +476,22 @@ const ActionPlan = () => {
                 </button>
              </div>
 
-             <div className="h-6 w-px bg-gray-300 mx-2"></div>
-
-             <button
-              onClick={handleAddTask}
-              className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add
-            </button>
         </div>
       </div>
 
       {/* Gantt Chart Container */}
       <div className="flex-1 overflow-auto relative select-none">
         <div className="flex min-w-max">
-            {/* Left Sidebar: Task Names */}
             <div className="sticky left-0 z-20 bg-white border-r border-gray-200 shadow-sm w-64 flex-shrink-0">
-                <div className="h-[60px] border-b border-gray-200 bg-gray-50 flex items-center px-4 font-semibold text-xs text-gray-500 uppercase tracking-wider">
-                    Task Details
+                <div className="h-[60px] border-b border-gray-200 bg-gray-50 flex items-center justify-between px-4 font-semibold text-xs text-gray-500 uppercase tracking-wider">
+                    <span>Task Details</span>
+                    <button
+                      onClick={handleAddTask}
+                      className="p-1.5 rounded-full bg-blue-600 text-white hover:bg-blue-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500"
+                      title="Add Task"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
                 </div>
                 {tasks.map((task) => (
                     <div 
