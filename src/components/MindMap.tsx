@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect, MouseEvent } from 'react';
-import { Plus, Trash2, GripHorizontal, MousePointer2 } from 'lucide-react';
+import { useState, useRef, MouseEvent } from 'react';
+import { Plus, Trash2, MousePointer2 } from 'lucide-react';
 import clsx from 'clsx';
 
 interface Node {

@@ -2,7 +2,6 @@ import { useState } from 'react';
 
 const ProblemStatement = () => {
   const [statement, setStatement] = useState('');
-  const [background, setBackground] = useState('');
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -22,20 +21,6 @@ const ProblemStatement = () => {
               placeholder="Describe the problem..."
               value={statement}
               onChange={(e) => setStatement(e.target.value)}
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="background" className="block text-sm font-medium text-gray-700 mb-1">
-              Background / Context
-            </label>
-            <textarea
-              id="background"
-              rows={4}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border"
-              placeholder="Why is this important now?"
-              value={background}
-              onChange={(e) => setBackground(e.target.value)}
             />
           </div>
         </div>
