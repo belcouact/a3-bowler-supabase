@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Eye, EyeOff } from 'lucide-react';
+import { Plus, ZoomIn, ZoomOut } from 'lucide-react';
 import clsx from 'clsx';
-import { addDays, formatDate, getMonthName, isWeekend } from '../../utils/dateUtils';
+import { addDays, formatDate, isWeekend } from '../../utils/dateUtils';
 import ActionModal, { ActionTask } from '../../components/ActionModal';
 
 const BASE_CELL_WIDTH = 40;
@@ -29,16 +29,17 @@ const ActionPlan = () => {
     },
   ]);
 
-  const [viewDate, setViewDate] = useState(new Date());
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
+    start: formatDate(new Date()),
+    end: formatDate(addDays(new Date(), 180)) // ~6 months
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<ActionTask | null>(null);
   const [newStartDate, setNewStartDate] = useState<string | undefined>(undefined);
   
   // View Options
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [showWeekends, setShowWeekends] = useState(false);
-  const [viewMode, setViewMode] = useState<'week' | 'month'>('month');
-
+  
   // Dragging State
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragType, setDragType] = useState<'move' | 'resize-left' | 'resize-right' | null>(null);
@@ -49,44 +50,27 @@ const ActionPlan = () => {
   const cellWidth = BASE_CELL_WIDTH * zoomLevel;
 
   const visibleDates = useMemo(() => {
-    let rangeDays = viewMode === 'month' ? 45 : 21; // Buffer
-    let start = new Date(viewDate);
+    const start = new Date(dateRange.start);
+    const end = new Date(dateRange.end);
     
-    // Align start based on view mode
-    if (viewMode === 'month') {
-        start.setDate(1); // 1st of month
-    } else {
-        // Start of current week (Sunday)
-        const day = start.getDay();
-        start = addDays(start, -day);
+    // Ensure valid range
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) {
+        return [];
     }
 
     const dates = [];
     let current = start;
-    // Generate enough dates to fill range, respecting filter
-    let count = 0;
-    // Safety break to prevent infinite loops if logic fails, though unlikely
-    while (count < rangeDays) {
-        if (showWeekends || !isWeekend(current)) {
+    
+    while (current <= end) {
+        if (!isWeekend(current)) {
             dates.push(new Date(current));
         }
         current = addDays(current, 1);
-        // If we are just skipping weekends, we keep adding days until we have enough *visible* columns
-        // But usually we want a fixed *date range*.
-        // Let's stick to a fixed date range scan, but filter.
-        // If we want to show "the month", we need all days in the month.
-        count++;
     }
     
-    // Re-do: Generate fixed calendar range, then filter
-    // This ensures "Month View" shows the actual month, not just "45 working days"
-    const fixedRange = viewMode === 'month' ? 60 : 30;
-    const allDates = Array.from({ length: fixedRange }, (_, i) => addDays(start, i));
-    
-    if (showWeekends) return allDates;
-    return allDates.filter(d => !isWeekend(d));
+    return dates;
 
-  }, [viewDate, viewMode, showWeekends]);
+  }, [dateRange]);
 
   // Helper to find visual start/end for a task
   // If a task starts on a hidden day (e.g. Sat), we map it to the next visible day for start?
@@ -270,63 +254,26 @@ const ActionPlan = () => {
       {/* Header Controls */}
       <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-white z-20 relative">
         <div className="flex items-center space-x-4">
-            {/* View Scope Toggle */}
-            <div className="flex bg-gray-100 rounded-md p-1">
-                <button
-                    onClick={() => setViewMode('month')}
-                    className={clsx("px-3 py-1 text-xs font-medium rounded transition-all", viewMode === 'month' ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700")}
-                >
-                    Month
-                </button>
-                <button
-                    onClick={() => setViewMode('week')}
-                    className={clsx("px-3 py-1 text-xs font-medium rounded transition-all", viewMode === 'week' ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700")}
-                >
-                    Week
-                </button>
-            </div>
-
-            {/* Date Nav */}
-            <div className="flex items-center space-x-2 bg-gray-100 rounded-md p-1">
-                <button 
-                    onClick={() => {
-                        if (viewMode === 'month') setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() - 1)));
-                        else setViewDate(addDays(viewDate, -7));
-                    }}
-                    className="p-1 hover:bg-white rounded shadow-sm transition-all"
-                >
-                    <ChevronLeft className="w-4 h-4 text-gray-600" />
-                </button>
-                <span className="text-sm font-medium w-32 text-center">
-                    {viewMode === 'month' ? (
-                        `${getMonthName(viewDate.getMonth())} ${viewDate.getFullYear()}`
-                    ) : (
-                        `Week of ${formatDate(viewDate)}`
-                    )}
-                </span>
-                <button 
-                    onClick={() => {
-                        if (viewMode === 'month') setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() + 1)));
-                        else setViewDate(addDays(viewDate, 7));
-                    }}
-                    className="p-1 hover:bg-white rounded shadow-sm transition-all"
-                >
-                    <ChevronRight className="w-4 h-4 text-gray-600" />
-                </button>
+            {/* Date Range Picker */}
+            <div className="flex items-center space-x-2 bg-gray-100 rounded-md p-2">
+                <span className="text-xs font-semibold text-gray-500 uppercase">View Range:</span>
+                <input 
+                    type="date" 
+                    value={dateRange.start}
+                    onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                    className="text-sm bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                <span className="text-gray-400">-</span>
+                <input 
+                    type="date" 
+                    value={dateRange.end}
+                    onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                    className="text-sm bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
             </div>
         </div>
 
         <div className="flex items-center space-x-3">
-             {/* Weekend Toggle */}
-             <button
-                onClick={() => setShowWeekends(!showWeekends)}
-                className={clsx("p-1.5 rounded-md border transition-colors flex items-center space-x-1", showWeekends ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white border-gray-200 text-gray-500")}
-                title={showWeekends ? "Hide Weekends" : "Show Weekends"}
-             >
-                {showWeekends ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                <span className="text-xs font-medium">{showWeekends ? "Weekends On" : "Weekends Off"}</span>
-             </button>
-
              {/* Zoom Controls */}
              <div className="flex items-center bg-gray-100 rounded-md p-1">
                 <button onClick={() => setZoomLevel(Math.max(0.5, zoomLevel - 0.25))} className="p-1 hover:bg-white rounded shadow-sm">
