@@ -122,6 +122,7 @@ const MindMapNode = ({
             {node.type === 'root' ? 'PROBLEM' : 'WHY?'}
          </span>
          <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity items-center">
+            {/* Color Picker Trigger */}
             <div className="relative">
                 <button
                     onClick={(e) => {
@@ -163,6 +164,13 @@ const MindMapNode = ({
                     <Trash2 className="w-3 h-3" />
                 </button>
             )}
+            <button 
+                onClick={() => onAdd(node.id, 'right')}
+                className="p-1 hover:bg-blue-50 text-slate-400 hover:text-blue-500 rounded"
+                title="Add next Why (Right)"
+            >
+                <Plus className="w-3 h-3" />
+            </button>
          </div>
       </div>
 
@@ -183,6 +191,7 @@ const MindMapNode = ({
         onMouseDown={(e) => e.stopPropagation()} // Allow text selection
       />
 
+      {/* Resize Handle */}
       <div 
         className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize flex items-center justify-center opacity-0 group-hover:opacity-100 z-20"
         onMouseDown={handleResizeStart}
@@ -191,18 +200,11 @@ const MindMapNode = ({
          <div className="w-2 h-2 border-r-2 border-b-2 border-slate-300"></div>
       </div>
 
+      {/* Add Below Button */}
       <button 
         className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-white border border-slate-200 rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-50 text-slate-400 hover:text-blue-500 z-10"
         onClick={() => onAdd(node.id, 'bottom')}
         title="Add Why below"
-      >
-        <Plus className="w-3 h-3" />
-      </button>
-
-      <button
-        className="absolute top-2 -right-3 bg-white border border-slate-200 rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-50 text-slate-400 hover:text-blue-500 z-10"
-        onClick={() => onAdd(node.id, 'right')}
-        title="Add next Why (Right)"
       >
         <Plus className="w-3 h-3" />
       </button>
