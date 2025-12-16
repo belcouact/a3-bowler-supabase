@@ -99,7 +99,9 @@ const MetricBowler = () => {
               <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 Scope
               </th>
-              {/* Placeholder for monthly data columns if needed later */}
+              <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Type
+              </th>
               {displayMonths.map((month) => (
                 <th key={month} scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider text-gray-300">
                   {month}
@@ -110,7 +112,7 @@ const MetricBowler = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {metrics.length === 0 ? (
                 <tr>
-                    <td colSpan={3 + displayMonths.length} className="px-6 py-10 text-center text-gray-500 italic">
+                    <td colSpan={4 + displayMonths.length} className="px-6 py-10 text-center text-gray-500 italic">
                         No metrics added yet. Use the + button to add metrics.
                     </td>
                 </tr>
@@ -126,7 +128,7 @@ const MetricBowler = () => {
                             {metric.definition && (
                                 <div className="group relative">
                                     <Info className="w-3.5 h-3.5 text-gray-400 hover:text-blue-500 cursor-help" />
-                                    <div className="absolute left-full top-0 ml-2 w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                                    <div className="absolute left-full top-0 ml-2 w-64 p-3 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 whitespace-normal break-words">
                                         {metric.definition}
                                     </div>
                                 </div>
@@ -148,10 +150,13 @@ const MetricBowler = () => {
                       {metric.scope}
                     </td>
                     
+                    <td className="px-6 py-2 whitespace-nowrap text-xs font-medium text-gray-500 bg-gray-50/30 border-b border-gray-100 h-8">
+                      Target
+                    </td>
+
                     {displayMonths.map((month) => (
                         <td key={`${month}-target`} className="px-3 py-2 whitespace-nowrap text-xs text-gray-500 bg-gray-50/30 border-b border-gray-100 h-8">
-                            <div className="flex justify-between items-center">
-                                <span className="text-[10px] text-gray-400 uppercase mr-2">T:</span>
+                            <div className="flex justify-center items-center">
                                 <span className="font-medium text-gray-700">{metric.monthlyData?.[month]?.target || '-'}</span>
                             </div>
                         </td>
@@ -160,10 +165,12 @@ const MetricBowler = () => {
 
                   {/* Row 2: Actual Data */}
                   <tr key={`${metric.id}-row2`} className="hover:bg-gray-50 transition-colors">
+                     <td className="px-6 py-2 whitespace-nowrap text-xs font-medium text-gray-500 h-8">
+                        Actual
+                     </td>
                      {displayMonths.map((month) => (
                         <td key={`${month}-actual`} className="px-3 py-2 whitespace-nowrap text-xs text-gray-500 h-8">
-                             <div className="flex justify-between items-center">
-                                <span className="text-[10px] text-gray-400 uppercase mr-2">A:</span>
+                             <div className="flex justify-center items-center">
                                 <span className={`font-semibold ${
                                   !metric.monthlyData?.[month]?.actual ? 'text-gray-400' : 
                                   'text-gray-900'
