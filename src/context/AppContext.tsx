@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { dataService } from '../services/dataService';
 import { useAuth } from './AuthContext';
+import { generateShortId } from '../utils/idUtils';
 
 // Types
 export interface MetricData {
@@ -119,7 +120,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const addBowler = (data: Omit<Bowler, 'id'>) => {
     const newBowler = {
-      id: crypto.randomUUID(),
+      id: generateShortId(),
       ...data,
     };
     const newBowlers = [...bowlers, newBowler];
@@ -135,7 +136,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const addA3Case = (caseData: Omit<A3Case, 'id'>) => {
     const newCase = {
-      id: crypto.randomUUID(),
+      id: generateShortId(),
       ...caseData
     };
     const newA3Cases = [...a3Cases, newCase];

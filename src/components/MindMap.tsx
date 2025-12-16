@@ -291,7 +291,7 @@ export const MindMap = ({ initialNodes, onChange }: MindMapProps) => {
     if (!parent) return;
 
     const newNode: Node = {
-      id: Date.now().toString(),
+      id: generateShortId(),
       text: 'Why?',
       x: 0,
       y: 0,

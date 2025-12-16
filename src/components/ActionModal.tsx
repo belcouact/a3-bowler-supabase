@@ -42,7 +42,7 @@ const ActionModal = ({ isOpen, onClose, onSave, onDelete, initialData, defaultSt
         const end = new Date(new Date(start).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // +7 days
         
         setFormData({
-          id: Date.now().toString(),
+          id: generateShortId(),
           name: '',
           owner: '',
           startDate: start,

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { Bowler, Metric } from '../context/AppContext';
 import clsx from 'clsx';
+import { generateShortId } from '../utils/idUtils';
 
 interface BowlerModalProps {
   isOpen: boolean;
@@ -59,7 +60,7 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
 
   const handleAddMetric = () => {
     const newMetric: Metric = {
-      id: Date.now().toString(),
+      id: generateShortId(),
       name: '',
       definition: '',
       owner: '',
