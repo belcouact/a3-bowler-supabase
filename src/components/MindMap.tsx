@@ -18,16 +18,14 @@ const DEFAULT_HEIGHT = 80;
 
 const MindMapNode = ({ 
   node, 
-  scale,
   onUpdate, 
   onAdd, 
   onDelete, 
   onMouseDown 
 }: { 
   node: Node, 
-  scale: number,
   onUpdate: (id: string, updates: Partial<Node>) => void,
-  onAdd: (id: string) => void,
+  onAdd: (id: string, direction: 'right' | 'bottom') => void,
   onDelete: (id: string) => void,
   onMouseDown: (e: ReactMouseEvent, id: string) => void
 }) => {
@@ -56,7 +54,7 @@ const MindMapNode = ({
              // Use a debounce or check if the update is needed.
              // Actually, for line drawing we need the full box size (border-box).
              // entry.borderBoxSize is available in newer browsers, or use getBoundingClientRect
-             const rect = entry.target.getBoundingClientRect();
+             
              // We need unscaled dimensions?
              // getBoundingClientRect returns scaled dimensions if transform is applied.
              // But the node itself doesn't have scale transform, the parent container does.
@@ -122,9 +120,9 @@ const MindMapNode = ({
                 </button>
             )}
             <button 
-                onClick={() => onAdd(node.id)}
+                onClick={() => onAdd(node.id, 'right')}
                 className="p-1 hover:bg-blue-50 text-slate-400 hover:text-blue-500 rounded"
-                title="Add next Why"
+                title="Add next Why (Right)"
             >
                 <Plus className="w-3 h-3" />
             </button>
@@ -140,6 +138,15 @@ const MindMapNode = ({
         placeholder={node.type === 'root' ? "Describe the problem..." : "Ask why..."}
         onMouseDown={(e) => e.stopPropagation()} // Allow text selection
       />
+
+      {/* Add Below Button */}
+      <button 
+        className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-white border border-slate-200 rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-50 text-slate-400 hover:text-blue-500 z-10"
+        onClick={() => onAdd(node.id, 'bottom')}
+        title="Add Why below"
+      >
+        <Plus className="w-3 h-3" />
+      </button>
     </div>
   );
 };
@@ -194,25 +201,49 @@ export const MindMap = () => {
     setDraggingId(null);
   };
 
-  const addNode = (parentId: string) => {
+  const addNode = (parentId: string, direction: 'right' | 'bottom') => {
     const parent = nodes.find(n => n.id === parentId);
     if (!parent) return;
 
     const newNode: Node = {
       id: Date.now().toString(),
       text: 'Why?',
-      x: parent.x + (parent.width || DEFAULT_WIDTH) + 50,
-      y: parent.y,
+      x: 0,
+      y: 0,
       width: DEFAULT_WIDTH,
       height: DEFAULT_HEIGHT,
       parentId,
       type: 'child'
     };
     
-    // Auto-adjust y if there are multiple children
-    const siblings = nodes.filter(n => n.parentId === parentId);
-    if (siblings.length > 0) {
-        newNode.y = parent.y + (siblings.length * 100);
+    if (direction === 'bottom') {
+        newNode.x = parent.x;
+        newNode.y = parent.y + (parent.height || DEFAULT_HEIGHT) + 50;
+        
+        // Adjust if siblings exist below
+        const bottomSiblings = nodes.filter(n => 
+            n.parentId === parentId && 
+            n.y > parent.y + (parent.height || DEFAULT_HEIGHT)/2
+        );
+        
+        if (bottomSiblings.length > 0) {
+            const maxX = Math.max(...bottomSiblings.map(n => n.x));
+            newNode.x = maxX + (DEFAULT_WIDTH + 20);
+        }
+    } else {
+        // Default to right
+        newNode.x = parent.x + (parent.width || DEFAULT_WIDTH) + 50;
+        newNode.y = parent.y;
+
+        // Auto-adjust y if there are multiple children to the right
+        const rightSiblings = nodes.filter(n => 
+            n.parentId === parentId && 
+            n.x > parent.x + (parent.width || DEFAULT_WIDTH)/2
+        );
+        if (rightSiblings.length > 0) {
+            const maxY = Math.max(...rightSiblings.map(n => n.y));
+            newNode.y = maxY + (DEFAULT_HEIGHT + 20);
+        }
     }
 
     setNodes([...nodes, newNode]);
@@ -242,15 +273,38 @@ export const MindMap = () => {
       const parent = nodes.find(n => n.id === node.parentId);
       if (!parent) return null;
 
-      const startX = parent.x + (parent.width || DEFAULT_WIDTH);
-      const startY = parent.y + (parent.height || DEFAULT_HEIGHT) / 2;
-      const endX = node.x;
-      const endY = node.y + (node.height || DEFAULT_HEIGHT) / 2;
+      const parentWidth = parent.width || DEFAULT_WIDTH;
+      const parentHeight = parent.height || DEFAULT_HEIGHT;
+      const nodeWidth = node.width || DEFAULT_WIDTH;
+      const nodeHeight = node.height || DEFAULT_HEIGHT;
 
-      const controlPoint1X = startX + (endX - startX) / 2;
-      const controlPoint1Y = startY;
-      const controlPoint2X = endX - (endX - startX) / 2;
-      const controlPoint2Y = endY;
+      let startX, startY, endX, endY, controlPoint1X, controlPoint1Y, controlPoint2X, controlPoint2Y;
+
+      // Determine if vertical connection (node is below parent)
+      // Use a tolerance of 10px to avoid flickering if exactly on line
+      if (node.y >= parent.y + parentHeight - 10) {
+          // Vertical: Bottom Center -> Top Center
+          startX = parent.x + parentWidth / 2;
+          startY = parent.y + parentHeight;
+          endX = node.x + nodeWidth / 2;
+          endY = node.y;
+
+          controlPoint1X = startX;
+          controlPoint1Y = startY + (endY - startY) / 2;
+          controlPoint2X = endX;
+          controlPoint2Y = endY - (endY - startY) / 2;
+      } else {
+          // Horizontal: Right Center -> Left Center
+          startX = parent.x + parentWidth;
+          startY = parent.y + parentHeight / 2;
+          endX = node.x;
+          endY = node.y + nodeHeight / 2;
+
+          controlPoint1X = startX + (endX - startX) / 2;
+          controlPoint1Y = startY;
+          controlPoint2X = endX - (endX - startX) / 2;
+          controlPoint2Y = endY;
+      }
 
       const path = `M ${startX} ${startY} C ${controlPoint1X} ${controlPoint1Y}, ${controlPoint2X} ${controlPoint2Y}, ${endX} ${endY}`;
 
@@ -310,7 +364,6 @@ export const MindMap = () => {
                 <MindMapNode
                     key={node.id}
                     node={node}
-                    scale={scale}
                     onUpdate={updateNode}
                     onAdd={addNode}
                     onDelete={deleteNode}
