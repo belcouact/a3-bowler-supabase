@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Navigate } from 'react-router-dom';
 import { Edit2, Info } from 'lucide-react';
 import { useApp, Metric, MetricData } from '../context/AppContext';
 import MetricEditModal from '../components/MetricEditModal';
@@ -54,11 +54,7 @@ const MetricBowler = () => {
   };
 
   if (!id && bowlers.length > 0) {
-      return (
-        <div className="flex flex-col items-center justify-center h-96 text-gray-500">
-           <p className="text-lg font-medium">Select a Bowler List from the sidebar to view metrics.</p>
-        </div>
-      )
+      return <Navigate to={`/metric-bowler/${bowlers[0].id}`} replace />;
   }
 
   return (

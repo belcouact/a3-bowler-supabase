@@ -12,6 +12,7 @@ interface A3CaseModalProps {
 const A3CaseModal = ({ isOpen, onClose, onSave, initialData }: A3CaseModalProps) => {
   const [formData, setFormData] = useState<Omit<A3Case, 'id'>>({
     title: '',
+    description: '',
     owner: '',
     priority: 'Medium',
     startDate: '',
@@ -24,6 +25,7 @@ const A3CaseModal = ({ isOpen, onClose, onSave, initialData }: A3CaseModalProps)
       if (initialData) {
         setFormData({
           title: initialData.title,
+          description: initialData.description || '',
           owner: initialData.owner || '',
           priority: initialData.priority || 'Medium',
           startDate: initialData.startDate || '',
@@ -34,6 +36,7 @@ const A3CaseModal = ({ isOpen, onClose, onSave, initialData }: A3CaseModalProps)
         // Reset form on open
         setFormData({
           title: '',
+          description: '',
           owner: '',
           priority: 'Medium',
           startDate: new Date().toISOString().split('T')[0],
@@ -82,6 +85,17 @@ const A3CaseModal = ({ isOpen, onClose, onSave, initialData }: A3CaseModalProps)
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <textarea
+                  rows={3}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Optional description of the problem..."
                 />
               </div>
 

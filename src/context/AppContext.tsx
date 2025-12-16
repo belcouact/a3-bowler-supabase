@@ -30,6 +30,7 @@ export interface Bowler {
 export interface A3Case {
   id: string;
   title: string;
+  description?: string;
   owner?: string;
   priority?: 'Low' | 'Medium' | 'High';
   startDate?: string;
