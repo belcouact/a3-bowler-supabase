@@ -2,6 +2,10 @@ name = "kv-bowler-data-worker"
 main = "index.ts"
 compatibility_date = "2023-10-02"
 
+routes = [
+	{ pattern = "bowler-worker.study-llm.me", custom_domain = true }
+]
+
 [[kv_namespaces]]
 binding = "BOWLER_DATA"
 id = "16589ade07c44137ac0d25ff0d6ef12f"
