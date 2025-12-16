@@ -86,8 +86,6 @@ const ActionPlan = () => {
         // Actually, let's just start from 'start' date and jump 7 days?
         // Standard Gantt: Columns are weeks starting Monday/Sunday.
         // Let's align to Monday for consistency.
-        const day = current.getDay();
-        // current.setDate(diff); // This might go before dateRange.start
         
         // Let's just list weeks that overlap with the range.
         // But for simplicity, let's just step by 7 days from start, OR align to calendar weeks.
