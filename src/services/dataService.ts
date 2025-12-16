@@ -2,7 +2,7 @@
 // Since the worker URL is not yet deployed, we will use a placeholder or assume a local development URL
 // You should update this URL when you deploy the worker.
 
-const API_BASE_URL = 'https://kv-bowler-data-worker.5525899.workers.dev';
+const API_BASE_URL = 'https://bowler-worker.study-llm.me';
 
 export const dataService = {
   async saveData(bowlers: any[], a3Cases: any[]) {
