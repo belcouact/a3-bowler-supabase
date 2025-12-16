@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
-import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Plus, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Eye, EyeOff } from 'lucide-react';
 import clsx from 'clsx';
-import { addDays, diffDays, formatDate, getMonthName } from '../../utils/dateUtils';
+import { addDays, formatDate, getMonthName, isWeekend } from '../../utils/dateUtils';
 import ActionModal, { ActionTask } from '../../components/ActionModal';
 
-// Constants for Gantt Chart
-const CELL_WIDTH = 40; // px per day
+const BASE_CELL_WIDTH = 40;
 
 const ActionPlan = () => {
   // --- State ---
@@ -30,21 +29,133 @@ const ActionPlan = () => {
     },
   ]);
 
-  const [viewDate, setViewDate] = useState(new Date()); // Start of the view
+  const [viewDate, setViewDate] = useState(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<ActionTask | null>(null);
   const [newStartDate, setNewStartDate] = useState<string | undefined>(undefined);
   
+  // View Options
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [showWeekends, setShowWeekends] = useState(false);
+  const [viewMode, setViewMode] = useState<'week' | 'month'>('month');
+
   // Dragging State
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragType, setDragType] = useState<'move' | 'resize-left' | 'resize-right' | null>(null);
   const [dragStartX, setDragStartX] = useState(0);
   const [dragStartTask, setDragStartTask] = useState<ActionTask | null>(null);
 
-  // --- Helpers ---
-  const daysToRender = 60; // Render 60 days
-  const startDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1); // Start from 1st of current month
-  const dates = Array.from({ length: daysToRender }, (_, i) => addDays(startDate, i));
+  // --- Computed ---
+  const cellWidth = BASE_CELL_WIDTH * zoomLevel;
+
+  const visibleDates = useMemo(() => {
+    let rangeDays = viewMode === 'month' ? 45 : 21; // Buffer
+    let start = new Date(viewDate);
+    
+    // Align start based on view mode
+    if (viewMode === 'month') {
+        start.setDate(1); // 1st of month
+    } else {
+        // Start of current week (Sunday)
+        const day = start.getDay();
+        start = addDays(start, -day);
+    }
+
+    const dates = [];
+    let current = start;
+    // Generate enough dates to fill range, respecting filter
+    let count = 0;
+    // Safety break to prevent infinite loops if logic fails, though unlikely
+    while (count < rangeDays) {
+        if (showWeekends || !isWeekend(current)) {
+            dates.push(new Date(current));
+        }
+        current = addDays(current, 1);
+        // If we are just skipping weekends, we keep adding days until we have enough *visible* columns
+        // But usually we want a fixed *date range*.
+        // Let's stick to a fixed date range scan, but filter.
+        // If we want to show "the month", we need all days in the month.
+        count++;
+    }
+    
+    // Re-do: Generate fixed calendar range, then filter
+    // This ensures "Month View" shows the actual month, not just "45 working days"
+    const fixedRange = viewMode === 'month' ? 60 : 30;
+    const allDates = Array.from({ length: fixedRange }, (_, i) => addDays(start, i));
+    
+    if (showWeekends) return allDates;
+    return allDates.filter(d => !isWeekend(d));
+
+  }, [viewDate, viewMode, showWeekends]);
+
+  // Helper to map date to grid index
+  const getDateIndex = (dateStr: string) => {
+    return visibleDates.findIndex(d => formatDate(d) === dateStr);
+  };
+
+  // Helper to find visual start/end for a task
+  // If a task starts on a hidden day (e.g. Sat), we map it to the next visible day for start?
+  // Or purely by index lookup.
+  const getTaskVisualMetrics = (task: ActionTask) => {
+    const taskStartStr = task.startDate;
+    const taskEndStr = task.endDate;
+
+    // Find exact match
+    let startIndex = visibleDates.findIndex(d => formatDate(d) === taskStartStr);
+    let endIndex = visibleDates.findIndex(d => formatDate(d) === taskEndStr);
+
+    // Handling hidden dates:
+    // If start is hidden, maybe it started before? 
+    // For now, let's just accept exact matches. If -1, it might be off screen.
+    // However, if the task spans the view but start/end are off-screen/hidden, we need to handle it.
+    
+    const taskStart = new Date(task.startDate);
+    const taskEnd = new Date(task.endDate);
+    const viewStart = visibleDates[0];
+    const viewEnd = visibleDates[visibleDates.length - 1];
+
+    if (!viewStart || !viewEnd) return null;
+
+    // If completely out of view
+    if (taskEnd < viewStart || taskStart > viewEnd) return null;
+
+    // Clamp start/end to view range for rendering if exact match not found
+    // This handles "started before view" or "starts on hidden weekend"
+    
+    if (startIndex === -1) {
+        // If before view, clamp to 0
+        if (taskStart < viewStart) startIndex = 0;
+        else {
+            // Started inside view but on hidden day? Find next visible day
+            // Or just don't render start?
+            // Simple approach: Find first visible date >= taskStart
+            startIndex = visibleDates.findIndex(d => d >= taskStart);
+        }
+    }
+
+    if (endIndex === -1) {
+        // If after view, clamp to end
+        if (taskEnd > viewEnd) endIndex = visibleDates.length - 1;
+        else {
+             // Ends on hidden day? Find last visible date <= taskEnd
+             // We iterate backwards
+             for (let i = visibleDates.length - 1; i >= 0; i--) {
+                 if (visibleDates[i] <= taskEnd) {
+                     endIndex = i;
+                     break;
+                 }
+             }
+        }
+    }
+    
+    if (startIndex === -1 || endIndex === -1) return null;
+    if (startIndex > endIndex) return null;
+
+    const left = startIndex * cellWidth;
+    const width = (endIndex - startIndex + 1) * cellWidth;
+
+    return { left, width };
+  };
 
   // --- Handlers ---
 
@@ -55,14 +166,13 @@ const ActionPlan = () => {
   };
 
   const handleGridClick = (dateStr: string) => {
-      // If clicking on empty space (not dragging), open add modal for that date
       setEditingTask(null);
       setNewStartDate(dateStr);
       setIsModalOpen(true);
   };
 
   const handleTaskDoubleClick = (e: React.MouseEvent, task: ActionTask) => {
-    e.stopPropagation(); // Prevent grid click
+    e.stopPropagation();
     setEditingTask(task);
     setIsModalOpen(true);
   };
@@ -83,7 +193,7 @@ const ActionPlan = () => {
 
   const handleMouseDown = (e: React.MouseEvent, task: ActionTask, type: 'move' | 'resize-left' | 'resize-right') => {
     e.stopPropagation();
-    e.preventDefault(); // Prevent text selection
+    e.preventDefault();
     setDraggingId(task.id);
     setDragType(type);
     setDragStartX(e.clientX);
@@ -95,36 +205,45 @@ const ActionPlan = () => {
       if (!draggingId || !dragType || !dragStartTask) return;
 
       const deltaX = e.clientX - dragStartX;
-      const deltaDays = Math.round(deltaX / CELL_WIDTH);
+      const deltaCells = Math.round(deltaX / cellWidth);
 
-      if (deltaDays === 0) return;
+      if (deltaCells === 0) return;
 
       const newTasks = tasks.map(t => {
         if (t.id !== draggingId) return t;
 
-        const originalStart = new Date(dragStartTask.startDate);
-        const originalEnd = new Date(dragStartTask.endDate);
+        // We need to calculate based on VISIBLE indices
+        const startIdx = visibleDates.findIndex(d => formatDate(d) === dragStartTask.startDate);
+        const endIdx = visibleDates.findIndex(d => formatDate(d) === dragStartTask.endDate);
+        
+        // If original task was off-grid (hidden), dragging is weird. Abort or snap?
+        if (startIdx === -1 || endIdx === -1) return t; 
 
-        let newStart = originalStart;
-        let newEnd = originalEnd;
+        let newStartIdx = startIdx;
+        let newEndIdx = endIdx;
 
         if (dragType === 'move') {
-          newStart = addDays(originalStart, deltaDays);
-          newEnd = addDays(originalEnd, deltaDays);
+          newStartIdx = startIdx + deltaCells;
+          newEndIdx = endIdx + deltaCells;
         } else if (dragType === 'resize-left') {
-          newStart = addDays(originalStart, deltaDays);
-          // Prevent end before start
-          if (newStart > newEnd) newStart = newEnd; 
+          newStartIdx = startIdx + deltaCells;
+          if (newStartIdx > newEndIdx) newStartIdx = newEndIdx;
         } else if (dragType === 'resize-right') {
-          newEnd = addDays(originalEnd, deltaDays);
-          // Prevent start after end
-          if (newEnd < newStart) newEnd = newStart;
+          newEndIdx = endIdx + deltaCells;
+          if (newEndIdx < newStartIdx) newEndIdx = newStartIdx;
         }
+
+        // Bound checks
+        if (newStartIdx < 0) newStartIdx = 0;
+        if (newEndIdx >= visibleDates.length) newEndIdx = visibleDates.length - 1;
+        
+        // If we hit the bounds of the rendered view, we stop.
+        // Ideally we'd scroll or load more, but for now clamp.
 
         return {
           ...t,
-          startDate: formatDate(newStart),
-          endDate: formatDate(newEnd)
+          startDate: formatDate(visibleDates[newStartIdx]),
+          endDate: formatDate(visibleDates[newEndIdx])
         };
       });
 
@@ -148,7 +267,7 @@ const ActionPlan = () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [draggingId, dragType, dragStartX, dragStartTask, tasks]);
+  }, [draggingId, dragType, dragStartX, dragStartTask, tasks, visibleDates, cellWidth]);
 
 
   return (
@@ -156,40 +275,82 @@ const ActionPlan = () => {
       {/* Header Controls */}
       <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-white z-20 relative">
         <div className="flex items-center space-x-4">
-          <h3 className="text-lg font-bold text-gray-900">Action Plan Timeline</h3>
-          <div className="flex items-center space-x-2 bg-gray-100 rounded-md p-1">
-            <button 
-                onClick={() => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() - 1)))}
-                className="p-1 hover:bg-white rounded shadow-sm transition-all"
-            >
-                <ChevronLeft className="w-4 h-4 text-gray-600" />
-            </button>
-            <span className="text-sm font-medium w-24 text-center">
-                {getMonthName(viewDate.getMonth())} {viewDate.getFullYear()}
-            </span>
-            <button 
-                onClick={() => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() + 1)))}
-                className="p-1 hover:bg-white rounded shadow-sm transition-all"
-            >
-                <ChevronRight className="w-4 h-4 text-gray-600" />
-            </button>
-          </div>
+            {/* View Scope Toggle */}
+            <div className="flex bg-gray-100 rounded-md p-1">
+                <button
+                    onClick={() => setViewMode('month')}
+                    className={clsx("px-3 py-1 text-xs font-medium rounded transition-all", viewMode === 'month' ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700")}
+                >
+                    Month
+                </button>
+                <button
+                    onClick={() => setViewMode('week')}
+                    className={clsx("px-3 py-1 text-xs font-medium rounded transition-all", viewMode === 'week' ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-700")}
+                >
+                    Week
+                </button>
+            </div>
+
+            {/* Date Nav */}
+            <div className="flex items-center space-x-2 bg-gray-100 rounded-md p-1">
+                <button 
+                    onClick={() => {
+                        if (viewMode === 'month') setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() - 1)));
+                        else setViewDate(addDays(viewDate, -7));
+                    }}
+                    className="p-1 hover:bg-white rounded shadow-sm transition-all"
+                >
+                    <ChevronLeft className="w-4 h-4 text-gray-600" />
+                </button>
+                <span className="text-sm font-medium w-32 text-center">
+                    {viewMode === 'month' ? (
+                        `${getMonthName(viewDate.getMonth())} ${viewDate.getFullYear()}`
+                    ) : (
+                        `Week of ${formatDate(viewDate)}`
+                    )}
+                </span>
+                <button 
+                    onClick={() => {
+                        if (viewMode === 'month') setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() + 1)));
+                        else setViewDate(addDays(viewDate, 7));
+                    }}
+                    className="p-1 hover:bg-white rounded shadow-sm transition-all"
+                >
+                    <ChevronRight className="w-4 h-4 text-gray-600" />
+                </button>
+            </div>
         </div>
-        <div className="flex space-x-3">
-             <div className="text-xs text-gray-500 flex items-center">
-                <span className="inline-block w-3 h-3 bg-blue-500 rounded-sm mr-2"></span>
-                Double-click to edit
+
+        <div className="flex items-center space-x-3">
+             {/* Weekend Toggle */}
+             <button
+                onClick={() => setShowWeekends(!showWeekends)}
+                className={clsx("p-1.5 rounded-md border transition-colors flex items-center space-x-1", showWeekends ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white border-gray-200 text-gray-500")}
+                title={showWeekends ? "Hide Weekends" : "Show Weekends"}
+             >
+                {showWeekends ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                <span className="text-xs font-medium">{showWeekends ? "Weekends On" : "Weekends Off"}</span>
+             </button>
+
+             {/* Zoom Controls */}
+             <div className="flex items-center bg-gray-100 rounded-md p-1">
+                <button onClick={() => setZoomLevel(Math.max(0.5, zoomLevel - 0.25))} className="p-1 hover:bg-white rounded shadow-sm">
+                    <ZoomOut className="w-4 h-4 text-gray-600" />
+                </button>
+                <span className="text-xs text-gray-500 w-8 text-center">{Math.round(zoomLevel * 100)}%</span>
+                <button onClick={() => setZoomLevel(Math.min(2, zoomLevel + 0.25))} className="p-1 hover:bg-white rounded shadow-sm">
+                    <ZoomIn className="w-4 h-4 text-gray-600" />
+                </button>
              </div>
-             <div className="text-xs text-gray-500 flex items-center">
-                <span className="inline-block w-3 h-3 border border-gray-400 rounded-sm mr-2"></span>
-                Drag to move/resize
-             </div>
+
+             <div className="h-6 w-px bg-gray-300 mx-2"></div>
+
              <button
               onClick={handleAddTask}
               className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add Action
+              Add
             </button>
         </div>
       </div>
@@ -229,16 +390,17 @@ const ActionPlan = () => {
             <div className="relative">
                 {/* Header: Dates */}
                 <div className="flex h-[60px] border-b border-gray-200 bg-gray-50 sticky top-0 z-10">
-                    {dates.map((date, i) => {
+                    {visibleDates.map((date, i) => {
                         const isToday = formatDate(date) === formatDate(new Date());
+                        const isWeekendDay = isWeekend(date);
                         return (
                             <div 
                                 key={i} 
                                 className={clsx(
                                     "flex-shrink-0 border-r border-gray-200 flex flex-col items-center justify-center text-xs",
-                                    isToday ? "bg-blue-50" : ""
+                                    isToday ? "bg-blue-50" : isWeekendDay ? "bg-gray-100" : ""
                                 )}
-                                style={{ width: CELL_WIDTH }}
+                                style={{ width: cellWidth }}
                             >
                                 <span className="font-semibold text-gray-700">{date.getDate()}</span>
                                 <span className="text-gray-400 text-[10px]">{date.toLocaleDateString('en-US', { weekday: 'narrow' })}</span>
@@ -251,25 +413,20 @@ const ActionPlan = () => {
                 <div className="relative">
                     {/* Vertical Lines Background */}
                     <div className="absolute inset-0 flex pointer-events-none">
-                        {dates.map((_, i) => (
-                            <div key={i} className="flex-shrink-0 border-r border-gray-100 h-full" style={{ width: CELL_WIDTH }}></div>
+                        {visibleDates.map((date, i) => (
+                            <div key={i} className={clsx(
+                                "flex-shrink-0 border-r border-gray-100 h-full",
+                                isWeekend(date) ? "bg-gray-50/50" : ""
+                            )} style={{ width: cellWidth }}></div>
                         ))}
                     </div>
 
                     {/* Task Rows & Bars */}
                     {tasks.map((task) => {
-                         // Calculate Position
-                         const taskStart = new Date(task.startDate);
-                         const taskEnd = new Date(task.endDate);
-                         const offsetDays = diffDays(taskStart, startDate);
-                         const durationDays = diffDays(taskEnd, taskStart) + 1; // Inclusive
-
-                         const left = offsetDays * CELL_WIDTH;
-                         const width = durationDays * CELL_WIDTH;
+                         const metrics = getTaskVisualMetrics(task);
+                         if (!metrics) return null;
+                         const { left, width } = metrics;
                          
-                         // Only render if visible roughly
-                         if (left + width < 0) return null;
-
                          return (
                             <div key={task.id} className="h-[48px] border-b border-gray-100 relative group">
                                 {/* Clickable row background for "Add" */}
@@ -278,9 +435,9 @@ const ActionPlan = () => {
                                     onClick={(e) => {
                                         const rect = e.currentTarget.getBoundingClientRect();
                                         const clickX = e.clientX - rect.left;
-                                        const dayIndex = Math.floor(clickX / CELL_WIDTH);
-                                        if (dayIndex >= 0 && dayIndex < dates.length) {
-                                            handleGridClick(formatDate(dates[dayIndex]));
+                                        const colIndex = Math.floor(clickX / cellWidth);
+                                        if (colIndex >= 0 && colIndex < visibleDates.length) {
+                                            handleGridClick(formatDate(visibleDates[colIndex]));
                                         }
                                     }}
                                 />
@@ -293,7 +450,7 @@ const ActionPlan = () => {
                                         task.status === 'In Progress' ? "bg-blue-500 border-blue-700" : "bg-gray-400 border-gray-600",
                                         draggingId === task.id ? "ring-2 ring-offset-1 ring-blue-400 opacity-90" : "hover:brightness-110"
                                     )}
-                                    style={{ left: Math.max(0, left), width: Math.max(CELL_WIDTH, width) }}
+                                    style={{ left: Math.max(0, left), width: Math.max(cellWidth, width) }}
                                     onMouseDown={(e) => handleMouseDown(e, task, 'move')}
                                     onDoubleClick={(e) => handleTaskDoubleClick(e, task)}
                                 >
@@ -322,9 +479,9 @@ const ActionPlan = () => {
                                     onClick={(e) => {
                                         const rect = e.currentTarget.getBoundingClientRect();
                                         const clickX = e.clientX - rect.left;
-                                        const dayIndex = Math.floor(clickX / CELL_WIDTH);
-                                        if (dayIndex >= 0 && dayIndex < dates.length) {
-                                            handleGridClick(formatDate(dates[dayIndex]));
+                                        const colIndex = Math.floor(clickX / cellWidth);
+                                        if (colIndex >= 0 && colIndex < visibleDates.length) {
+                                            handleGridClick(formatDate(visibleDates[colIndex]));
                                         }
                                     }}
                                 />
