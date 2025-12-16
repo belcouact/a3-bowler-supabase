@@ -1,9 +1,10 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { LayoutDashboard, FileText, Plus, BarChart3, Target, ChevronLeft, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
-import { useApp, A3Case } from '../context/AppContext';
+import { useApp, A3Case, Bowler } from '../context/AppContext';
 import { useState } from 'react';
 import A3CaseModal from './A3CaseModal';
+import BowlerModal from './BowlerModal';
 
 const Layout = () => {
   const location = useLocation();
@@ -13,26 +14,13 @@ const Layout = () => {
   const isMetricBowler = location.pathname.includes('/metric-bowler');
   const isA3Analysis = location.pathname.includes('/a3-analysis');
 
-  const [newItemName, setNewItemName] = useState('');
-  const [isAdding, setIsAdding] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isA3ModalOpen, setIsA3ModalOpen] = useState(false);
-
-  const handleAddItem = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newItemName.trim()) return;
-
-    if (isMetricBowler) {
-      addBowler(newItemName);
-      setNewItemName('');
-      setIsAdding(false);
-    }
-  };
+  const [isBowlerModalOpen, setIsBowlerModalOpen] = useState(false);
 
   const handlePlusClick = () => {
     if (isMetricBowler) {
-        if (!isSidebarOpen) setIsSidebarOpen(true);
-        setIsAdding(!isAdding);
+        setIsBowlerModalOpen(true);
     } else {
         setIsA3ModalOpen(true);
     }
@@ -40,6 +28,10 @@ const Layout = () => {
 
   const handleSaveA3Case = (data: Omit<A3Case, 'id'>) => {
       addA3Case(data);
+  };
+
+  const handleSaveBowler = (data: Omit<Bowler, 'id'>) => {
+      addBowler(data);
   };
 
   const navItems = [
@@ -132,22 +124,7 @@ const Layout = () => {
           </div>
 
           {/* Add Item Form */}
-          {isAdding && isSidebarOpen && (
-            <div className="p-3 border-b border-gray-100 bg-blue-50">
-              <form onSubmit={handleAddItem}>
-                <input
-                  type="text"
-                  autoFocus
-                  placeholder={isMetricBowler ? "New Bowler Name..." : "New A3 Title..."}
-                  className="w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 shadow-sm"
-                  value={newItemName}
-                  onChange={(e) => setNewItemName(e.target.value)}
-                  onBlur={() => !newItemName && setIsAdding(false)}
-                />
-              </form>
-            </div>
-          )}
-
+          
           <div className="flex-1 overflow-y-auto p-3 space-y-1">
             {isMetricBowler && bowlers.map((bowler) => (
               <Link
@@ -189,7 +166,7 @@ const Layout = () => {
               </Link>
             ))}
 
-            {((isMetricBowler && bowlers.length === 0) || (isA3Analysis && a3Cases.length === 0)) && !isAdding && (
+            {((isMetricBowler && bowlers.length === 0) || (isA3Analysis && a3Cases.length === 0)) && (
                <div className={clsx("text-center py-8 text-gray-400 text-sm italic", isSidebarOpen ? "px-4" : "px-1 text-xs")}>
                   {isSidebarOpen ? "No items yet. Click + to add one." : "Empty"}
                </div>
@@ -209,6 +186,12 @@ const Layout = () => {
         isOpen={isA3ModalOpen} 
         onClose={() => setIsA3ModalOpen(false)} 
         onSave={handleSaveA3Case} 
+      />
+
+      <BowlerModal 
+        isOpen={isBowlerModalOpen} 
+        onClose={() => setIsBowlerModalOpen(false)} 
+        onSave={handleSaveBowler} 
       />
     </div>
   );

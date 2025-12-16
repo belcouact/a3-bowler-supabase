@@ -1,9 +1,24 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 
 // Types
+export interface Metric {
+  id: string;
+  name: string;
+  definition: string;
+  owner: string;
+  scope: string;
+  attribute: string;
+}
+
 export interface Bowler {
   id: string;
   name: string;
+  description?: string;
+  objective?: string;
+  champion?: string;
+  commitment?: string;
+  tag?: string;
+  metrics?: Metric[];
 }
 
 export interface A3Case {
@@ -18,7 +33,7 @@ export interface A3Case {
 interface AppContextType {
   bowlers: Bowler[];
   a3Cases: A3Case[];
-  addBowler: (name: string) => void;
+  addBowler: (data: Omit<Bowler, 'id'>) => void;
   addA3Case: (caseData: Omit<A3Case, 'id'>) => void;
   deleteBowler: (id: string) => void;
   deleteA3Case: (id: string) => void;
@@ -39,10 +54,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     { id: '2', title: 'Improve Delivery Time to West Coast' },
   ]);
 
-  const addBowler = (name: string) => {
+  const addBowler = (data: Omit<Bowler, 'id'>) => {
     const newBowler = {
       id: Date.now().toString(),
-      name,
+      ...data,
     };
     setBowlers([...bowlers, newBowler]);
   };
