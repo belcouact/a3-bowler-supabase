@@ -96,7 +96,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       // Load user data
       dataService.loadData(user.username)
         .then(data => {
-            //...(data.success) {
+          if (data.success) {
             setBowlers(data.bowlers || []);
             setA3Cases(data.a3Cases || []);
           }
