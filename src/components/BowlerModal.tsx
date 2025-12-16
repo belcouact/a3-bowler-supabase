@@ -7,10 +7,11 @@ interface BowlerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: Omit<Bowler, 'id'>) => void;
+  onDelete?: (id: string) => void;
   initialData?: Bowler;
 }
 
-const BowlerModal = ({ isOpen, onClose, onSave, initialData }: BowlerModalProps) => {
+const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerModalProps) => {
   const [activeTab, setActiveTab] = useState<'General' | 'Metrics'>('General');
   
   // General State
@@ -285,21 +286,35 @@ const BowlerModal = ({ isOpen, onClose, onSave, initialData }: BowlerModalProps)
             </div>
 
           </div>
-          <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button
-              type="button"
-              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
-              onClick={handleSubmit}
-            >
-              Create Bowler
-            </button>
-            <button
-              type="button"
-              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-              onClick={onClose}
-            >
-              Cancel
-            </button>
+          <div className="bg-gray-50 px-4 py-3 sm:px-6 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
+            <div className="order-2 sm:order-1 w-full sm:w-auto">
+                {initialData && onDelete && (
+                    <button
+                        type="button"
+                        className="w-full sm:w-auto inline-flex justify-center items-center rounded-md border border-transparent px-4 py-2 text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm font-medium"
+                        onClick={() => onDelete(initialData.id)}
+                    >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                    </button>
+                )}
+            </div>
+            <div className="order-1 sm:order-2 flex flex-col sm:flex-row-reverse w-full sm:w-auto">
+                <button
+                type="button"
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                onClick={handleSubmit}
+                >
+                {initialData ? 'Save Changes' : 'Create Bowler'}
+                </button>
+                <button
+                type="button"
+                className="mt-3 sm:mt-0 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:w-auto sm:text-sm"
+                onClick={onClose}
+                >
+                Cancel
+                </button>
+            </div>
           </div>
         </div>
       </div>

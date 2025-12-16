@@ -1,4 +1,4 @@
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, FileText, Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon, Save } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case, Bowler } from '../context/AppContext';
@@ -11,7 +11,8 @@ import { dataService } from '../services/dataService';
 
 const Layout = () => {
   const location = useLocation();
-  const { bowlers, a3Cases, addBowler, updateBowler, addA3Case, updateA3Case } = useApp();
+  const navigate = useNavigate();
+  const { bowlers, a3Cases, addBowler, updateBowler, addA3Case, updateA3Case, deleteBowler, deleteA3Case } = useApp();
   const { user, logout } = useAuth();
   
   // Identify active module based on path
@@ -71,6 +72,28 @@ const Layout = () => {
         addBowler(data);
       }
       setEditingBowler(null);
+  };
+
+  const handleDeleteBowler = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this Bowler list?')) {
+      deleteBowler(id);
+      setIsBowlerModalOpen(false);
+      setEditingBowler(null);
+      if (location.pathname.includes(`/metric-bowler/${id}`)) {
+        navigate('/metric-bowler');
+      }
+    }
+  };
+
+  const handleDeleteA3Case = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this A3 Case?')) {
+      deleteA3Case(id);
+      setIsA3ModalOpen(false);
+      setEditingA3Case(null);
+      if (location.pathname.includes(`/a3-analysis/${id}`)) {
+        navigate('/a3-analysis');
+      }
+    }
   };
 
   const navItems = [
@@ -269,6 +292,7 @@ const Layout = () => {
             setEditingA3Case(null);
         }}
         onSave={handleSaveA3Case} 
+        onDelete={handleDeleteA3Case}
         initialData={editingA3Case || undefined}
       />
 
@@ -279,6 +303,7 @@ const Layout = () => {
             setEditingBowler(null);
         }}
         onSave={handleSaveBowler} 
+        onDelete={handleDeleteBowler}
         initialData={editingBowler || undefined}
       />
 
