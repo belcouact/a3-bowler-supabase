@@ -88,11 +88,6 @@ const ActionPlan = () => {
 
   }, [viewDate, viewMode, showWeekends]);
 
-  // Helper to map date to grid index
-  const getDateIndex = (dateStr: string) => {
-    return visibleDates.findIndex(d => formatDate(d) === dateStr);
-  };
-
   // Helper to find visual start/end for a task
   // If a task starts on a hidden day (e.g. Sat), we map it to the next visible day for start?
   // Or purely by index lookup.
