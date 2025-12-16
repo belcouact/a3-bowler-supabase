@@ -397,7 +397,7 @@ export const MindMap = ({ initialNodes, onChange }: MindMapProps) => {
         <path
           key={`${parent.id}-${node.id}`}
           d={path}
-          stroke="#94a3b8"
+          stroke="#64748b"
           strokeWidth="2"
           fill="none"
         />
@@ -438,7 +438,12 @@ export const MindMap = ({ initialNodes, onChange }: MindMapProps) => {
           </div>
 
           <div style={{ transform: `scale(${scale})`, transformOrigin: '0 0', width: '100%', height: '100%' }}>
-              <svg className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-visible z-0">
+              <svg 
+                className="absolute top-0 left-0 w-full h-full pointer-events-none z-0" 
+                style={{ overflow: 'visible' }}
+                width="100%"
+                height="100%"
+              >
                 {renderConnections()}
               </svg>
 
