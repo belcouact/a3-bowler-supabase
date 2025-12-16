@@ -6,6 +6,8 @@ import ProblemStatement from './pages/a3-subpages/ProblemStatement';
 import DataAnalysis from './pages/a3-subpages/DataAnalysis';
 import WhyAnalysis from './pages/a3-subpages/WhyAnalysis';
 import ActionPlan from './pages/a3-subpages/ActionPlan';
+import Result from './pages/a3-subpages/Result';
+import Summary from './pages/a3-subpages/Summary';
 
 function App() {
   return (
@@ -26,6 +28,8 @@ function App() {
             <Route path="data-analysis" element={<DataAnalysis />} />
             <Route path="why-analysis" element={<WhyAnalysis />} />
             <Route path="action-plan" element={<ActionPlan />} />
+            <Route path="result" element={<Result />} />
+            <Route path="summary" element={<Summary />} />
           </Route>
         </Route>
       </Routes>

@@ -15,6 +15,8 @@ const A3Analysis = () => {
     { path: 'data-analysis', label: 'Data Analysis' },
     { path: 'why-analysis', label: 'Why Analysis' },
     { path: 'action-plan', label: 'Action Plan' },
+    { path: 'result', label: 'Result' },
+    { path: 'summary', label: 'Summary' },
   ];
 
   if (!id && a3Cases.length > 0) {
