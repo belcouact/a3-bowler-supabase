@@ -425,7 +425,7 @@ const ActionPlan = () => {
 
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+    <div className="flex flex-col h-full bg-white shadow border border-gray-200 overflow-hidden">
       {/* Header Controls */}
       <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-white z-20 relative">
         <div className="flex items-center space-x-4">

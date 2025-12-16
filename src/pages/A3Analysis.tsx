@@ -28,8 +28,8 @@ const A3Analysis = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+    <div className="">
+      <div className="bg-white p-6 shadow-sm border border-gray-200 border-b-0">
         <div className="mb-6">
            <div className="flex justify-between items-start">
               <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
@@ -61,11 +61,11 @@ const A3Analysis = () => {
       </div>
       
       {location.pathname.includes('action-plan') ? (
-        <div className="h-[600px]">
+        <div className="h-[600px] border-t border-gray-200">
           <Outlet />
         </div>
       ) : (
-        <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 min-h-[500px]">
+        <div className="bg-white p-8 shadow-sm border border-gray-200 min-h-[500px]">
           <Outlet />
         </div>
       )}
