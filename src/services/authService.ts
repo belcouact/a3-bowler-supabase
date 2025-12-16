@@ -9,7 +9,7 @@ export interface User {
   [key: string]: any;
 }
 
-const API_BASE_URL = 'https://login.study-llm.me';
+const API_BASE_URL = 'https://bowler-worker.study-llm.me';
 
 export const authService = {
   async signup(data: any) {

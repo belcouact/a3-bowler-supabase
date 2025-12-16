@@ -2,6 +2,7 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useParams } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
+import { useState, useEffect } from 'react';
 
 const data = [
   { name: 'Week 1', defects: 12 },
@@ -15,6 +16,23 @@ const DataAnalysis = () => {
   const { id } = useParams();
   const { a3Cases, updateA3Case } = useApp();
   const currentCase = a3Cases.find(c => c.id === id);
+  const [observations, setObservations] = useState('');
+
+  useEffect(() => {
+    if (currentCase) {
+      setObservations(currentCase.dataAnalysisObservations || '');
+    }
+  }, [currentCase?.dataAnalysisObservations]);
+
+  const handleBlur = () => {
+    if (currentCase) {
+      updateA3Case({ ...currentCase, dataAnalysisObservations: observations });
+    }
+  };
+
+  if (!currentCase) {
+    return <div className="text-gray-500">Loading case data...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -52,8 +70,9 @@ const DataAnalysis = () => {
             rows={4}
             className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border"
             placeholder="What patterns or insights do you see in the data?"
-            value={currentCase?.dataAnalysisObservations || ''}
-            onChange={(e) => currentCase && updateA3Case({ ...currentCase, dataAnalysisObservations: e.target.value })}
+            value={observations}
+            onChange={(e) => setObservations(e.target.value)}
+            onBlur={handleBlur}
           />
         </div>
       </div>
