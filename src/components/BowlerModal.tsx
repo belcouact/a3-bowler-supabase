@@ -207,7 +207,7 @@ const BowlerModal = ({ isOpen, onClose, onSave }: BowlerModalProps) => {
                                     No metrics added yet. Click "Add Metric" to start.
                                 </div>
                             ) : (
-                                metrics.map((metric, index) => (
+                                metrics.map((metric) => (
                                     <div key={metric.id} className="border border-gray-200 rounded-md p-4 bg-gray-50 relative">
                                         <button 
                                             onClick={() => handleDeleteMetric(metric.id)}
