@@ -1,13 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
-import { Plus, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
-import { getDaysInMonth, addDays, diffDays, formatDate, getMonthName } from '../../utils/dateUtils';
+import { addDays, diffDays, formatDate, getMonthName } from '../../utils/dateUtils';
 import ActionModal, { ActionTask } from '../../components/ActionModal';
 
 // Constants for Gantt Chart
 const CELL_WIDTH = 40; // px per day
-const HEADER_HEIGHT = 60;
-const ROW_HEIGHT = 48;
 
 const ActionPlan = () => {
   // --- State ---
