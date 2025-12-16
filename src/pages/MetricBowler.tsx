@@ -94,9 +94,6 @@ const MetricBowler = () => {
                 Metric Name
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Owner
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 Scope
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -123,16 +120,19 @@ const MetricBowler = () => {
                   <tr key={`${metric.id}-row1`} className="hover:bg-gray-50 transition-colors border-b-0">
                     <td rowSpan={2} className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] group-hover:bg-gray-50 align-top">
                       <div className="flex items-start justify-between">
-                        <div className="flex items-center">
-                            <span className="mr-2">{metric.name}</span>
-                            {metric.definition && (
-                                <div className="group relative">
-                                    <Info className="w-3.5 h-3.5 text-gray-400 hover:text-blue-500 cursor-help" />
-                                    <div className="absolute left-full top-0 ml-2 w-64 p-3 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 whitespace-normal break-words">
-                                        {metric.definition}
+                        <div className="flex flex-col">
+                            <div className="flex items-center">
+                                <span className="mr-2">{metric.name}</span>
+                                {metric.definition && (
+                                    <div className="group relative">
+                                        <Info className="w-3.5 h-3.5 text-gray-400 hover:text-blue-500 cursor-help" />
+                                        <div className="absolute left-full top-0 ml-2 w-64 p-3 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 whitespace-normal break-words">
+                                            {metric.definition}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
+                            </div>
+                            <span className="text-xs text-gray-500 font-normal mt-1">{metric.owner}</span>
                         </div>
                         <button 
                           onClick={() => handleEditClick(metric)}
@@ -142,9 +142,6 @@ const MetricBowler = () => {
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                    </td>
-                    <td rowSpan={2} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 align-top">
-                      {metric.owner}
                     </td>
                     <td rowSpan={2} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 align-top border-r border-gray-100">
                       {metric.scope}
