@@ -4,13 +4,7 @@ import { useParams } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import { useState, useEffect } from 'react';
 
-const data = [
-  { name: 'Week 1', defects: 12 },
-  { name: 'Week 2', defects: 19 },
-  { name: 'Week 3', defects: 3 },
-  { name: 'Week 4', defects: 5 },
-  { name: 'Week 5', defects: 2 },
-];
+const data: any[] = [];
 
 const DataAnalysis = () => {
   const { id } = useParams();

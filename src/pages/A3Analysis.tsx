@@ -8,6 +8,14 @@ const A3Analysis = () => {
   const { id } = useParams();
   const { a3Cases } = useApp();
   
+  if (!id) {
+      return (
+        <div className="flex flex-col items-center justify-center h-96 text-gray-500">
+           <p className="text-lg font-medium">Select an A3 Case from the sidebar to view details.</p>
+        </div>
+      )
+  }
+
   const selectedCase = a3Cases.find(c => c.id === id);
   const title = selectedCase ? selectedCase.title : 'A3 Problem Solving';
 
@@ -20,10 +28,10 @@ const A3Analysis = () => {
     { path: 'summary', label: 'Summary', icon: FileText },
   ];
 
-  if (!id && a3Cases.length > 0) {
-      return (
+  if (!selectedCase) {
+    return (
         <div className="flex flex-col items-center justify-center h-96 text-gray-500">
-           <p className="text-lg font-medium">Select an A3 Case from the sidebar to view details.</p>
+           <p className="text-lg font-medium">Case not found.</p>
         </div>
       )
   }

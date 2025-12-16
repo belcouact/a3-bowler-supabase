@@ -1,15 +1,16 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-// Mock data for the summary view
-const chartData = [
-  { name: 'Week 1', defects: 12 },
-  { name: 'Week 2', defects: 19 },
-  { name: 'Week 3', defects: 3 },
-  { name: 'Week 4', defects: 5 },
-  { name: 'Week 5', defects: 2 },
-];
+import { useParams } from 'react-router-dom';
+import { useApp } from '../../context/AppContext';
 
 const Summary = () => {
+  const { id } = useParams();
+  const { a3Cases } = useApp();
+  const currentCase = a3Cases.find(c => c.id === id);
+
+  if (!currentCase) {
+    return <div className="text-gray-500">Loading case data...</div>;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-4">
@@ -26,8 +27,7 @@ const Summary = () => {
           <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
             <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">1. Problem Statement</h4>
             <div className="text-sm text-gray-600 space-y-2">
-              <p><span className="font-medium text-gray-900">Problem:</span> Scrap rate in Line 4 has increased by 15% over the last month.</p>
-              <p><span className="font-medium text-gray-900">Background:</span> Line 4 is critical for the new EV battery housing production. Higher scrap rate is affecting delivery commitments.</p>
+              <p><span className="font-medium text-gray-900">Problem:</span> {currentCase.problemStatement || 'Not defined'}</p>
             </div>
           </div>
 
@@ -35,13 +35,7 @@ const Summary = () => {
           <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
             <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">3. Root Cause Analysis (5 Whys)</h4>
             <div className="text-sm text-gray-600">
-              <ul className="list-decimal list-inside space-y-1">
-                <li>Machine stopped suddenly. (Why?) &rarr; Fuse blew.</li>
-                <li>Fuse blew. (Why?) &rarr; Overloaded motor.</li>
-                <li>Overloaded motor. (Why?) &rarr; Bearing seized.</li>
-                <li>Bearing seized. (Why?) &rarr; Lack of lubrication.</li>
-                <li><span className="font-medium text-red-600">Root Cause:</span> Lubrication pump failed due to worn seal.</li>
-              </ul>
+               <p className="italic text-gray-500">See "5 Whys Analysis" tab for details.</p>
             </div>
           </div>
 
@@ -49,8 +43,7 @@ const Summary = () => {
            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
             <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">5. Results & Follow-up</h4>
             <div className="text-sm text-gray-600 space-y-2">
-              <p><span className="font-medium text-gray-900">Outcome:</span> Replaced lubrication pump and established weekly inspection schedule.</p>
-              <p><span className="font-medium text-gray-900">Impact:</span> Scrap rate reduced to &lt; 1% in the following 2 weeks.</p>
+              <p><span className="font-medium text-gray-900">Outcome:</span> {currentCase.results || 'No results recorded yet.'}</p>
             </div>
           </div>
         </div>
@@ -62,7 +55,7 @@ const Summary = () => {
             <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">2. Data Analysis</h4>
             <div className="h-48 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
+                <BarChart data={[]}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="name" tick={{fontSize: 10}} />
                   <YAxis tick={{fontSize: 10}} />
@@ -71,7 +64,7 @@ const Summary = () => {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <p className="text-xs text-gray-500 mt-2">Peak defects observed in Week 2, correlated with the lubrication failure.</p>
+            <p className="text-xs text-gray-500 mt-2">{currentCase.dataAnalysisObservations || 'No data observations recorded.'}</p>
           </div>
 
           {/* Action Plan */}
@@ -87,21 +80,19 @@ const Summary = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  <tr>
-                    <td className="px-2 py-1 text-xs text-gray-900">Replace Pump</td>
-                    <td className="px-2 py-1 text-xs text-gray-500">Mike</td>
-                    <td className="px-2 py-1 text-xs text-green-600">Done</td>
-                  </tr>
-                  <tr>
-                    <td className="px-2 py-1 text-xs text-gray-900">Update Maint. Schedule</td>
-                    <td className="px-2 py-1 text-xs text-gray-500">Sarah</td>
-                    <td className="px-2 py-1 text-xs text-green-600">Done</td>
-                  </tr>
-                  <tr>
-                    <td className="px-2 py-1 text-xs text-gray-900">Train Operators</td>
-                    <td className="px-2 py-1 text-xs text-gray-500">John</td>
-                    <td className="px-2 py-1 text-xs text-yellow-600">In Progress</td>
-                  </tr>
+                  {currentCase.actionPlanTasks && currentCase.actionPlanTasks.length > 0 ? (
+                    currentCase.actionPlanTasks.map(task => (
+                      <tr key={task.id}>
+                        <td className="px-2 py-1 text-xs text-gray-900">{task.name}</td>
+                        <td className="px-2 py-1 text-xs text-gray-500">{task.owner}</td>
+                        <td className="px-2 py-1 text-xs text-gray-600">{task.status}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={3} className="px-2 py-4 text-xs text-center text-gray-500">No actions defined.</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

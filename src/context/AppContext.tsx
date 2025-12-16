@@ -86,15 +86,9 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 // Provider
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
-  const [bowlers, setBowlers] = useState<Bowler[]>([
-    { id: '1', name: 'Plant A - Operations' },
-    { id: '2', name: 'Plant A - Safety' },
-  ]);
+  const [bowlers, setBowlers] = useState<Bowler[]>([]);
 
-  const [a3Cases, setA3Cases] = useState<A3Case[]>([
-    { id: '1', title: 'Reduce Scrap Rate in Line 4' },
-    { id: '2', title: 'Improve Delivery Time to West Coast' },
-  ]);
+  const [a3Cases, setA3Cases] = useState<A3Case[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -110,22 +104,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           console.error("Failed to load user data:", err);
         });
     } else {
-        // Reset to default/empty if no user is logged in
-        // Or keep defaults. Let's keep defaults for now or reset to initial demo data
-        // For a real app, you might want to clear data on logout.
-        // But since we initialized with demo data, maybe revert to that or keep empty?
-        // Let's assume we keep demo data for non-logged in users or just don't clear it yet.
-        // Actually, if we want to show empty or demo data when logged out, we should decide.
-        // For now, let's not clear it to avoid flashing empty states if it was demo usage.
-        // But typically:
-        setBowlers([
-            { id: '1', name: 'Plant A - Operations' },
-            { id: '2', name: 'Plant A - Safety' },
-        ]);
-        setA3Cases([
-            { id: '1', title: 'Reduce Scrap Rate in Line 4' },
-            { id: '2', title: 'Improve Delivery Time to West Coast' },
-        ]);
+        setBowlers([]);
+        setA3Cases([]);
     }
   }, [user]);
 

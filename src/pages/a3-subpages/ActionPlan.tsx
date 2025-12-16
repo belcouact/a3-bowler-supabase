@@ -8,26 +8,7 @@ import { useApp } from '../../context/AppContext';
 
 const BASE_CELL_WIDTH = 40;
 
-const getDefaultTasks = (): ActionTask[] => [
-  { 
-    id: '1', 
-    name: 'Define problem scope', 
-    owner: 'Alice', 
-    startDate: new Date().toISOString().split('T')[0], 
-    endDate: addDays(new Date(), 4).toISOString().split('T')[0],
-    status: 'In Progress',
-    progress: 40
-  },
-  { 
-    id: '2', 
-    name: 'Gather initial data', 
-    owner: 'Bob', 
-    startDate: addDays(new Date(), 2).toISOString().split('T')[0], 
-    endDate: addDays(new Date(), 6).toISOString().split('T')[0],
-    status: 'Not Started',
-    progress: 0
-  },
-];
+const getDefaultTasks = (): ActionTask[] => [];
 
 const ActionPlan = () => {
   const { id } = useParams();
