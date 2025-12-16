@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, ZoomIn, ZoomOut } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
 import clsx from 'clsx';
-import { addDays, formatDate, isWeekend } from '../../utils/dateUtils';
+import { addDays, formatDate, isWeekend, diffDays } from '../../utils/dateUtils';
 import ActionModal, { ActionTask } from '../../components/ActionModal';
 
 const BASE_CELL_WIDTH = 40;
@@ -168,6 +168,49 @@ const ActionPlan = () => {
     setTasks(tasks.filter(t => t.id !== id));
   };
 
+  const handleShiftDateRange = (direction: -1 | 1) => {
+    const start = new Date(dateRange.start);
+    const end = new Date(dateRange.end);
+    const duration = diffDays(end, start) + 1; // Inclusive
+
+    const newStart = addDays(start, direction * duration);
+    const newEnd = addDays(end, direction * duration);
+
+    setDateRange({
+        start: formatDate(newStart),
+        end: formatDate(newEnd)
+    });
+  };
+
+  const handleSetViewMode = (mode: 'week' | 'month') => {
+      const start = new Date(dateRange.start);
+      // Align start to nice boundary?
+      // For week: Start on Sunday/Monday?
+      // For month: Start on 1st?
+      // Let's keep "Start Date" as anchor for now to be less disruptive, or align?
+      // Usually "Month View" implies "This Month".
+      
+      let newStart = start;
+      let newEnd = start;
+
+      if (mode === 'week') {
+          // Align to start of week (Sunday)
+          const day = newStart.getDay();
+          newStart = addDays(newStart, -day);
+          newEnd = addDays(newStart, 6);
+      } else {
+          // Align to start of month
+          newStart.setDate(1);
+          // End of month
+          newEnd = new Date(newStart.getFullYear(), newStart.getMonth() + 1, 0);
+      }
+
+      setDateRange({
+          start: formatDate(newStart),
+          end: formatDate(newEnd)
+      });
+  };
+
   // --- Drag Logic ---
 
   const handleMouseDown = (e: React.MouseEvent, task: ActionTask, type: 'move' | 'resize-left' | 'resize-right') => {
@@ -254,22 +297,53 @@ const ActionPlan = () => {
       {/* Header Controls */}
       <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-white z-20 relative">
         <div className="flex items-center space-x-4">
-            {/* Date Range Picker */}
-            <div className="flex items-center space-x-2 bg-gray-100 rounded-md p-2">
-                <span className="text-xs font-semibold text-gray-500 uppercase">View Range:</span>
-                <input 
-                    type="date" 
-                    value={dateRange.start}
-                    onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                    className="text-sm bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                <span className="text-gray-400">-</span>
-                <input 
-                    type="date" 
-                    value={dateRange.end}
-                    onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                    className="text-sm bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
+            {/* View Presets */}
+            <div className="flex bg-gray-100 rounded-md p-1">
+                <button
+                    onClick={() => handleSetViewMode('month')}
+                    className="px-3 py-1 text-xs font-medium rounded text-gray-500 hover:text-gray-700 hover:bg-white transition-all"
+                >
+                    Month
+                </button>
+                <button
+                    onClick={() => handleSetViewMode('week')}
+                    className="px-3 py-1 text-xs font-medium rounded text-gray-500 hover:text-gray-700 hover:bg-white transition-all"
+                >
+                    Week
+                </button>
+            </div>
+
+            {/* Date Range Picker with Navigation */}
+            <div className="flex items-center space-x-2 bg-gray-100 rounded-md p-1">
+                <button 
+                    onClick={() => handleShiftDateRange(-1)}
+                    className="p-1.5 hover:bg-white rounded shadow-sm transition-all"
+                >
+                    <ChevronLeft className="w-4 h-4 text-gray-600" />
+                </button>
+                
+                <div className="flex items-center space-x-2 px-2">
+                    <input 
+                        type="date" 
+                        value={dateRange.start}
+                        onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                        className="text-xs bg-transparent border-none focus:ring-0 p-0 w-24 text-center font-medium text-gray-700 cursor-pointer"
+                    />
+                    <span className="text-gray-400">-</span>
+                    <input 
+                        type="date" 
+                        value={dateRange.end}
+                        onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                        className="text-xs bg-transparent border-none focus:ring-0 p-0 w-24 text-center font-medium text-gray-700 cursor-pointer"
+                    />
+                </div>
+
+                <button 
+                    onClick={() => handleShiftDateRange(1)}
+                    className="p-1.5 hover:bg-white rounded shadow-sm transition-all"
+                >
+                    <ChevronRight className="w-4 h-4 text-gray-600" />
+                </button>
             </div>
         </div>
 
