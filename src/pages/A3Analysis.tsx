@@ -35,7 +35,6 @@ const A3Analysis = () => {
                 In Progress
               </span>
            </div>
-           <p className="text-gray-500 mt-1">ID: {id}</p>
         </div>
 
         <div className="flex space-x-1 border-b border-gray-200">

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
+import { Plus, ZoomIn, ZoomOut } from 'lucide-react';
 import clsx from 'clsx';
-import { addDays, formatDate, isWeekend, diffDays } from '../../utils/dateUtils';
+import { addDays, formatDate, isWeekend } from '../../utils/dateUtils';
 import ActionModal, { ActionTask } from '../../components/ActionModal';
 
 const BASE_CELL_WIDTH = 40;
@@ -87,7 +87,6 @@ const ActionPlan = () => {
         // Standard Gantt: Columns are weeks starting Monday/Sunday.
         // Let's align to Monday for consistency.
         const day = current.getDay();
-        const diff = current.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
         // current.setDate(diff); // This might go before dateRange.start
         
         // Let's just list weeks that overlap with the range.
@@ -103,7 +102,6 @@ const ActionPlan = () => {
         while (iter <= end) {
             // Only add if the week overlaps with range (it definitely does if we start at/before start)
             // Actually, we want columns that cover the range.
-            const weekEnd = addDays(iter, 6);
             
             // Format label: "Oct 2"
             const label = `${iter.toLocaleString('default', { month: 'short' })} ${iter.getDate()}`;
@@ -160,8 +158,7 @@ const ActionPlan = () => {
         // ... (Similar clamping logic needed) ...
     } else if (timeScale === 'week') {
         // Find week column that contains taskStart
-        startIndex = gridColumns.findIndex((c, i) => {
-            const nextCol = gridColumns[i+1];
+        startIndex = gridColumns.findIndex((c) => {
             // If taskStart is within this week
             // This week starts at c.date
             // Ends at nextCol.date (exclusive) or c.date + 7
@@ -171,7 +168,7 @@ const ActionPlan = () => {
         });
 
         // Find week column that contains taskEnd
-        endIndex = gridColumns.findIndex((c, i) => {
+        endIndex = gridColumns.findIndex((c) => {
             const weekStart = c.date;
             const weekEnd = addDays(weekStart, 6);
             return taskEnd >= weekStart && taskEnd <= weekEnd;
@@ -280,20 +277,6 @@ const ActionPlan = () => {
 
   const handleDeleteTask = (id: string) => {
     setTasks(tasks.filter(t => t.id !== id));
-  };
-
-  const handleShiftDateRange = (direction: -1 | 1) => {
-    const start = new Date(dateRange.start);
-    const end = new Date(dateRange.end);
-    const duration = diffDays(end, start) + 1; // Inclusive
-
-    const newStart = addDays(start, direction * duration);
-    const newEnd = addDays(end, direction * duration);
-
-    setDateRange({
-        start: formatDate(newStart),
-        end: formatDate(newEnd)
-    });
   };
 
   const handleSetViewMode = (mode: 'week' | 'month') => {
@@ -466,13 +449,6 @@ const ActionPlan = () => {
 
             {/* Date Range Picker with Navigation */}
             <div className="flex items-center space-x-2 bg-gray-100 rounded-md p-1">
-                <button 
-                    onClick={() => handleShiftDateRange(-1)}
-                    className="p-1.5 hover:bg-white rounded shadow-sm transition-all"
-                >
-                    <ChevronLeft className="w-4 h-4 text-gray-600" />
-                </button>
-                
                 <div className="flex items-center space-x-2 px-2">
                     <input 
                         type="date" 
@@ -488,13 +464,6 @@ const ActionPlan = () => {
                         className="text-xs bg-transparent border-none focus:ring-0 p-0 w-24 text-center font-medium text-gray-700 cursor-pointer"
                     />
                 </div>
-
-                <button 
-                    onClick={() => handleShiftDateRange(1)}
-                    className="p-1.5 hover:bg-white rounded shadow-sm transition-all"
-                >
-                    <ChevronRight className="w-4 h-4 text-gray-600" />
-                </button>
             </div>
         </div>
 
@@ -584,7 +553,7 @@ const ActionPlan = () => {
                 <div className="relative">
                     {/* Vertical Lines Background */}
                     <div className="absolute inset-0 flex pointer-events-none">
-                        {gridColumns.map((col, i) => (
+                        {gridColumns.map((_, i) => (
                             <div key={i} className={clsx(
                                 "flex-shrink-0 border-r border-gray-100 h-full",
                                 // Highlight weekends in day view only if we were showing them, but we aren't.

@@ -9,13 +9,17 @@ export interface Bowler {
 export interface A3Case {
   id: string;
   title: string;
+  owner?: string;
+  priority?: 'Low' | 'Medium' | 'High';
+  startDate?: string;
+  endDate?: string;
 }
 
 interface AppContextType {
   bowlers: Bowler[];
   a3Cases: A3Case[];
   addBowler: (name: string) => void;
-  addA3Case: (title: string) => void;
+  addA3Case: (caseData: Omit<A3Case, 'id'>) => void;
   deleteBowler: (id: string) => void;
   deleteA3Case: (id: string) => void;
 }
@@ -43,10 +47,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setBowlers([...bowlers, newBowler]);
   };
 
-  const addA3Case = (title: string) => {
+  const addA3Case = (caseData: Omit<A3Case, 'id'>) => {
     const newCase = {
       id: Date.now().toString(),
-      title,
+      ...caseData
     };
     setA3Cases([...a3Cases, newCase]);
   };

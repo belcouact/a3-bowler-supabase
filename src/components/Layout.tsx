@@ -1,8 +1,9 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { LayoutDashboard, FileText, Plus, BarChart3, Target, ChevronLeft, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
-import { useApp } from '../context/AppContext';
+import { useApp, A3Case } from '../context/AppContext';
 import { useState } from 'react';
+import A3CaseModal from './A3CaseModal';
 
 const Layout = () => {
   const location = useLocation();
@@ -15,6 +16,7 @@ const Layout = () => {
   const [newItemName, setNewItemName] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isA3ModalOpen, setIsA3ModalOpen] = useState(false);
 
   const handleAddItem = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,11 +24,22 @@ const Layout = () => {
 
     if (isMetricBowler) {
       addBowler(newItemName);
-    } else {
-      addA3Case(newItemName);
+      setNewItemName('');
+      setIsAdding(false);
     }
-    setNewItemName('');
-    setIsAdding(false);
+  };
+
+  const handlePlusClick = () => {
+    if (isMetricBowler) {
+        if (!isSidebarOpen) setIsSidebarOpen(true);
+        setIsAdding(!isAdding);
+    } else {
+        setIsA3ModalOpen(true);
+    }
+  };
+
+  const handleSaveA3Case = (data: Omit<A3Case, 'id'>) => {
+      addA3Case(data);
   };
 
   const navItems = [
@@ -100,7 +113,7 @@ const Layout = () => {
                   {isMetricBowler ? 'Bowler Lists' : 'A3 Cases'}
                 </h2>
                 <button 
-                  onClick={() => setIsAdding(!isAdding)}
+                  onClick={handlePlusClick}
                   className="p-1 rounded-md hover:bg-blue-100 text-blue-600 transition-colors"
                   title="Add New"
                 >
@@ -109,7 +122,7 @@ const Layout = () => {
               </>
             ) : (
                <button 
-                  onClick={() => { setIsSidebarOpen(true); setIsAdding(true); }}
+                  onClick={handlePlusClick}
                   className="p-1 rounded-md hover:bg-blue-100 text-blue-600 transition-colors"
                   title="Add New"
                 >
@@ -191,6 +204,12 @@ const Layout = () => {
           </div>
         </main>
       </div>
+
+      <A3CaseModal 
+        isOpen={isA3ModalOpen} 
+        onClose={() => setIsA3ModalOpen(false)} 
+        onSave={handleSaveA3Case} 
+      />
     </div>
   );
 };
