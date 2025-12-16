@@ -20,7 +20,7 @@ const MetricBowler = () => {
 
   // Calculate 12 months based on start date
   const displayMonths = useMemo(() => {
-    const [year, monthStr] = startDate.split('-');
+    const [, monthStr] = startDate.split('-');
     const startMonthIndex = parseInt(monthStr, 10) - 1;
     
     const months = [];
