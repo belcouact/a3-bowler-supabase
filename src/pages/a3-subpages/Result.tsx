@@ -1,7 +1,28 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { useApp } from '../../context/AppContext';
 
 const Result = () => {
+  const { id } = useParams();
+  const { a3Cases, updateA3Case } = useApp();
+  const currentCase = a3Cases.find(c => c.id === id);
   const [results, setResults] = useState('');
+
+  useEffect(() => {
+    if (currentCase) {
+      setResults(currentCase.results || '');
+    }
+  }, [currentCase?.results]);
+
+  const handleBlur = () => {
+    if (currentCase) {
+      updateA3Case({ ...currentCase, results });
+    }
+  };
+
+  if (!currentCase) {
+    return <div className="text-gray-500">Loading case data...</div>;
+  }
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -21,6 +42,7 @@ const Result = () => {
               placeholder="Describe what happened after actions were taken..."
               value={results}
               onChange={(e) => setResults(e.target.value)}
+              onBlur={handleBlur}
             />
           </div>
         </div>

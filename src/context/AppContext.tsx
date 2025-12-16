@@ -38,6 +38,8 @@ export interface A3Case {
   startDate?: string;
   endDate?: string;
   status?: string;
+  problemStatement?: string;
+  results?: string;
   dataAnalysisObservations?: string;
 }
 

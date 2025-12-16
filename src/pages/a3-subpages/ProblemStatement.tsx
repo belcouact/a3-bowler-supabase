@@ -1,7 +1,28 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { useApp } from '../../context/AppContext';
 
 const ProblemStatement = () => {
+  const { id } = useParams();
+  const { a3Cases, updateA3Case } = useApp();
+  const currentCase = a3Cases.find(c => c.id === id);
   const [statement, setStatement] = useState('');
+
+  useEffect(() => {
+    if (currentCase) {
+      setStatement(currentCase.problemStatement || '');
+    }
+  }, [currentCase?.problemStatement]);
+
+  const handleBlur = () => {
+    if (currentCase) {
+      updateA3Case({ ...currentCase, problemStatement: statement });
+    }
+  };
+
+  if (!currentCase) {
+    return <div className="text-gray-500">Loading case data...</div>;
+  }
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -21,6 +42,7 @@ const ProblemStatement = () => {
               placeholder="Describe the problem..."
               value={statement}
               onChange={(e) => setStatement(e.target.value)}
+              onBlur={handleBlur}
             />
           </div>
         </div>
