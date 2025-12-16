@@ -13,8 +13,14 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Navigate to="/metric-bowler" replace />} />
+          
+          {/* Metric Bowler Routes */}
           <Route path="metric-bowler" element={<MetricBowler />} />
-          <Route path="a3-analysis" element={<A3Analysis />}>
+          <Route path="metric-bowler/:id" element={<MetricBowler />} />
+          
+          {/* A3 Analysis Routes */}
+          <Route path="a3-analysis" element={<Navigate to="/a3-analysis/1/problem-statement" replace />} />
+          <Route path="a3-analysis/:id" element={<A3Analysis />}>
             <Route index element={<Navigate to="problem-statement" replace />} />
             <Route path="problem-statement" element={<ProblemStatement />} />
             <Route path="data-analysis" element={<DataAnalysis />} />
