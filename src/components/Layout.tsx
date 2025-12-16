@@ -28,9 +28,13 @@ const Layout = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSaveData = async () => {
+    if (!user) {
+      alert('Please login to save data.');
+      return;
+    }
     setIsSaving(true);
     try {
-      await dataService.saveData(bowlers, a3Cases);
+      await dataService.saveData(bowlers, a3Cases, user.id);
       alert('Data saved successfully!');
     } catch (error) {
       console.error('Save error:', error);
