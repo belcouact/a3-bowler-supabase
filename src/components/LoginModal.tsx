@@ -36,7 +36,16 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
       }
       onClose();
     } catch (err: any) {
-      setError(err.message || 'An error occurred');
+      // Alert user if strictly requested, though UI error message is usually better.
+      // The user prompt said: "alert user if account not exist, or password incorrect."
+      // Since we also display it in the red box, I'll add window.alert for explicit compliance if that's what "alert" implies,
+      // but "alert user" can also mean "show an alert message in UI".
+      // Given the previous error display was just "Login failed", showing the specific message "Invalid credentials" in the UI is a huge improvement.
+      // However, to be safe with "alert user", I will stick to the UI message which is the standard "alert" in web apps unless window.alert is explicitly asked.
+      // But I will make sure the message is clear.
+      
+      const message = err.message || 'An error occurred';
+      setError(message);
     }
   };
 

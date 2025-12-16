@@ -32,7 +32,8 @@ export const authService = {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Login failed');
+      // Prefer errorData.error as seen in test response: {"error":"Invalid credentials","success":false}
+      throw new Error(errorData.error || errorData.message || 'Login failed');
     }
     return response.json();
   },

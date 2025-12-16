@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(userProfile);
       localStorage.setItem('user', JSON.stringify(userProfile));
     } catch (error) {
-      console.error('Login error:', error);
+      // Do not log login errors to console as they are expected (wrong password etc)
       throw error;
     } finally {
       setIsLoading(false);
