@@ -1,16 +1,13 @@
 import { useState, useMemo } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { Edit2, Info } from 'lucide-react';
-import { useApp, Metric, MetricData } from '../context/AppContext';
-import MetricEditModal from '../components/MetricEditModal';
+import { Info } from 'lucide-react';
+import { useApp, Metric } from '../context/AppContext';
 
 const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const MetricBowler = () => {
   const { id } = useParams();
   const { bowlers, updateBowler } = useApp();
-  
-  const [editingMetric, setEditingMetric] = useState<Metric | null>(null);
   
   const [startDate, setStartDate] = useState(() => {
     const today = new Date();
@@ -40,21 +37,42 @@ const MetricBowler = () => {
   const title = selectedBowler ? selectedBowler.name : 'Metric Bowler';
   const metrics = selectedBowler?.metrics || [];
 
-  const handleEditClick = (metric: Metric) => {
-    setEditingMetric(metric);
-  };
-
-  const handleSaveMetricData = (metricId: string, data: Record<string, MetricData>) => {
+  const handleCellUpdate = (
+    metricId: string,
+    monthKey: string,
+    field: 'target' | 'actual',
+    value: string
+  ) => {
     if (!selectedBowler) return;
 
-    const updatedMetrics = metrics.map(m => 
-      m.id === metricId ? { ...m, monthlyData: data } : m
-    );
+    const updatedMetrics = metrics.map(m => {
+      if (m.id !== metricId) return m;
 
-    updateBowler({
-      ...selectedBowler,
-      metrics: updatedMetrics
+      const currentMonthlyData = m.monthlyData || {};
+      const monthData = currentMonthlyData[monthKey] || { target: '', actual: '' };
+      
+      // If value hasn't changed, don't update
+      if (monthData[field] === value) return m;
+
+      return {
+        ...m,
+        monthlyData: {
+          ...currentMonthlyData,
+          [monthKey]: {
+            ...monthData,
+            [field]: value
+          }
+        }
+      };
     });
+
+    // Only update if there are actual changes
+    if (JSON.stringify(updatedMetrics) !== JSON.stringify(metrics)) {
+        updateBowler({
+            ...selectedBowler,
+            metrics: updatedMetrics
+        });
+    }
   };
 
   if (!id && bowlers.length > 0) {
@@ -138,13 +156,6 @@ const MetricBowler = () => {
                             </div>
                             <span className="text-xs text-gray-500 font-normal mt-1">{metric.owner}</span>
                         </div>
-                        <button 
-                          onClick={() => handleEditClick(metric)}
-                          className="text-gray-400 hover:text-blue-600 transition-colors p-1"
-                          title="Edit Data"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
                       </div>
                     </td>
                     <td rowSpan={2} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 align-top border-r border-gray-100">
@@ -158,13 +169,14 @@ const MetricBowler = () => {
                     {displayMonths.map((month) => (
                       <td
                         key={`${month.key}-target`}
-                        className="px-3 py-2 whitespace-nowrap text-xs text-gray-500 bg-gray-50/30 border-b border-gray-100 h-8"
+                        className="px-0 py-0 whitespace-nowrap text-xs text-gray-500 bg-gray-50/30 border-b border-gray-100 h-8 p-0"
                       >
-                        <div className="flex justify-center items-center">
-                          <span className="font-medium text-gray-700">
-                            {metric.monthlyData?.[month.key]?.target || '-'}
-                          </span>
-                        </div>
+                        <input
+                            type="text"
+                            className="w-full h-full bg-transparent text-center focus:outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-500 px-2"
+                            defaultValue={metric.monthlyData?.[month.key]?.target || ''}
+                            onBlur={(e) => handleCellUpdate(metric.id, month.key, 'target', e.target.value)}
+                        />
                       </td>
                     ))}
                   </tr>
@@ -177,17 +189,16 @@ const MetricBowler = () => {
                      {displayMonths.map((month) => (
                        <td
                          key={`${month.key}-actual`}
-                         className="px-3 py-2 whitespace-nowrap text-xs text-gray-500 h-8"
+                         className="px-0 py-0 whitespace-nowrap text-xs text-gray-500 h-8 p-0"
                        >
-                         <div className="flex justify-center items-center">
-                           <span
-                             className={`font-semibold ${
-                               !metric.monthlyData?.[month.key]?.actual ? 'text-gray-400' : 'text-gray-900'
+                         <input
+                             type="text"
+                             className={`w-full h-full bg-transparent text-center focus:outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-500 px-2 ${
+                               !metric.monthlyData?.[month.key]?.actual ? 'text-gray-400' : 'text-gray-900 font-semibold'
                              }`}
-                           >
-                             {metric.monthlyData?.[month.key]?.actual || '-'}
-                           </span>
-                         </div>
+                             defaultValue={metric.monthlyData?.[month.key]?.actual || ''}
+                             onBlur={(e) => handleCellUpdate(metric.id, month.key, 'actual', e.target.value)}
+                         />
                        </td>
                      ))}
                   </tr>
@@ -197,14 +208,6 @@ const MetricBowler = () => {
           </tbody>
         </table>
       </div>
-
-      <MetricEditModal 
-        isOpen={!!editingMetric}
-        onClose={() => setEditingMetric(null)}
-        metric={editingMetric}
-        onSave={handleSaveMetricData}
-        startDate={startDate}
-      />
     </div>
   );
 };
