@@ -5,12 +5,14 @@ import { useApp, Metric } from '../context/AppContext';
 import { ImportModal } from '../components/ImportModal';
 import { HelpModal } from '../components/HelpModal';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useToast } from '../context/ToastContext';
 
 const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const MetricBowler = () => {
   const { id } = useParams();
   const { bowlers, updateBowler } = useApp();
+  const toast = useToast();
   
   const [startDate, setStartDate] = useState(() => {
     const today = new Date();
@@ -199,7 +201,7 @@ const MetricBowler = () => {
 
   const handleDownloadCSV = () => {
     if (!selectedBowler || metrics.length === 0) {
-      alert("No data to download.");
+      toast.info("No data to download.");
       return;
     }
 

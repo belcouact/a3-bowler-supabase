@@ -3,6 +3,7 @@ import { X, Plus, Trash2 } from 'lucide-react';
 import { Bowler, Metric } from '../context/AppContext';
 import clsx from 'clsx';
 import { generateShortId } from '../utils/idUtils';
+import { useToast } from '../context/ToastContext';
 
 interface BowlerModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface BowlerModalProps {
 
 const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerModalProps) => {
   const [activeTab, setActiveTab] = useState<'General' | 'Metrics'>('General');
+  const toast = useToast();
   
   // General State
   const [generalData, setGeneralData] = useState({
@@ -80,7 +82,7 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
 
   const handleSubmit = () => {
     if (!generalData.name.trim()) {
-        alert('Please provide a name for the Bowler List.');
+        toast.error('Please provide a name for the Bowler List.');
         return;
     }
     

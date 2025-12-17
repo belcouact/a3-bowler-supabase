@@ -10,12 +10,14 @@ import LoginModal from './LoginModal';
 import { AIChatModal } from './AIChatModal';
 import { AppInfoModal } from './AppInfoModal';
 import { dataService } from '../services/dataService';
+import { useToast } from '../context/ToastContext';
 
 const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { bowlers, a3Cases, addBowler, updateBowler, addA3Case, updateA3Case, deleteBowler, deleteA3Case } = useApp();
   const { user, logout, isLoading } = useAuth();
+  const toast = useToast();
   
   // Identify active module based on path
   const isMetricBowler = location.pathname.includes('/metric-bowler');
@@ -34,16 +36,16 @@ const Layout = () => {
 
   const handleSaveData = async () => {
     if (!user) {
-      alert('Please login to save data.');
+      toast.error('Please login to save data.');
       return;
     }
     setIsSaving(true);
     try {
       await dataService.saveData(bowlers, a3Cases, user.username);
-      alert('Data saved successfully!');
+      toast.success('Data saved successfully!');
     } catch (error) {
       console.error('Save error:', error);
-      alert('Failed to save data. Please check if the backend is running.');
+      toast.error('Failed to save data. Please check if the backend is running.');
     } finally {
       setIsSaving(false);
     }
