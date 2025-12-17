@@ -460,17 +460,17 @@ export const MindMap = ({ initialNodes, onChange }: MindMapProps) => {
                 </button>
           </div>
 
-          <div style={{ transform: `scale(${scale})`, transformOrigin: '0 0', width: '100%', height: '100%' }}>
+          <div style={{ transform: `scale(${scale})`, transformOrigin: '0 0', width: '100%', height: '100%', position: 'relative' }}>
               <svg 
-                className="absolute top-0 left-0 w-full h-full pointer-events-none z-0" 
-                style={{ overflow: 'visible' }}
+                className="absolute top-0 left-0 w-full h-full pointer-events-none" 
+                style={{ overflow: 'visible', zIndex: 0 }}
                 width="100%"
                 height="100%"
               >
                 {renderConnections()}
               </svg>
 
-              <div className="z-10 relative">
+              <div className="relative" style={{ zIndex: 10 }}>
                 {nodes.map(node => (
                     <MindMapNode
                         key={node.id}
