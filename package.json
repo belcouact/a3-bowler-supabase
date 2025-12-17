@@ -10,17 +10,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "clsx": "^2.1.0",
+    "lucide-react": "^0.330.0",
+    "markmap-lib": "^0.18.12",
+    "markmap-render": "^0.18.12",
+    "markmap-toolbar": "^0.18.12",
+    "markmap-view": "^0.18.12",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.0",
     "recharts": "^2.12.0",
-    "lucide-react": "^0.330.0",
-    "clsx": "^2.1.0",
-    "tailwind-merge": "^2.2.1",
-    "markmap-view": "0.16.0",
-    "markmap-lib": "0.16.0",
-    "markmap-toolbar": "0.16.0",
-    "markmap-common": "0.16.0"
+    "tailwind-merge": "^2.2.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.56",

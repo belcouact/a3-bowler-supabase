@@ -66,17 +66,22 @@ var index_default = {
         }
         if (bowlers && Array.isArray(bowlers)) {
           for (const bowler of bowlers) {
-            const bowlerToSave = { ...bowler, userAccountId: userId };
+            const bowlerToSave = { ...bowler, userId };
             await env.BOWLER_DATA.put(`user:${userId}:bowler:${bowler.id}`, JSON.stringify(bowlerToSave));
           }
         }
         if (a3Cases && Array.isArray(a3Cases)) {
           for (const a3 of a3Cases) {
-            const a3ToSave = { ...a3, userAccountId: userId };
+            const a3ToSave = { ...a3, userId };
             await env.BOWLER_DATA.put(`user:${userId}:a3:${a3.id}`, JSON.stringify(a3ToSave));
           }
         }
-        return new Response(JSON.stringify({ success: true, message: "Data saved successfully" }), {
+        return new Response(JSON.stringify({
+          success: true,
+          message: "Data saved successfully",
+          debug_userId: userId
+          // Echo back userId for verification
+        }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
       } catch (err) {
@@ -101,14 +106,24 @@ var index_default = {
         for (const key of bowlerList.keys) {
           const value = await env.BOWLER_DATA.get(key.name);
           if (value) {
-            bowlers.push(JSON.parse(value));
+            const data = JSON.parse(value);
+            if (data.userId === userId || data.userAccountId === userId) {
+              bowlers.push(data);
+            } else {
+              bowlers.push(data);
+            }
           }
         }
         const a3List = await env.BOWLER_DATA.list({ prefix: `user:${userId}:a3:` });
         for (const key of a3List.keys) {
           const value = await env.BOWLER_DATA.get(key.name);
           if (value) {
-            a3Cases.push(JSON.parse(value));
+            const data = JSON.parse(value);
+            if (data.userId === userId || data.userAccountId === userId) {
+              a3Cases.push(data);
+            } else {
+              a3Cases.push(data);
+            }
           }
         }
         return new Response(JSON.stringify({ success: true, bowlers, a3Cases }), {
