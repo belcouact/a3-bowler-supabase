@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, MouseEvent as ReactMouseEvent, useLayoutEffect } from 'react';
+import { useState, useRef, useEffect, MouseEvent as ReactMouseEvent, useLayoutEffect, useCallback } from 'react';
 import { Plus, Trash2, MousePointer2, ZoomIn, ZoomOut, Palette } from 'lucide-react';
 import clsx from 'clsx';
 import { MindMapNodeData } from '../context/AppContext';
@@ -34,6 +34,11 @@ const MindMapNode = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const nodeRef = useRef<HTMLDivElement>(null);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const nodeDataRef = useRef(node);
+
+  useLayoutEffect(() => {
+    nodeDataRef.current = node;
+  });
 
   // Auto-resize textarea
   useLayoutEffect(() => {
@@ -44,27 +49,24 @@ const MindMapNode = ({
   }, [node.text, node.customHeight]);
 
   // Observe node size changes (only update model if size changes significantly and not resizing manually)
-  // Actually, we can skip this if we trust our manual resize and text auto-grow.
-  // But we need it for initial render or text changes to update the connections.
   useEffect(() => {
     if (!nodeRef.current) return;
     
     const observer = new ResizeObserver(entries => {
       for (const entry of entries) {
         const el = entry.target as HTMLElement;
-        // Only update if difference is significant and we are not in the middle of a manual resize (implied by rapid updates, but here we just check values)
-        // If node.width is set, el.offsetWidth should match it.
-        // If node.width is undefined, we sync el.offsetWidth to it?
-        // Actually, we should just sync the actual DOM size to the store so lines draw correctly.
-        if (Math.abs((node.width || DEFAULT_WIDTH) - el.offsetWidth) > 2 || Math.abs((node.height || DEFAULT_HEIGHT) - el.offsetHeight) > 2) {
-             onUpdate(node.id, { width: el.offsetWidth, height: el.offsetHeight });
+        const currentNode = nodeDataRef.current;
+        
+        // Only update if difference is significant
+        if (Math.abs((currentNode.width || DEFAULT_WIDTH) - el.offsetWidth) > 2 || Math.abs((currentNode.height || DEFAULT_HEIGHT) - el.offsetHeight) > 2) {
+             onUpdate(currentNode.id, { width: el.offsetWidth, height: el.offsetHeight });
         }
       }
     });
 
     observer.observe(nodeRef.current);
     return () => observer.disconnect();
-  }, [node.id, node.width, node.height, onUpdate]);
+  }, [onUpdate]);
 
   const handleResizeStart = (e: ReactMouseEvent) => {
     e.stopPropagation();
@@ -369,9 +371,9 @@ export const MindMap = ({ initialNodes, onChange }: MindMapProps) => {
     setNodes(nodes.filter(n => !idsToDelete.includes(n.id)));
   };
 
-  const updateNode = (id: string, updates: Partial<Node>) => {
+  const updateNode = useCallback((id: string, updates: Partial<Node>) => {
     setNodes(prev => prev.map(n => n.id === id ? { ...n, ...updates } : n));
-  };
+  }, []);
 
   const renderConnections = () => {
     return nodes.map(node => {
