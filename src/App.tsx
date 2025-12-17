@@ -16,7 +16,7 @@ function App() {
     <Router basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route path="/" element={<Layout />}>
-          <Route index element={<Navigate to="/mindmap" replace />} />
+          <Route index element={<Navigate to="/metric-bowler" replace />} />
           
           <Route path="mindmap" element={<MarkmapPage />} />
 

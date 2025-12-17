@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, FileText, Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Workflow } from 'lucide-react';
+import { LayoutDashboard, FileText, Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Workflow, Zap, Link as LinkIcon } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case, Bowler } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
@@ -106,9 +106,9 @@ const Layout = () => {
   };
 
   const navItems = [
-    { path: '/mindmap', label: 'Front Page', icon: Workflow },
-    { path: '/metric-bowler', label: 'Metric Bowler', icon: LayoutDashboard },
-    { path: '/a3-analysis', label: 'A3 Analysis', icon: FileText },
+    { path: '/mindmap', label: 'Front Page', icon: LinkIcon },
+    { path: '/metric-bowler', label: 'Metric Bowler', icon: Target },
+    { path: '/a3-analysis', label: 'A3 Analysis', icon: Zap },
   ];
 
   return (
