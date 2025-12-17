@@ -198,7 +198,11 @@ const Layout = () => {
                 </div>
               </div>
               <button 
-                onClick={logout}
+                onClick={() => {
+                  if (window.confirm("Are you sure you want to logout? Unsaved changes may be lost.")) {
+                    logout();
+                  }
+                }}
                 disabled={isLoading}
                 className="text-gray-500 hover:text-red-600 transition-colors p-1 rounded-full hover:bg-gray-100 disabled:opacity-50"
                 title="Logout"
