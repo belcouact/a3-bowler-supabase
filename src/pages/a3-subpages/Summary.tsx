@@ -1,4 +1,3 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useParams } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 
@@ -10,16 +9,6 @@ const Summary = () => {
   if (!currentCase) {
     return <div className="text-gray-500">Loading case data...</div>;
   }
-
-  const data = [
-    { name: 'Jan', defects: 65 },
-    { name: 'Feb', defects: 59 },
-    { name: 'Mar', defects: 80 },
-    { name: 'Apr', defects: 81 },
-    { name: 'May', defects: 56 },
-    { name: 'Jun', defects: 55 },
-    { name: 'Jul', defects: 40 },
-  ];
 
   return (
     <div className="space-y-6">
