@@ -89,6 +89,55 @@ const MetricBowler = () => {
     });
   };
 
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    metricId: string,
+    monthKey: string,
+    field: 'target' | 'actual',
+    metricIndex: number,
+    monthIndex: number
+  ) => {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      
+      let nextMetricIndex = metricIndex;
+      let nextField = field;
+      let nextMonthIndex = monthIndex;
+
+      if (e.key === 'ArrowUp') {
+        if (field === 'actual') {
+          nextField = 'target';
+        } else {
+          nextField = 'actual';
+          nextMetricIndex = Math.max(0, metricIndex - 1);
+        }
+      } else if (e.key === 'ArrowDown') {
+        if (field === 'target') {
+          nextField = 'actual';
+        } else {
+          nextField = 'target';
+          nextMetricIndex = Math.min(metrics.length - 1, metricIndex + 1);
+        }
+      } else if (e.key === 'ArrowLeft') {
+        nextMonthIndex = Math.max(0, monthIndex - 1);
+      } else if (e.key === 'ArrowRight') {
+        nextMonthIndex = Math.min(displayMonths.length - 1, monthIndex + 1);
+      }
+
+      const nextMetric = metrics[nextMetricIndex];
+      const nextMonth = displayMonths[nextMonthIndex];
+      const inputId = `cell-${nextMetric.id}-${nextMonth.key}-${nextField}`;
+      const element = document.getElementById(inputId);
+      
+      if (element) {
+        element.focus();
+        (element as HTMLInputElement).select();
+      }
+    } else if (e.key === 'Enter') {
+      (e.target as HTMLInputElement).blur();
+    }
+  };
+
   const handleDownloadCSV = () => {
     if (!selectedBowler || metrics.length === 0) return;
 
@@ -205,7 +254,7 @@ const MetricBowler = () => {
                     </td>
                 </tr>
             ) : (
-                metrics.map((metric) => (
+                metrics.map((metric, metricIndex) => (
                   <>
                   {/* Row 1: Metadata + Target Data */}
                   <tr key={`${metric.id}-row1`} className="hover:bg-gray-50 transition-colors border-b-0">
@@ -235,16 +284,18 @@ const MetricBowler = () => {
                       Target
                     </td>
 
-                    {displayMonths.map((month) => (
+                    {displayMonths.map((month, monthIndex) => (
                       <td
                         key={`${month.key}-target`}
                         className="px-0 py-0 whitespace-nowrap text-xs text-gray-500 bg-gray-50/30 border-b border-gray-100 h-8 p-0"
                       >
                         <input
+                            id={`cell-${metric.id}-${month.key}-target`}
                             type="text"
                             className="w-full h-full bg-transparent text-center focus:outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-500 px-1 min-w-[3rem]"
                             defaultValue={metric.monthlyData?.[month.key]?.target || ''}
                             onBlur={(e) => handleCellUpdate(metric.id, month.key, 'target', e.target.value)}
+                            onKeyDown={(e) => handleKeyDown(e, metric.id, month.key, 'target', metricIndex, monthIndex)}
                         />
                       </td>
                     ))}
@@ -255,18 +306,20 @@ const MetricBowler = () => {
                      <td className="px-2 py-2 whitespace-nowrap text-xs font-medium text-gray-500 h-8">
                         Actual
                      </td>
-                     {displayMonths.map((month) => (
+                     {displayMonths.map((month, monthIndex) => (
                        <td
                          key={`${month.key}-actual`}
                          className="px-0 py-0 whitespace-nowrap text-xs text-gray-500 h-8 p-0"
                        >
                          <input
+                             id={`cell-${metric.id}-${month.key}-actual`}
                              type="text"
                              className={`w-full h-full bg-transparent text-center focus:outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-500 px-1 min-w-[3rem] ${
                                !metric.monthlyData?.[month.key]?.actual ? 'text-gray-400' : 'text-gray-900 font-semibold'
                              }`}
                              defaultValue={metric.monthlyData?.[month.key]?.actual || ''}
                              onBlur={(e) => handleCellUpdate(metric.id, month.key, 'actual', e.target.value)}
+                             onKeyDown={(e) => handleKeyDown(e, metric.id, month.key, 'actual', metricIndex, monthIndex)}
                          />
                        </td>
                      ))}
