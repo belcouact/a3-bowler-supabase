@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { Info } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -105,25 +106,25 @@ const MetricBowler = () => {
         </div>
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="min-w-full divide-y divide-gray-200 table-auto">
           <thead className="bg-gray-50">
             <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] w-48">
                 Metric Name
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-24">
                 Scope
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-20">
                 Type
               </th>
               {displayMonths.map((month) => (
                 <th
                   key={month.key}
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider text-gray-300"
+                  className="px-1 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider text-gray-400 whitespace-normal break-words min-w-[3rem]"
                 >
-                  {month.label}
+                  {month.label.replace('/', ' ')}
                 </th>
               ))}
             </tr>
@@ -140,13 +141,13 @@ const MetricBowler = () => {
                   <>
                   {/* Row 1: Metadata + Target Data */}
                   <tr key={`${metric.id}-row1`} className="hover:bg-gray-50 transition-colors border-b-0">
-                    <td rowSpan={2} className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] group-hover:bg-gray-50 align-top">
+                    <td rowSpan={2} className="px-4 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] group-hover:bg-gray-50 align-top break-words">
                       <div className="flex items-start justify-between">
                         <div className="flex flex-col">
-                            <div className="flex items-center">
+                            <div className="flex items-center flex-wrap">
                                 <span className="mr-2">{metric.name}</span>
                                 {metric.definition && (
-                                    <div className="group relative">
+                                    <div className="group relative inline-block">
                                         <Info className="w-3.5 h-3.5 text-gray-400 hover:text-blue-500 cursor-help" />
                                         <div className="absolute left-full top-0 ml-2 w-64 p-3 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 whitespace-normal break-words">
                                             {metric.definition}
@@ -158,11 +159,11 @@ const MetricBowler = () => {
                         </div>
                       </div>
                     </td>
-                    <td rowSpan={2} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 align-top border-r border-gray-100">
+                    <td rowSpan={2} className="px-2 py-4 text-sm text-gray-500 align-top border-r border-gray-100 break-words">
                       {metric.scope}
                     </td>
                     
-                    <td className="px-6 py-2 whitespace-nowrap text-xs font-medium text-gray-500 bg-gray-50/30 border-b border-gray-100 h-8">
+                    <td className="px-2 py-2 whitespace-nowrap text-xs font-medium text-gray-500 bg-gray-50/30 border-b border-gray-100 h-8">
                       Target
                     </td>
 
@@ -173,7 +174,7 @@ const MetricBowler = () => {
                       >
                         <input
                             type="text"
-                            className="w-full h-full bg-transparent text-center focus:outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-500 px-2"
+                            className="w-full h-full bg-transparent text-center focus:outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-500 px-1 min-w-[3rem]"
                             defaultValue={metric.monthlyData?.[month.key]?.target || ''}
                             onBlur={(e) => handleCellUpdate(metric.id, month.key, 'target', e.target.value)}
                         />
@@ -183,7 +184,7 @@ const MetricBowler = () => {
 
                   {/* Row 2: Actual Data */}
                   <tr key={`${metric.id}-row2`} className="hover:bg-gray-50 transition-colors">
-                     <td className="px-6 py-2 whitespace-nowrap text-xs font-medium text-gray-500 h-8">
+                     <td className="px-2 py-2 whitespace-nowrap text-xs font-medium text-gray-500 h-8">
                         Actual
                      </td>
                      {displayMonths.map((month) => (
@@ -193,7 +194,7 @@ const MetricBowler = () => {
                        >
                          <input
                              type="text"
-                             className={`w-full h-full bg-transparent text-center focus:outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-500 px-2 ${
+                             className={`w-full h-full bg-transparent text-center focus:outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-500 px-1 min-w-[3rem] ${
                                !metric.monthlyData?.[month.key]?.actual ? 'text-gray-400' : 'text-gray-900 font-semibold'
                              }`}
                              defaultValue={metric.monthlyData?.[month.key]?.actual || ''}
@@ -208,6 +209,69 @@ const MetricBowler = () => {
           </tbody>
         </table>
       </div>
+
+      {metrics.length > 0 && (
+        <div className="p-6 bg-gray-50 border-t border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">Metric Trends</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {metrics.map((metric) => {
+              const chartData = displayMonths.map((month) => ({
+                name: month.label.split('/')[1], // Just show month name
+                fullLabel: month.label,
+                target: parseFloat(metric.monthlyData?.[month.key]?.target || '0') || null,
+                actual: parseFloat(metric.monthlyData?.[month.key]?.actual || '0') || null,
+              }));
+
+              return (
+                <div key={`${metric.id}-chart`} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                  <h4 className="text-sm font-medium text-gray-900 mb-4">{metric.name}</h4>
+                  <div className="h-64 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                        <XAxis 
+                          dataKey="name" 
+                          tick={{ fontSize: 10, fill: '#6b7280' }} 
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis 
+                          tick={{ fontSize: 10, fill: '#6b7280' }} 
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <Tooltip 
+                          contentStyle={{ borderRadius: '4px', border: 'none', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}
+                          labelStyle={{ color: '#374151', fontWeight: 600 }}
+                        />
+                        <Legend wrapperStyle={{ fontSize: '12px' }} />
+                        <Line 
+                          type="monotone" 
+                          dataKey="actual" 
+                          stroke="#3b82f6" 
+                          strokeWidth={2} 
+                          dot={{ r: 3, fill: '#3b82f6', strokeWidth: 0 }} 
+                          activeDot={{ r: 5 }} 
+                          name="Actual"
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="target" 
+                          stroke="#ef4444" 
+                          strokeWidth={2} 
+                          strokeDasharray="5 5" 
+                          dot={false}
+                          name="Target" 
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
