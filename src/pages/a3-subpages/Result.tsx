@@ -57,7 +57,7 @@ const Result = () => {
   }
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6">
       <div>
         <h3 className="text-xl font-bold text-gray-900 mb-2">Results & Follow-up</h3>
         <p className="text-gray-500 mb-4">Document the results achieved after implementing the action plan.</p>
