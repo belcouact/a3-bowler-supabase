@@ -8,6 +8,8 @@ const ProblemStatement = () => {
   const currentCase = a3Cases.find(c => c.id === id);
   const [statement, setStatement] = useState('');
 
+  console.log('Rendering ProblemStatement', { id, currentCase });
+
   useEffect(() => {
     if (currentCase) {
       setStatement(currentCase.problemStatement || '');

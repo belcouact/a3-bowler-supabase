@@ -8,6 +8,8 @@ const Result = () => {
   const currentCase = a3Cases.find(c => c.id === id);
   const [results, setResults] = useState('');
 
+  console.log('Rendering Result', { id, currentCase });
+
   useEffect(() => {
     if (currentCase) {
       setResults(currentCase.results || '');

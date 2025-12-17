@@ -15,6 +15,8 @@ const ActionPlan = () => {
   const { a3Cases, updateA3Case } = useApp();
   const currentCase = a3Cases.find(c => c.id === id);
 
+  console.log('Rendering ActionPlan', { id, currentCase });
+
   // --- State ---
   const [tasks, setTasks] = useState<ActionTask[]>(getDefaultTasks());
 

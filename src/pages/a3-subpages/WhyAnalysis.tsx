@@ -7,6 +7,8 @@ const WhyAnalysis = () => {
   const { a3Cases, updateA3Case } = useApp();
   const currentCase = a3Cases.find(c => c.id === id);
 
+  console.log('Rendering WhyAnalysis', { id, currentCase });
+
   const handleMindMapChange = (nodes: MindMapNodeData[]) => {
     if (!currentCase) return;
     updateA3Case({ ...currentCase, mindMapNodes: nodes });

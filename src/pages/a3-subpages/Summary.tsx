@@ -7,6 +7,8 @@ const Summary = () => {
   const { a3Cases } = useApp();
   const currentCase = a3Cases.find(c => c.id === id);
 
+  console.log('Rendering Summary', { id, currentCase });
+
   if (!currentCase) {
     return <div className="text-gray-500">Loading case data...</div>;
   }
