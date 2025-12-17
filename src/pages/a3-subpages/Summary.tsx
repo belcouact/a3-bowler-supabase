@@ -75,6 +75,44 @@ const Summary = () => {
               </ResponsiveContainer>
             </div>
             <p className="text-xs text-gray-500 mt-2">{currentCase.dataAnalysisObservations || 'No data observations recorded.'}</p>
+            
+            {/* Evidence Images */}
+            {currentCase.dataAnalysisImages && currentCase.dataAnalysisImages.length > 0 && (
+                <div className="mt-4 border-t pt-2">
+                    <h5 className="text-xs font-semibold text-gray-600 mb-2">Evidence</h5>
+                    <div className="relative w-full h-48 bg-gray-50 border border-gray-200 rounded overflow-hidden">
+                        {/* We use a simple scaling approach or just mapping. 
+                            Since the original canvas is 500px height, we scale it down or scroll.
+                            Let's use a scale transform to fit a 500px canvas into 192px (h-48) roughly 0.4 scale.
+                            But width is variable.
+                            Better: just show them as is with overflow-auto or contain.
+                        */}
+                         <div className="w-full h-full relative overflow-auto">
+                            {currentCase.dataAnalysisImages.map(img => (
+                                <div
+                                    key={img.id}
+                                    style={{
+                                        position: 'absolute',
+                                        left: img.x * 0.5, // Scale down positions slightly for summary view
+                                        top: img.y * 0.5,
+                                        width: img.width * 0.5,
+                                        height: img.height * 0.5,
+                                    }}
+                                >
+                                    <img 
+                                        src={img.src} 
+                                        alt="evidence" 
+                                        className="w-full h-full object-contain" 
+                                    />
+                                </div>
+                            ))}
+                         </div>
+                         <div className="absolute bottom-1 right-1 text-[10px] text-gray-400">
+                             * Scaled (50%)
+                         </div>
+                    </div>
+                </div>
+            )}
           </div>
 
           {/* Action Plan */}

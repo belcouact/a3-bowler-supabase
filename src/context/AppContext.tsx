@@ -56,6 +56,15 @@ export interface ActionPlanTaskData {
   progress: number;
 }
 
+export interface DataAnalysisImage {
+  id: string;
+  src: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface A3Case {
   id: string;
   title: string;
@@ -71,6 +80,7 @@ export interface A3Case {
   rootCause?: string;
   actionPlanTasks?: ActionPlanTaskData[];
   dataAnalysisObservations?: string;
+  dataAnalysisImages?: DataAnalysisImage[];
 }
 
 interface AppContextType {
