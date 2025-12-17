@@ -158,8 +158,7 @@ const Layout = () => {
             className="flex items-center px-3 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors"
             title="Ask AI"
           >
-            <Sparkles className="w-4 h-4 sm:mr-1.5" />
-            <span className="hidden sm:inline">Ask AI</span>
+            <Sparkles className="w-4 h-4" />
           </button>
 
           <button
