@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { Info, Settings, Download, Upload } from 'lucide-react';
+import { Info, Settings, Download, Upload, HelpCircle } from 'lucide-react';
 import { useApp, Metric } from '../context/AppContext';
 import { ImportModal } from '../components/ImportModal';
+import { HelpModal } from '../components/HelpModal';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -22,6 +23,7 @@ const MetricBowler = () => {
   });
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [chartSettingsOpen, setChartSettingsOpen] = useState<Record<string, boolean>>({});
   const [chartScales, setChartScales] = useState<Record<string, { min: string; max: string }>>({});
 
@@ -252,6 +254,13 @@ const MetricBowler = () => {
              {selectedBowler?.tag && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-3">{selectedBowler.tag}</span>}
             
             <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setIsHelpModalOpen(true)}
+                className="inline-flex items-center p-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                title="Help Guide"
+              >
+                <HelpCircle className="h-4 w-4" />
+              </button>
               <button
                 onClick={() => setIsImportModalOpen(true)}
                 className="inline-flex items-center p-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -527,6 +536,10 @@ const MetricBowler = () => {
         onClose={() => setIsImportModalOpen(false)}
         onImport={handleImport}
         existingMetrics={metrics}
+      />
+      <HelpModal 
+        isOpen={isHelpModalOpen} 
+        onClose={() => setIsHelpModalOpen(false)} 
       />
     </div>
   );

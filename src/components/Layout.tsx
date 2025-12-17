@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, FileText, Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon, Save, Loader2 } from 'lucide-react';
+import { LayoutDashboard, FileText, Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon, Save, Loader2, Sparkles } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case, Bowler } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
@@ -7,6 +7,7 @@ import { useState } from 'react';
 import A3CaseModal from './A3CaseModal';
 import BowlerModal from './BowlerModal';
 import LoginModal from './LoginModal';
+import { AIChatModal } from './AIChatModal';
 import { dataService } from '../services/dataService';
 
 const Layout = () => {
@@ -26,6 +27,7 @@ const Layout = () => {
   const [editingBowler, setEditingBowler] = useState<Bowler | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
 
   const handleSaveData = async () => {
     if (!user) {
@@ -142,6 +144,15 @@ const Layout = () => {
         </div>
         
         <div className="flex items-center space-x-4">
+          <button
+            onClick={() => setIsAIChatOpen(true)}
+            className="flex items-center px-3 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors"
+            title="Ask AI"
+          >
+            <Sparkles className="w-4 h-4 sm:mr-1.5" />
+            <span className="hidden sm:inline">Ask AI</span>
+          </button>
+
           <button
             onClick={handleSaveData}
             disabled={isSaving}
@@ -319,6 +330,11 @@ const Layout = () => {
       <LoginModal 
         isOpen={isLoginModalOpen} 
         onClose={() => setIsLoginModalOpen(false)} 
+      />
+
+      <AIChatModal 
+        isOpen={isAIChatOpen} 
+        onClose={() => setIsAIChatOpen(false)} 
       />
     </div>
   );
