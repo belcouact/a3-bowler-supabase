@@ -81,6 +81,7 @@ export interface A3Case {
   actionPlanTasks?: ActionPlanTaskData[];
   dataAnalysisObservations?: string;
   dataAnalysisImages?: DataAnalysisImage[];
+  dataAnalysisCanvasHeight?: number;
 }
 
 interface AppContextType {

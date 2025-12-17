@@ -16,11 +16,14 @@ const DataAnalysis = () => {
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const [canvasHeight, setCanvasHeight] = useState(500);
+  const [isResizingCanvas, setIsResizingCanvas] = useState(false);
   
   // Use Refs for mutable drag state to avoid closure staleness and excessive re-renders
   const dragStartRef = useRef({ x: 0, y: 0 });
   const resizeStartRef = useRef({ w: 0, h: 0, x: 0, y: 0 });
   const resizeHandleRef = useRef<string | null>(null);
+  const canvasResizeStartRef = useRef({ h: 0, y: 0 });
   
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -29,6 +32,9 @@ const DataAnalysis = () => {
     if (currentCase) {
         if (currentCase.dataAnalysisImages && JSON.stringify(currentCase.dataAnalysisImages) !== JSON.stringify(images)) {
              setImages(currentCase.dataAnalysisImages || []);
+        }
+        if (currentCase.dataAnalysisCanvasHeight && currentCase.dataAnalysisCanvasHeight !== canvasHeight) {
+            setCanvasHeight(currentCase.dataAnalysisCanvasHeight);
         }
         
         const newVal = currentCase.dataAnalysisObservations || '';
@@ -41,6 +47,12 @@ const DataAnalysis = () => {
   const saveImages = (newImages: DataAnalysisImage[]) => {
       if (currentCase) {
           updateA3Case({ ...currentCase, dataAnalysisImages: newImages });
+      }
+  };
+
+  const saveCanvasHeight = (height: number) => {
+      if (currentCase) {
+          updateA3Case({ ...currentCase, dataAnalysisCanvasHeight: height });
       }
   };
 
@@ -127,7 +139,20 @@ const DataAnalysis = () => {
       }
   };
 
+  const handleCanvasResizeStart = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      setIsResizingCanvas(true);
+      canvasResizeStartRef.current = { h: canvasHeight, y: e.clientY };
+  };
+
   const handleMouseMove = (e: React.MouseEvent) => {
+      if (isResizingCanvas) {
+          const dy = e.clientY - canvasResizeStartRef.current.y;
+          setCanvasHeight(Math.max(200, canvasResizeStartRef.current.h + dy));
+          return;
+      }
+
       if (!selectedImageId) return;
 
       if (isDragging) {
@@ -180,6 +205,12 @@ const DataAnalysis = () => {
   };
 
   const handleMouseUp = () => {
+      if (isResizingCanvas) {
+          setIsResizingCanvas(false);
+          saveCanvasHeight(canvasHeight);
+          return;
+      }
+
       if (isDragging || isResizing) {
           setIsDragging(false);
           setIsResizing(false);
@@ -246,9 +277,18 @@ const DataAnalysis = () => {
             
             <div 
                 ref={canvasRef}
-                className="w-full h-[500px] bg-white border-2 border-dashed border-gray-300 rounded-lg relative overflow-hidden select-none"
+                className="w-full bg-white border-2 border-dashed border-gray-300 rounded-lg relative overflow-hidden select-none"
+                style={{ height: canvasHeight }}
                 onClick={() => setSelectedImageId(null)}
             >
+                {/* Canvas Resize Handle */}
+                <div 
+                    className="absolute bottom-0 left-0 right-0 h-4 bg-gray-100 hover:bg-gray-200 cursor-s-resize flex items-center justify-center border-t border-gray-200 z-50"
+                    onMouseDown={handleCanvasResizeStart}
+                >
+                    <div className="w-10 h-1 bg-gray-400 rounded-full"></div>
+                </div>
+
                 {images.length === 0 && (
                     <div className="absolute inset-0 flex items-center justify-center text-gray-400 pointer-events-none">
                         <p>Paste (Ctrl+V) images here or click Upload</p>
