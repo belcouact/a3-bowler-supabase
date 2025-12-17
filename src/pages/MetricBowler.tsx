@@ -198,16 +198,19 @@ const MetricBowler = () => {
   };
 
   const handleDownloadCSV = () => {
-    if (!selectedBowler || metrics.length === 0) return;
+    if (!selectedBowler || metrics.length === 0) {
+      alert("No data to download.");
+      return;
+    }
 
     // 1. Create Header Row
-    // Header: Metric Name, Scope, Type, 2024/Jan, 2024/Feb...
+    // Header: Metric Name, Type, 2024/Jan, 2024/Feb...
     const monthHeaders = displayMonths.map(m => `"${m.label}"`).join(',');
-    const header = `"Metric Name","Scope","Type",${monthHeaders}\n`;
+    const header = `"Metric Name","Type",${monthHeaders}\n`;
 
     // 2. Create Data Rows
     const rows = metrics.flatMap(metric => {
-      const basicInfo = `"${metric.name}","${metric.scope}"`;
+      const basicInfo = `"${metric.name}"`;
       
       const targetRowData = displayMonths.map(m => {
         return `"${metric.monthlyData?.[m.key]?.target || ''}"`;
@@ -224,16 +227,16 @@ const MetricBowler = () => {
     }).join('\n');
 
     // 3. Combine and Download
-    const csvContent = header + rows;
+    const csvContent = "\uFEFF" + header + rows;
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${selectedBowler.name}_metrics_${startDate}.csv`);
-    link.style.visibility = 'hidden';
+    link.href = url;
+    link.download = `${selectedBowler.name}_metrics_${startDate || 'all'}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   if (!id && bowlers.length > 0) {
