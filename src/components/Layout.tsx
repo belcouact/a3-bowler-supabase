@@ -106,7 +106,7 @@ const Layout = () => {
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Top Bar */}
       <header className="bg-white border-b border-gray-200 z-10 shadow-sm h-16 flex items-center px-6 justify-between">
         <div className="flex items-center space-x-8">
@@ -186,7 +186,7 @@ const Layout = () => {
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1">
         {/* Dynamic Sidebar */}
         <aside className={clsx(
           "bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out relative",
@@ -292,7 +292,7 @@ const Layout = () => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto bg-gray-50">
+        <main className="flex-1 bg-gray-50">
            <Outlet />
         </main>
       </div>
