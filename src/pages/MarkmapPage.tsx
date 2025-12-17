@@ -6,6 +6,34 @@ import { Split } from 'lucide-react';
 
 const transformer = new Transformer();
 
+const escapeHtmlTags = (md: string) => {
+  // Split by code blocks
+  const parts = md.split(/(```[\s\S]*?```)/g);
+  return parts.map((part, index) => {
+    // If it's a code block (odd index), return as is
+    if (index % 2 === 1) return part;
+    
+    // Process text content: split by inline code
+    const inlineParts = part.split(/(`[^`]+`)/g);
+    return inlineParts.map((subPart, subIndex) => {
+      // If it's inline code (odd index), return as is
+      if (subIndex % 2 === 1) return subPart;
+      
+      // Escape HTML-like tags in text
+      return subPart.replace(/<(\/?[a-zA-Z0-9]+)([^>\n]*)>/g, (match, tagName, rest) => {
+        const content = tagName + rest;
+        // Preserve autolinks (containing :// or @)
+        if (content.match(/:\/\//) || content.includes('@')) return match;
+        // Preserve <br>
+        const lower = tagName.toLowerCase();
+        if (lower === 'br' || lower === '/br') return match;
+        
+        return `&lt;${content}&gt;`;
+      });
+    }).join('');
+  }).join('');
+};
+
 const exampleMarkdown = `---
 title: markmap
 markmap:
@@ -101,7 +129,7 @@ const MarkmapPage = () => {
   // Update Markmap data when markdown changes
   useEffect(() => {
     if (mm) {
-      const { root } = transformer.transform(markdown);
+      const { root } = transformer.transform(escapeHtmlTags(markdown));
       mm.setData(root);
       mm.fit();
     }
