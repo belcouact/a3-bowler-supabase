@@ -3,8 +3,27 @@ import { Transformer } from 'markmap-lib';
 import { Markmap } from 'markmap-view';
 import { Toolbar } from 'markmap-toolbar';
 import { Split } from 'lucide-react';
+import hljs from 'highlight.js';
+import 'highlight.js/styles/default.css';
+
+// Register highlight.js globally so markmap might pick it up if it checks window
+if (typeof window !== 'undefined') {
+    (window as any).hljs = hljs;
+}
 
 const transformer = new Transformer();
+
+// Configure transformer to NOT request highlight.js from CDN
+// since we have imported it locally
+transformer.urlBuilder.getUrl = (url) => {
+    if (url.includes('highlight.js') || url.includes('highlight.min.js')) {
+        return '';
+    }
+    return url;
+};
+
+// Also try to remove it from the built-in plugins if possible
+// but urlBuilder is the main interception point for assets
 
 // Do not strip HTML tags, preserve all characters
 // @ts-ignore
