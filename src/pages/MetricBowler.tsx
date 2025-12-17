@@ -91,8 +91,6 @@ const MetricBowler = () => {
 
   const handleKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
-    metricId: string,
-    monthKey: string,
     field: 'target' | 'actual',
     metricIndex: number,
     monthIndex: number
@@ -295,7 +293,7 @@ const MetricBowler = () => {
                             className="w-full h-full bg-transparent text-center focus:outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-500 px-1 min-w-[3rem]"
                             defaultValue={metric.monthlyData?.[month.key]?.target || ''}
                             onBlur={(e) => handleCellUpdate(metric.id, month.key, 'target', e.target.value)}
-                            onKeyDown={(e) => handleKeyDown(e, metric.id, month.key, 'target', metricIndex, monthIndex)}
+                            onKeyDown={(e) => handleKeyDown(e, 'target', metricIndex, monthIndex)}
                         />
                       </td>
                     ))}
@@ -319,7 +317,7 @@ const MetricBowler = () => {
                              }`}
                              defaultValue={metric.monthlyData?.[month.key]?.actual || ''}
                              onBlur={(e) => handleCellUpdate(metric.id, month.key, 'actual', e.target.value)}
-                             onKeyDown={(e) => handleKeyDown(e, metric.id, month.key, 'actual', metricIndex, monthIndex)}
+                             onKeyDown={(e) => handleKeyDown(e, 'actual', metricIndex, monthIndex)}
                          />
                        </td>
                      ))}
