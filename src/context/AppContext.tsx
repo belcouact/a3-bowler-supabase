@@ -138,19 +138,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         console.error("Local Storage save failed", e);
       }
 
-      // 2. Debounce Backend Save (Save only after 5 seconds of inactivity)
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-
-      saveTimeoutRef.current = setTimeout(() => {
-        console.log(`Saving data to backend for user: ${user.username}`);
-        dataService.saveData(newBowlers, newA3Cases, user.username)
-          .then(res => console.log("Save response:", res))
-          .catch(err => {
-            console.error("Failed to save data:", err);
-          });
-      }, 5000);
+      // Auto-save to backend has been disabled as per request
     }
   };
 
