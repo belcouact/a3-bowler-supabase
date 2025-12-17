@@ -11,6 +11,7 @@ const Summary = () => {
   const currentCase = a3Cases.find(c => c.id === id);
   const contentRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const toast = useToast();
 
   const handleExportPDF = async () => {
     if (!contentRef.current || !currentCase) return;
