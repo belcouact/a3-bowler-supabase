@@ -6,6 +6,51 @@ import { Split } from 'lucide-react';
 
 const transformer = new Transformer();
 
+const exampleMarkdown = `---
+title: markmap
+markmap:
+  colorFreezeLevel: 2
+  maxWidth: 400
+---
+
+## Links
+
+- [https://markmap.js.org/](https://markmap.js.org/)
+- [https://github.com/gera2ld/markmap](https://github.com/gera2ld/markmap)
+
+## Related Projects
+
+- [https://github.com/gera2ld/coc-markmap](https://github.com/gera2ld/coc-markmap) for Neovim
+- [https://marketplace.visualstudio.com/items?itemName=gera2ld.markmap-vscode](https://marketplace.visualstudio.com/items?itemName=gera2ld.markmap-vscode) for VSCode
+- [https://github.com/emacs-eaf/eaf-markmap](https://github.com/emacs-eaf/eaf-markmap) for Emacs
+
+## Features
+
+Note that if blocks and lists appear at the same level, the lists will be ignored.
+
+### Lists
+
+- **strong** ~~del~~ *italic* ==highlight==
+- \`inline code\`
+- [x] checkbox
+- Now we can wrap very very very very long text with the \`maxWidth\` option
+- Ordered list
+  1. item 1
+  2. item 2
+
+### Blocks
+
+\`\`\`js
+console.log('hello, JavaScript')
+\`\`\`
+
+| Products | Price |
+|-|-|
+| Apple | 4 |
+| Banana | 2 |
+
+![](https://markmap.js.org/favicon.png)`;
+
 const MarkmapPage = () => {
   const [markdown, setMarkdown] = useState(`# A3 Bowler
 ## Metric Bowler
@@ -17,11 +62,23 @@ const MarkmapPage = () => {
 - Root Cause Analysis
 - Action Plan
 `);
+  const [useExample, setUseExample] = useState(false);
+  const [savedMarkdown, setSavedMarkdown] = useState('');
   const [svgRef, setSvgRef] = useState<SVGSVGElement | null>(null);
   const [mm, setMm] = useState<Markmap | null>(null);
   const [splitPosition, setSplitPosition] = useState(40); // Percentage
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Handle Example Checkbox
+  useEffect(() => {
+    if (useExample) {
+        setSavedMarkdown(markdown);
+        setMarkdown(exampleMarkdown);
+    } else if (savedMarkdown) {
+        setMarkdown(savedMarkdown);
+    }
+  }, [useExample]);
 
   // Initialize Markmap
   useEffect(() => {
@@ -95,7 +152,20 @@ const MarkmapPage = () => {
             value={markdown}
             onChange={(e) => setMarkdown(e.target.value)}
             placeholder="Type your markdown here..."
+            disabled={useExample}
           />
+          <div className="p-2 border-t border-gray-200 bg-gray-50 flex items-center">
+            <input 
+                type="checkbox" 
+                id="useExample" 
+                checked={useExample} 
+                onChange={(e) => setUseExample(e.target.checked)}
+                className="mr-2"
+            />
+            <label htmlFor="useExample" className="text-sm text-gray-700 select-none cursor-pointer">
+                Use Example
+            </label>
+          </div>
         </div>
 
         {/* Resizer Handle */}
