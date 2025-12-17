@@ -1,6 +1,10 @@
 declare module 'markmap-lib' {
     export class Transformer {
         transform(markdown: string): { root: any; features: any };
+        urlBuilder: {
+            getUrl: (path: string) => string;
+        };
+        assets: any;
     }
 }
 

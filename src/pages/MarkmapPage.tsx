@@ -15,7 +15,7 @@ const transformer = new Transformer();
 
 // Configure transformer to NOT request highlight.js from CDN
 // since we have imported it locally
-transformer.urlBuilder.getUrl = (url) => {
+transformer.urlBuilder.getUrl = (url: string) => {
     if (url.includes('highlight.js') || url.includes('highlight.min.js')) {
         return '';
     }
