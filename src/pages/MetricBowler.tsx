@@ -16,27 +16,40 @@ const MetricBowler = () => {
     return `${today.getFullYear()}-04`;
   });
 
+  const [stopDate, setStopDate] = useState(() => {
+    const today = new Date();
+    return `${today.getFullYear() + 1}-04`;
+  });
+
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [chartSettingsOpen, setChartSettingsOpen] = useState<Record<string, boolean>>({});
   const [chartScales, setChartScales] = useState<Record<string, { min: string; max: string }>>({});
 
   const displayMonths = useMemo(() => {
-    const [yearStr, monthStr] = startDate.split('-');
-    const startYear = parseInt(yearStr, 10);
-    const startMonthIndex = parseInt(monthStr, 10) - 1;
+    const [startYearStr, startMonthStr] = startDate.split('-');
+    const startYear = parseInt(startYearStr, 10);
+    const startMonthIndex = parseInt(startMonthStr, 10) - 1;
 
+    const [stopYearStr, stopMonthStr] = stopDate.split('-');
+    const stopYear = parseInt(stopYearStr, 10);
+    const stopMonthIndex = parseInt(stopMonthStr, 10) - 1;
+
+    const totalMonths = (stopYear - startYear) * 12 + (stopMonthIndex - startMonthIndex) + 1;
     const months = [];
-    for (let i = 0; i < 12; i++) {
-      const date = new Date(startYear, startMonthIndex + i, 1);
-      const monthIndex = date.getMonth();
-      const year = date.getFullYear();
-      const monthName = allMonths[monthIndex];
-      const key = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
-      const label = `${year}/${monthName}`;
-      months.push({ key, label });
+
+    if (totalMonths > 0) {
+      for (let i = 0; i < totalMonths; i++) {
+        const date = new Date(startYear, startMonthIndex + i, 1);
+        const monthIndex = date.getMonth();
+        const year = date.getFullYear();
+        const monthName = allMonths[monthIndex];
+        const key = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
+        const label = `${year}/${monthName}`;
+        months.push({ key, label });
+      }
     }
     return months;
-  }, [startDate]);
+  }, [startDate, stopDate]);
 
   // Find the selected bowler name, or default to generic if not found or no ID
   const selectedBowler = bowlers.find(b => b.id === id);
@@ -195,27 +208,34 @@ const MetricBowler = () => {
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setIsImportModalOpen(true)}
-                className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center p-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 title="Import CSV"
               >
-                <Upload className="h-4 w-4 mr-1.5" />
-                Import
+                <Upload className="h-4 w-4" />
               </button>
               <button
                 onClick={handleDownloadCSV}
-                 className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                 className="inline-flex items-center p-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                  title="Download CSV"
                >
-                 <Download className="h-4 w-4 mr-1.5" />
-                 Export
+                 <Download className="h-4 w-4" />
                </button>
-               <label htmlFor="startDate" className="text-sm text-gray-600 font-medium">Start Date:</label>
                <input 
                  type="month" 
                  id="startDate"
                  value={startDate}
                  onChange={(e) => setStartDate(e.target.value)}
-                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-1 border"
+                 className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-1 border"
+                 title="Start Date"
+               />
+               <span className="text-gray-400">-</span>
+               <input 
+                 type="month" 
+                 id="stopDate"
+                 value={stopDate}
+                 onChange={(e) => setStopDate(e.target.value)}
+                 className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-1 border"
+                 title="Stop Date"
                />
              </div>
         </div>
