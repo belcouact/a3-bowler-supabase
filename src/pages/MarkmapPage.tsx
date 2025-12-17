@@ -6,35 +6,7 @@ import { Split } from 'lucide-react';
 
 const transformer = new Transformer();
 
-const escapeHtmlTags = (md: string) => {
-  // Split by code blocks
-  const parts = md.split(/(```[\s\S]*?```)/g);
-  return parts.map((part, index) => {
-    // If it's a code block (odd index), return as is
-    if (index % 2 === 1) return part;
-    
-    // Process text content: split by inline code
-    const inlineParts = part.split(/(`[^`]+`)/g);
-    return inlineParts.map((subPart, subIndex) => {
-      // If it's inline code (odd index), return as is
-      if (subIndex % 2 === 1) return subPart;
-      
-      // Escape HTML-like tags in text
-      return subPart.replace(/<(\/?[a-zA-Z0-9]+)([^>\n]*)>/g, (match, tagName, rest) => {
-        const content = tagName + rest;
-        // Preserve autolinks (containing :// or @)
-        if (content.match(/:\/\//) || content.includes('@')) return match;
-        // Preserve <br>
-        const lower = tagName.toLowerCase();
-        if (lower === 'br' || lower === '/br') return match;
-        
-        return `&lt;${content}&gt;`;
-      });
-    }).join('');
-  }).join('');
-};
-
-const exampleMarkdown = `---
+const EXAMPLE_MARKDOWN = `---
 title: markmap
 markmap:
   colorFreezeLevel: 2
@@ -43,14 +15,14 @@ markmap:
 
 ## Links
 
-- [https://markmap.js.org/](https://markmap.js.org/)
-- [https://github.com/gera2ld/markmap](https://github.com/gera2ld/markmap)
+- \`https://markmap.js.org/\`
+- \`https://github.com/gera2ld/markmap\`
 
 ## Related Projects
 
-- [https://github.com/gera2ld/coc-markmap](https://github.com/gera2ld/coc-markmap) for Neovim
-- [https://marketplace.visualstudio.com/items?itemName=gera2ld.markmap-vscode](https://marketplace.visualstudio.com/items?itemName=gera2ld.markmap-vscode) for VSCode
-- [https://github.com/emacs-eaf/eaf-markmap](https://github.com/emacs-eaf/eaf-markmap) for Emacs
+- \`https://github.com/gera2ld/coc-markmap\` for Neovim
+- \`https://marketplace.visualstudio.com/items?itemName=gera2ld.markmap-vscode\` for VSCode
+- \`https://github.com/emacs-eaf/eaf-markmap\` for Emacs
 
 ## Features
 
@@ -90,23 +62,11 @@ const MarkmapPage = () => {
 - Root Cause Analysis
 - Action Plan
 `);
-  const [useExample, setUseExample] = useState(false);
-  const [savedMarkdown, setSavedMarkdown] = useState('');
   const [svgRef, setSvgRef] = useState<SVGSVGElement | null>(null);
   const [mm, setMm] = useState<Markmap | null>(null);
   const [splitPosition, setSplitPosition] = useState(40); // Percentage
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
-
-  // Handle Example Checkbox
-  useEffect(() => {
-    if (useExample) {
-        setSavedMarkdown(markdown);
-        setMarkdown(exampleMarkdown);
-    } else if (savedMarkdown) {
-        setMarkdown(savedMarkdown);
-    }
-  }, [useExample]);
 
   // Initialize Markmap
   useEffect(() => {
@@ -129,7 +89,7 @@ const MarkmapPage = () => {
   // Update Markmap data when markdown changes
   useEffect(() => {
     if (mm) {
-      const { root } = transformer.transform(escapeHtmlTags(markdown));
+      const { root } = transformer.transform(markdown);
       mm.setData(root);
       mm.fit();
     }
@@ -157,6 +117,23 @@ const MarkmapPage = () => {
     document.removeEventListener('mouseup', handleMouseUp);
   };
 
+  const handleUseExample = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setMarkdown(EXAMPLE_MARKDOWN);
+    } else {
+      setMarkdown(`# A3 Bowler
+## Metric Bowler
+- Track KPIs
+- Monthly Targets
+- Gap Analysis
+## A3 Problem Solving
+- Problem Statement
+- Root Cause Analysis
+- Action Plan
+`);
+    }
+  };
+
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col bg-white w-full">
       <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
@@ -180,19 +157,16 @@ const MarkmapPage = () => {
             value={markdown}
             onChange={(e) => setMarkdown(e.target.value)}
             placeholder="Type your markdown here..."
-            disabled={useExample}
           />
           <div className="p-2 border-t border-gray-200 bg-gray-50 flex items-center">
-            <input 
-                type="checkbox" 
-                id="useExample" 
-                checked={useExample} 
-                onChange={(e) => setUseExample(e.target.checked)}
-                className="mr-2"
-            />
-            <label htmlFor="useExample" className="text-sm text-gray-700 select-none cursor-pointer">
-                Use Example
-            </label>
+             <input
+               type="checkbox"
+               id="useExample"
+               className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+               onChange={handleUseExample}
+               checked={markdown === EXAMPLE_MARKDOWN}
+             />
+             <label htmlFor="useExample" className="text-sm text-gray-700">Use example</label>
           </div>
         </div>
 
