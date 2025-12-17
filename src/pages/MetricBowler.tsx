@@ -204,13 +204,13 @@ const MetricBowler = () => {
     }
 
     // 1. Create Header Row
-    // Header: Metric Name, Type, 2024/Jan, 2024/Feb...
+    // Header: Metric Name, Scope, Type, 2024/Jan, 2024/Feb...
     const monthHeaders = displayMonths.map(m => `"${m.label}"`).join(',');
-    const header = `"Metric Name","Type",${monthHeaders}\n`;
+    const header = `"Metric Name","Scope","Type",${monthHeaders}\n`;
 
     // 2. Create Data Rows
     const rows = metrics.flatMap(metric => {
-      const basicInfo = `"${metric.name}"`;
+      const basicInfo = `"${metric.name}","${metric.scope || ''}"`;
       
       const targetRowData = displayMonths.map(m => {
         return `"${metric.monthlyData?.[m.key]?.target || ''}"`;
@@ -305,6 +305,9 @@ const MetricBowler = () => {
               <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] w-48">
                 Metric Name
               </th>
+              <th scope="col" className="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-24 border-r border-gray-200">
+                Scope
+              </th>
               <th scope="col" className="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-20 border-r border-gray-200">
                 Type
               </th>
@@ -342,9 +345,6 @@ const MetricBowler = () => {
                                         <p className="font-semibold mb-1">Definition:</p>
                                         <p className="mb-2">{metric.definition || 'N/A'}</p>
                                         
-                                        <p className="font-semibold mb-1">Scope:</p>
-                                        <p className="mb-2">{metric.scope || 'N/A'}</p>
-                                        
                                         <p className="font-semibold mb-1">Owner:</p>
                                         <p className="mb-2">{metric.owner || 'N/A'}</p>
                                         
@@ -357,6 +357,10 @@ const MetricBowler = () => {
                       </div>
                     </td>
                     
+                    <td rowSpan={2} className="px-2 py-4 whitespace-nowrap text-xs text-gray-700 bg-white border-r border-gray-200 border-b-0 align-top">
+                        {metric.scope || '-'}
+                    </td>
+
                     <td className="px-2 py-2 whitespace-nowrap text-xs font-medium text-gray-500 bg-gray-50/30 border-b border-gray-100 h-8">
                       Target
                     </td>
