@@ -247,9 +247,6 @@ const MetricBowler = () => {
               <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] w-48">
                 Metric Name
               </th>
-              <th scope="col" className="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-24">
-                Scope
-              </th>
               <th scope="col" className="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-20">
                 Type
               </th>
@@ -267,7 +264,7 @@ const MetricBowler = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {metrics.length === 0 ? (
                 <tr>
-                    <td colSpan={4 + displayMonths.length} className="px-6 py-10 text-center text-gray-500 italic">
+                    <td colSpan={3 + displayMonths.length} className="px-6 py-10 text-center text-gray-500 italic">
                         No metrics added yet. Use the + button to add metrics.
                     </td>
                 </tr>
@@ -281,21 +278,25 @@ const MetricBowler = () => {
                         <div className="flex flex-col">
                             <div className="flex items-center flex-wrap">
                                 <span className="mr-2">{metric.name}</span>
-                                {metric.definition && (
-                                    <div className="group relative inline-block">
-                                        <Info className="w-3.5 h-3.5 text-gray-400 hover:text-blue-500 cursor-help" />
-                                        <div className="absolute left-full top-0 ml-2 w-64 p-3 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 whitespace-normal break-words">
-                                            {metric.definition}
-                                        </div>
+                                <div className="group relative inline-block">
+                                    <Info className="w-3.5 h-3.5 text-gray-400 hover:text-blue-500 cursor-help" />
+                                    <div className="absolute left-full top-0 ml-2 w-64 p-3 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 whitespace-normal break-words">
+                                        <p className="font-semibold mb-1">Definition:</p>
+                                        <p className="mb-2">{metric.definition || 'N/A'}</p>
+                                        
+                                        <p className="font-semibold mb-1">Scope:</p>
+                                        <p className="mb-2">{metric.scope || 'N/A'}</p>
+                                        
+                                        <p className="font-semibold mb-1">Owner:</p>
+                                        <p className="mb-2">{metric.owner || 'N/A'}</p>
+                                        
+                                        <p className="font-semibold mb-1">Attribute:</p>
+                                        <p>{metric.attribute || 'N/A'}</p>
                                     </div>
-                                )}
+                                </div>
                             </div>
-                            <span className="text-xs text-gray-500 font-normal mt-1">{metric.owner}</span>
                         </div>
                       </div>
-                    </td>
-                    <td rowSpan={2} className="px-2 py-4 text-sm text-gray-500 align-top border-r border-gray-100 break-words">
-                      {metric.scope}
                     </td>
                     
                     <td className="px-2 py-2 whitespace-nowrap text-xs font-medium text-gray-500 bg-gray-50/30 border-b border-gray-100 h-8">
