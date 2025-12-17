@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, LayoutDashboard, FileText, Sparkles, Save, Target, ArrowRight } from 'lucide-react';
+import { X, LayoutDashboard, FileText, Sparkles, Save } from 'lucide-react';
 
 interface AppInfoModalProps {
   isOpen: boolean;
