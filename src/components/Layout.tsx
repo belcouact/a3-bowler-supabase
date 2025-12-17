@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, Link as LinkIcon } from 'lucide-react';
+import { Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, Link as LinkIcon, FileText } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case, Bowler } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
