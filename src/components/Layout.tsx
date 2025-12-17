@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, FileText, Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon, Save, Loader2, Sparkles } from 'lucide-react';
+import { LayoutDashboard, FileText, Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case, Bowler } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
@@ -8,6 +8,7 @@ import A3CaseModal from './A3CaseModal';
 import BowlerModal from './BowlerModal';
 import LoginModal from './LoginModal';
 import { AIChatModal } from './AIChatModal';
+import { AppInfoModal } from './AppInfoModal';
 import { dataService } from '../services/dataService';
 
 const Layout = () => {
@@ -26,8 +27,9 @@ const Layout = () => {
   const [isBowlerModalOpen, setIsBowlerModalOpen] = useState(false);
   const [editingBowler, setEditingBowler] = useState<Bowler | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+  const [isAppInfoOpen, setIsAppInfoOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSaveData = async () => {
     if (!user) {
@@ -117,6 +119,13 @@ const Layout = () => {
               <BarChart3 className="w-6 h-6 text-white" />
             </div>
             <h1 className="text-xl font-bold text-gray-900 tracking-tight">Performance Tracker</h1>
+            <button 
+                onClick={() => setIsAppInfoOpen(true)}
+                className="text-gray-400 hover:text-blue-600 transition-colors ml-1"
+                title="About this app"
+            >
+                <Info className="w-5 h-5" />
+            </button>
           </div>
           
           <nav className="flex space-x-1">
@@ -332,9 +341,14 @@ const Layout = () => {
         onClose={() => setIsLoginModalOpen(false)} 
       />
 
-      <AIChatModal 
-        isOpen={isAIChatOpen} 
-        onClose={() => setIsAIChatOpen(false)} 
+      <AIChatModal
+        isOpen={isAIChatOpen}
+        onClose={() => setIsAIChatOpen(false)}
+      />
+
+      <AppInfoModal
+        isOpen={isAppInfoOpen}
+        onClose={() => setIsAppInfoOpen(false)}
       />
     </div>
   );
