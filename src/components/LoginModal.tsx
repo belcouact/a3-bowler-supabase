@@ -9,7 +9,7 @@ interface LoginModalProps {
 }
 
 const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
-  const [activeTab, setActiveTab] = useState<'login' | 'signup'>('signup');
+  const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   
