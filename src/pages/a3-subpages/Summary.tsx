@@ -44,9 +44,10 @@ const Summary = () => {
 
       pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
       pdf.save(`A3-${currentCase.title.replace(/[^a-z0-9]/gi, '_')}.pdf`);
+      toast.success('PDF exported successfully!');
     } catch (error) {
       console.error('Export failed:', error);
-      alert('Failed to export PDF.');
+      toast.error('Failed to export PDF.');
     } finally {
       setIsExporting(false);
     }
