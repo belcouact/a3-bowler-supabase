@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode, useEffect, useRef } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { dataService } from '../services/dataService';
 import { useAuth } from './AuthContext';
 import { generateShortId } from '../utils/idUtils';
@@ -92,7 +92,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [bowlers, setBowlers] = useState<Bowler[]>([]);
   const [a3Cases, setA3Cases] = useState<A3Case[]>([]);
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (user) {
