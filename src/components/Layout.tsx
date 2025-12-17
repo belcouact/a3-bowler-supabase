@@ -227,7 +227,7 @@ const Layout = () => {
         {!isMindMap && (
         <aside className={clsx(
           "bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out relative",
-          isSidebarOpen ? "w-64 absolute z-20 h-full md:relative" : "w-0 md:w-16"
+          isSidebarOpen ? "w-64 absolute z-50 h-full md:relative" : "w-0 md:w-16"
         )}>
           {/* Toggle Button */}
           <button
