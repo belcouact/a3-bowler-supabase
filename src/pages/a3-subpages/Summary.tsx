@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { Download, Loader2 } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 
 const Summary = () => {
   const { id } = useParams();
