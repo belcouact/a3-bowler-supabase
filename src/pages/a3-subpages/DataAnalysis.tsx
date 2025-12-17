@@ -4,13 +4,23 @@ import { useParams } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import { useState, useEffect } from 'react';
 
-const data: any[] = [];
+const data = [
+  { name: 'Jan', defects: 65 },
+  { name: 'Feb', defects: 59 },
+  { name: 'Mar', defects: 80 },
+  { name: 'Apr', defects: 81 },
+  { name: 'May', defects: 56 },
+  { name: 'Jun', defects: 55 },
+  { name: 'Jul', defects: 40 },
+];
 
 const DataAnalysis = () => {
   const { id } = useParams();
   const { a3Cases, updateA3Case } = useApp();
   const currentCase = a3Cases.find(c => c.id === id);
   const [observations, setObservations] = useState('');
+
+  console.log('Rendering DataAnalysis', { id, currentCase });
 
   useEffect(() => {
     if (currentCase) {
