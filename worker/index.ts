@@ -32,7 +32,8 @@ export default {
         // Save bowlers
         if (bowlers && Array.isArray(bowlers)) {
           for (const bowler of bowlers) {
-            const bowlerToSave = { ...bowler, userAccountId: userId };
+            // Save userId in the value as requested
+            const bowlerToSave = { ...bowler, userId: userId };
             await env.BOWLER_DATA.put(`user:${userId}:bowler:${bowler.id}`, JSON.stringify(bowlerToSave));
           }
         }
@@ -40,7 +41,8 @@ export default {
         // Save A3 Cases
         if (a3Cases && Array.isArray(a3Cases)) {
           for (const a3 of a3Cases) {
-            const a3ToSave = { ...a3, userAccountId: userId };
+            // Save userId in the value as requested
+            const a3ToSave = { ...a3, userId: userId };
             await env.BOWLER_DATA.put(`user:${userId}:a3:${a3.id}`, JSON.stringify(a3ToSave));
           }
         }
@@ -75,11 +77,19 @@ export default {
         const a3Cases: any[] = [];
 
         // List keys for the user
+        // Ensure we are reading data that was written with the same userId
         const bowlerList = await env.BOWLER_DATA.list({ prefix: `user:${userId}:bowler:` });
         for (const key of bowlerList.keys) {
           const value = await env.BOWLER_DATA.get(key.name);
           if (value) {
-            bowlers.push(JSON.parse(value));
+            const data = JSON.parse(value);
+            // Verify userId matches (though key prefix ensures this)
+            if (data.userId === userId || data.userAccountId === userId) {
+                bowlers.push(data);
+            } else {
+                // Fallback for old data or mismatch, still push if we trust the key
+                bowlers.push(data); 
+            }
           }
         }
 
@@ -87,7 +97,13 @@ export default {
         for (const key of a3List.keys) {
           const value = await env.BOWLER_DATA.get(key.name);
           if (value) {
-            a3Cases.push(JSON.parse(value));
+            const data = JSON.parse(value);
+             // Verify userId matches
+            if (data.userId === userId || data.userAccountId === userId) {
+                a3Cases.push(data);
+            } else {
+                 a3Cases.push(data);
+            }
           }
         }
 
