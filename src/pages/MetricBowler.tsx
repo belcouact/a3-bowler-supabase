@@ -293,14 +293,14 @@ const MetricBowler = () => {
               <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] w-48">
                 Metric Name
               </th>
-              <th scope="col" className="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-20">
+              <th scope="col" className="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-20 border-r border-gray-200">
                 Type
               </th>
               {displayMonths.map((month) => (
                 <th
                   key={month.key}
                   scope="col"
-                  className="px-1 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider text-gray-400 whitespace-normal break-words min-w-[3rem]"
+                  className="px-1 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider text-gray-400 whitespace-normal break-words min-w-[3rem] border-r border-gray-200"
                 >
                   {month.label.replace('/', ' ')}
                 </th>
@@ -319,7 +319,7 @@ const MetricBowler = () => {
                   <>
                   {/* Row 1: Metadata + Target Data */}
                   <tr key={`${metric.id}-row1`} className="hover:bg-gray-50 transition-colors border-b-0">
-                    <td rowSpan={2} className="px-4 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] group-hover:bg-gray-50 align-top break-words">
+                    <td rowSpan={2} className="px-4 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 hover:z-[60] border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] group-hover:bg-gray-50 align-top break-words">
                       <div className="flex items-start justify-between">
                         <div className="flex flex-col">
                             <div className="flex items-center flex-wrap">
@@ -352,7 +352,7 @@ const MetricBowler = () => {
                     {displayMonths.map((month, monthIndex) => (
                       <td
                         key={`${month.key}-target`}
-                        className="px-0 py-0 whitespace-nowrap text-xs text-gray-500 bg-gray-50/30 border-b border-gray-100 h-8 p-0 relative group/cell"
+                        className="px-0 py-0 whitespace-nowrap text-xs text-gray-500 bg-gray-50/30 border-b border-r border-gray-100 h-8 p-0 relative group/cell"
                         onContextMenu={(e) => handleRightClick(e, metric.id, month.key, 'target', metric.monthlyData?.[month.key]?.targetNote || '')}
                       >
                         <input
@@ -365,7 +365,7 @@ const MetricBowler = () => {
                             title={metric.monthlyData?.[month.key]?.targetNote || ''}
                         />
                         {metric.monthlyData?.[month.key]?.targetNote && (
-                          <div className="absolute top-0 right-0 w-0 h-0 border-t-[6px] border-r-[6px] border-t-red-500 border-r-transparent pointer-events-none" />
+                          <div className="absolute top-0 right-0 w-0 h-0 border-t-[6px] border-l-[6px] border-t-red-500 border-l-transparent pointer-events-none" />
                         )}
                       </td>
                     ))}
@@ -373,13 +373,13 @@ const MetricBowler = () => {
 
                   {/* Row 2: Actual Data */}
                   <tr key={`${metric.id}-row2`} className="hover:bg-gray-50 transition-colors">
-                     <td className="px-2 py-2 whitespace-nowrap text-xs font-medium text-gray-500 h-8">
+                     <td className="px-2 py-2 whitespace-nowrap text-xs font-medium text-gray-500 h-8 border-b border-r border-gray-100">
                         Actual
                      </td>
                      {displayMonths.map((month, monthIndex) => (
                        <td
                          key={`${month.key}-actual`}
-                         className="px-0 py-0 whitespace-nowrap text-xs text-gray-500 h-8 p-0 relative group/cell"
+                         className="px-0 py-0 whitespace-nowrap text-xs text-gray-500 h-8 p-0 relative group/cell border-b border-r border-gray-100"
                          onContextMenu={(e) => handleRightClick(e, metric.id, month.key, 'actual', metric.monthlyData?.[month.key]?.actualNote || '')}
                        >
                          <input
@@ -394,7 +394,7 @@ const MetricBowler = () => {
                              title={metric.monthlyData?.[month.key]?.actualNote || ''}
                          />
                          {metric.monthlyData?.[month.key]?.actualNote && (
-                           <div className="absolute top-0 right-0 w-0 h-0 border-t-[6px] border-r-[6px] border-t-red-500 border-r-transparent pointer-events-none" />
+                           <div className="absolute top-0 right-0 w-0 h-0 border-t-[6px] border-l-[6px] border-t-red-500 border-l-transparent pointer-events-none" />
                          )}
                        </td>
                      ))}
