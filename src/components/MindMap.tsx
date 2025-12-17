@@ -258,8 +258,12 @@ export const MindMap = ({ initialNodes, onChange }: MindMapProps) => {
 
   // Sync with external updates
   useEffect(() => {
-    if (initialNodes && initialNodes.length > 0) {
+    if (initialNodes && initialNodes.length > 0 && draggingId === null) {
         setNodes(prev => {
+            // Optimization: check reference equality first
+            if (prev === initialNodes) {
+                return prev;
+            }
             // Deep comparison to prevent unnecessary updates/loops
             if (JSON.stringify(prev) === JSON.stringify(initialNodes)) {
                 return prev;
@@ -267,7 +271,7 @@ export const MindMap = ({ initialNodes, onChange }: MindMapProps) => {
             return initialNodes;
         });
     }
-  }, [initialNodes]); 
+  }, [initialNodes, draggingId]); 
 
   const handleMouseDown = (e: ReactMouseEvent, id: string) => {
     e.stopPropagation();

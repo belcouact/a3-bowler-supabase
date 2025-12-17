@@ -9,27 +9,18 @@ const WhyAnalysis = () => {
   const currentCase = a3Cases.find(c => c.id === id);
 
   // We use local state to avoid flickering but sync with context
-  const [nodes, setNodes] = useState<MindMapNodeData[]>([]);
   const [rootCause, setRootCause] = useState('');
 
   useEffect(() => {
     if (currentCase) {
-        // Only update if different to avoid potential loops with the MindMap internal state
-        // (Though MindMap handles this too, double safety is good)
-        if (JSON.stringify(currentCase.mindMapNodes) !== JSON.stringify(nodes)) {
-             setNodes(currentCase.mindMapNodes || []);
-        }
         if (currentCase.rootCause !== rootCause) {
             setRootCause(currentCase.rootCause || '');
         }
     }
-  }, [currentCase]); // We don't include nodes/rootCause in deps to avoid loop, just listen to currentCase changes
+  }, [currentCase]); // We don't include rootCause in deps to avoid loop, just listen to currentCase changes
 
   const handleNodesChange = useCallback((newNodes: MindMapNodeData[]) => {
       if (!currentCase) return;
-      
-      // Update local state immediately for responsiveness
-      setNodes(newNodes);
       
       // Update context
       updateA3Case({
