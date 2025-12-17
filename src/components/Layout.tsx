@@ -20,6 +20,7 @@ const Layout = () => {
   // Identify active module based on path
   const isMetricBowler = location.pathname.includes('/metric-bowler');
   const isA3Analysis = location.pathname.includes('/a3-analysis');
+  const isMindMap = location.pathname.includes('/mindmap');
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isA3ModalOpen, setIsA3ModalOpen] = useState(false);
@@ -205,6 +206,7 @@ const Layout = () => {
 
       <div className="flex flex-1">
         {/* Dynamic Sidebar */}
+        {!isMindMap && (
         <aside className={clsx(
           "bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out relative",
           isSidebarOpen ? "w-64 absolute z-20 h-full md:relative" : "w-0 md:w-16"
@@ -307,6 +309,7 @@ const Layout = () => {
             </div>
           </div>
         </aside>
+        )}
 
         {/* Main Content */}
         <main className="flex-1 bg-gray-50">
