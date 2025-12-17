@@ -105,7 +105,7 @@ const Layout = () => {
   };
 
   const navItems = [
-    { path: '/mindmap', label: 'Mind Map', icon: Workflow },
+    { path: '/mindmap', label: 'Front Page', icon: Workflow },
     { path: '/metric-bowler', label: 'Metric Bowler', icon: LayoutDashboard },
     { path: '/a3-analysis', label: 'A3 Analysis', icon: FileText },
   ];

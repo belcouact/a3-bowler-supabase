@@ -73,14 +73,14 @@ const MarkmapPage = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col bg-white">
+    <div className="h-[calc(100vh-4rem)] flex flex-col bg-white w-full">
       <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
         <h2 className="text-lg font-bold text-gray-800 flex items-center">
             <Split className="w-5 h-5 mr-2" />
-            Text to MindMap
+            Strategy to Metric Linkage
         </h2>
         <span className="text-xs text-gray-500">
-            Edit the markdown on the left to update the mindmap.
+            Convert markdown text to mindmap for better visualization
         </span>
       </div>
       
