@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, MousePointer, Keyboard, FileSpreadsheet, MessageSquare, TrendingUp } from 'lucide-react';
+import { X, MousePointer, Keyboard, FileSpreadsheet, MessageSquare, TrendingUp, Target } from 'lucide-react';
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -67,6 +67,18 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     <h4 className="text-sm font-medium text-gray-900">Navigation</h4>
                     <p className="text-sm text-gray-500">
                       Use Arrow keys to move between cells. Press Enter to confirm editing.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <Target className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div className="ml-3">
+                    <h4 className="text-sm font-medium text-gray-900">Target Rules</h4>
+                    <p className="text-sm text-gray-500">
+                      Set rules in the Edit Metric window: {'>='} Target (default), {'<='} Target, or Within Range (e.g. &#123;5,10&#125;). Actual values violating the rule will be highlighted in red.
                     </p>
                   </div>
                 </div>
