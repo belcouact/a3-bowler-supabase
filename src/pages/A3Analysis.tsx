@@ -2,6 +2,7 @@ import { Link, Outlet, useLocation, useParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { useApp } from '../context/AppContext';
 import { AlertCircle, BarChart2, GitBranch, Calendar, CheckCircle, FileText } from 'lucide-react';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 const A3Analysis = () => {
   const location = useLocation();
@@ -50,11 +51,12 @@ const A3Analysis = () => {
 
         <div className="flex space-x-1 border-b border-gray-200 overflow-x-auto">
           {tabs.map((tab) => {
-            const isActive = location.pathname.includes(tab.path);
+            // Check if active using explicit path check to avoid partial matches on similar names if any
+            const isActive = location.pathname.includes(`/${tab.path}`);
             return (
               <Link
                 key={tab.path}
-                to={tab.path}
+                to={`/a3-analysis/${id}/${tab.path}`}
                 className={clsx(
                   'py-2 px-3 md:py-3 md:px-6 border-b-2 font-medium text-sm transition-all duration-200 whitespace-nowrap flex items-center',
                   isActive
@@ -73,11 +75,15 @@ const A3Analysis = () => {
       
       {location.pathname.includes('action-plan') ? (
         <div className="h-[600px] border-t border-gray-200">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </div>
       ) : (
         <div className="bg-white p-3 md:p-8 shadow-sm border border-gray-200 min-h-[500px]">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </div>
       )}
     </div>
