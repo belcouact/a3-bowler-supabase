@@ -157,13 +157,10 @@ const Layout = () => {
 
           {user ? (
             <div className="flex items-center space-x-3">
-              <div className="flex items-center space-x-2 text-sm">
+              <div className="flex items-center space-x-2 text-sm" title={user.username || 'User'}>
                 <div className="h-8 w-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-700 font-bold text-xs">
                   {user.username ? user.username.substring(0, 2).toUpperCase() : <UserIcon className="w-4 h-4" />}
                 </div>
-                <span className="hidden md:inline font-medium text-gray-700">
-                  {user.username && user.username.split('@')[0]}
-                </span>
               </div>
               <button 
                 onClick={logout}
