@@ -34,7 +34,7 @@ const Layout = () => {
     }
     setIsSaving(true);
     try {
-      await dataService.saveData(bowlers, a3Cases, user.id);
+      await dataService.saveData(bowlers, a3Cases, user.username);
       alert('Data saved successfully!');
     } catch (error) {
       console.error('Save error:', error);
