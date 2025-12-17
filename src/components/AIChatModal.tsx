@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, Bot, User, Loader2, Sparkles, Database } from 'lucide-react';
+import { X, Send, Bot, Loader2, Sparkles } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 interface AIChatModalProps {
@@ -37,7 +37,7 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
       bowlers: bowlers.map(b => ({
         name: b.name,
         description: b.description,
-        metrics: b.metrics.map(m => ({
+        metrics: (b.metrics || []).map(m => ({
           name: m.name,
           scope: m.scope,
           monthlyData: m.monthlyData
