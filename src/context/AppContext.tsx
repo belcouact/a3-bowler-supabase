@@ -18,6 +18,7 @@ export interface Metric {
   owner: string;
   scope: string;
   attribute: string;
+  targetMeetingRule?: 'gte' | 'lte' | 'within_range';
   monthlyData?: Record<string, MetricData>;
 }
 

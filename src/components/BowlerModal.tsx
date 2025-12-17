@@ -67,7 +67,8 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
       definition: '',
       owner: '',
       scope: '',
-      attribute: ''
+      attribute: '',
+      targetMeetingRule: 'gte'
     };
     setMetrics([...metrics, newMetric]);
   };
