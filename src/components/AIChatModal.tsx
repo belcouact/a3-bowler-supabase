@@ -12,18 +12,12 @@ interface Message {
   content: string;
 }
 
-const MODELS = [
-  { id: 'deepseek', name: 'DeepSeek' },
-  { id: 'kimi', name: 'Kimi' },
-  { id: 'glm', name: 'GLM-4' }
-];
-
 export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => {
   const { bowlers, a3Cases } = useApp();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('deepseek');
+  const selectedModel = 'deepseek';
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -122,13 +116,6 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
                     AI Assistant
                   </h2>
                   <div className="flex items-center space-x-2">
-                    <select 
-                        value={selectedModel} 
-                        onChange={(e) => setSelectedModel(e.target.value)}
-                        className="bg-blue-700 text-white text-xs rounded border-none focus:ring-0 py-1 px-2 cursor-pointer"
-                    >
-                        {MODELS.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-                    </select>
                     <button
                         type="button"
                         className="rounded-md text-blue-200 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
