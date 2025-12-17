@@ -16,7 +16,10 @@
     "recharts": "^2.12.0",
     "lucide-react": "^0.330.0",
     "clsx": "^2.1.0",
-    "tailwind-merge": "^2.2.1"
+    "tailwind-merge": "^2.2.1",
+    "markmap-view": "^0.17.0",
+    "markmap-lib": "^0.17.0",
+    "markmap-toolbar": "^0.17.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.56",
