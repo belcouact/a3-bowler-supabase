@@ -45,7 +45,11 @@ const Summary = () => {
           <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
             <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">3. Root Cause Analysis (5 Whys)</h4>
             <div className="text-sm text-gray-600">
-               <p className="italic text-gray-500">See "5 Whys Analysis" tab for details.</p>
+               {currentCase.rootCause ? (
+                   <p className="whitespace-pre-wrap">{currentCase.rootCause}</p>
+               ) : (
+                   <p className="italic text-gray-500">Root cause not identified yet. See "5 Whys Analysis" tab.</p>
+               )}
             </div>
           </div>
 
@@ -63,30 +67,12 @@ const Summary = () => {
           {/* Data Analysis */}
           <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
             <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">2. Data Analysis</h4>
-            <div className="h-48 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" tick={{fontSize: 10}} />
-                  <YAxis tick={{fontSize: 10}} />
-                  <Tooltip />
-                  <Bar dataKey="defects" fill="#8884d8" name="Defect Count" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <p className="text-xs text-gray-500 mt-2">{currentCase.dataAnalysisObservations || 'No data observations recorded.'}</p>
             
             {/* Evidence Images */}
             {currentCase.dataAnalysisImages && currentCase.dataAnalysisImages.length > 0 && (
-                <div className="mt-4 border-t pt-2">
+                <div className="mb-4">
                     <h5 className="text-xs font-semibold text-gray-600 mb-2">Evidence</h5>
                     <div className="relative w-full h-48 bg-gray-50 border border-gray-200 rounded overflow-hidden">
-                        {/* We use a simple scaling approach or just mapping. 
-                            Since the original canvas is 500px height, we scale it down or scroll.
-                            Let's use a scale transform to fit a 500px canvas into 192px (h-48) roughly 0.4 scale.
-                            But width is variable.
-                            Better: just show them as is with overflow-auto or contain.
-                        */}
                          <div className="w-full h-full relative overflow-auto">
                             {currentCase.dataAnalysisImages.map(img => (
                                 <div
@@ -113,6 +99,11 @@ const Summary = () => {
                     </div>
                 </div>
             )}
+
+            <p className="text-xs text-gray-500 mt-2">
+                <span className="font-semibold block mb-1">Observation:</span>
+                {currentCase.dataAnalysisObservations || 'No data observations recorded.'}
+            </p>
           </div>
 
           {/* Action Plan */}

@@ -269,6 +269,7 @@ const DataAnalysis = () => {
                             zIndex: selectedImageId === img.id ? 10 : 1
                         }}
                         onMouseDown={(e) => handleMouseDown(e, img.id)}
+                        onClick={(e) => e.stopPropagation()}
                     >
                         <img 
                             src={img.src} 
