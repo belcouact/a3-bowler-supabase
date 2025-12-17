@@ -45,7 +45,11 @@ export default {
           }
         }
 
-        return new Response(JSON.stringify({ success: true, message: 'Data saved successfully' }), {
+        return new Response(JSON.stringify({ 
+            success: true, 
+            message: 'Data saved successfully',
+            debug_userId: userId // Echo back userId for verification
+        }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } catch (err: any) {

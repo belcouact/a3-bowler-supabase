@@ -28,17 +28,29 @@ export const dataService = {
   },
 
   async loadData(userId: string) {
-    const response = await fetch(`${API_BASE_URL}/load?userId=${userId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/load?userId=${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error('Failed to load data');
+      if (!response.ok) {
+        // If 404, it might mean the worker route isn't found OR no data for user (depending on worker logic).
+        // To prevent "crashing" or blocking the UI, we return empty data.
+        if (response.status === 404) {
+             console.warn(`Data load endpoint returned 404 for user ${userId}. Returning empty data.`);
+             return { success: true, bowlers: [], a3Cases: [] };
+        }
+        throw new Error(`Failed to load data: ${response.status} ${response.statusText}`);
+      }
+
+      return response.json();
+    } catch (error) {
+        console.error("Error in loadData:", error);
+        // Return empty structure to prevent app crash
+        return { success: false, bowlers: [], a3Cases: [] };
     }
-
-    return response.json();
   },
 };

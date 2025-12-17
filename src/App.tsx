@@ -21,17 +21,14 @@ function App() {
           <Route path="metric-bowler/:id" element={<MetricBowler />} />
           
           {/* A3 Analysis Routes */}
-          <Route path="a3-analysis">
+          <Route path="a3-analysis" element={<A3Analysis />}>
             <Route index element={<div className="text-center py-10 text-gray-500">Select an A3 Case to view details</div>} />
-            <Route path=":id" element={<A3Analysis />}>
-              <Route index element={<Navigate to="problem-statement" replace />} />
-              <Route path="problem-statement" element={<ProblemStatement />} />
-              <Route path="data-analysis" element={<DataAnalysis />} />
-              <Route path="why-analysis" element={<WhyAnalysis />} />
-              <Route path="action-plan" element={<ActionPlan />} />
-              <Route path="result" element={<Result />} />
-              <Route path="summary" element={<Summary />} />
-            </Route>
+            <Route path=":id/problem-statement" element={<ProblemStatement />} />
+            <Route path=":id/data-analysis" element={<DataAnalysis />} />
+            <Route path=":id/why-analysis" element={<WhyAnalysis />} />
+            <Route path=":id/action-plan" element={<ActionPlan />} />
+            <Route path=":id/result" element={<Result />} />
+            <Route path=":id/summary" element={<Summary />} />
           </Route>
         </Route>
       </Routes>

@@ -112,9 +112,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const persistData = (newBowlers: Bowler[], newA3Cases: A3Case[]) => {
     if (user) {
-      dataService.saveData(newBowlers, newA3Cases, user.username).catch(err => {
-        console.error("Failed to save data:", err);
-      });
+      console.log(`Saving data for user: ${user.username}`);
+      dataService.saveData(newBowlers, newA3Cases, user.username)
+        .then(res => console.log("Save response:", res))
+        .catch(err => {
+          console.error("Failed to save data:", err);
+        });
     }
   };
 
