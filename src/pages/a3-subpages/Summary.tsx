@@ -1,21 +1,72 @@
 import { useParams } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
+import { useState, useRef } from 'react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { Download, Loader2 } from 'lucide-react';
 
 const Summary = () => {
   const { id } = useParams();
   const { a3Cases } = useApp();
   const currentCase = a3Cases.find(c => c.id === id);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportPDF = async () => {
+    if (!contentRef.current || !currentCase) return;
+
+    try {
+      setIsExporting(true);
+      const canvas = await html2canvas(contentRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        ignoreElements: (element) => element.classList.contains('export-ignore'),
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgProps = pdf.getImageProperties(imgData);
+      
+      const ratio = Math.min((pdfWidth - 20) / imgProps.width, (pdfHeight - 20) / imgProps.height);
+      const imgWidth = imgProps.width * ratio;
+      const imgHeight = imgProps.height * ratio;
+      const x = (pdfWidth - imgWidth) / 2;
+      const y = (pdfHeight - imgHeight) / 2;
+
+      pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+      pdf.save(`A3-${currentCase.title.replace(/[^a-z0-9]/gi, '_')}.pdf`);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to export PDF.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   if (!currentCase) {
     return <div className="text-gray-500">Loading case data...</div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" ref={contentRef}>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xl font-bold text-gray-900">A3 Problem Solving Summary</h3>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">
-          Export PDF
+        <button 
+          onClick={handleExportPDF}
+          disabled={isExporting}
+          className="export-ignore px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium flex items-center disabled:opacity-50"
+        >
+          {isExporting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Download className="w-4 h-4 mr-2" />}
+          {isExporting ? 'Exporting...' : 'Export PDF'}
         </button>
       </div>
       
