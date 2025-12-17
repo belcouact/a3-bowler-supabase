@@ -89,7 +89,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [bowlers, setBowlers] = useState<Bowler[]>([]);
   const [a3Cases, setA3Cases] = useState<A3Case[]>([]);
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (user) {
