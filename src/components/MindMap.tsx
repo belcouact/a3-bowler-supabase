@@ -240,16 +240,30 @@ export const MindMap = ({ initialNodes, onChange }: MindMapProps) => {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const onChangeRef = useRef(onChange);
 
+  // Update ref when onChange prop changes to avoid effect dependency
   useEffect(() => {
-    if (onChange) {
-      onChange(nodes);
-    }
-  }, [nodes, onChange]);
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
+  // Notify parent of changes
+  useEffect(() => {
+    if (onChangeRef.current) {
+      onChangeRef.current(nodes);
+    }
+  }, [nodes]);
+
+  // Sync with external updates
   useEffect(() => {
     if (initialNodes && initialNodes.length > 0) {
-        setNodes(initialNodes);
+        setNodes(prev => {
+            // Deep comparison to prevent unnecessary updates/loops
+            if (JSON.stringify(prev) === JSON.stringify(initialNodes)) {
+                return prev;
+            }
+            return initialNodes;
+        });
     }
   }, [initialNodes]); 
 
