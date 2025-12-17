@@ -79,6 +79,39 @@ const MetricBowler = () => {
     }
   };
 
+  const handleDownloadCSV = () => {
+    if (!selectedBowler || metrics.length === 0) return;
+
+    // 1. Create Header Row
+    const monthHeaders = displayMonths.map(m => `"${m.label} Target","${m.label} Actual"`).join(',');
+    const header = `"Metric Name","Scope","Type",${monthHeaders}\n`;
+
+    // 2. Create Data Rows
+    const rows = metrics.map(metric => {
+      const basicInfo = `"${metric.name}","${metric.scope}"`;
+      
+      const monthData = displayMonths.map(m => {
+        const target = metric.monthlyData?.[m.key]?.target || '';
+        const actual = metric.monthlyData?.[m.key]?.actual || '';
+        return `"${target}","${actual}"`;
+      }).join(',');
+
+      return `${basicInfo},"Target/Actual",${monthData}`;
+    }).join('\n');
+
+    // 3. Combine and Download
+    const csvContent = header + rows;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${selectedBowler.name}_metrics_${startDate}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (!id && bowlers.length > 0) {
       return <Navigate to={`/metric-bowler/${bowlers[0].id}`} replace />;
   }
@@ -97,6 +130,14 @@ const MetricBowler = () => {
              {selectedBowler?.tag && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-3">{selectedBowler.tag}</span>}
              
              <div className="flex items-center space-x-2">
+               <button
+                 onClick={handleDownloadCSV}
+                 className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                 title="Download CSV"
+               >
+                 <Download className="h-4 w-4 mr-1.5" />
+                 Export
+               </button>
                <label htmlFor="startDate" className="text-sm text-gray-600 font-medium">Start Date:</label>
                <input 
                  type="month" 
