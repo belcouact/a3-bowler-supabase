@@ -442,13 +442,23 @@ const ActionPlan = () => {
             <div className="flex bg-gray-100 rounded-md p-1">
                 <button
                     onClick={() => handleSetViewMode('month')}
-                    className="px-3 py-1 text-xs font-medium rounded text-gray-500 hover:text-gray-700 hover:bg-white transition-all"
+                    className={clsx(
+                        "px-3 py-1 text-xs font-medium rounded transition-all",
+                        timeScale === 'month' 
+                            ? "bg-white text-gray-900 shadow-sm" 
+                            : "text-gray-500 hover:text-gray-700 hover:bg-white/50"
+                    )}
                 >
                     Month
                 </button>
                 <button
                     onClick={() => handleSetViewMode('week')}
-                    className="px-3 py-1 text-xs font-medium rounded text-gray-500 hover:text-gray-700 hover:bg-white transition-all"
+                    className={clsx(
+                        "px-3 py-1 text-xs font-medium rounded transition-all",
+                        timeScale === 'week' 
+                            ? "bg-white text-gray-900 shadow-sm" 
+                            : "text-gray-500 hover:text-gray-700 hover:bg-white/50"
+                    )}
                 >
                     Week
                 </button>
