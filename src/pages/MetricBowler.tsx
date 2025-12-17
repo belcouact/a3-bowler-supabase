@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { Info } from 'lucide-react';
+import { Info, Settings, Download } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -14,6 +14,9 @@ const MetricBowler = () => {
     const today = new Date();
     return `${today.getFullYear()}-04`;
   });
+
+  const [chartSettingsOpen, setChartSettingsOpen] = useState<Record<string, boolean>>({});
+  const [chartScales, setChartScales] = useState<Record<string, { min: string; max: string }>>({});
 
   const displayMonths = useMemo(() => {
     const [yearStr, monthStr] = startDate.split('-');
@@ -222,9 +225,61 @@ const MetricBowler = () => {
                 actual: parseFloat(metric.monthlyData?.[month.key]?.actual || '0') || null,
               }));
 
+              const scale = chartScales[metric.id] || { min: '', max: '' };
+              const isSettingsOpen = chartSettingsOpen[metric.id] || false;
+              
+              const yDomain: [number | 'auto', number | 'auto'] = [
+                scale.min !== '' && !isNaN(parseFloat(scale.min)) ? parseFloat(scale.min) : 'auto',
+                scale.max !== '' && !isNaN(parseFloat(scale.max)) ? parseFloat(scale.max) : 'auto',
+              ];
+
               return (
                 <div key={`${metric.id}-chart`} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                  <h4 className="text-sm font-medium text-gray-900 mb-4">{metric.name}</h4>
+                  <div className="flex justify-between items-start mb-4">
+                    <h4 className="text-sm font-medium text-gray-900">{metric.name}</h4>
+                    <button
+                        onClick={() => setChartSettingsOpen(prev => ({ ...prev, [metric.id]: !prev[metric.id] }))}
+                        className={`p-1 rounded-md transition-colors ${isSettingsOpen ? 'bg-gray-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                        title="Adjust Scale"
+                    >
+                        <Settings className="w-4 h-4" />
+                    </button>
+                  </div>
+                  
+                  {isSettingsOpen && (
+                    <div className="mb-4 p-3 bg-gray-50 rounded-md text-xs">
+                        <div className="flex items-center space-x-4">
+                            <span className="font-medium text-gray-600">Y-Axis Scale:</span>
+                            <div className="flex items-center space-x-2">
+                                <label className="text-gray-500">Min:</label>
+                                <input 
+                                    type="number" 
+                                    className="w-20 p-1 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Auto"
+                                    value={scale.min}
+                                    onChange={(e) => setChartScales(prev => ({
+                                        ...prev,
+                                        [metric.id]: { ...prev[metric.id], min: e.target.value }
+                                    }))}
+                                />
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <label className="text-gray-500">Max:</label>
+                                <input 
+                                    type="number" 
+                                    className="w-20 p-1 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Auto"
+                                    value={scale.max}
+                                    onChange={(e) => setChartScales(prev => ({
+                                        ...prev,
+                                        [metric.id]: { ...prev[metric.id], max: e.target.value }
+                                    }))}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                  )}
+
                   <div className="h-64 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
@@ -239,6 +294,7 @@ const MetricBowler = () => {
                           tick={{ fontSize: 10, fill: '#6b7280' }} 
                           axisLine={false}
                           tickLine={false}
+                          domain={yDomain}
                         />
                         <Tooltip 
                           contentStyle={{ borderRadius: '4px', border: 'none', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}
