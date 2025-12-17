@@ -507,6 +507,7 @@ const ActionPlan = () => {
                         key={task.id} 
                         className="h-[48px] border-b border-gray-100 flex items-center px-4 hover:bg-gray-50 group cursor-pointer"
                         onDoubleClick={(e) => handleTaskDoubleClick(e, task)}
+                        title={task.description}
                     >
                         <div className="flex-1 min-w-0">
                             <div className="text-sm font-medium text-gray-900 truncate">{task.name || 'Untitled Task'}</div>

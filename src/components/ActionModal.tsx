@@ -5,6 +5,7 @@ import { generateShortId } from '../utils/idUtils';
 export interface ActionTask {
   id: string;
   name: string;
+  description?: string;
   owner: string;
   startDate: string;
   endDate: string;
@@ -25,6 +26,7 @@ const ActionModal = ({ isOpen, onClose, onSave, onDelete, initialData, defaultSt
   const [formData, setFormData] = useState<ActionTask>({
     id: '',
     name: '',
+    description: '',
     owner: '',
     startDate: '',
     endDate: '',
@@ -45,6 +47,7 @@ const ActionModal = ({ isOpen, onClose, onSave, onDelete, initialData, defaultSt
         setFormData({
           id: generateShortId(),
           name: '',
+          description: '',
           owner: '',
           startDate: start,
           endDate: end,
@@ -93,6 +96,16 @@ const ActionModal = ({ isOpen, onClose, onSave, onDelete, initialData, defaultSt
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <textarea
+                  rows={3}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  value={formData.description || ''}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
               </div>
 

@@ -312,7 +312,7 @@ const Layout = () => {
                       ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
                       : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                   )}
-                  title={!isSidebarOpen ? a3.title : undefined}
+                  title={a3.description || (!isSidebarOpen ? a3.title : undefined)}
                 >
                   <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
                     <FileText className={clsx("w-4 h-4 flex-shrink-0", isSidebarOpen ? "mr-3" : "mr-0", location.pathname.includes(`/a3-analysis/${a3.id}`) ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />

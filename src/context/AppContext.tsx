@@ -50,6 +50,7 @@ export interface MindMapNodeData {
 export interface ActionPlanTaskData {
   id: string;
   name: string;
+  description?: string;
   owner: string;
   startDate: string;
   endDate: string;
