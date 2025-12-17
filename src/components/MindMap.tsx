@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, MouseEvent as ReactMouseEvent, useLayoutEffect, useCallback } from 'react';
-import { Plus, Trash2, MousePointer2, ZoomIn, ZoomOut, Palette } from 'lucide-react';
+import { Plus, Trash2, ZoomIn, ZoomOut, Palette } from 'lucide-react';
 import clsx from 'clsx';
 import { MindMapNodeData } from '../context/AppContext';
 import { generateShortId } from '../utils/idUtils';
