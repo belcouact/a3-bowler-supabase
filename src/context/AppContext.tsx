@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect, useRef } from 'react';
 import { dataService } from '../services/dataService';
 import { useAuth } from './AuthContext';
 import { generateShortId } from '../utils/idUtils';
@@ -88,17 +88,32 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [bowlers, setBowlers] = useState<Bowler[]>([]);
-
   const [a3Cases, setA3Cases] = useState<A3Case[]>([]);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (user) {
-      // Load user data
+      // 1. Try Local Storage first to be instant
+      const localDataKey = `user_data_${user.username}`;
+      const localData = localStorage.getItem(localDataKey);
+      if (localData) {
+        try {
+          const parsed = JSON.parse(localData);
+          setBowlers(parsed.bowlers || []);
+          setA3Cases(parsed.a3Cases || []);
+        } catch (e) {
+          console.error("Failed to parse local data", e);
+        }
+      }
+
+      // 2. Load user data from backend (Source of Truth)
       dataService.loadData(user.username)
         .then(data => {
           if (data.success) {
             setBowlers(data.bowlers || []);
             setA3Cases(data.a3Cases || []);
+            // Update local storage to match backend
+            localStorage.setItem(localDataKey, JSON.stringify({ bowlers: data.bowlers || [], a3Cases: data.a3Cases || [] }));
           }
         })
         .catch(err => {
@@ -112,12 +127,27 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const persistData = (newBowlers: Bowler[], newA3Cases: A3Case[]) => {
     if (user) {
-      console.log(`Saving data for user: ${user.username}`);
-      dataService.saveData(newBowlers, newA3Cases, user.username)
-        .then(res => console.log("Save response:", res))
-        .catch(err => {
-          console.error("Failed to save data:", err);
-        });
+      // 1. Save to Local Storage immediately
+      const localDataKey = `user_data_${user.username}`;
+      try {
+        localStorage.setItem(localDataKey, JSON.stringify({ bowlers: newBowlers, a3Cases: newA3Cases }));
+      } catch (e) {
+        console.error("Local Storage save failed", e);
+      }
+
+      // 2. Debounce Backend Save (Save only after 5 seconds of inactivity)
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+
+      saveTimeoutRef.current = setTimeout(() => {
+        console.log(`Saving data to backend for user: ${user.username}`);
+        dataService.saveData(newBowlers, newA3Cases, user.username)
+          .then(res => console.log("Save response:", res))
+          .catch(err => {
+            console.error("Failed to save data:", err);
+          });
+      }, 5000);
     }
   };
 
