@@ -46,7 +46,6 @@ export const AppInfoModal: React.FC<AppInfoModalProps> = ({ isOpen, onClose }) =
                   <ul className="text-sm text-gray-500 space-y-1 ml-2 list-disc list-inside">
                     <li>Create Bowlers for different teams</li>
                     <li>Track Target vs Actual data</li>
-                    <li>Automatic gap calculation</li>
                     <li>Visual trend charts</li>
                   </ul>
                 </div>
@@ -62,7 +61,7 @@ export const AppInfoModal: React.FC<AppInfoModalProps> = ({ isOpen, onClose }) =
                   <ul className="text-sm text-gray-500 space-y-1 ml-2 list-disc list-inside">
                     <li>Problem Statement Definition</li>
                     <li>Data Analysis & Visualization</li>
-                    <li>Root Cause Analysis (5 Whys / Fishbone)</li>
+                    <li>Root Cause Analysis (5 Whys)</li>
                     <li>Action Plan Tracking</li>
                   </ul>
                 </div>
@@ -95,9 +94,6 @@ export const AppInfoModal: React.FC<AppInfoModalProps> = ({ isOpen, onClose }) =
                 </div>
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg text-xs text-gray-500 text-center">
-                <p>Version 1.0.0 &bull; Built for Performance Excellence</p>
-              </div>
             </div>
           </div>
         </div>
