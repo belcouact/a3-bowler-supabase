@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, Link as LinkIcon, FileText } from 'lucide-react';
+import { Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, Link as LinkIcon, FileText, ExternalLink } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case, Bowler } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
@@ -105,6 +105,12 @@ const Layout = () => {
     }
   };
 
+  const handleExit = () => {
+    if (window.confirm("Are you sure you want to exit to the main app (study-llm.me)? Unsaved changes may be lost.")) {
+      window.location.href = "https://study-llm.me";
+    }
+  };
+
   const navItems = [
     { path: '/mindmap', label: 'Front Page', icon: LinkIcon },
     { path: '/metric-bowler', label: 'Metric Bowler', icon: Target },
@@ -131,6 +137,14 @@ const Layout = () => {
           </div>
           
           <nav className="flex space-x-1">
+             <button
+              onClick={handleExit}
+              className="flex items-center px-3 md:px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 text-gray-600 hover:bg-gray-100 hover:text-red-600"
+              title="Exit to Main App"
+            >
+              <ExternalLink className="w-5 h-5 md:w-4 md:h-4 md:mr-2 text-gray-400" />
+              <span className="hidden md:inline">Exit</span>
+            </button>
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname.startsWith(item.path);
