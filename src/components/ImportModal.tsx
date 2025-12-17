@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, X, FileText, AlertCircle, Check } from 'lucide-react';
-import { Metric, MetricData } from '../context/AppContext';
+import { Metric } from '../context/AppContext';
 import { generateShortId } from '../utils/idUtils';
 
 interface ImportModalProps {
@@ -36,53 +36,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
     const lines = text.split('\n');
     if (lines.length < 2) throw new Error('File is empty or missing headers');
 
-    // Parse headers
-    // Handle CSV quoting properly-ish (simple split by comma ignoring commas in quotes is better, but simple split might fail)
-    // Let's use a regex for splitting CSV lines
-    const splitCSV = (line: string) => {
-      const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-      // Fallback if regex fails or simple split
-      if (!matches) return line.split(',').map(s => s.trim());
-      return matches.map(m => m.replace(/^"|"$/g, '').trim());
-    };
-
-    // Better regex for CSV splitting:
-    // Matches quoted fields OR non-comma fields
-    const csvSplitRegex = /(?:,|^)(?:"([^"]*)"|([^",]*))/g;
-    
-    const parseLine = (line: string) => {
-        const result = [];
-        let match;
-        csvSplitRegex.lastIndex = 0;
-        while ((match = csvSplitRegex.exec(line)) !== null) {
-            // match[1] is quoted content, match[2] is unquoted
-            // We need to check if the match is empty string which can happen between commas
-            // Actually this regex approach is tricky for empty fields.
-            // Let's use a simpler approach: 
-            // 1. Placeholder for commas inside quotes
-            // 2. Split by comma
-            // 3. Restore commas
-            
-            let temp = line;
-            const placeholders: string[] = [];
-            temp = temp.replace(/"(.*?)"/g, (m, c) => {
-                placeholders.push(c);
-                return `__PLACEHOLDER_${placeholders.length - 1}__`;
-            });
-            
-            return temp.split(',').map(s => {
-                const trimmed = s.trim();
-                if (trimmed.startsWith('__PLACEHOLDER_')) {
-                    const index = parseInt(trimmed.replace('__PLACEHOLDER_', '').replace('__', ''));
-                    return placeholders[index];
-                }
-                return trimmed;
-            });
-        }
-        return [];
-    };
-
-    // Let's try a robust enough simple parser
+    // Robust simple CSV parser
     const simpleParseLine = (line: string) => {
         const result = [];
         let current = '';
