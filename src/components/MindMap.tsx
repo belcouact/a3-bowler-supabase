@@ -404,8 +404,8 @@ export const MindMap = ({ initialNodes, onChange }: MindMapProps) => {
         <path
           key={`${parent.id}-${node.id}`}
           d={path}
-          stroke="#64748b"
-          strokeWidth="2"
+          stroke="#475569"
+          strokeWidth="3"
           fill="none"
         />
       );
@@ -416,17 +416,17 @@ export const MindMap = ({ initialNodes, onChange }: MindMapProps) => {
     <div className="flex flex-col h-full space-y-2">
         <div 
           ref={containerRef}
-          className="w-full min-h-[600px] bg-slate-50 relative overflow-hidden border border-slate-200 rounded-lg cursor-grab active:cursor-grabbing resize-y"
+          className="w-full flex-1 min-h-[600px] bg-slate-50 relative overflow-hidden border border-slate-200 rounded-lg cursor-grab active:cursor-grabbing resize-y"
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
         >
-          <div className="absolute top-4 left-4 z-10 bg-white/80 p-2 rounded shadow backdrop-blur-sm text-xs text-slate-500 pointer-events-none">
+          <div className="absolute top-4 left-4 z-20 bg-white/80 p-2 rounded shadow backdrop-blur-sm text-xs text-slate-500 pointer-events-none">
             <p className="flex items-center"><MousePointer2 className="w-3 h-3 mr-1"/> Drag nodes to organize</p>
             <p className="flex items-center mt-1"><Plus className="w-3 h-3 mr-1"/> Add 'Why' to drill down</p>
           </div>
 
-          <div className="absolute top-4 right-4 z-10 flex items-center bg-white/80 rounded-md p-1 shadow backdrop-blur-sm border border-slate-200">
+          <div className="absolute top-4 right-4 z-20 flex items-center bg-white/80 rounded-md p-1 shadow backdrop-blur-sm border border-slate-200">
                 <button 
                     onClick={() => setScale(Math.max(0.5, scale - 0.1))} 
                     className="p-1 hover:bg-gray-100 rounded"
