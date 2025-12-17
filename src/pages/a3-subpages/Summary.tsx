@@ -99,6 +99,39 @@ const Summary = () => {
            {/* Results */}
            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
             <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">5. Results & Follow-up</h4>
+            
+            {/* Result Images */}
+            {currentCase.resultImages && currentCase.resultImages.length > 0 && (
+                <div className="mb-4">
+                    <h5 className="text-xs font-semibold text-gray-600 mb-2">Result Evidence</h5>
+                    <div className="relative w-full h-48 bg-gray-50 border border-gray-200 rounded overflow-hidden">
+                         <div className="w-full h-full relative overflow-auto">
+                            {currentCase.resultImages.map(img => (
+                                <div
+                                    key={img.id}
+                                    style={{
+                                        position: 'absolute',
+                                        left: img.x * 0.5, // Scale down positions slightly for summary view
+                                        top: img.y * 0.5,
+                                        width: img.width * 0.5,
+                                        height: img.height * 0.5,
+                                    }}
+                                >
+                                    <img 
+                                        src={img.src} 
+                                        alt="result evidence" 
+                                        className="w-full h-full object-contain" 
+                                    />
+                                </div>
+                            ))}
+                         </div>
+                         <div className="absolute bottom-1 right-1 text-[10px] text-gray-400">
+                             * Scaled (50%)
+                         </div>
+                    </div>
+                </div>
+            )}
+
             <div className="text-sm text-gray-600 space-y-2">
               <p><span className="font-medium text-gray-900">Outcome:</span> {currentCase.results || 'No results recorded yet.'}</p>
             </div>
