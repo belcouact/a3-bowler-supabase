@@ -429,10 +429,10 @@ export const MindMap = ({ initialNodes, onChange }: MindMapProps) => {
   };
 
   return (
-    <div className="flex flex-col h-full space-y-2">
+    <div className="flex flex-col space-y-2">
         <div 
           ref={containerRef}
-          className="w-full flex-1 min-h-[600px] bg-slate-50 relative overflow-hidden border border-slate-200 rounded-lg cursor-grab active:cursor-grabbing resize-y"
+          className="w-full h-[600px] bg-slate-50 relative overflow-hidden border border-slate-200 rounded-lg cursor-grab active:cursor-grabbing resize-y"
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
