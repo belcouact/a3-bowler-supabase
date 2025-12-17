@@ -9,14 +9,17 @@ import ActionPlan from './pages/a3-subpages/ActionPlan';
 import Result from './pages/a3-subpages/Result';
 import Summary from './pages/a3-subpages/Summary';
 import A3Redirect from './components/A3Redirect';
+import MarkmapPage from './pages/MarkmapPage';
 
 function App() {
   return (
     <Router basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route path="/" element={<Layout />}>
-          <Route index element={<Navigate to="/metric-bowler" replace />} />
+          <Route index element={<Navigate to="/mindmap" replace />} />
           
+          <Route path="mindmap" element={<MarkmapPage />} />
+
           {/* Metric Bowler Routes */}
           <Route path="metric-bowler" element={<MetricBowler />} />
           <Route path="metric-bowler/:id" element={<MetricBowler />} />
