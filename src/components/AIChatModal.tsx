@@ -68,7 +68,10 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
         Answer the user's questions based on this data. Be concise and helpful.`
       };
 
-      const apiMessages = [systemMessage, ...newMessages];
+      // Always include system message with latest context + conversation history
+      // Filter out previous system messages from history to avoid duplication/bloat
+      const historyMessages = messages.filter(m => m.role !== 'system');
+      const apiMessages = [systemMessage, ...historyMessages, userMessage];
 
       const response = await fetch('https://multi-model-worker.study-llm.me/api/chat', {
         method: 'POST',
