@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { Info, Settings, Download } from 'lucide-react';
-import { useApp } from '../context/AppContext';
+import { Info, Settings, Download, Upload } from 'lucide-react';
+import { useApp, Metric } from '../context/AppContext';
+import { ImportModal } from '../components/ImportModal';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -15,6 +16,7 @@ const MetricBowler = () => {
     return `${today.getFullYear()}-04`;
   });
 
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [chartSettingsOpen, setChartSettingsOpen] = useState<Record<string, boolean>>({});
   const [chartScales, setChartScales] = useState<Record<string, { min: string; max: string }>>({});
 
@@ -79,6 +81,14 @@ const MetricBowler = () => {
     }
   };
 
+  const handleImport = (updatedMetrics: Metric[]) => {
+    if (!selectedBowler) return;
+    updateBowler({
+      ...selectedBowler,
+      metrics: updatedMetrics
+    });
+  };
+
   const handleDownloadCSV = () => {
     if (!selectedBowler || metrics.length === 0) return;
 
@@ -128,10 +138,18 @@ const MetricBowler = () => {
         <div className="text-right flex flex-col items-end">
              {selectedBowler?.champion && <p className="text-sm text-gray-600 mb-2">Champion: {selectedBowler.champion}</p>}
              {selectedBowler?.tag && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-3">{selectedBowler.tag}</span>}
-             
-             <div className="flex items-center space-x-2">
-               <button
-                 onClick={handleDownloadCSV}
+            
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setIsImportModalOpen(true)}
+                className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                title="Import CSV"
+              >
+                <Upload className="h-4 w-4 mr-1.5" />
+                Import
+              </button>
+              <button
+                onClick={handleDownloadCSV}
                  className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                  title="Download CSV"
                >
@@ -369,6 +387,13 @@ const MetricBowler = () => {
           </div>
         </div>
       )}
+
+      <ImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImport={handleImport}
+        existingMetrics={metrics}
+      />
     </div>
   );
 };
