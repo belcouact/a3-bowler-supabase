@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { Info } from 'lucide-react';
-import { useApp, Metric } from '../context/AppContext';
+import { useApp } from '../context/AppContext';
 
 const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
