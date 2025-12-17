@@ -6,6 +6,14 @@ import { Split } from 'lucide-react';
 
 const transformer = new Transformer();
 
+// Do not strip HTML tags, preserve all characters
+// @ts-ignore
+if (transformer.assets && transformer.assets.styles) {
+    // Attempt to inject style to preserve whitespace if needed, but mainly we rely on markmap's rendering
+}
+
+
+
 const EXAMPLE_MARKDOWN = `---
 title: markmap
 markmap:
