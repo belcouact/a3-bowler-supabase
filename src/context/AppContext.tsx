@@ -66,6 +66,7 @@ export interface A3Case {
   problemStatement?: string;
   results?: string;
   mindMapNodes?: MindMapNodeData[];
+  rootCause?: string;
   actionPlanTasks?: ActionPlanTaskData[];
   dataAnalysisObservations?: string;
 }
