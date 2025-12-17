@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 
@@ -6,19 +6,24 @@ const ProblemStatement = () => {
   const { id } = useParams();
   const { a3Cases, updateA3Case } = useApp();
   const currentCase = a3Cases.find(c => c.id === id);
-  const [statement, setStatement] = useState('');
-
-  console.log('Rendering ProblemStatement', { id, currentCase });
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    if (currentCase) {
-      setStatement(currentCase.problemStatement || '');
+    if (currentCase && textareaRef.current) {
+      const newVal = currentCase.problemStatement || '';
+      // Only update if the value is different to avoid cursor jumping if active
+      if (textareaRef.current.value !== newVal) {
+          textareaRef.current.value = newVal;
+      }
     }
   }, [currentCase?.problemStatement]);
 
   const handleBlur = () => {
-    if (currentCase) {
-      updateA3Case({ ...currentCase, problemStatement: statement });
+    if (currentCase && textareaRef.current) {
+      const newValue = textareaRef.current.value;
+      if (newValue !== currentCase.problemStatement) {
+          updateA3Case({ ...currentCase, problemStatement: newValue });
+      }
     }
   };
 
@@ -38,12 +43,12 @@ const ProblemStatement = () => {
               What is the problem?
             </label>
             <textarea
+              ref={textareaRef}
               id="problem"
               rows={4}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border"
               placeholder="Describe the problem..."
-              value={statement}
-              onChange={(e) => setStatement(e.target.value)}
+              defaultValue={currentCase.problemStatement || ''}
               onBlur={handleBlur}
             />
           </div>

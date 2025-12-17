@@ -2,7 +2,7 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useParams } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
-import { useState, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 const data = [
   { name: 'Jan', defects: 65 },
@@ -18,19 +18,23 @@ const DataAnalysis = () => {
   const { id } = useParams();
   const { a3Cases, updateA3Case } = useApp();
   const currentCase = a3Cases.find(c => c.id === id);
-  const [observations, setObservations] = useState('');
-
-  console.log('Rendering DataAnalysis', { id, currentCase });
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    if (currentCase) {
-      setObservations(currentCase.dataAnalysisObservations || '');
+    if (currentCase && textareaRef.current) {
+        const newVal = currentCase.dataAnalysisObservations || '';
+        if (textareaRef.current.value !== newVal) {
+            textareaRef.current.value = newVal;
+        }
     }
   }, [currentCase?.dataAnalysisObservations]);
 
   const handleBlur = () => {
-    if (currentCase) {
-      updateA3Case({ ...currentCase, dataAnalysisObservations: observations });
+    if (currentCase && textareaRef.current) {
+        const newValue = textareaRef.current.value;
+        if (newValue !== currentCase.dataAnalysisObservations) {
+            updateA3Case({ ...currentCase, dataAnalysisObservations: newValue });
+        }
     }
   };
 
@@ -70,12 +74,12 @@ const DataAnalysis = () => {
             Key Observations from Data
           </label>
           <textarea
+            ref={textareaRef}
             id="observations"
             rows={4}
             className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border"
             placeholder="What patterns or insights do you see in the data?"
-            value={observations}
-            onChange={(e) => setObservations(e.target.value)}
+            defaultValue={currentCase.dataAnalysisObservations || ''}
             onBlur={handleBlur}
           />
         </div>
