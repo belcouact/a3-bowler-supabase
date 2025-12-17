@@ -137,6 +137,21 @@ const MarkmapPage = () => {
     }
   }, [mm, markdown]);
 
+  // Handle Resize to keep centered
+  useEffect(() => {
+    if (!wrapperRef.current || !mm) return;
+
+    const observer = new ResizeObserver(() => {
+      mm.fit();
+    });
+
+    observer.observe(wrapperRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [mm]);
+
   // Resizable logic
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
