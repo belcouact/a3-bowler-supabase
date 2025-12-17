@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useApp } from '../../context/AppContext';
+import { useApp, DataAnalysisImage } from '../../context/AppContext';
+import ImageCanvas from '../../components/ImageCanvas';
 
 const Result = () => {
   const { id } = useParams();
@@ -8,14 +9,39 @@ const Result = () => {
   const currentCase = a3Cases.find(c => c.id === id);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Canvas State
+  const [images, setImages] = useState<DataAnalysisImage[]>([]);
+  const [canvasHeight, setCanvasHeight] = useState(500);
+
   useEffect(() => {
-    if (currentCase && textareaRef.current) {
+    if (currentCase) {
+        if (currentCase.resultImages && JSON.stringify(currentCase.resultImages) !== JSON.stringify(images)) {
+             setImages(currentCase.resultImages || []);
+        }
+        if (currentCase.resultCanvasHeight && currentCase.resultCanvasHeight !== canvasHeight) {
+            setCanvasHeight(currentCase.resultCanvasHeight);
+        }
+
         const newVal = currentCase.results || '';
-        if (textareaRef.current.value !== newVal) {
+        if (textareaRef.current && textareaRef.current.value !== newVal) {
             textareaRef.current.value = newVal;
         }
     }
-  }, [currentCase?.results]);
+  }, [currentCase?.id]); // Only re-sync on case switch
+
+  const saveImages = (newImages: DataAnalysisImage[]) => {
+      setImages(newImages);
+      if (currentCase) {
+          updateA3Case({ ...currentCase, resultImages: newImages });
+      }
+  };
+
+  const saveCanvasHeight = (height: number) => {
+      setCanvasHeight(height);
+      if (currentCase) {
+          updateA3Case({ ...currentCase, resultCanvasHeight: height });
+      }
+  };
 
   const handleBlur = () => {
     if (currentCase && textareaRef.current) {
@@ -36,7 +62,16 @@ const Result = () => {
         <h3 className="text-xl font-bold text-gray-900 mb-2">Results & Follow-up</h3>
         <p className="text-gray-500 mb-4">Document the results achieved after implementing the action plan.</p>
         
-        <div className="space-y-4">
+        {/* Evidence Canvas */}
+        <ImageCanvas 
+            images={images}
+            onImagesChange={saveImages}
+            height={canvasHeight}
+            onHeightChange={saveCanvasHeight}
+            label="Result Evidence (Paste or Upload Images)"
+        />
+
+        <div className="space-y-4 mt-6">
           <div>
             <label htmlFor="results" className="block text-sm font-medium text-gray-700 mb-1">
               Actual Results

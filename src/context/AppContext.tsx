@@ -84,6 +84,8 @@ export interface A3Case {
   dataAnalysisObservations?: string;
   dataAnalysisImages?: DataAnalysisImage[];
   dataAnalysisCanvasHeight?: number;
+  resultImages?: DataAnalysisImage[];
+  resultCanvasHeight?: number;
 }
 
 interface AppContextType {
