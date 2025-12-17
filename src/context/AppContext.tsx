@@ -7,6 +7,8 @@ import { generateShortId } from '../utils/idUtils';
 export interface MetricData {
   target: string;
   actual: string;
+  targetNote?: string;
+  actualNote?: string;
 }
 
 export interface Metric {

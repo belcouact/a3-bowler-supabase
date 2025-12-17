@@ -94,6 +94,52 @@ const MetricBowler = () => {
     }
   };
 
+  const handleNoteUpdate = (
+    metricId: string,
+    monthKey: string,
+    field: 'targetNote' | 'actualNote',
+    value: string
+  ) => {
+    if (!selectedBowler) return;
+
+    const updatedMetrics = metrics.map(m => {
+      if (m.id !== metricId) return m;
+
+      const currentMonthlyData = m.monthlyData || {};
+      const monthData = currentMonthlyData[monthKey] || { target: '', actual: '' };
+      
+      return {
+        ...m,
+        monthlyData: {
+          ...currentMonthlyData,
+          [monthKey]: {
+            ...monthData,
+            [field]: value
+          }
+        }
+      };
+    });
+
+    updateBowler({
+        ...selectedBowler,
+        metrics: updatedMetrics
+    });
+  };
+
+  const handleRightClick = (
+    e: React.MouseEvent,
+    metricId: string,
+    monthKey: string,
+    type: 'target' | 'actual',
+    currentNote: string
+  ) => {
+    e.preventDefault();
+    const note = prompt('Enter note for this cell:', currentNote);
+    if (note !== null) {
+      handleNoteUpdate(metricId, monthKey, type === 'target' ? 'targetNote' : 'actualNote', note);
+    }
+  };
+
   const handleImport = (updatedMetrics: Metric[]) => {
     if (!selectedBowler) return;
     updateBowler({
@@ -306,7 +352,8 @@ const MetricBowler = () => {
                     {displayMonths.map((month, monthIndex) => (
                       <td
                         key={`${month.key}-target`}
-                        className="px-0 py-0 whitespace-nowrap text-xs text-gray-500 bg-gray-50/30 border-b border-gray-100 h-8 p-0"
+                        className="px-0 py-0 whitespace-nowrap text-xs text-gray-500 bg-gray-50/30 border-b border-gray-100 h-8 p-0 relative group/cell"
+                        onContextMenu={(e) => handleRightClick(e, metric.id, month.key, 'target', metric.monthlyData?.[month.key]?.targetNote || '')}
                       >
                         <input
                             id={`cell-${metric.id}-${month.key}-target`}
@@ -315,7 +362,11 @@ const MetricBowler = () => {
                             defaultValue={metric.monthlyData?.[month.key]?.target || ''}
                             onBlur={(e) => handleCellUpdate(metric.id, month.key, 'target', e.target.value)}
                             onKeyDown={(e) => handleKeyDown(e, 'target', metricIndex, monthIndex)}
+                            title={metric.monthlyData?.[month.key]?.targetNote || ''}
                         />
+                        {metric.monthlyData?.[month.key]?.targetNote && (
+                          <div className="absolute top-0 right-0 w-0 h-0 border-t-[6px] border-r-[6px] border-t-red-500 border-r-transparent pointer-events-none" />
+                        )}
                       </td>
                     ))}
                   </tr>
@@ -328,7 +379,8 @@ const MetricBowler = () => {
                      {displayMonths.map((month, monthIndex) => (
                        <td
                          key={`${month.key}-actual`}
-                         className="px-0 py-0 whitespace-nowrap text-xs text-gray-500 h-8 p-0"
+                         className="px-0 py-0 whitespace-nowrap text-xs text-gray-500 h-8 p-0 relative group/cell"
+                         onContextMenu={(e) => handleRightClick(e, metric.id, month.key, 'actual', metric.monthlyData?.[month.key]?.actualNote || '')}
                        >
                          <input
                              id={`cell-${metric.id}-${month.key}-actual`}
@@ -339,7 +391,11 @@ const MetricBowler = () => {
                              defaultValue={metric.monthlyData?.[month.key]?.actual || ''}
                              onBlur={(e) => handleCellUpdate(metric.id, month.key, 'actual', e.target.value)}
                              onKeyDown={(e) => handleKeyDown(e, 'actual', metricIndex, monthIndex)}
+                             title={metric.monthlyData?.[month.key]?.actualNote || ''}
                          />
+                         {metric.monthlyData?.[month.key]?.actualNote && (
+                           <div className="absolute top-0 right-0 w-0 h-0 border-t-[6px] border-r-[6px] border-t-red-500 border-r-transparent pointer-events-none" />
+                         )}
                        </td>
                      ))}
                   </tr>
