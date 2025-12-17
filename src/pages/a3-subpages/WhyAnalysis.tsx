@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useApp, MindMapNodeData } from '../../context/AppContext';
 import { MindMap } from '../../components/MindMap';
+import { FileText } from 'lucide-react';
 
 const WhyAnalysis = () => {
   const { id } = useParams();
@@ -10,6 +11,7 @@ const WhyAnalysis = () => {
 
   // We use local state to avoid flickering but sync with context
   const [rootCause, setRootCause] = useState('');
+  const [convertedText, setConvertedText] = useState('');
 
   useEffect(() => {
     if (currentCase) {
@@ -41,6 +43,40 @@ const WhyAnalysis = () => {
       }
   };
 
+  const generateTextStructure = () => {
+    if (!currentCase?.mindMapNodes || currentCase.mindMapNodes.length === 0) {
+        setConvertedText('No content to convert.');
+        return;
+    }
+
+    const nodes = currentCase.mindMapNodes;
+    const roots = nodes.filter(n => !n.parentId);
+    
+    let text = '';
+
+    const traverse = (nodeId: string, depth: number) => {
+        const children = nodes.filter(n => n.parentId === nodeId);
+        // Sort children by Y position to maintain visual order roughly
+        children.sort((a, b) => a.y - b.y);
+        
+        for (const child of children) {
+            const indent = '  '.repeat(depth);
+            text += `${indent}- ${child.text}\n`;
+            traverse(child.id, depth + 1);
+        }
+    };
+
+    // Sort roots by Y position
+    roots.sort((a, b) => a.y - b.y);
+
+    for (const root of roots) {
+        text += `${root.text}\n`;
+        traverse(root.id, 1);
+    }
+
+    setConvertedText(text);
+  };
+
   if (!currentCase) {
     return <div className="text-gray-500">Loading case data...</div>;
   }
@@ -57,6 +93,24 @@ const WhyAnalysis = () => {
       <div className="flex flex-col">
          {/* MindMap container is resizable by itself via CSS in MindMap.tsx (resize-y) */}
          <MindMap initialNodes={currentCase.mindMapNodes} onChange={handleNodesChange} />
+      </div>
+
+      {/* Conversion Section */}
+      <div className="flex flex-col space-y-2">
+          <button
+            onClick={generateTextStructure}
+            className="self-start flex items-center px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <FileText className="w-4 h-4 mr-2 text-gray-500" />
+            Convert to Text
+          </button>
+          
+          {convertedText && (
+            <div className="bg-gray-50 p-4 rounded-md border border-gray-200 mt-2">
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Text Representation</h4>
+                <pre className="text-sm text-gray-800 whitespace-pre-wrap font-mono">{convertedText}</pre>
+            </div>
+          )}
       </div>
 
       <div className="mt-6">
