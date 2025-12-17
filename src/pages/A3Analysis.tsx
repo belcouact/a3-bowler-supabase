@@ -72,7 +72,7 @@ const A3Analysis = () => {
       </div>
       
       {location.pathname.includes('action-plan') ? (
-        <div className="h-[600px] border-t border-gray-200">
+        <div className="h-[calc(100vh-14rem)] border-t border-gray-200">
           <Outlet />
         </div>
       ) : (
