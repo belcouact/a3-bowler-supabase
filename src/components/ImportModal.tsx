@@ -65,6 +65,10 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
     if (metricNameIndex === -1) {
         throw new Error('Missing required column: "Metric Name"');
     }
+    
+    if (scopeIndex === -1) {
+        throw new Error('Missing required column: "Scope"');
+    }
 
     // Identify month columns
     // Supports two formats:
@@ -126,7 +130,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
         const name = row[metricNameIndex];
         if (!name) continue;
 
-        const scope = scopeIndex !== -1 ? row[scopeIndex] : 'Site'; // Default scope
+        const scope = row[scopeIndex];
         
         // Determine row type if using Long format
         let rowType: 'target' | 'actual' | null = null;
