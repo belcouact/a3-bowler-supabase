@@ -82,12 +82,27 @@ const MarkmapPage = () => {
   const [markdown, setMarkdown] = useState(`# A3 Bowler
 ## Metric Bowler
 - Track KPIs
+  - Safety
+  - Quality
+  - Delivery
+  - Cost
 - Monthly Targets
+  - Plan
+  - Actual
 - Gap Analysis
+  - Deviation
+  - Reason
 ## A3 Problem Solving
 - Problem Statement
+  - Description
+  - Impact
 - Root Cause Analysis
+  - 5 Whys
+  - Fishbone
 - Action Plan
+  - What
+  - Who
+  - When
 `);
   const [svgRef, setSvgRef] = useState<SVGSVGElement | null>(null);
   const [mm, setMm] = useState<Markmap | null>(null);
