@@ -93,20 +93,26 @@ const MetricBowler = () => {
     if (!selectedBowler || metrics.length === 0) return;
 
     // 1. Create Header Row
-    const monthHeaders = displayMonths.map(m => `"${m.label} Target","${m.label} Actual"`).join(',');
+    // Header: Metric Name, Scope, Type, 2024/Jan, 2024/Feb...
+    const monthHeaders = displayMonths.map(m => `"${m.label}"`).join(',');
     const header = `"Metric Name","Scope","Type",${monthHeaders}\n`;
 
     // 2. Create Data Rows
-    const rows = metrics.map(metric => {
+    const rows = metrics.flatMap(metric => {
       const basicInfo = `"${metric.name}","${metric.scope}"`;
       
-      const monthData = displayMonths.map(m => {
-        const target = metric.monthlyData?.[m.key]?.target || '';
-        const actual = metric.monthlyData?.[m.key]?.actual || '';
-        return `"${target}","${actual}"`;
+      const targetRowData = displayMonths.map(m => {
+        return `"${metric.monthlyData?.[m.key]?.target || ''}"`;
       }).join(',');
 
-      return `${basicInfo},"Target/Actual",${monthData}`;
+      const actualRowData = displayMonths.map(m => {
+        return `"${metric.monthlyData?.[m.key]?.actual || ''}"`;
+      }).join(',');
+
+      return [
+        `${basicInfo},"Target",${targetRowData}`,
+        `${basicInfo},"Actual",${actualRowData}`
+      ];
     }).join('\n');
 
     // 3. Combine and Download

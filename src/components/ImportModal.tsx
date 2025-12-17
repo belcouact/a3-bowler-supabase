@@ -105,26 +105,25 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
 
     const headers = simpleParseLine(lines[0]);
     const metricNameIndex = headers.findIndex(h => h.toLowerCase().includes('metric name'));
-    // Scope is optional but good to have
     const scopeIndex = headers.findIndex(h => h.toLowerCase().includes('scope'));
+    const typeIndex = headers.findIndex(h => h.toLowerCase() === 'type');
     
     if (metricNameIndex === -1) {
         throw new Error('Missing required column: "Metric Name"');
     }
 
     // Identify month columns
-    // Headers might be "2024/Jan Target", "2024/Jan Actual"
-    const monthMappings: { index: number; type: 'target' | 'actual'; key: string }[] = [];
+    // Supports two formats:
+    // 1. Wide: "2024/Jan Target", "2024/Jan Actual"
+    // 2. Long: "2024/Jan" with a separate "Type" column specifying Target/Actual
+    const monthMappings: { index: number; type: 'target' | 'actual' | 'dynamic'; key: string }[] = [];
     
     headers.forEach((h, index) => {
         const lower = h.toLowerCase();
-        if (lower.endsWith(' target') || lower.endsWith(' actual')) {
-            const isTarget = lower.endsWith(' target');
-            const datePart = h.substring(0, h.lastIndexOf(' ')); // "2024/Jan"
-            
-            // Parse datePart to "YYYY-MM"
-            // Expecting "YYYY/MMM" e.g. "2024/Jan"
-            const parts = datePart.split('/');
+        
+        // Helper to parse "YYYY/MMM" to "YYYY-MM"
+        const parseDateKey = (dateStr: string) => {
+            const parts = dateStr.split('/');
             if (parts.length === 2) {
                 const year = parts[0];
                 const monthName = parts[1];
@@ -132,13 +131,33 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                     .indexOf(monthName.toLowerCase().substring(0, 3));
                 
                 if (monthIndex !== -1) {
-                    const key = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
-                    monthMappings.push({
-                        index,
-                        type: isTarget ? 'target' : 'actual',
-                        key
-                    });
+                    return `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
                 }
+            }
+            return null;
+        };
+
+        if (lower.endsWith(' target') || lower.endsWith(' actual')) {
+            const isTarget = lower.endsWith(' target');
+            const datePart = h.substring(0, h.lastIndexOf(' ')); // "2024/Jan"
+            const key = parseDateKey(datePart);
+            
+            if (key) {
+                monthMappings.push({
+                    index,
+                    type: isTarget ? 'target' : 'actual',
+                    key
+                });
+            }
+        } else {
+            // Check if it's just a date column (for Long format)
+            const key = parseDateKey(h);
+            if (key) {
+                 monthMappings.push({
+                    index,
+                    type: 'dynamic',
+                    key
+                });
             }
         }
     });
@@ -155,6 +174,14 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
 
         const scope = scopeIndex !== -1 ? row[scopeIndex] : 'Site'; // Default scope
         
+        // Determine row type if using Long format
+        let rowType: 'target' | 'actual' | null = null;
+        if (typeIndex !== -1 && row[typeIndex]) {
+            const val = row[typeIndex].toLowerCase();
+            if (val.includes('target')) rowType = 'target';
+            else if (val.includes('actual')) rowType = 'actual';
+        }
+
         // Find existing or create new
         let metric = newMetrics.find(m => m.name === name);
         if (!metric) {
@@ -176,10 +203,21 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
         monthMappings.forEach(mapping => {
             if (row[mapping.index] !== undefined) {
                 const val = row[mapping.index];
+                let effectiveType = mapping.type;
+                
+                // If column is dynamic (just date), use the row's Type column
+                if (effectiveType === 'dynamic') {
+                    if (!rowType) return; // Cannot determine if target or actual
+                    effectiveType = rowType;
+                }
+
                 if (!monthlyData[mapping.key]) {
                     monthlyData[mapping.key] = { target: '', actual: '' };
                 }
-                monthlyData[mapping.key][mapping.type] = val;
+                
+                // Only update if value is present (don't overwrite with empty string if not intended?)
+                // Actually CSV usually implies overwrite.
+                monthlyData[mapping.key][effectiveType] = val;
             }
         });
         
