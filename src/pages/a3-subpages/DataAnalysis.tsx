@@ -278,7 +278,7 @@ const DataAnalysis = () => {
                         
                         {selectedImageId === img.id && (
                             <>
-                                {/* Resize Handles */}
+                                {/* Resize Handles - Corners */}
                                 <div 
                                     className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-blue-500 rounded-full cursor-nw-resize z-20"
                                     onMouseDown={(e) => handleResizeStart(e, img.id, 'tl')}
@@ -294,6 +294,24 @@ const DataAnalysis = () => {
                                 <div 
                                     className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-blue-500 rounded-full cursor-se-resize z-20"
                                     onMouseDown={(e) => handleResizeStart(e, img.id, 'br')}
+                                />
+
+                                {/* Resize Handles - Sides */}
+                                <div 
+                                    className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-blue-500 rounded-full cursor-n-resize z-20"
+                                    onMouseDown={(e) => handleResizeStart(e, img.id, 't')}
+                                />
+                                <div 
+                                    className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-blue-500 rounded-full cursor-s-resize z-20"
+                                    onMouseDown={(e) => handleResizeStart(e, img.id, 'b')}
+                                />
+                                <div 
+                                    className="absolute top-1/2 -translate-y-1/2 -left-1.5 w-3 h-3 bg-blue-500 rounded-full cursor-w-resize z-20"
+                                    onMouseDown={(e) => handleResizeStart(e, img.id, 'l')}
+                                />
+                                <div 
+                                    className="absolute top-1/2 -translate-y-1/2 -right-1.5 w-3 h-3 bg-blue-500 rounded-full cursor-e-resize z-20"
+                                    onMouseDown={(e) => handleResizeStart(e, img.id, 'r')}
                                 />
                                 {/* Delete Button */}
                                 <button
