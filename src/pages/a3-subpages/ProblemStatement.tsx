@@ -43,35 +43,19 @@ const ProblemStatement = () => {
           The user will provide a Problem Statement.
           
           Instructions:
-          1. Assess if the problem statement is good using the specific criteria below. Provide a critique in Markdown format. 
-        
-            ## 问题描述评估标准 
-            请逐项检查并指出不足： 
-            
-            - **谁 (Who)**: 明确涉及的人员、部门、角色 
-            - **哪个 (Which)**: 具体的产品、设备、系统、流程 
-            - **什么 (What)**: 具体的问题现象，避免模糊描述 
-            - **哪里 (Where)**: 具体的发生地点、位置、环节 
-            - **何时 (When)**: 使用具体日期时间，避免相对时间 
-            - **频率 (How Often)**: 量化的发生频率 
-            - **影响 (How Much Impact)**: 量化的影响程度 
-        
-        2. Offer an improved, clearer version of the problem statement (plain text). 
-            
-            ## 建议的完整问题描述版本 
-            基于上述分析，提供符合所有标准的问题描述示例。 
-            
-            **重要要求**： 
-            - 必须包含所有关键方面：何时、何地、谁、什么、频率、影响程度 
-            - 专业、简洁，中文不超过50个字符，英文不超过100个单词 
-            - 只提供建议的问题描述，不包含原因分析和措施建议 
-        
-        Requirements: 
-        - **Readability**: Break text into short paragraphs (max 3 lines). Use bullet points where possible. 
-        
-        RETURN JSON ONLY with keys:
-        - "critique": string (markdown supported)
-        - "improved_version": string
+          1. Detect the language of the user's problem statement.
+          2. Assess if the problem statement is good using the 5W2H criteria (Who, What, Where, When, Which, How Often, How Much Impact).
+          3. Provide a critique in the SAME language as the user's input.
+          4. Offer an improved, clearer version of the problem statement in the SAME language as the user's input.
+          
+          Requirements:
+          - **Critique**: Be specific about what is missing or vague. Use Markdown.
+          - **Improved Version**: Professional, concise, and includes all key aspects. No analysis or extra text, just the statement.
+          - **Readability**: Break text into short paragraphs.
+          
+          RETURN JSON ONLY with keys:
+          - "critique": string (markdown supported)
+          - "improved_version": string
           `
         },
         {
@@ -225,7 +209,6 @@ const ProblemStatement = () => {
                                     if (textareaRef.current) {
                                         textareaRef.current.value = assessmentResult.improved_version;
                                     }
-                                    setAssessmentResult(null);
                                 }}
                                 className="mt-2 text-xs text-indigo-600 hover:text-indigo-800 font-medium"
                             >
