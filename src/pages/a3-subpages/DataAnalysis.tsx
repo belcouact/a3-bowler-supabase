@@ -1,20 +1,9 @@
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useParams } from 'react-router-dom';
 import { useApp, DataAnalysisImage } from '../../context/AppContext';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { generateShortId } from '../../utils/idUtils';
 import { Upload, X } from 'lucide-react';
-
-const data = [
-  { name: 'Jan', defects: 65 },
-  { name: 'Feb', defects: 59 },
-  { name: 'Mar', defects: 80 },
-  { name: 'Apr', defects: 81 },
-  { name: 'May', defects: 56 },
-  { name: 'Jun', defects: 55 },
-  { name: 'Jul', defects: 40 },
-];
 
 const DataAnalysis = () => {
   const { id } = useParams();
@@ -240,23 +229,6 @@ const DataAnalysis = () => {
         <h3 className="text-xl font-bold text-gray-900 mb-2">Data Analysis</h3>
         <p className="text-gray-500 mb-4">Visualize the data to understand the magnitude and trend of the problem.</p>
         
-        {/* Existing Chart */}
-        <div className="h-80 w-full bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={data}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="defects" fill="#8884d8" name="Defect Count" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
         {/* Evidence Canvas */}
         <div className="mb-6">
             <div className="flex justify-between items-center mb-2">
