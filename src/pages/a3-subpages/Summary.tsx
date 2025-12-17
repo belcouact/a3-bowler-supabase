@@ -13,6 +13,16 @@ const Summary = () => {
     return <div className="text-gray-500">Loading case data...</div>;
   }
 
+  const data = [
+    { name: 'Jan', defects: 65 },
+    { name: 'Feb', defects: 59 },
+    { name: 'Mar', defects: 80 },
+    { name: 'Apr', defects: 81 },
+    { name: 'May', defects: 56 },
+    { name: 'Jun', defects: 55 },
+    { name: 'Jul', defects: 40 },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-4">
@@ -57,7 +67,7 @@ const Summary = () => {
             <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">2. Data Analysis</h4>
             <div className="h-48 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={[]}>
+                <BarChart data={data}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="name" tick={{fontSize: 10}} />
                   <YAxis tick={{fontSize: 10}} />

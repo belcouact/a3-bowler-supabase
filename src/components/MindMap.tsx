@@ -247,6 +247,12 @@ export const MindMap = ({ initialNodes, onChange }: MindMapProps) => {
     }
   }, [nodes, onChange]);
 
+  useEffect(() => {
+    if (initialNodes && initialNodes.length > 0) {
+        setNodes(initialNodes);
+    }
+  }, [initialNodes]); 
+
   const handleMouseDown = (e: ReactMouseEvent, id: string) => {
     e.stopPropagation();
     const node = nodes.find(n => n.id === id);

@@ -45,7 +45,7 @@ const ActionPlan = () => {
     } else {
       setTasks(getDefaultTasks());
     }
-  }, [currentCase?.id]);
+  }, [currentCase]);
 
   const persistTasks = (updatedTasks: ActionTask[]) => {
     if (!currentCase) return;

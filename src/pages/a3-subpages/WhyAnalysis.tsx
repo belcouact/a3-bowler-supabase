@@ -27,7 +27,7 @@ const WhyAnalysis = () => {
         </p>
         
         <div className="w-full h-full">
-            <MindMap initialNodes={currentCase.mindMapNodes} onChange={handleMindMapChange} />
+            <MindMap initialNodes={currentCase.mindMapNodes || []} onChange={handleMindMapChange} />
         </div>
       </div>
     </div>
