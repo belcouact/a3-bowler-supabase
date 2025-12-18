@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (data: any) => {
     setIsLoading(true);
     try {
-      const response = await authService.login(data);
+      await authService.login(data);
       // Login response only returns success status, so we need to fetch user profile
       const userProfile = await authService.getUser(data.username);
       setUser(userProfile);
