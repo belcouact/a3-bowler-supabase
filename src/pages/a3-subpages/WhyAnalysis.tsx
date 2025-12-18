@@ -47,10 +47,10 @@ const WhyAnalysis = () => {
     }
     
     // Only update if changed to avoid loops and unnecessary updates
-    if (text !== currentCase.rootCause) {
+    if (text !== currentCase.mindMapText) {
         updateA3Case({
             ...currentCase,
-            rootCause: text
+            mindMapText: text
         });
     }
   }, [currentCase?.mindMapNodes, updateA3Case, currentCase?.id]); // Use specific dependencies to be safe, though currentCase checks inside handle it.

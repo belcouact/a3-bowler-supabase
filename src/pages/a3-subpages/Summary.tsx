@@ -87,12 +87,24 @@ const Summary = () => {
           {/* Why Analysis */}
           <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
             <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">3. Root Cause Analysis (5 Whys)</h4>
-            <div className="text-sm text-gray-600">
-               {currentCase.rootCause ? (
-                   <p className="whitespace-pre-wrap">{currentCase.rootCause}</p>
-               ) : (
-                   <p className="italic text-gray-500">Root cause not identified yet. See "5 Whys Analysis" tab.</p>
+            <div className="text-sm text-gray-600 space-y-4">
+               {/* Mind Map Text */}
+               {currentCase.mindMapText && (
+                   <div className="bg-gray-50 p-3 rounded border border-gray-100">
+                       <h5 className="text-xs font-semibold text-gray-500 mb-1">5 Whys Analysis:</h5>
+                       <p className="whitespace-pre-wrap font-mono text-xs">{currentCase.mindMapText}</p>
+                   </div>
                )}
+
+               {/* Identified Root Cause */}
+               <div>
+                   <h5 className="text-xs font-semibold text-gray-500 mb-1">Identified Root Cause:</h5>
+                   {currentCase.rootCause ? (
+                       <p className="whitespace-pre-wrap">{currentCase.rootCause}</p>
+                   ) : (
+                       <p className="italic text-gray-500">Root cause not identified yet.</p>
+                   )}
+               </div>
             </div>
           </div>
 
