@@ -203,6 +203,11 @@ const MarkmapPage = () => {
 
   return (
     <div className="flex flex-col h-full bg-white">
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-gray-100 bg-white">
+          <p className="text-sm text-gray-500">Visualize objects to metrics</p>
+      </div>
+
       {/* Tab Bar */}
       <div className="flex border-b border-gray-200 bg-white">
         <button
