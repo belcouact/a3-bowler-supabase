@@ -31,8 +31,22 @@ export default {
 
         // Save bowlers
         if (bowlers && Array.isArray(bowlers)) {
+          // 1. Get all existing bowler keys for this user
+          const existingList = await env.BOWLER_DATA.list({ prefix: `user:${userId}:bowler:` });
+          const existingKeys = new Set(existingList.keys.map(k => k.name));
+          
+          // 2. Identify keys to keep (based on incoming payload)
+          const keysToKeep = new Set(bowlers.map(b => `user:${userId}:bowler:${b.id}`));
+          
+          // 3. Delete keys that are not in the payload
+          for (const key of existingKeys) {
+            if (!keysToKeep.has(key)) {
+              await env.BOWLER_DATA.delete(key);
+            }
+          }
+
+          // 4. Update/Create items from payload
           for (const bowler of bowlers) {
-            // Save userId in the value as requested
             const bowlerToSave = { ...bowler, userId: userId };
             await env.BOWLER_DATA.put(`user:${userId}:bowler:${bowler.id}`, JSON.stringify(bowlerToSave));
           }
@@ -40,8 +54,22 @@ export default {
 
         // Save A3 Cases
         if (a3Cases && Array.isArray(a3Cases)) {
+           // 1. Get all existing A3 keys for this user
+           const existingList = await env.BOWLER_DATA.list({ prefix: `user:${userId}:a3:` });
+           const existingKeys = new Set(existingList.keys.map(k => k.name));
+           
+           // 2. Identify keys to keep
+           const keysToKeep = new Set(a3Cases.map(a => `user:${userId}:a3:${a.id}`));
+           
+           // 3. Delete keys that are not in the payload
+           for (const key of existingKeys) {
+             if (!keysToKeep.has(key)) {
+               await env.BOWLER_DATA.delete(key);
+             }
+           }
+
+          // 4. Update/Create items
           for (const a3 of a3Cases) {
-            // Save userId in the value as requested
             const a3ToSave = { ...a3, userId: userId };
             await env.BOWLER_DATA.put(`user:${userId}:a3:${a3.id}`, JSON.stringify(a3ToSave));
           }
