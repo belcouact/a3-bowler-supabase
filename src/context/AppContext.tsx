@@ -201,7 +201,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AppContext.Provider value={{ bowlers, a3Cases, addBowler, updateBowler, addA3Case, updateA3Case, deleteBowler, deleteA3Case }}>
+    <AppContext.Provider
+      value={{
+        bowlers,
+        a3Cases,
+        addBowler,
+        updateBowler,
+        addA3Case,
+        updateA3Case,
+        deleteBowler,
+        deleteA3Case,
+        isLoading
+      }}
+    >
       {children}
     </AppContext.Provider>
   );

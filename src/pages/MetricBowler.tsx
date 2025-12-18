@@ -244,13 +244,13 @@ const MetricBowler = () => {
     }
 
     // 1. Create Header Row
-    // Header: Metric Name, Scope, Type, 2024/Jan, 2024/Feb...
+    // Header: Bowler Name, Metric Name, Scope, Type, 2024/Jan, 2024/Feb...
     const monthHeaders = displayMonths.map(m => `"${m.label}"`).join(',');
-    const header = `"Metric Name","Scope","Type",${monthHeaders}\n`;
+    const header = `"Bowler Name","Metric Name","Scope","Type",${monthHeaders}\n`;
 
     // 2. Create Data Rows
     const rows = metrics.flatMap(metric => {
-      const basicInfo = `"${metric.name}","${metric.scope || ''}"`;
+      const basicInfo = `"${selectedBowler.name}","${metric.name}","${metric.scope || ''}"`;
       
       const targetRowData = displayMonths.map(m => {
         return `"${metric.monthlyData?.[m.key]?.target || ''}"`;
@@ -566,7 +566,7 @@ const MetricBowler = () => {
                           dataKey="actual" 
                           stroke="#3b82f6" 
                           strokeWidth={2} 
-                          dot={{ r: 3, fill: '#3b82f6', strokeWidth: 0 }} 
+                          dot={<CustomizedDot />} 
                           activeDot={{ r: 5 }} 
                           name="Actual"
                         />

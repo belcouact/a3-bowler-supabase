@@ -121,6 +121,14 @@ const Layout = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
+      {(isLoading || isDataLoading) && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-white/80 backdrop-blur-sm transition-opacity duration-300">
+          <div className="flex flex-col items-center">
+            <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+            <p className="mt-4 text-base font-medium text-gray-700">Loading application data...</p>
+          </div>
+        </div>
+      )}
       {/* Top Bar */}
       <header className="bg-white border-b border-gray-200 z-10 shadow-sm h-16 flex items-center px-6 justify-between">
         <div className="flex items-center space-x-8">
