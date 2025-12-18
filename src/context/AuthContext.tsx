@@ -6,6 +6,7 @@ interface AuthContextType {
   login: (data: any) => Promise<void>;
   signup: (data: any) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -72,8 +73,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const refreshUser = async () => {
+    if (!user?.username) return;
+    setIsLoading(true);
+    try {
+      const updatedUser = await authService.getUser(user.username);
+      // Ensure we merge with existing session info if needed, but getUser likely returns full profile
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    } catch (error) {
+      console.error('Refresh user error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, refreshUser, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

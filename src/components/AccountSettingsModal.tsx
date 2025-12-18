@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Lock, CreditCard, Check } from 'lucide-react';
+import { X, Lock, CreditCard, Check, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
 import { useToast } from '../context/ToastContext';
@@ -10,7 +10,7 @@ interface AccountSettingsModalProps {
 }
 
 export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOpen, onClose }) => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const toast = useToast();
   const [activeTab, setActiveTab] = useState<'password' | 'profile'>('password');
   const [isLoading, setIsLoading] = useState(false);
@@ -80,11 +80,25 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
           isPublic
         }
       });
+      // Refresh user data after successful update
+      await refreshUser();
       toast.success('Profile updated successfully');
     } catch (error: any) {
       toast.error(error.message || 'Failed to update profile');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRefreshProfile = async () => {
+    setIsLoading(true);
+    try {
+        await refreshUser();
+        toast.success('Profile reloaded');
+    } catch (error: any) {
+        toast.error('Failed to reload profile');
+    } finally {
+        setIsLoading(false);
     }
   };
 
@@ -125,9 +139,18 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
 
           {/* Content */}
           <div className="px-6 py-6">
-            <div className="mb-6">
-               <span className="text-gray-500">User: </span>
-               <span className="font-semibold text-blue-600">{user?.username}</span>
+            <div className="mb-6 flex items-center justify-between">
+               <div>
+                  <span className="text-gray-500">User: </span>
+                  <span className="font-semibold text-blue-600">{user?.username}</span>
+               </div>
+               <button 
+                  onClick={handleRefreshProfile}
+                  className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                  title="Reload Profile from Server"
+               >
+                  <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+               </button>
             </div>
 
             {activeTab === 'password' ? (
