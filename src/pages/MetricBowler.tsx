@@ -53,7 +53,7 @@ const CustomizedDot = (props: any) => {
   const { cx, cy, payload } = props;
   
   // If no coordinates, don't render
-  if (cx === undefined || cy === undefined) return null;
+  if (cx === undefined || cy === undefined || isNaN(cx) || isNaN(cy)) return null;
 
   // If no actual value, don't render dot
   if (payload.actual === null || payload.actual === undefined) return null;
@@ -819,7 +819,7 @@ const MetricBowler = () => {
                           strokeWidth={2} 
                           strokeDasharray="3 3" 
                           dot={false}
-                          activeDot={{ r: 5 }}
+                          activeDot={false}
                           name="Min Target"
                           connectNulls 
                         />
@@ -830,7 +830,7 @@ const MetricBowler = () => {
                           strokeWidth={2} 
                           strokeDasharray="3 3" 
                           dot={false}
-                          activeDot={{ r: 5 }}
+                          activeDot={false}
                           name="Max Target"
                           connectNulls 
                         />
