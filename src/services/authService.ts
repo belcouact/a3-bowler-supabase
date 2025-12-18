@@ -70,6 +70,20 @@ export const authService = {
     return response.json();
   },
 
+  async updateProfile(data: any) {
+    const response = await fetch(`${API_BASE_URL}/update-profile`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error('Update profile failed');
+    }
+    return response.json();
+  },
+
   async getUser(username: string) {
     const response = await fetch(`${API_BASE_URL}/user/${username}`);
     if (!response.ok) {

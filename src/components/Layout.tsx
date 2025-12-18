@@ -7,6 +7,7 @@ import { useState } from 'react';
 import A3CaseModal from './A3CaseModal';
 import BowlerModal from './BowlerModal';
 import LoginModal from './LoginModal';
+import { AccountSettingsModal } from './AccountSettingsModal';
 import { AIChatModal } from './AIChatModal';
 import { AppInfoModal } from './AppInfoModal';
 import { dataService } from '../services/dataService';
@@ -30,6 +31,7 @@ const Layout = () => {
   const [isBowlerModalOpen, setIsBowlerModalOpen] = useState(false);
   const [editingBowler, setEditingBowler] = useState<Bowler | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [isAppInfoOpen, setIsAppInfoOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -202,7 +204,11 @@ const Layout = () => {
 
           {user ? (
             <div className="flex items-center space-x-3">
-              <div className="flex items-center space-x-2 text-sm" title={user.username || 'User'}>
+              <div 
+                className="flex items-center space-x-2 text-sm cursor-pointer hover:opacity-80 transition-opacity" 
+                title={user.username || 'User'}
+                onClick={() => setIsAccountSettingsOpen(true)}
+              >
                 <div className="h-8 w-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-700 font-bold text-xs">
                   {user.username ? user.username.substring(0, 2).toUpperCase() : <UserIcon className="w-4 h-4" />}
                 </div>
@@ -370,6 +376,11 @@ const Layout = () => {
       <LoginModal 
         isOpen={isLoginModalOpen} 
         onClose={() => setIsLoginModalOpen(false)} 
+      />
+
+      <AccountSettingsModal 
+        isOpen={isAccountSettingsOpen} 
+        onClose={() => setIsAccountSettingsOpen(false)} 
       />
 
       <AIChatModal
