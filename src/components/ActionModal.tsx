@@ -7,6 +7,7 @@ export interface ActionTask {
   name: string;
   description?: string;
   owner: string;
+  group?: string;
   startDate: string;
   endDate: string;
   status: 'Not Started' | 'In Progress' | 'Completed';
@@ -28,6 +29,7 @@ const ActionModal = ({ isOpen, onClose, onSave, onDelete, initialData, defaultSt
     name: '',
     description: '',
     owner: '',
+    group: '',
     startDate: '',
     endDate: '',
     status: 'Not Started',
@@ -49,6 +51,7 @@ const ActionModal = ({ isOpen, onClose, onSave, onDelete, initialData, defaultSt
           name: '',
           description: '',
           owner: '',
+          group: '',
           startDate: start,
           endDate: end,
           status: 'Not Started',
@@ -120,17 +123,27 @@ const ActionModal = ({ isOpen, onClose, onSave, onDelete, initialData, defaultSt
                   />
                 </div>
                 <div>
-                   <label className="block text-sm font-medium text-gray-700">Status</label>
-                   <select
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      value={formData.status}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                   >
-                     <option>Not Started</option>
-                     <option>In Progress</option>
-                     <option>Completed</option>
-                   </select>
+                   <label className="block text-sm font-medium text-gray-700">Group</label>
+                   <input
+                     type="text"
+                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                     value={formData.group || ''}
+                     onChange={(e) => setFormData({ ...formData, group: e.target.value })}
+                   />
                 </div>
+              </div>
+
+              <div>
+                 <label className="block text-sm font-medium text-gray-700">Status</label>
+                 <select
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                 >
+                   <option>Not Started</option>
+                   <option>In Progress</option>
+                   <option>Completed</option>
+                 </select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

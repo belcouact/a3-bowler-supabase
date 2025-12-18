@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, ZoomIn, ZoomOut } from 'lucide-react';
+import { Plus, ZoomIn, ZoomOut, ChevronDown, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
 import { addDays, formatDate, isWeekend } from '../../utils/dateUtils';
 import ActionModal, { ActionTask } from '../../components/ActionModal';
@@ -25,6 +25,7 @@ const ActionPlan = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<ActionTask | null>(null);
   const [newStartDate, setNewStartDate] = useState<string | undefined>(undefined);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   
   // View Options
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -51,6 +52,42 @@ const ActionPlan = () => {
   };
 
   // --- Computed ---
+  
+  const groupedTasks = useMemo(() => {
+    const groups: Record<string, ActionTask[]> = {};
+    const ungrouped: ActionTask[] = [];
+
+    tasks.forEach(task => {
+        if (task.group) {
+            if (!groups[task.group]) groups[task.group] = [];
+            groups[task.group].push(task);
+        } else {
+            ungrouped.push(task);
+        }
+    });
+
+    const sortedGroupKeys = Object.keys(groups).sort();
+    
+    // Flatten for rendering
+    const rows: Array<{ type: 'group', name: string, id: string } | { type: 'task', task: ActionTask, id: string }> = [];
+    
+    // Add ungrouped first
+    ungrouped.forEach(task => rows.push({ type: 'task', task, id: task.id }));
+
+    sortedGroupKeys.forEach(groupName => {
+        rows.push({ type: 'group', name: groupName, id: `group-${groupName}` });
+        if (expandedGroups[groupName] !== false) { // Default to expanded
+             groups[groupName].forEach(task => rows.push({ type: 'task', task, id: task.id }));
+        }
+    });
+
+    return rows;
+  }, [tasks, expandedGroups]);
+
+  const toggleGroup = (group: string) => {
+    setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
+  };
+
   const cellWidth = (timeScale === 'month' ? 100 : (timeScale === 'week' ? 60 : BASE_CELL_WIDTH)) * zoomLevel;
 
   const gridColumns = useMemo(() => {
@@ -512,7 +549,23 @@ const ActionPlan = () => {
                       <Plus className="w-3 h-3" />
                     </button>
                 </div>
-                {tasks.map((task) => (
+                {groupedTasks.map((row) => {
+                    if (row.type === 'group') {
+                        const isExpanded = expandedGroups[row.name] !== false;
+                        return (
+                             <div 
+                                key={row.id} 
+                                className="h-[32px] border-b border-gray-100 flex items-center px-4 bg-gray-100 hover:bg-gray-200 cursor-pointer"
+                                onClick={() => toggleGroup(row.name)}
+                            >
+                                {isExpanded ? <ChevronDown className="w-3 h-3 mr-2 text-gray-600" /> : <ChevronRight className="w-3 h-3 mr-2 text-gray-600" />}
+                                <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">{row.name}</span>
+                            </div>
+                        );
+                    }
+                    
+                    const task = row.task;
+                    return (
                     <div 
                         key={task.id} 
                         className="h-[48px] border-b border-gray-100 flex items-center px-4 hover:bg-gray-50 group cursor-pointer"
@@ -529,7 +582,8 @@ const ActionPlan = () => {
                             task.status === 'In Progress' ? "bg-blue-500" : "bg-gray-300"
                         )} />
                     </div>
-                ))}
+                    );
+                })}
                  {/* Empty rows filler */}
                  {Array.from({ length: Math.max(0, 10 - tasks.length) }).map((_, i) => (
                     <div key={`empty-${i}`} className="h-[48px] border-b border-gray-50 bg-gray-50/10"></div>
@@ -582,9 +636,36 @@ const ActionPlan = () => {
                     </div>
 
                     {/* Task Rows & Bars */}
-                    {tasks.map((task) => {
+                    {groupedTasks.map((row) => {
+                         if (row.type === 'group') {
+                             return (
+                                 <div key={row.id} className="h-[32px] border-b border-gray-100 bg-gray-50/50"></div>
+                             );
+                         }
+
+                         const task = row.task;
                          const metrics = getTaskVisualMetrics(task);
-                         if (!metrics) return null;
+                         
+                         // Render empty row if not visible to maintain alignment
+                         if (!metrics) {
+                             return (
+                                <div key={task.id} className="h-[48px] border-b border-gray-100 relative group">
+                                     {/* Clickable background for adding task */}
+                                    <div 
+                                        className="absolute inset-0 z-0" 
+                                        onClick={(e) => {
+                                            const rect = e.currentTarget.getBoundingClientRect();
+                                            const clickX = e.clientX - rect.left;
+                                            const colIndex = Math.floor(clickX / cellWidth);
+                                            if (colIndex >= 0 && colIndex < gridColumns.length) {
+                                                handleGridClick(formatDate(gridColumns[colIndex].date));
+                                            }
+                                        }}
+                                    />
+                                </div>
+                             );
+                         }
+
                          const { left, width } = metrics;
                          
                          return (

@@ -52,6 +52,7 @@ export interface ActionPlanTaskData {
   name: string;
   description?: string;
   owner: string;
+  group?: string;
   startDate: string;
   endDate: string;
   status: 'Not Started' | 'In Progress' | 'Completed';
@@ -72,6 +73,7 @@ export interface A3Case {
   title: string;
   description?: string;
   owner?: string;
+  group?: string;
   priority?: 'Low' | 'Medium' | 'High';
   startDate?: string;
   endDate?: string;

@@ -619,30 +619,101 @@ const Layout = () => {
                   );
               })()}
 
-              {isA3Analysis && a3Cases.map((a3) => (
-                <Link
-                  key={a3.id}
-                  to={`/a3-analysis/${a3.id}/problem-statement`}
-                  onDoubleClick={(e) => {
-                    e.preventDefault();
-                    setEditingA3Case(a3);
-                    setIsA3ModalOpen(true);
-                  }}
-                  className={clsx(
-                    "group flex items-center py-2.5 text-sm font-medium rounded-lg transition-all",
-                    isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
-                    location.pathname.includes(`/a3-analysis/${a3.id}`)
-                      ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                      : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                  )}
-                  title={a3.description || (!isSidebarOpen ? a3.title : undefined)}
-                >
-                  <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
-                    <FileText className={clsx("w-4 h-4 flex-shrink-0", isSidebarOpen ? "mr-3" : "mr-0", location.pathname.includes(`/a3-analysis/${a3.id}`) ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
-                    {isSidebarOpen && <span className="truncate">{a3.title}</span>}
-                  </div>
-                </Link>
-              ))}
+              {isA3Analysis && (() => {
+                  const ungrouped = a3Cases.filter(a => !a.group);
+                  const grouped = a3Cases.filter(a => !!a.group).reduce((acc, a3) => {
+                      const group = a3.group!;
+                      if (!acc[group]) acc[group] = [];
+                      acc[group].push(a3);
+                      return acc;
+                  }, {} as Record<string, A3Case[]>);
+                  
+                  const sortedGroups = Object.keys(grouped).sort();
+
+                  return (
+                      <>
+                        {/* Ungrouped Items */}
+                        {ungrouped.map(a3 => (
+                            <Link
+                                key={a3.id}
+                                to={`/a3-analysis/${a3.id}/problem-statement`}
+                                onDoubleClick={(e) => {
+                                    e.preventDefault();
+                                    setEditingA3Case(a3);
+                                    setIsA3ModalOpen(true);
+                                }}
+                                className={clsx(
+                                    "group flex items-center py-2.5 text-sm font-medium rounded-lg transition-all",
+                                    isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
+                                    location.pathname.includes(`/a3-analysis/${a3.id}`)
+                                    ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                                )}
+                                title={a3.description || (!isSidebarOpen ? a3.title : undefined)}
+                            >
+                                <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
+                                    <FileText className={clsx("w-4 h-4 flex-shrink-0", isSidebarOpen ? "mr-3" : "mr-0", location.pathname.includes(`/a3-analysis/${a3.id}`) ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
+                                    {isSidebarOpen && <span className="truncate">{a3.title}</span>}
+                                </div>
+                            </Link>
+                        ))}
+
+                        {/* Grouped Items */}
+                        {sortedGroups.map(group => (
+                            <div key={group} className="mt-2">
+                                <button
+                                    onClick={() => toggleGroup(group)}
+                                    className={clsx(
+                                        "flex items-center w-full text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 hover:text-gray-700 transition-colors",
+                                        isSidebarOpen ? "px-3" : "justify-center"
+                                    )}
+                                    title={group}
+                                >
+                                    {isSidebarOpen ? (
+                                        <>
+                                            {isGroupExpanded(group) ? <ChevronDown className="w-3 h-3 mr-1" /> : <ChevronRight className="w-3 h-3 mr-1" />}
+                                            <span className="truncate">{group}</span>
+                                        </>
+                                    ) : (
+                                        <div className="flex justify-center w-full">
+                                            {isGroupExpanded(group) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                                        </div>
+                                    )}
+                                </button>
+                                
+                                {isGroupExpanded(group) && (
+                                    <div className={clsx("space-y-1", isSidebarOpen && "pl-3 border-l-2 border-gray-100 ml-2")}>
+                                        {grouped[group].map(a3 => (
+                                            <Link
+                                                key={a3.id}
+                                                to={`/a3-analysis/${a3.id}/problem-statement`}
+                                                onDoubleClick={(e) => {
+                                                    e.preventDefault();
+                                                    setEditingA3Case(a3);
+                                                    setIsA3ModalOpen(true);
+                                                }}
+                                                className={clsx(
+                                                    "group flex items-center py-2 text-sm font-medium rounded-lg transition-all",
+                                                    isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
+                                                    location.pathname.includes(`/a3-analysis/${a3.id}`)
+                                                    ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                                                )}
+                                                title={a3.description || (!isSidebarOpen ? a3.title : undefined)}
+                                            >
+                                                <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
+                                                    <FileText className={clsx("w-4 h-4 flex-shrink-0", isSidebarOpen ? "mr-3" : "mr-0", location.pathname.includes(`/a3-analysis/${a3.id}`) ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
+                                                    {isSidebarOpen && <span className="truncate">{a3.title}</span>}
+                                                </div>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                      </>
+                  );
+              })()}
 
               {((isMetricBowler && bowlers.length === 0) || (isA3Analysis && a3Cases.length === 0)) && (
                 <div className={clsx("text-center py-8 text-gray-400 text-sm italic", isSidebarOpen ? "px-4" : "px-1 text-xs")}>
