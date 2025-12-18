@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { Info, Settings, Download, Upload, HelpCircle, BrainCircuit } from 'lucide-react';
+import { Info, Settings, Download, Upload, HelpCircle, Sparkles } from 'lucide-react';
 import { useApp, Metric, Bowler } from '../context/AppContext';
 import { ImportModal } from '../components/ImportModal';
 import { HelpModal } from '../components/HelpModal';
