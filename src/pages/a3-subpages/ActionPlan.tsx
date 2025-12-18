@@ -539,7 +539,7 @@ const ActionPlan = () => {
       <div className="flex-1 overflow-auto relative select-none">
         <div className="flex min-w-max">
             <div className="sticky left-0 z-20 bg-white border-r border-gray-200 shadow-sm w-64 flex-shrink-0">
-                <div className="h-[60px] border-b border-gray-200 bg-gray-50 flex items-center justify-between px-4 font-semibold text-xs text-gray-500 uppercase tracking-wider">
+                <div className="h-[60px] border-b border-gray-200 bg-gray-50 flex items-center justify-between px-4 font-semibold text-xs text-gray-500 uppercase tracking-wider sticky top-0 z-30">
                     <span>Task Details</span>
                     <button
                       onClick={handleAddTask}
