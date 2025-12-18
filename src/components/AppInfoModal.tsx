@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { X, LayoutDashboard, FileText, Sparkles, Save, Upload, Download, Cloud } from 'lucide-react';
+import { X, LayoutDashboard, FileText, Sparkles, Save, Upload, Download, Cloud, Info } from 'lucide-react';
 
 interface AppInfoModalProps {
   isOpen: boolean;
