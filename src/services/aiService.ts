@@ -77,52 +77,93 @@ export const analyzeMetric = (metric: Metric): AnalysisResult => {
   const successCount = totalPoints - violationCount;
   const achievementRate = totalPoints > 0 ? (successCount / totalPoints) * 100 : 0;
 
-  // 2. Calculate Trend (Simple Linear Regression or comparison of recent points)
+  // 2. Calculate Trend
   let trend: AnalysisResult['trend'] = 'stable';
+  let slope = 0;
+  
+  // Normalize attribute
+  const attribute = (metric.attribute || 'individual data').toLowerCase();
+  const isAccumulative = attribute.includes('accumulative') || attribute.includes('cumulative');
+  const isMovingAverage = attribute.includes('moving') || attribute.includes('average');
+
   if (dataPoints.length >= 2) {
-    const values = dataPoints.map(p => p.actual);
-    const n = values.length;
-    // Simple slope calculation (using index as x)
-    let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
-    for (let i = 0; i < n; i++) {
-      sumX += i;
-      sumY += values[i];
-      sumXY += i * values[i];
-      sumXX += i * i;
-    }
-    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    let values = dataPoints.map(p => p.actual);
+    let performTrendAnalysis = true;
     
-    // Determine trend based on slope and some threshold
-    // Also consider standard deviation for fluctuation
-    const avg = sumY / n;
-    const variance = values.reduce((acc, val) => acc + Math.pow(val - avg, 2), 0) / n;
-    const stdDev = Math.sqrt(variance);
+    // For accumulative data, we analyze the trend of the *rate of change* (deltas)
+    // unless there are too few points, then we fall back to absolute values but that's trivial for accumulative.
+    if (isAccumulative) {
+        if (values.length >= 3) {
+            const deltas = [];
+            for(let i = 1; i < values.length; i++) {
+                deltas.push(values[i] - values[i-1]);
+            }
+            values = deltas;
+        } else {
+            // Not enough data to determine trend of growth rate (need at least 2 intervals, so 3 points)
+            trend = 'stable';
+            performTrendAnalysis = false;
+        }
+    }
 
-    const cv = Math.abs(avg) > 0.0001 ? stdDev / Math.abs(avg) : 0; // Coefficient of Variation
+    if (performTrendAnalysis && values.length >= 2) {
+        const n = values.length;
+        // Simple slope calculation (using index as x)
+        let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+        for (let i = 0; i < n; i++) {
+        sumX += i;
+        sumY += values[i];
+        sumXY += i * values[i];
+        sumXX += i * i;
+        }
+        slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+        
+        const avg = sumY / n;
+        const variance = values.reduce((acc, val) => acc + Math.pow(val - avg, 2), 0) / n;
+        const stdDev = Math.sqrt(variance);
 
-    if (cv > 0.2 && Math.abs(slope) < (stdDev * 0.1)) {
-        trend = 'fluctuating';
-    } else if (slope > 0.01 * Math.abs(avg)) { // somewhat arbitrary threshold
-        trend = 'increasing';
-    } else if (slope < -0.01 * Math.abs(avg)) {
-        trend = 'decreasing';
-    } else {
-        trend = 'stable';
+        const cv = Math.abs(avg) > 0.0001 ? stdDev / Math.abs(avg) : 0; // Coefficient of Variation
+
+        // Adjusted thresholds
+        if (cv > 0.2 && Math.abs(slope) < (stdDev * 0.1)) {
+            trend = 'fluctuating';
+        } else if (slope > 0.01 * Math.abs(avg)) { 
+            trend = 'increasing';
+        } else if (slope < -0.01 * Math.abs(avg)) {
+            trend = 'decreasing';
+        } else {
+            trend = 'stable';
+        }
     }
   }
 
   // 3. Detect Anomalies (Z-score)
   const anomalies: string[] = [];
   if (dataPoints.length >= 3) {
-      const values = dataPoints.map(p => p.actual);
+      let values = dataPoints.map(p => p.actual);
+      let valueMap = dataPoints.map((p, i) => ({ val: p.actual, month: p.month, originalIndex: i }));
+
+      // For accumulative, check deltas for anomalies
+      if (isAccumulative) {
+          const deltas = [];
+          for(let i = 1; i < values.length; i++) {
+              deltas.push(values[i] - values[i-1]);
+          }
+          values = deltas;
+          // Map deltas back to the month where the jump happened (the second month of the pair)
+          valueMap = valueMap.slice(1).map((v, i) => ({ ...v, val: values[i] })); 
+      }
+
       const mean = values.reduce((a, b) => a + b, 0) / values.length;
       const stdDev = Math.sqrt(values.reduce((sq, n) => sq + Math.pow(n - mean, 2), 0) / values.length);
 
       if (stdDev > 0) {
-          dataPoints.forEach(p => {
-              const zScore = (p.actual - mean) / stdDev;
+          valueMap.forEach(p => {
+              const zScore = (p.val - mean) / stdDev;
               if (Math.abs(zScore) > 2) { // 2 standard deviations
-                  anomalies.push(`${p.month}: Value ${p.actual} is significantly ${p.actual > mean ? 'higher' : 'lower'} than average.`);
+                  const direction = p.val > mean ? 'higher' : 'lower';
+                  const context = isAccumulative ? 'increase' : 'value';
+                  anomalies.push(`${p.month}: The ${context} (${p.val.toFixed(2)}) is significantly ${direction} than average.`);
               }
           });
       }
@@ -130,7 +171,45 @@ export const analyzeMetric = (metric: Metric): AnalysisResult => {
 
   // 4. Generate Summary
   const lastPoint = dataPoints[dataPoints.length - 1];
-  let summary = `The metric shows a ${trend} trend. `;
+  let summary = '';
+  
+  // Trend Interpretation based on Target Rule
+  const rule = metric.targetMeetingRule || 'gte';
+  let trendAssessment = '';
+  
+  if (trend === 'stable') {
+      trendAssessment = 'remaining stable';
+  } else if (trend === 'fluctuating') {
+      trendAssessment = 'fluctuating significantly';
+  } else {
+      // Directional trend
+      let isGood = false;
+      if (rule === 'gte') { // Higher is better
+          isGood = trend === 'increasing';
+      } else if (rule === 'lte') { // Lower is better
+          isGood = trend === 'decreasing';
+      } else { // Within range
+          // For within_range, moving towards center is good, but simple slope doesn't tell us center.
+          // We'll just report the direction.
+      }
+      
+      const direction = trend;
+      if (rule !== 'within_range') {
+        trendAssessment = `showing a ${isGood ? 'favorable' : 'concerning'} ${direction} trend`;
+      } else {
+        trendAssessment = `showing a ${direction} trend`;
+      }
+  }
+
+  // Attribute Context
+  if (isAccumulative) {
+      summary += `Based on the accumulative data analysis, the rate of growth is ${trendAssessment}. `;
+  } else if (isMovingAverage) {
+      summary += `The moving average indicates the metric is ${trendAssessment}. `;
+  } else {
+      summary += `The metric is ${trendAssessment}. `;
+  }
+
   summary += `Target achievement rate is ${achievementRate.toFixed(1)}%. `;
   
   if (dataPoints.length > 0) {
@@ -138,7 +217,7 @@ export const analyzeMetric = (metric: Metric): AnalysisResult => {
   }
 
   if (anomalies.length > 0) {
-      summary += `Detected ${anomalies.length} anomal${anomalies.length > 1 ? 'ies' : 'y'}.`;
+      summary += `Detected ${anomalies.length} anomal${anomalies.length > 1 ? 'ies' : 'y'}: ${anomalies.join(' ')}`;
   } else {
       summary += `No significant anomalies detected.`;
   }
