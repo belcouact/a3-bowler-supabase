@@ -251,9 +251,9 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                     Required Columns
                   </h4>
                   <ul className="text-xs text-gray-600 list-disc list-inside space-y-1">
-                    <li><span className="font-mono font-medium">Bowler Name</span> (Required, 1st Column)</li>
+                    <li><span className="font-mono font-medium">Bowler Name</span> (Required)</li>
                     <li><span className="font-mono font-medium">Metric Name</span> (Required)</li>
-                    <li><span className="font-mono font-medium">Scope</span> (Optional)</li>
+                    <li><span className="font-mono font-medium">Scope</span> (Required)</li>
                     <li>
                       Date Columns format: <span className="font-mono">YYYY/MMM Target</span> and <span className="font-mono">YYYY/MMM Actual</span>
                       <br />
