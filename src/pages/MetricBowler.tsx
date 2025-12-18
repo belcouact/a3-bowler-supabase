@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { Info, Settings, Download, Upload, HelpCircle, Sparkles } from 'lucide-react';
+import { Info, Settings, Download, Upload, HelpCircle, Sparkles, Loader2 } from 'lucide-react';
 import { useApp, Metric, Bowler } from '../context/AppContext';
 import { ImportModal } from '../components/ImportModal';
 import { HelpModal } from '../components/HelpModal';
@@ -96,6 +96,7 @@ const MetricBowler = () => {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
   const [analyzingMetricName, setAnalyzingMetricName] = useState('');
+  const [analyzingMetrics, setAnalyzingMetrics] = useState<Record<string, boolean>>({});
 
   const displayMonths = useMemo(() => {
     const [startYearStr, startMonthStr] = startDate.split('-');
@@ -128,11 +129,18 @@ const MetricBowler = () => {
   const title = selectedBowler ? selectedBowler.name : 'Metric Bowler';
   const metrics = selectedBowler?.metrics || [];
 
-  const handleAIAnalysis = (metric: Metric) => {
-    const result = analyzeMetric(metric);
-    setAnalysisResult(result);
-    setAnalyzingMetricName(metric.name);
-    setIsAnalysisModalOpen(true);
+  const handleAIAnalysis = async (metric: Metric) => {
+    setAnalyzingMetrics(prev => ({ ...prev, [metric.id]: true }));
+    try {
+        const result = await analyzeMetric(metric);
+        setAnalysisResult(result);
+        setAnalyzingMetricName(metric.name);
+        setIsAnalysisModalOpen(true);
+    } catch (error) {
+        console.error("Analysis failed", error);
+    } finally {
+        setAnalyzingMetrics(prev => ({ ...prev, [metric.id]: false }));
+    }
   };
 
   const handleCellUpdate = (
@@ -589,10 +597,11 @@ const MetricBowler = () => {
                     <div className="flex items-center space-x-1">
                         <button
                             onClick={() => handleAIAnalysis(metric)}
-                            className="p-1 rounded-md transition-colors text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                            disabled={analyzingMetrics[metric.id]}
+                            className="p-1 rounded-md transition-colors text-blue-500 hover:text-blue-700 hover:bg-blue-50 disabled:opacity-50"
                             title="AI Analysis"
                         >
-                            <Sparkles className="w-4 h-4" />
+                            {analyzingMetrics[metric.id] ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                         </button>
                         <button
                             onClick={() => setChartSettingsOpen(prev => ({ ...prev, [metric.id]: !prev[metric.id] }))}

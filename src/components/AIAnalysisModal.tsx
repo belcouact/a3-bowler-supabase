@@ -87,23 +87,23 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({ isOpen, onClos
                     </div>
                 </div>
 
-                {/* Anomalies Section */}
+                {/* Suggestions Section */}
                 <div>
                     <h4 className="text-sm font-medium text-gray-900 mb-2 flex items-center">
                         <AlertTriangle className="w-4 h-4 mr-1 text-orange-500" />
-                        Anomalies Detected
+                        Suggestions
                     </h4>
-                    {result.anomalies.length > 0 ? (
+                    {result.suggestion.length > 0 ? (
                         <ul className="text-sm text-gray-600 space-y-2 bg-orange-50 p-3 rounded-md border border-orange-100">
-                            {result.anomalies.map((anomaly, index) => (
+                            {result.suggestion.map((item, index) => (
                                 <li key={index} className="flex items-start">
                                     <span className="mr-2">•</span>
-                                    <span>{anomaly}</span>
+                                    <span>{item}</span>
                                 </li>
                             ))}
                         </ul>
                     ) : (
-                        <p className="text-sm text-gray-500 italic">No significant anomalies detected in the dataset.</p>
+                        <p className="text-sm text-gray-500 italic">No specific suggestions detected.</p>
                     )}
                 </div>
 
