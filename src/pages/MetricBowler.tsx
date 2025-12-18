@@ -55,6 +55,9 @@ const CustomizedDot = (props: any) => {
   // If no coordinates, don't render
   if (cx === undefined || cy === undefined) return null;
 
+  // If no actual value, don't render dot
+  if (payload.actual === null || payload.actual === undefined) return null;
+
   const violation = isViolation(
     payload.rule,
     payload.rawTarget,
