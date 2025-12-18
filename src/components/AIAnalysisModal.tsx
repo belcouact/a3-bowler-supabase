@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, TrendingUp, TrendingDown, Minus, Activity, AlertTriangle, CheckCircle, BrainCircuit } from 'lucide-react';
+import { X, TrendingUp, TrendingDown, Minus, Activity, AlertTriangle, CheckCircle } from 'lucide-react';
 import { AnalysisResult } from '../services/aiService';
 
 interface AIAnalysisModalProps {
@@ -51,10 +51,7 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({ isOpen, onClos
           </div>
           
           <div className="sm:flex sm:items-start">
-            <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
-              <BrainCircuit className="h-6 w-6 text-blue-600" />
-            </div>
-            <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+            <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
               <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">
                 AI Analysis: {metricName}
               </h3>
