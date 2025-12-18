@@ -316,14 +316,14 @@ const Layout = () => {
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setIsImportModalOpen(true)}
-                className="p-2 border border-gray-300 rounded-md text-gray-600 bg-white hover:bg-gray-50 hover:text-gray-900 shadow-sm"
+                className="h-9 w-9 flex items-center justify-center rounded-lg bg-emerald-500 text-white shadow-sm hover:bg-emerald-600"
                 title="Import CSV"
               >
                 <Upload className="w-4 h-4" />
               </button>
               <button
                 onClick={handleDownloadAllBowlersCSV}
-                className="p-2 border border-gray-300 rounded-md text-gray-600 bg-white hover:bg-gray-50 hover:text-gray-900 shadow-sm"
+                className="h-9 w-9 flex items-center justify-center rounded-lg bg-blue-500 text-white shadow-sm hover:bg-blue-600"
                 title="Download All Bowlers CSV"
               >
                 <Download className="w-4 h-4" />
