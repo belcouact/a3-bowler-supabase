@@ -678,6 +678,7 @@ const MetricBowler = () => {
                           name="Actual"
                           connectNulls
                         />
+                        {metric.targetMeetingRule !== 'within_range' && (
                         <Line 
                           type="monotone" 
                           dataKey="target" 
@@ -688,6 +689,9 @@ const MetricBowler = () => {
                           name="Target"
                           connectNulls 
                         />
+                        )}
+                        {metric.targetMeetingRule === 'within_range' && (
+                        <>
                         <Line 
                           type="monotone" 
                           dataKey="minTarget" 
@@ -708,6 +712,8 @@ const MetricBowler = () => {
                           name="Max Target"
                           connectNulls 
                         />
+                        </>
+                        )}
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
