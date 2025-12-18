@@ -85,39 +85,7 @@ const WhyAnalysis = () => {
       }
   };
 
-  const generateTextStructure = () => {
-    if (!currentCase?.mindMapNodes || currentCase.mindMapNodes.length === 0) {
-        setConvertedText('No content to convert.');
-        return;
-    }
 
-    const nodes = currentCase.mindMapNodes;
-    const roots = nodes.filter(n => !n.parentId);
-    
-    let text = '';
-
-    const traverse = (nodeId: string, depth: number) => {
-        const children = nodes.filter(n => n.parentId === nodeId);
-        // Sort children by Y position to maintain visual order roughly
-        children.sort((a, b) => a.y - b.y);
-        
-        for (const child of children) {
-            const indent = '  '.repeat(depth);
-            text += `${indent}- ${child.text}\n`;
-            traverse(child.id, depth + 1);
-        }
-    };
-
-    // Sort roots by Y position
-    roots.sort((a, b) => a.y - b.y);
-
-    for (const root of roots) {
-        text += `${root.text}\n`;
-        traverse(root.id, 1);
-    }
-
-    setConvertedText(text);
-  };
 
   if (!currentCase) {
     return <div className="text-gray-500">Loading case data...</div>;
