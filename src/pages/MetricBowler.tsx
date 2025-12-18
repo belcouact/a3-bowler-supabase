@@ -205,12 +205,59 @@ const MetricBowler = () => {
     }
   };
 
-  const handleImport = (updatedMetrics: Metric[]) => {
-    if (!selectedBowler) return;
-    updateBowler({
-      ...selectedBowler,
-      metrics: updatedMetrics
+  const handleImport = (importedData: Record<string, Metric[]>) => {
+    let createdCount = 0;
+    let updatedCount = 0;
+
+    Object.entries(importedData).forEach(([bowlerName, importedMetrics]) => {
+      const existingBowler = bowlers.find(b => b.name === bowlerName);
+
+      if (existingBowler) {
+        // Merge with existing metrics
+        const mergedMetrics = [...(existingBowler.metrics || [])];
+        
+        importedMetrics.forEach(impMetric => {
+          const existingMetricIndex = mergedMetrics.findIndex(m => m.name === impMetric.name);
+          
+          if (existingMetricIndex >= 0) {
+            // Update existing metric
+            const existingMetric = mergedMetrics[existingMetricIndex];
+            mergedMetrics[existingMetricIndex] = {
+              ...existingMetric,
+              ...impMetric,
+              id: existingMetric.id, // Preserve ID
+              monthlyData: {
+                ...existingMetric.monthlyData,
+                ...impMetric.monthlyData
+              }
+            };
+          } else {
+            // Add new metric
+            mergedMetrics.push(impMetric);
+          }
+        });
+
+        updateBowler({
+          ...existingBowler,
+          metrics: mergedMetrics
+        });
+        updatedCount++;
+      } else {
+        // Create new bowler
+        addBowler({
+          name: bowlerName,
+          metrics: importedMetrics,
+          description: 'Imported from CSV'
+        });
+        createdCount++;
+      }
     });
+
+    if (createdCount > 0 || updatedCount > 0) {
+        // If we are currently viewing a bowler, and that bowler was updated, the UI will auto-update via context.
+        // If we created a new bowler and we weren't viewing any, or we want to switch to it? 
+        // For now, just stay where we are.
+    }
   };
 
   const handleKeyDown = (
@@ -619,9 +666,9 @@ const MetricBowler = () => {
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
         onImport={handleImport}
-        existingMetrics={metrics}
       />
-      <HelpModal 
+      
+      <HelpModal
         isOpen={isHelpModalOpen} 
         onClose={() => setIsHelpModalOpen(false)} 
       />

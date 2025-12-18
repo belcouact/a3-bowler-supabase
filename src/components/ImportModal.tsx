@@ -7,11 +7,11 @@ import { useToast } from '../context/ToastContext';
 interface ImportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onImport: (metrics: Metric[]) => void;
-  existingMetrics: Metric[];
+  onImport: (data: Record<string, Metric[]>) => void;
 }
 
-export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport, existingMetrics }) => {
+
+export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport }) => {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -60,10 +60,15 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
     };
 
     const headers = simpleParseLine(lines[0]);
+    const bowlerNameIndex = headers.findIndex(h => h.toLowerCase().includes('bowler name'));
     const metricNameIndex = headers.findIndex(h => h.toLowerCase().includes('metric name'));
     const scopeIndex = headers.findIndex(h => h.toLowerCase().includes('scope'));
     const typeIndex = headers.findIndex(h => h.toLowerCase() === 'type');
     
+    if (bowlerNameIndex === -1) {
+        throw new Error('Missing required column: "Bowler Name"');
+    }
+
     if (metricNameIndex === -1) {
         throw new Error('Missing required column: "Metric Name"');
     }
@@ -122,7 +127,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
         }
     });
 
-    const newMetrics = [...existingMetrics];
+    const result: Record<string, Metric[]> = {};
     let processedRows = 0;
     
     // Process rows
@@ -130,6 +135,9 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
         if (!lines[i].trim()) continue;
         const row = simpleParseLine(lines[i]);
         
+        const bowlerName = row[bowlerNameIndex];
+        if (!bowlerName) continue;
+
         const name = row[metricNameIndex];
         if (!name) continue;
 
@@ -143,8 +151,15 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
             else if (val.includes('actual')) rowType = 'actual';
         }
 
-        // Find existing or create new
-        let metric = newMetrics.find(m => m.name === name);
+        // Initialize bowler array if not exists
+        if (!result[bowlerName]) {
+            result[bowlerName] = [];
+        }
+        
+        const currentBowlerMetrics = result[bowlerName];
+
+        // Find existing or create new metric for this bowler
+        let metric = currentBowlerMetrics.find(m => m.name === name);
         if (!metric) {
             metric = {
                 id: generateShortId(),
@@ -155,7 +170,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                 attribute: '',
                 monthlyData: {}
             };
-            newMetrics.push(metric);
+            currentBowlerMetrics.push(metric);
         }
 
         // Update monthly data
@@ -176,8 +191,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                     monthlyData[mapping.key] = { target: '', actual: '' };
                 }
                 
-                // Only update if value is present (don't overwrite with empty string if not intended?)
-                // Actually CSV usually implies overwrite.
+                // Only update if value is present
                 monthlyData[mapping.key][effectiveType] = val;
             }
         });
@@ -186,7 +200,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
         processedRows++;
     }
 
-    return { metrics: newMetrics, rowCount: processedRows, colCount: headers.length };
+    return { data: result, rowCount: processedRows, colCount: headers.length };
   };
 
   const handleUpload = () => {
@@ -196,8 +210,8 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
     reader.onload = (e) => {
       try {
         const text = e.target?.result as string;
-        const { metrics: updatedMetrics, rowCount, colCount } = parseCSV(text);
-        onImport(updatedMetrics);
+        const { data, rowCount, colCount } = parseCSV(text);
+        onImport(data);
         const successMsg = `Successfully imported data: ${rowCount} rows and ${colCount} columns processed.`;
         setSuccess(successMsg);
         toast.success(successMsg);
