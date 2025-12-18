@@ -1,4 +1,4 @@
-import { Metric, MetricData } from '../context/AppContext';
+import { Metric } from '../context/AppContext';
 
 export interface AnalysisResult {
   trend: 'increasing' | 'decreasing' | 'stable' | 'fluctuating';

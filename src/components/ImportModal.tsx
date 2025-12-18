@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, X, FileText, AlertCircle, Check } from 'lucide-react';
-import { Metric } from '../context/AppContext';
+import { Metric, Bowler } from '../context/AppContext';
 import { generateShortId } from '../utils/idUtils';
 import { useToast } from '../context/ToastContext';
 
@@ -137,7 +137,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
         }
     });
 
-    const result: Record<string, Metric[]> = {};
+    const result: Record<string, { bowler: Partial<Bowler>, metrics: Metric[] }> = {};
     let processedRows = 0;
     
     // Process rows
@@ -153,6 +153,25 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
 
         const scope = row[scopeIndex];
         
+        const description = descriptionIndex !== -1 ? row[descriptionIndex] : undefined;
+        const objective = objectiveIndex !== -1 ? row[objectiveIndex] : undefined;
+        const champion = championIndex !== -1 ? row[championIndex] : undefined;
+        const commitment = commitmentIndex !== -1 ? row[commitmentIndex] : undefined;
+        const tag = tagIndex !== -1 ? row[tagIndex] : undefined;
+
+        const definition = metricDefinitionIndex !== -1 ? row[metricDefinitionIndex] : '';
+        const owner = metricOwnerIndex !== -1 ? row[metricOwnerIndex] : '';
+        const attribute = metricAttributeIndex !== -1 ? row[metricAttributeIndex] : '';
+        const rawRule = targetRuleIndex !== -1 ? row[targetRuleIndex] : undefined;
+        
+        let targetMeetingRule: 'gte' | 'lte' | 'within_range' | undefined = undefined;
+        if (rawRule) {
+          const r = rawRule.toLowerCase().trim();
+          if (r === 'gte' || r === 'lte' || r === 'within_range') {
+            targetMeetingRule = r as any;
+          }
+        }
+
         // Determine row type if using Long format
         let rowType: 'target' | 'actual' | null = null;
         if (typeIndex !== -1 && row[typeIndex]) {
@@ -161,12 +180,31 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
             else if (val.includes('actual')) rowType = 'actual';
         }
 
-        // Initialize bowler array if not exists
+        // Initialize bowler entry if not exists
         if (!result[bowlerName]) {
-            result[bowlerName] = [];
+            result[bowlerName] = {
+                bowler: {
+                    name: bowlerName,
+                    description,
+                    objective,
+                    champion,
+                    commitment,
+                    tag
+                },
+                metrics: []
+            };
+        } else {
+            // Update bowler metadata if available in subsequent rows (last non-empty wins or accumulate?)
+            // Usually metadata is same for all rows of same bowler, but let's update just in case
+            const b = result[bowlerName].bowler;
+            if (description) b.description = description;
+            if (objective) b.objective = objective;
+            if (champion) b.champion = champion;
+            if (commitment) b.commitment = commitment;
+            if (tag) b.tag = tag;
         }
         
-        const currentBowlerMetrics = result[bowlerName];
+        const currentBowlerMetrics = result[bowlerName].metrics;
 
         // Find existing or create new metric for this bowler
         let metric = currentBowlerMetrics.find(m => m.name === name);
@@ -175,12 +213,19 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                 id: generateShortId(),
                 name,
                 scope,
-                definition: '',
-                owner: '',
-                attribute: '',
+                definition,
+                owner,
+                attribute,
+                targetMeetingRule,
                 monthlyData: {}
             };
             currentBowlerMetrics.push(metric);
+        } else {
+            // Update metric metadata if present
+            if (definition) metric.definition = definition;
+            if (owner) metric.owner = owner;
+            if (attribute) metric.attribute = attribute;
+            if (targetMeetingRule) metric.targetMeetingRule = targetMeetingRule;
         }
 
         // Update monthly data

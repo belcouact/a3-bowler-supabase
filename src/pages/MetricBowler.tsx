@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { Info, Settings, Download, Upload, HelpCircle, BrainCircuit } from 'lucide-react';
-import { useApp, Metric } from '../context/AppContext';
+import { useApp, Metric, Bowler } from '../context/AppContext';
 import { ImportModal } from '../components/ImportModal';
 import { HelpModal } from '../components/HelpModal';
 import { AIAnalysisModal } from '../components/AIAnalysisModal';
@@ -219,18 +219,18 @@ const MetricBowler = () => {
     }
   };
 
-  const handleImport = (importedData: Record<string, Metric[]>) => {
+  const handleImport = (importedData: Record<string, { bowler: Partial<Bowler>, metrics: Metric[] }>) => {
     let createdCount = 0;
     let updatedCount = 0;
 
-    Object.entries(importedData).forEach(([bowlerName, importedMetrics]) => {
+    Object.entries(importedData).forEach(([bowlerName, { bowler, metrics }]) => {
       const existingBowler = bowlers.find(b => b.name === bowlerName);
 
       if (existingBowler) {
         // Merge with existing metrics
         const mergedMetrics = [...(existingBowler.metrics || [])];
         
-        importedMetrics.forEach(impMetric => {
+        metrics.forEach(impMetric => {
           const existingMetricIndex = mergedMetrics.findIndex(m => m.name === impMetric.name);
           
           if (existingMetricIndex >= 0) {
@@ -253,6 +253,7 @@ const MetricBowler = () => {
 
         updateBowler({
           ...existingBowler,
+          ...bowler,
           metrics: mergedMetrics
         });
         updatedCount++;
@@ -260,8 +261,9 @@ const MetricBowler = () => {
         // Create new bowler
         addBowler({
           name: bowlerName,
-          metrics: importedMetrics,
-          description: 'Imported from CSV'
+          ...bowler,
+          metrics: metrics,
+          description: bowler.description || 'Imported from CSV'
         });
         createdCount++;
       }
