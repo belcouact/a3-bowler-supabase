@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, Link as LinkIcon, FileText, ExternalLink, Upload, Download } from 'lucide-react';
+import { Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, Link as LinkIcon, FileText, ExternalLink, Upload, Download, MoreVertical } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case, Bowler, Metric } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
@@ -37,6 +37,7 @@ const Layout = () => {
   const [isAppInfoOpen, setIsAppInfoOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleImport = (importedData: Record<string, { bowler: Partial<Bowler>, metrics: Metric[] }>) => {
     let createdCount = 0;
@@ -295,47 +296,127 @@ const Layout = () => {
           </nav>
         </div>
         
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={handleExit}
-            className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-red-600 transition-colors"
-            title="Exit to Main App"
-          >
-            <ExternalLink className="w-4 h-4" />
-          </button>
-          {isMetricBowler && (
-            <>
-              <button
-                onClick={() => navigate('/mindmap')}
-                className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-colors"
-                title="Visualize objectives"
-              >
-                <LinkIcon className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setIsImportModalOpen(true)}
-                className="p-2 rounded-md bg-green-500 text-white shadow-sm hover:bg-green-600 transition-colors"
-                title="Import CSV"
-              >
-                <Upload className="w-4 h-4" />
-              </button>
-              <button
-                onClick={handleDownloadAllCSV}
-                className="p-2 rounded-md bg-blue-500 text-white shadow-sm hover:bg-blue-600 transition-colors"
-                title="Download all bowlers"
-              >
-                <Download className="w-4 h-4" />
-              </button>
-            </>
-          )}
+        <div className="flex items-center space-x-2 md:space-x-4">
+          {/* Desktop Toolbar */}
+          <div className="hidden md:flex items-center space-x-4">
+            <button
+              onClick={handleExit}
+              className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-red-600 transition-colors"
+              title="Exit to Main App"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </button>
+            {isMetricBowler && (
+              <>
+                <button
+                  onClick={() => navigate('/mindmap')}
+                  className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-colors"
+                  title="Visualize objectives"
+                >
+                  <LinkIcon className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setIsImportModalOpen(true)}
+                  className="p-2 rounded-md bg-green-500 text-white shadow-sm hover:bg-green-600 transition-colors"
+                  title="Import CSV"
+                >
+                  <Upload className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={handleDownloadAllCSV}
+                  className="p-2 rounded-md bg-blue-500 text-white shadow-sm hover:bg-blue-600 transition-colors"
+                  title="Download all bowlers"
+                >
+                  <Download className="w-4 h-4" />
+                </button>
+              </>
+            )}
 
-          <button
-            onClick={() => setIsAIChatOpen(true)}
-            className="flex items-center px-3 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors"
-            title="Ask AI"
-          >
-            <Sparkles className="w-4 h-4" />
-          </button>
+            <button
+              onClick={() => setIsAIChatOpen(true)}
+              className="flex items-center px-3 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors"
+              title="Ask AI"
+            >
+              <Sparkles className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Mobile Menu Dropdown */}
+          <div className="md:hidden relative">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 transition-colors"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+
+            {isMobileMenuOpen && (
+              <>
+                <div 
+                  className="fixed inset-0 z-30" 
+                  onClick={() => setIsMobileMenuOpen(false)}
+                />
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-40 border border-gray-200">
+                  <button
+                    onClick={() => {
+                      handleExit();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-red-600"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-3" />
+                    Exit App
+                  </button>
+                  
+                  {isMetricBowler && (
+                    <>
+                      <button
+                        onClick={() => {
+                          navigate('/mindmap');
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600"
+                      >
+                        <LinkIcon className="w-4 h-4 mr-3" />
+                        Visualize
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsImportModalOpen(true);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-green-600"
+                      >
+                        <Upload className="w-4 h-4 mr-3" />
+                        Import CSV
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleDownloadAllCSV();
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600"
+                      >
+                        <Download className="w-4 h-4 mr-3" />
+                        Download
+                      </button>
+                    </>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      setIsAIChatOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-indigo-600"
+                  >
+                    <Sparkles className="w-4 h-4 mr-3" />
+                    Ask AI
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
 
           <button
             onClick={handleSaveData}
