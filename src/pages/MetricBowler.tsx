@@ -592,7 +592,7 @@ const MetricBowler = () => {
                             className="p-1 rounded-md transition-colors text-blue-500 hover:text-blue-700 hover:bg-blue-50"
                             title="AI Analysis"
                         >
-                            <BrainCircuit className="w-4 h-4" />
+                            <Sparkles className="w-4 h-4" />
                         </button>
                         <button
                             onClick={() => setChartSettingsOpen(prev => ({ ...prev, [metric.id]: !prev[metric.id] }))}
