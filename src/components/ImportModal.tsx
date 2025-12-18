@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Upload, X, FileText, AlertCircle, Check } from 'lucide-react';
 import { Metric } from '../context/AppContext';
 import { generateShortId } from '../utils/idUtils';
+import { useToast } from '../context/ToastContext';
 
 interface ImportModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const toast = useToast();
 
   if (!isOpen) return null;
 
