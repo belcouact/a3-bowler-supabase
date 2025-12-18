@@ -86,13 +86,25 @@ const MarkmapPage = () => {
   const [mm, setMm] = useState<Markmap | null>(null);
   const [splitPosition, setSplitPosition] = useState(40); // Percentage
   const [activeTab, setActiveTab] = useState<'Mind Map' | 'Text Input'>('Mind Map');
+  
+  // Independent state for Text Input tab
+  const [textInputMarkdown, setTextInputMarkdown] = useState('');
+  
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const textInputWrapperRef = useRef<HTMLDivElement>(null);
+  const [textInputSvgRef, setTextInputSvgRef] = useState<SVGSVGElement | null>(null);
+  const [textInputMm, setTextInputMm] = useState<Markmap | null>(null);
+  const [textInputSplitPosition, setTextInputSplitPosition] = useState(40);
 
   // Sync local state with context when context changes (e.g. initial load)
   useEffect(() => {
     if (dashboardMarkdown) {
       setMarkdown(dashboardMarkdown);
+      // Initialize text input markdown if empty
+      if (!textInputMarkdown) {
+          setTextInputMarkdown(dashboardMarkdown);
+      }
     }
   }, [dashboardMarkdown]);
 
@@ -102,7 +114,11 @@ const MarkmapPage = () => {
     updateDashboardMarkdown(newVal);
   };
 
-  // Initialize Markmap
+  const handleTextInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setTextInputMarkdown(e.target.value);
+  };
+
+  // Initialize Markmap for Mind Map Tab
   useEffect(() => {
     if (svgRef && !mm) {
       const newMm = Markmap.create(svgRef);
@@ -120,7 +136,25 @@ const MarkmapPage = () => {
     }
   }, [svgRef, mm]);
 
-  // Update Markmap data when markdown changes
+  // Initialize Markmap for Text Input Tab
+  useEffect(() => {
+    if (textInputSvgRef && !textInputMm) {
+      const newMm = Markmap.create(textInputSvgRef);
+      setTextInputMm(newMm);
+      
+      // Add toolbar
+      if (textInputWrapperRef.current) {
+         const toolbar = Toolbar.create(newMm);
+         toolbar.setBrand(false);
+         toolbar.el.style.position = 'absolute';
+         toolbar.el.style.bottom = '1rem';
+         toolbar.el.style.right = '1rem';
+         textInputWrapperRef.current.appendChild(toolbar.el);
+      }
+    }
+  }, [textInputSvgRef, textInputMm]);
+
+  // Update Markmap data when markdown changes (Mind Map Tab)
   useEffect(() => {
     if (mm) {
       const { root } = transformer.transform(markdown);
@@ -129,7 +163,16 @@ const MarkmapPage = () => {
     }
   }, [mm, markdown]);
 
-  // Handle Resize to keep centered
+  // Update Markmap data when markdown changes (Text Input Tab)
+  useEffect(() => {
+    if (textInputMm) {
+      const { root } = transformer.transform(textInputMarkdown);
+      textInputMm.setData(root);
+      textInputMm.fit();
+    }
+  }, [textInputMm, textInputMarkdown]);
+
+  // Handle Resize to keep centered (Mind Map Tab)
   useEffect(() => {
     if (!wrapperRef.current || !mm) return;
 
@@ -144,7 +187,22 @@ const MarkmapPage = () => {
     };
   }, [mm]);
 
-  // Resizable logic
+  // Handle Resize to keep centered (Text Input Tab)
+  useEffect(() => {
+    if (!textInputWrapperRef.current || !textInputMm) return;
+
+    const observer = new ResizeObserver(() => {
+        textInputMm.fit();
+    });
+
+    observer.observe(textInputWrapperRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [textInputMm]);
+
+  // Resizable logic for Mind Map Tab
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     document.addEventListener('mousemove', handleMouseMove);
@@ -165,6 +223,33 @@ const MarkmapPage = () => {
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
   };
+
+  // Resizable logic for Text Input Tab
+  const handleTextInputMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    document.addEventListener('mousemove', handleTextInputMouseMove);
+    document.addEventListener('mouseup', handleTextInputMouseUp);
+  };
+
+  const handleTextInputMouseMove = (e: MouseEvent) => {
+    // Reuse containerRef or create a new one for Text Input tab if needed, 
+    // but since we are replacing the view, we can assume the container is the same size context
+    // Ideally we should use a ref specific to the Text Input tab container
+    const container = document.getElementById('text-input-container');
+    if (container) {
+      const containerRect = container.getBoundingClientRect();
+      const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+      if (newWidth > 10 && newWidth < 90) {
+        setTextInputSplitPosition(newWidth);
+      }
+    }
+  };
+
+  const handleTextInputMouseUp = () => {
+    document.removeEventListener('mousemove', handleTextInputMouseMove);
+    document.removeEventListener('mouseup', handleTextInputMouseUp);
+  };
+
 
   const handleUseExample = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
@@ -205,7 +290,7 @@ const MarkmapPage = () => {
     <div className="flex flex-col h-full bg-white">
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-100 bg-white">
-          <p className="text-sm text-gray-500">Visualize objects to metrics</p>
+          <p className="text-sm font-bold text-gray-700">Visualize objects to metrics</p>
       </div>
 
       {/* Tab Bar */}
@@ -287,20 +372,41 @@ const MarkmapPage = () => {
           </div>
         </div>
 
-        {/* Text Input View (Full) */}
-        <div className={clsx("h-full w-full p-6 bg-gray-50", activeTab === 'Text Input' ? "block" : "hidden")}>
-           <div className="h-full max-w-5xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col">
-              <div className="p-3 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                 <span className="text-sm font-semibold text-gray-700">Full Text Editor</span>
-                 <span className="text-xs text-gray-500">Changes here update the Mind Map automatically</span>
-              </div>
-              <textarea
-                className="flex-1 w-full p-6 resize-none focus:outline-none font-mono text-sm leading-relaxed"
-                value={markdown}
-                onChange={handleMarkdownChange}
-                placeholder="Enter markdown text here..."
-              />
-           </div>
+        {/* Text Input View (Same as Mind Map View but Independent) */}
+        <div 
+          id="text-input-container"
+          className={clsx("h-full w-full", activeTab === 'Text Input' ? "flex" : "hidden")} 
+        >
+          <div 
+            style={{ width: `${textInputSplitPosition}%` }} 
+            className="h-full border-r border-gray-200 flex flex-col bg-white"
+          >
+            <div className="p-2 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Markdown Editor</span>
+              {/* Optional: Add example loader or other tools here if needed */}
+            </div>
+            <textarea
+              className="flex-1 w-full p-4 resize-none focus:outline-none focus:ring-inset focus:ring-2 focus:ring-blue-500/50 font-mono text-sm leading-relaxed"
+              value={textInputMarkdown}
+              onChange={handleTextInputChange}
+              placeholder="Enter markdown here..."
+            />
+          </div>
+          
+          {/* Draggable Handle */}
+          <div
+            className="w-1 h-full cursor-col-resize bg-transparent hover:bg-blue-400 absolute z-10 transition-colors"
+            style={{ left: `${textInputSplitPosition}%`, transform: 'translateX(-50%)' }}
+            onMouseDown={handleTextInputMouseDown}
+          />
+
+          <div 
+            style={{ width: `${100 - textInputSplitPosition}%` }} 
+            className="h-full relative bg-gray-50"
+            ref={textInputWrapperRef}
+          >
+            <svg className="w-full h-full" ref={setTextInputSvgRef} />
+          </div>
         </div>
       </div>
     </div>
