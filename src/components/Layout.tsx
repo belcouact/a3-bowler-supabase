@@ -136,7 +136,7 @@ const Layout = () => {
             <div className="bg-blue-600 p-1.5 rounded-lg">
               <BarChart3 className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight">Performance Tracker</h1>
+            <h1 className="text-xl font-bold text-gray-900 tracking-tight hidden md:block">Performance Tracker</h1>
             <button 
                 onClick={() => setIsAppInfoOpen(true)}
                 className="text-gray-400 hover:text-blue-600 transition-colors ml-1"
