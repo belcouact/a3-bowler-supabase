@@ -13,7 +13,7 @@ const API_BASE_URL = 'https://login.study-llm.me';
 
 export const authService = {
   async signup(data: any) {
-    const response = await fetch(`${API_BASE_URL}/signup`, {
+    const response = await fetch(`${API_BASE_URL}/api/signup`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -27,7 +27,7 @@ export const authService = {
   },
 
   async login(data: any) {
-    const response = await fetch(`${API_BASE_URL}/login`, {
+    const response = await fetch(`${API_BASE_URL}/api/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -45,7 +45,9 @@ export const authService = {
   async logout() {
     // Assuming logout might need a token or session handling, but based on description it's just a POST
     // If the API relies on cookies, we need credentials: 'include'
-    const response = await fetch(`${API_BASE_URL}/logout`, {
+    // Note: The worker does not currently have a /api/logout endpoint, so this might 404.
+    // We keep it for consistency if the backend adds it later.
+    const response = await fetch(`${API_BASE_URL}/api/logout`, {
       method: 'POST',
     });
     if (!response.ok) {
@@ -57,7 +59,7 @@ export const authService = {
   },
 
   async changePassword(data: any) {
-    const response = await fetch(`${API_BASE_URL}/change-password`, {
+    const response = await fetch(`${API_BASE_URL}/api/change-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -71,7 +73,7 @@ export const authService = {
   },
 
   async updateProfile(data: any) {
-    const response = await fetch(`${API_BASE_URL}/update-profile`, {
+    const response = await fetch(`${API_BASE_URL}/api/update-profile`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -85,7 +87,7 @@ export const authService = {
   },
 
   async getUser(username: string) {
-    const response = await fetch(`${API_BASE_URL}/user/${username}`);
+    const response = await fetch(`${API_BASE_URL}/api/user/${username}`);
     if (!response.ok) {
       throw new Error('Failed to fetch user profile');
     }
