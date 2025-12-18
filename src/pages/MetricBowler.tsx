@@ -760,7 +760,7 @@ const MetricBowler = () => {
                           stroke="#ef4444" 
                           strokeWidth={2} 
                           strokeDasharray="3 3" 
-                          dot={{ r: 3, fill: '#ef4444' }}
+                          dot={false}
                           activeDot={{ r: 5 }}
                           name="Min Target"
                           connectNulls 
@@ -771,7 +771,7 @@ const MetricBowler = () => {
                           stroke="#ef4444" 
                           strokeWidth={2} 
                           strokeDasharray="3 3" 
-                          dot={{ r: 3, fill: '#ef4444' }}
+                          dot={false}
                           activeDot={{ r: 5 }}
                           name="Max Target"
                           connectNulls 
