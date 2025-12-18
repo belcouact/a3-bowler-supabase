@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, MousePointer, Keyboard, FileSpreadsheet, MessageSquare, TrendingUp, Target, Edit, Sparkles } from 'lucide-react';
+import { X, MousePointer, MessageSquare, Target, Edit, Sparkles } from 'lucide-react';
 
 interface HelpModalProps {
   isOpen: boolean;
