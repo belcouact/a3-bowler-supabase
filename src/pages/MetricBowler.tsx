@@ -615,15 +615,46 @@ const MetricBowler = () => {
           <h3 className="text-lg font-semibold text-gray-900 mb-6">Metric Trends</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {metrics.map((metric) => {
-              const chartData = displayMonths.map((month) => ({
-                name: month.label.split('/')[1], // Just show month name
-                fullLabel: month.label,
-                target: parseFloat(metric.monthlyData?.[month.key]?.target || '0') || null,
-                actual: parseFloat(metric.monthlyData?.[month.key]?.actual || '0') || null,
-                rule: metric.targetMeetingRule,
-                rawTarget: metric.monthlyData?.[month.key]?.target,
-                rawActual: metric.monthlyData?.[month.key]?.actual
-              }));
+              const chartData = displayMonths.map((month) => {
+                const rawTarget = metric.monthlyData?.[month.key]?.target;
+                const rawActual = metric.monthlyData?.[month.key]?.actual;
+                
+                let target: number | null = null;
+                let minTarget: number | null = null;
+                let maxTarget: number | null = null;
+
+                if (rawTarget) {
+                     // Try to parse as range first
+                     const match = rawTarget.match(/^[{\[]?\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*[}\]]?$/);
+                     if (match) {
+                         const min = parseFloat(match[1]);
+                         const max = parseFloat(match[2]);
+                         if (!isNaN(min) && !isNaN(max)) {
+                             minTarget = min;
+                             maxTarget = max;
+                         }
+                     }
+                     
+                     // Also try to parse as single number (fallback)
+                     const val = parseFloat(rawTarget);
+                     if (!isNaN(val)) target = val;
+                }
+
+                const actualVal = rawActual ? parseFloat(rawActual) : NaN;
+                const actual = !isNaN(actualVal) ? actualVal : null;
+
+                return {
+                    name: month.label.split('/')[1], // Just show month name
+                    fullLabel: month.label,
+                    target,
+                    minTarget,
+                    maxTarget,
+                    actual,
+                    rule: metric.targetMeetingRule,
+                    rawTarget,
+                    rawActual
+                };
+              });
 
               const scale = chartScales[metric.id] || { min: '', max: '' };
               const isSettingsOpen = chartSettingsOpen[metric.id] || false;
@@ -729,7 +760,8 @@ const MetricBowler = () => {
                           stroke="#ef4444" 
                           strokeWidth={2} 
                           strokeDasharray="3 3" 
-                          dot={false}
+                          dot={{ r: 3, fill: '#ef4444' }}
+                          activeDot={{ r: 5 }}
                           name="Min Target"
                           connectNulls 
                         />
@@ -739,7 +771,8 @@ const MetricBowler = () => {
                           stroke="#ef4444" 
                           strokeWidth={2} 
                           strokeDasharray="3 3" 
-                          dot={false}
+                          dot={{ r: 3, fill: '#ef4444' }}
+                          activeDot={{ r: 5 }}
                           name="Max Target"
                           connectNulls 
                         />
