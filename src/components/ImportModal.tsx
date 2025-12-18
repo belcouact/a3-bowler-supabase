@@ -121,6 +121,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
     });
 
     const newMetrics = [...existingMetrics];
+    let processedRows = 0;
     
     // Process rows
     for (let i = 1; i < lines.length; i++) {
@@ -180,9 +181,10 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
         });
         
         metric.monthlyData = monthlyData;
+        processedRows++;
     }
 
-    return newMetrics;
+    return { metrics: newMetrics, rowCount: processedRows, colCount: headers.length };
   };
 
   const handleUpload = () => {
@@ -192,16 +194,20 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
     reader.onload = (e) => {
       try {
         const text = e.target?.result as string;
-        const updatedMetrics = parseCSV(text);
+        const { metrics: updatedMetrics, rowCount, colCount } = parseCSV(text);
         onImport(updatedMetrics);
-        setSuccess('Successfully imported metrics!');
+        const successMsg = `Successfully imported data: ${rowCount} rows and ${colCount} columns processed.`;
+        setSuccess(successMsg);
+        toast.success(successMsg);
         setTimeout(() => {
             onClose();
             setSuccess(null);
             setFile(null);
         }, 1500);
       } catch (err: any) {
-        setError(err.message || 'Failed to parse CSV');
+        const errorMsg = err.message || 'Failed to parse CSV';
+        setError(errorMsg);
+        toast.error(`Import Failed: ${errorMsg}`);
       }
     };
     reader.readAsText(file);
