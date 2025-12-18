@@ -43,8 +43,13 @@ const MindMapNode = ({
   // Auto-resize textarea
   useLayoutEffect(() => {
     if (textareaRef.current && !node.customHeight) {
+      // Reset height to auto to get correct scrollHeight
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+      const newHeight = textareaRef.current.scrollHeight;
+      textareaRef.current.style.height = newHeight + 'px';
+      
+      // If height changed significantly, we might need to update parent
+      // But we let ResizeObserver handle that to avoid double updates
     }
   }, [node.text, node.customHeight]);
 
@@ -54,13 +59,31 @@ const MindMapNode = ({
     
     const observer = new ResizeObserver(entries => {
       for (const entry of entries) {
-        const el = entry.target as HTMLElement;
-        const currentNode = nodeDataRef.current;
-        
-        // Only update if difference is significant
-        if (Math.abs((currentNode.width || DEFAULT_WIDTH) - el.offsetWidth) > 2 || Math.abs((currentNode.height || DEFAULT_HEIGHT) - el.offsetHeight) > 2) {
-             onUpdate(currentNode.id, { width: el.offsetWidth, height: el.offsetHeight });
-        }
+        // We use requestAnimationFrame to debounce and avoid "ResizeObserver loop limit exceeded"
+        requestAnimationFrame(() => {
+            const el = entry.target as HTMLElement;
+            const currentNode = nodeDataRef.current;
+            
+            // Calculate new dimensions
+            const newWidth = el.offsetWidth;
+            const newHeight = el.offsetHeight;
+            
+            // Only update if difference is significant AND different from current state
+            // Use a slightly larger threshold to prevent micro-adjustments loop
+            if (
+                (Math.abs((currentNode.width || DEFAULT_WIDTH) - newWidth) > 5) || 
+                (Math.abs((currentNode.height || DEFAULT_HEIGHT) - newHeight) > 5)
+            ) {
+                 // Check if it matches custom dimensions (user manual resize)
+                 // If the element size matches customWidth/Height, we don't need to update width/height 
+                 // because they are likely already driven by custom props or we want to avoid fighting with CSS
+                 
+                 // However, we DO need to sync 'width' and 'height' back to state for connections to draw correctly
+                 // But we must be careful not to trigger a re-render that changes layout again
+                 
+                 onUpdate(currentNode.id, { width: newWidth, height: newHeight });
+            }
+        });
       }
     });
 

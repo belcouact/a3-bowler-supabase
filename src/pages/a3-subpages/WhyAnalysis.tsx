@@ -24,11 +24,19 @@ const WhyAnalysis = () => {
   const handleNodesChange = useCallback((newNodes: MindMapNodeData[]) => {
       if (!currentCase) return;
       
-      // Update context
-      updateA3Case({
-          ...currentCase,
-          mindMapNodes: newNodes
-      });
+      // Optimization: Compare JSON string to avoid unnecessary context updates
+      // This is crucial because context update triggers re-render of this component, 
+      // which passes new nodes to MindMap, which might trigger another onChange if not careful.
+      const currentNodesJson = JSON.stringify(currentCase.mindMapNodes);
+      const newNodesJson = JSON.stringify(newNodes);
+
+      if (currentNodesJson !== newNodesJson) {
+          // Update context
+          updateA3Case({
+              ...currentCase,
+              mindMapNodes: newNodes
+          });
+      }
   }, [currentCase, updateA3Case]);
 
   const handleRootCauseChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
