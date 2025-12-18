@@ -273,12 +273,16 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
                                             </div>
                                             <div className="col-span-3">
                                                 <label className="block text-xs font-medium text-gray-500">Attribute</label>
-                                                <input
-                                                    type="text"
+                                                <select
                                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1 px-2 text-sm"
                                                     value={metric.attribute}
                                                     onChange={(e) => handleUpdateMetric(metric.id, 'attribute', e.target.value)}
-                                                />
+                                                >
+                                                    <option value="">Select Attribute</option>
+                                                    <option value="Individual data">Individual data</option>
+                                                    <option value="Moving average">Moving average</option>
+                                                    <option value="Accumulative">Accumulative</option>
+                                                </select>
                                             </div>
                                             <div className="col-span-3">
                                                 <label className="block text-xs font-medium text-gray-500">Target Rule</label>
