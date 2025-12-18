@@ -104,8 +104,13 @@ const Summary = () => {
             {currentCase.resultImages && currentCase.resultImages.length > 0 && (
                 <div className="mb-4">
                     <h5 className="text-xs font-semibold text-gray-600 mb-2">Result Evidence</h5>
-                    <div className="relative w-full h-48 bg-gray-50 border border-gray-200 rounded overflow-hidden">
-                         <div className="w-full h-full relative overflow-auto">
+                    <div 
+                        className="relative w-full bg-gray-50 border border-gray-200 rounded overflow-hidden"
+                        style={{
+                            height: Math.max(150, ...currentCase.resultImages.map(img => (img.y + img.height) * 0.5)) + 20
+                        }}
+                    >
+                         <div className="w-full h-full relative">
                             {currentCase.resultImages.map(img => (
                                 <div
                                     key={img.id}
@@ -148,8 +153,13 @@ const Summary = () => {
             {currentCase.dataAnalysisImages && currentCase.dataAnalysisImages.length > 0 && (
                 <div className="mb-4">
                     <h5 className="text-xs font-semibold text-gray-600 mb-2">Evidence</h5>
-                    <div className="relative w-full h-48 bg-gray-50 border border-gray-200 rounded overflow-hidden">
-                         <div className="w-full h-full relative overflow-auto">
+                    <div 
+                        className="relative w-full bg-gray-50 border border-gray-200 rounded overflow-hidden"
+                        style={{
+                            height: Math.max(150, ...currentCase.dataAnalysisImages.map(img => (img.y + img.height) * 0.5)) + 20
+                        }}
+                    >
+                         <div className="w-full h-full relative">
                             {currentCase.dataAnalysisImages.map(img => (
                                 <div
                                     key={img.id}

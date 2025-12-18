@@ -111,14 +111,23 @@ const ImageCanvas = ({ images, onImagesChange, height, onHeightChange, label = "
       e.preventDefault();
       setIsResizingCanvas(true);
       canvasResizeStartRef.current = { h: height, y: e.clientY };
+      document.addEventListener('mousemove', handleGlobalMouseMove);
+      document.addEventListener('mouseup', handleGlobalMouseUp);
+  };
+
+  const handleGlobalMouseMove = (e: MouseEvent) => {
+      const dy = e.clientY - canvasResizeStartRef.current.y;
+      onHeightChange(Math.max(200, canvasResizeStartRef.current.h + dy));
+  };
+
+  const handleGlobalMouseUp = () => {
+      setIsResizingCanvas(false);
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-      if (isResizingCanvas) {
-          const dy = e.clientY - canvasResizeStartRef.current.y;
-          onHeightChange(Math.max(200, canvasResizeStartRef.current.h + dy));
-          return;
-      }
+      if (isResizingCanvas) return; // Handled by global listener
 
       if (!selectedImageId) return;
 
@@ -177,12 +186,8 @@ const ImageCanvas = ({ images, onImagesChange, height, onHeightChange, label = "
   };
 
   const handleMouseUp = () => {
-      if (isResizingCanvas) {
-          setIsResizingCanvas(false);
-          // Final save could be triggered here if needed, but we update continuously.
-          return;
-      }
-
+      // isResizingCanvas is now handled globally
+      
       if (isDragging || isResizing) {
           setIsDragging(false);
           setIsResizing(false);
