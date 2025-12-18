@@ -7,9 +7,8 @@ import { useToast } from '../context/ToastContext';
 interface ImportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onImport: (data: Record<string, Metric[]>) => void;
+  onImport: (data: Record<string, { bowler: Partial<Bowler>, metrics: Metric[] }>) => void;
 }
-
 
 export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport }) => {
   const [file, setFile] = useState<File | null>(null);
@@ -61,7 +60,18 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
 
     const headers = simpleParseLine(lines[0]);
     const bowlerNameIndex = headers.findIndex(h => h.toLowerCase().includes('bowler name'));
+    const descriptionIndex = headers.findIndex(h => h.toLowerCase().includes('description'));
+    const objectiveIndex = headers.findIndex(h => h.toLowerCase().includes('objective'));
+    const championIndex = headers.findIndex(h => h.toLowerCase().includes('champion'));
+    const commitmentIndex = headers.findIndex(h => h.toLowerCase().includes('commitment'));
+    const tagIndex = headers.findIndex(h => h.toLowerCase().includes('tag'));
+    
     const metricNameIndex = headers.findIndex(h => h.toLowerCase().includes('metric name'));
+    const metricDefinitionIndex = headers.findIndex(h => h.toLowerCase().includes('definition'));
+    const metricOwnerIndex = headers.findIndex(h => h.toLowerCase().includes('owner'));
+    const metricAttributeIndex = headers.findIndex(h => h.toLowerCase().includes('attribute'));
+    const targetRuleIndex = headers.findIndex(h => h.toLowerCase().includes('target rule') || h.toLowerCase().includes('meeting rule'));
+    
     const scopeIndex = headers.findIndex(h => h.toLowerCase().includes('scope'));
     const typeIndex = headers.findIndex(h => h.toLowerCase() === 'type');
     
@@ -270,6 +280,8 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                     <li><span className="font-mono font-medium">Bowler Name</span> (Required)</li>
                     <li><span className="font-mono font-medium">Metric Name</span> (Required)</li>
                     <li><span className="font-mono font-medium">Scope</span> (Required)</li>
+                    <li><span className="font-mono font-medium">Description, Objective, Champion, Commitment, Tag</span> (Optional)</li>
+                    <li><span className="font-mono font-medium">Definition, Owner, Attribute, Target Rule</span> (Optional)</li>
                     <li>
                       Date Columns format: <span className="font-mono">YYYY/MMM Target</span> and <span className="font-mono">YYYY/MMM Actual</span>
                       <br />
@@ -287,6 +299,53 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                         className="hidden"
                     />
                     <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                        <FileText className="h-5 w-5 mr-2 text-gray-400" />
+                        {file ? file.name : 'Select CSV File'}
+                    </button>
+                </div>
+
+                {error && (
+                  <div className="mt-2 text-sm text-red-600 flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    {error}
+                  </div>
+                )}
+                
+                {success && (
+                  <div className="mt-2 text-sm text-green-600 flex items-center">
+                    <Check className="h-4 w-4 mr-1" />
+                    {success}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+            <button
+              type="button"
+              onClick={handleUpload}
+              disabled={!file || !!success}
+              className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm ${(!file || !!success) ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              Import
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
                         className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"

@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { Info, Settings, Download, Upload, HelpCircle } from 'lucide-react';
+import { Info, Settings, Download, Upload, HelpCircle, BrainCircuit } from 'lucide-react';
 import { useApp, Metric } from '../context/AppContext';
 import { ImportModal } from '../components/ImportModal';
 import { HelpModal } from '../components/HelpModal';
+import { AIAnalysisModal } from '../components/AIAnalysisModal';
+import { analyzeMetric, AnalysisResult } from '../services/aiService';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useToast } from '../context/ToastContext';
 
@@ -90,6 +92,11 @@ const MetricBowler = () => {
   const [chartSettingsOpen, setChartSettingsOpen] = useState<Record<string, boolean>>({});
   const [chartScales, setChartScales] = useState<Record<string, { min: string; max: string }>>({});
 
+  // AI Analysis State
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
+  const [analyzingMetricName, setAnalyzingMetricName] = useState('');
+
   const displayMonths = useMemo(() => {
     const [startYearStr, startMonthStr] = startDate.split('-');
     const startYear = parseInt(startYearStr, 10);
@@ -120,6 +127,13 @@ const MetricBowler = () => {
   const selectedBowler = bowlers.find(b => b.id === id);
   const title = selectedBowler ? selectedBowler.name : 'Metric Bowler';
   const metrics = selectedBowler?.metrics || [];
+
+  const handleAIAnalysis = (metric: Metric) => {
+    const result = analyzeMetric(metric);
+    setAnalysisResult(result);
+    setAnalyzingMetricName(metric.name);
+    setIsAnalysisModalOpen(true);
+  };
 
   const handleCellUpdate = (
     metricId: string,
@@ -570,13 +584,22 @@ const MetricBowler = () => {
                 <div key={`${metric.id}-chart`} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                   <div className="flex justify-between items-start mb-4">
                     <h4 className="text-sm font-medium text-gray-900">{metric.name}</h4>
-                    <button
-                        onClick={() => setChartSettingsOpen(prev => ({ ...prev, [metric.id]: !prev[metric.id] }))}
-                        className={`p-1 rounded-md transition-colors ${isSettingsOpen ? 'bg-gray-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
-                        title="Adjust Scale"
-                    >
-                        <Settings className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center space-x-1">
+                        <button
+                            onClick={() => handleAIAnalysis(metric)}
+                            className="p-1 rounded-md transition-colors text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                            title="AI Analysis"
+                        >
+                            <BrainCircuit className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={() => setChartSettingsOpen(prev => ({ ...prev, [metric.id]: !prev[metric.id] }))}
+                            className={`p-1 rounded-md transition-colors ${isSettingsOpen ? 'bg-gray-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                            title="Adjust Scale"
+                        >
+                            <Settings className="w-4 h-4" />
+                        </button>
+                    </div>
                   </div>
                   
                   {isSettingsOpen && (
@@ -671,6 +694,13 @@ const MetricBowler = () => {
       <HelpModal
         isOpen={isHelpModalOpen} 
         onClose={() => setIsHelpModalOpen(false)} 
+      />
+
+      <AIAnalysisModal
+        isOpen={isAnalysisModalOpen}
+        onClose={() => setIsAnalysisModalOpen(false)}
+        result={analysisResult}
+        metricName={analyzingMetricName}
       />
     </div>
   );
