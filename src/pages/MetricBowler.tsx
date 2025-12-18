@@ -151,6 +151,49 @@ const MetricBowler = () => {
   ) => {
     if (!selectedBowler) return;
 
+    // Validate input if it's a target field and rule is 'within_range'
+    const metric = metrics.find(m => m.id === metricId);
+    if (metric && field === 'target' && metric.targetMeetingRule === 'within_range') {
+        const match = value.match(/^[{\[]?\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*[}\]]?$/);
+        if (!match) {
+            toast.error("Invalid format: Target must be {min, max} (e.g., {5, 10})");
+            // Force re-render to reset input value by triggering a state update that doesn't change data?
+            // Actually, since the input is uncontrolled (defaultValue), we need to manually reset it or let the user fix it.
+            // But we should NOT update the bowler state.
+            
+            // To reset the input value visually to the previous valid state, we can find the element
+            const inputId = `cell-${metricId}-${monthKey}-target`;
+            const element = document.getElementById(inputId) as HTMLInputElement;
+            if (element) {
+                element.value = metric.monthlyData?.[monthKey]?.target || '';
+            }
+            return;
+        }
+        
+        const min = parseFloat(match[1]);
+        const max = parseFloat(match[2]);
+        
+        if (isNaN(min) || isNaN(max)) {
+             toast.error("Invalid numbers: Target must contain valid numbers");
+             const inputId = `cell-${metricId}-${monthKey}-target`;
+             const element = document.getElementById(inputId) as HTMLInputElement;
+             if (element) {
+                 element.value = metric.monthlyData?.[monthKey]?.target || '';
+             }
+             return;
+        }
+
+        if (min >= max) {
+            toast.error("Invalid range: Min value must be strictly smaller than Max value");
+             const inputId = `cell-${metricId}-${monthKey}-target`;
+             const element = document.getElementById(inputId) as HTMLInputElement;
+             if (element) {
+                 element.value = metric.monthlyData?.[monthKey]?.target || '';
+             }
+            return;
+        }
+    }
+
     const updatedMetrics = metrics.map(m => {
       if (m.id !== metricId) return m;
 
@@ -678,7 +721,30 @@ const MetricBowler = () => {
                           name="Actual"
                           connectNulls
                         />
-                        {metric.targetMeetingRule !== 'within_range' && (
+                        {metric.targetMeetingRule === 'within_range' ? (
+                        <>
+                        <Line 
+                          type="monotone" 
+                          dataKey="minTarget" 
+                          stroke="#ef4444" 
+                          strokeWidth={2} 
+                          strokeDasharray="3 3" 
+                          dot={false}
+                          name="Min Target"
+                          connectNulls 
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="maxTarget" 
+                          stroke="#ef4444" 
+                          strokeWidth={2} 
+                          strokeDasharray="3 3" 
+                          dot={false}
+                          name="Max Target"
+                          connectNulls 
+                        />
+                        </>
+                        ) : (
                         <Line 
                           type="monotone" 
                           dataKey="target" 
@@ -689,30 +755,6 @@ const MetricBowler = () => {
                           name="Target"
                           connectNulls 
                         />
-                        )}
-                        {metric.targetMeetingRule === 'within_range' && (
-                        <>
-                        <Line 
-                          type="monotone" 
-                          dataKey="minTarget" 
-                          stroke="#ef4444" 
-                          strokeWidth={1} 
-                          strokeDasharray="3 3" 
-                          dot={false}
-                          name="Min Target"
-                          connectNulls 
-                        />
-                        <Line 
-                          type="monotone" 
-                          dataKey="maxTarget" 
-                          stroke="#ef4444" 
-                          strokeWidth={1} 
-                          strokeDasharray="3 3" 
-                          dot={false}
-                          name="Max Target"
-                          connectNulls 
-                        />
-                        </>
                         )}
                       </LineChart>
                     </ResponsiveContainer>
