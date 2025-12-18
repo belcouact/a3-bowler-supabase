@@ -40,10 +40,10 @@ const Layout = () => {
       return;
     }
     setIsSaving(true);
-    try {
-      await dataService.saveData(bowlers, a3Cases, user.username);
-      toast.success('Data saved successfully!');
-    } catch (error) {
+      try {
+        await dataService.saveData(bowlers, a3Cases, user.username, dashboardMarkdown);
+        toast.success('Data saved successfully!');
+      } catch (error) {
       console.error('Save error:', error);
       toast.error('Failed to save data. Please check if the backend is running.');
     } finally {

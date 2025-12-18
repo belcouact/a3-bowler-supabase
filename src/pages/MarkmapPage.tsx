@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useApp } from '../context/AppContext';
 import { Transformer } from 'markmap-lib';
 import { Markmap } from 'markmap-view';
 import { Toolbar } from 'markmap-toolbar';
@@ -79,36 +80,26 @@ console.log('hello, JavaScript')
 ![](https://markmap.js.org/favicon.png)`;
 
 const MarkmapPage = () => {
-  const [markdown, setMarkdown] = useState(`# A3 Bowler
-## Metric Bowler
-- Track KPIs
-  - Safety
-  - Quality
-  - Delivery
-  - Cost
-- Monthly Targets
-  - Plan
-  - Actual
-- Gap Analysis
-  - Deviation
-  - Reason
-## A3 Problem Solving
-- Problem Statement
-  - Description
-  - Impact
-- Root Cause Analysis
-  - 5 Whys
-  - Fishbone
-- Action Plan
-  - What
-  - Who
-  - When
-`);
+  const { dashboardMarkdown, updateDashboardMarkdown } = useApp();
+  const [markdown, setMarkdown] = useState(dashboardMarkdown);
   const [svgRef, setSvgRef] = useState<SVGSVGElement | null>(null);
   const [mm, setMm] = useState<Markmap | null>(null);
   const [splitPosition, setSplitPosition] = useState(40); // Percentage
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Sync local state with context when context changes (e.g. initial load)
+  useEffect(() => {
+    if (dashboardMarkdown) {
+      setMarkdown(dashboardMarkdown);
+    }
+  }, [dashboardMarkdown]);
+
+  const handleMarkdownChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newVal = e.target.value;
+    setMarkdown(newVal);
+    updateDashboardMarkdown(newVal);
+  };
 
   // Initialize Markmap
   useEffect(() => {
@@ -177,8 +168,9 @@ const MarkmapPage = () => {
   const handleUseExample = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
       setMarkdown(EXAMPLE_MARKDOWN);
+      updateDashboardMarkdown(EXAMPLE_MARKDOWN);
     } else {
-      setMarkdown(`# A3 Bowler
+      const defaultVal = `# A3 Bowler
 ## Metric Bowler
 - Track KPIs
   - Safety
@@ -202,44 +194,39 @@ const MarkmapPage = () => {
   - What
   - Who
   - When
-`);
+`;
+      setMarkdown(defaultVal);
+      updateDashboardMarkdown(defaultVal);
     }
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col bg-white w-full">
-      <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-        <h2 className="text-lg font-bold text-gray-800 flex items-center">
-            <Split className="w-5 h-5 mr-2" />
-            Strategy to Metric Linkage
-        </h2>
-        <span className="text-xs text-gray-500">
-            Convert markdown text to mindmap for better visualization
-        </span>
+    <div className="h-full flex flex-col bg-gray-50 overflow-hidden" ref={containerRef}>
+      <div className="flex-none p-4 bg-white border-b border-gray-200 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-sm text-gray-500">Visualize your goals and problems</p>
+        </div>
+        <div className="flex items-center space-x-4">
+             <label className="flex items-center space-x-2 text-sm text-gray-600">
+                <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" onChange={handleUseExample} />
+                <span>Show Example</span>
+             </label>
+        </div>
       </div>
-      
-      <div ref={containerRef} className="flex-1 flex overflow-hidden relative">
+
+      <div className="flex-1 flex overflow-hidden relative">
         {/* Editor Pane */}
         <div 
             style={{ width: `${splitPosition}%` }} 
-            className="h-full border-r border-gray-200 flex flex-col shrink-0"
+            className="flex flex-col border-r border-gray-200 bg-white"
         >
-          <textarea
-            className="w-full h-full p-4 resize-none focus:outline-none font-mono text-sm bg-gray-50"
-            value={markdown}
-            onChange={(e) => setMarkdown(e.target.value)}
-            placeholder="Type your markdown here..."
-          />
-          <div className="p-2 border-t border-gray-200 bg-gray-50 flex items-center">
-             <input
-               type="checkbox"
-               id="useExample"
-               className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-               onChange={handleUseExample}
-               checked={markdown === EXAMPLE_MARKDOWN}
-             />
-             <label htmlFor="useExample" className="text-sm text-gray-700">Use example</label>
-          </div>
+            <textarea
+                className="flex-1 w-full p-4 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                value={markdown}
+                onChange={handleMarkdownChange}
+                placeholder="Type your markdown here..."
+            />
         </div>
 
         {/* Resizer Handle */}

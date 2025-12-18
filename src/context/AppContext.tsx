@@ -98,16 +98,46 @@ interface AppContextType {
   deleteBowler: (id: string) => void;
   deleteA3Case: (id: string) => void;
   isLoading: boolean;
+  dashboardMarkdown: string;
+  updateDashboardMarkdown: (markdown: string) => void;
 }
 
 // Context
 const AppContext = createContext<AppContextType | undefined>(undefined);
+
+// Default Markdown
+const DEFAULT_MARKDOWN = `# A3 Bowler
+## Metric Bowler
+- Track KPIs
+  - Safety
+  - Quality
+  - Delivery
+  - Cost
+- Monthly Targets
+  - Plan
+  - Actual
+- Gap Analysis
+  - Deviation
+  - Reason
+## A3 Problem Solving
+- Problem Statement
+  - Description
+  - Impact
+- Root Cause Analysis
+  - 5 Whys
+  - Fishbone
+- Action Plan
+  - What
+  - Who
+  - When
+`;
 
 // Provider
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [bowlers, setBowlers] = useState<Bowler[]>([]);
   const [a3Cases, setA3Cases] = useState<A3Case[]>([]);
+  const [dashboardMarkdown, setDashboardMarkdown] = useState<string>(DEFAULT_MARKDOWN);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -121,6 +151,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           const parsed = JSON.parse(localData);
           setBowlers(parsed.bowlers || []);
           setA3Cases(parsed.a3Cases || []);
+          setDashboardMarkdown(parsed.dashboardMarkdown || DEFAULT_MARKDOWN);
         } catch (e) {
           console.error("Failed to parse local data", e);
         }
@@ -132,8 +163,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           if (data.success) {
             setBowlers(data.bowlers || []);
             setA3Cases(data.a3Cases || []);
+            if (data.dashboardMarkdown) {
+                setDashboardMarkdown(data.dashboardMarkdown);
+            }
             // Update local storage to match backend
-            localStorage.setItem(localDataKey, JSON.stringify({ bowlers: data.bowlers || [], a3Cases: data.a3Cases || [] }));
+            localStorage.setItem(localDataKey, JSON.stringify({ 
+                bowlers: data.bowlers || [], 
+                a3Cases: data.a3Cases || [],
+                dashboardMarkdown: data.dashboardMarkdown || DEFAULT_MARKDOWN
+            }));
           }
         })
         .catch(err => {
@@ -145,21 +183,30 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     } else {
         setBowlers([]);
         setA3Cases([]);
+        setDashboardMarkdown(DEFAULT_MARKDOWN);
     }
   }, [user]);
 
-  const persistData = (newBowlers: Bowler[], newA3Cases: A3Case[]) => {
+  const persistData = (newBowlers: Bowler[], newA3Cases: A3Case[], newMarkdown: string) => {
     if (user) {
       // 1. Save to Local Storage immediately
       const localDataKey = `user_data_${user.username}`;
       try {
-        localStorage.setItem(localDataKey, JSON.stringify({ bowlers: newBowlers, a3Cases: newA3Cases }));
+        localStorage.setItem(localDataKey, JSON.stringify({ 
+            bowlers: newBowlers, 
+            a3Cases: newA3Cases,
+            dashboardMarkdown: newMarkdown
+        }));
       } catch (e) {
         console.error("Local Storage save failed", e);
       }
-
       // Auto-save to backend has been disabled as per request
     }
+  };
+
+  const updateDashboardMarkdown = (markdown: string) => {
+      setDashboardMarkdown(markdown);
+      persistData(bowlers, a3Cases, markdown);
   };
 
   const addBowler = (data: Omit<Bowler, 'id'>) => {
@@ -169,7 +216,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     };
     setBowlers(prev => {
       const newBowlers = [...prev, newBowler];
-      persistData(newBowlers, a3Cases);
+      persistData(newBowlers, a3Cases, dashboardMarkdown);
       return newBowlers;
     });
   };
@@ -177,7 +224,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const updateBowler = (updatedBowler: Bowler) => {
     setBowlers(prev => {
       const newBowlers = prev.map(b => b.id === updatedBowler.id ? updatedBowler : b);
-      persistData(newBowlers, a3Cases);
+      persistData(newBowlers, a3Cases, dashboardMarkdown);
       return newBowlers;
     });
   };
@@ -189,7 +236,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     };
     setA3Cases(prev => {
       const newA3Cases = [...prev, newCase];
-      persistData(bowlers, newA3Cases);
+      persistData(bowlers, newA3Cases, dashboardMarkdown);
       return newA3Cases;
     });
   };
@@ -197,7 +244,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const updateA3Case = (updatedCase: A3Case) => {
     setA3Cases(prev => {
       const newA3Cases = prev.map(c => c.id === updatedCase.id ? updatedCase : c);
-      persistData(bowlers, newA3Cases);
+      persistData(bowlers, newA3Cases, dashboardMarkdown);
       return newA3Cases;
     });
   };
@@ -205,7 +252,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const deleteBowler = (id: string) => {
     setBowlers(prev => {
       const newBowlers = prev.filter((b) => b.id !== id);
-      persistData(newBowlers, a3Cases);
+      persistData(newBowlers, a3Cases, dashboardMarkdown);
       return newBowlers;
     });
   };
@@ -213,7 +260,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const deleteA3Case = (id: string) => {
     setA3Cases(prev => {
       const newA3Cases = prev.filter((c) => c.id !== id);
-      persistData(bowlers, newA3Cases);
+      persistData(bowlers, newA3Cases, dashboardMarkdown);
       return newA3Cases;
     });
   };
@@ -229,7 +276,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         updateA3Case,
         deleteBowler,
         deleteA3Case,
-        isLoading
+        isLoading,
+        dashboardMarkdown,
+        updateDashboardMarkdown
       }}
     >
       {children}

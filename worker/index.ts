@@ -19,14 +19,19 @@ export default {
 
     if (request.method === 'POST' && url.pathname === '/save') {
       try {
-        const data = await request.json() as { bowlers: any[], a3Cases: any[], userId: string };
-        const { bowlers, a3Cases, userId } = data;
+        const data = await request.json() as { bowlers: any[], a3Cases: any[], userId: string, dashboardMarkdown?: string };
+        const { bowlers, a3Cases, userId, dashboardMarkdown } = data;
 
         if (!userId) {
            return new Response(JSON.stringify({ success: false, error: 'User ID is required' }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
+        }
+
+        // Save Dashboard Markdown
+        if (dashboardMarkdown !== undefined) {
+          await env.BOWLER_DATA.put(`user:${userId}:dashboard`, JSON.stringify({ content: dashboardMarkdown }));
         }
 
         // Save bowlers
