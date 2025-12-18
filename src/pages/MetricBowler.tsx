@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { Info, Settings, HelpCircle, Sparkles, Loader2 } from 'lucide-react';
-import { useApp, Metric, Bowler } from '../context/AppContext';
+import { useApp, Metric } from '../context/AppContext';
 import { HelpModal } from '../components/HelpModal';
 import { AIAnalysisModal } from '../components/AIAnalysisModal';
 import { analyzeMetric, AnalysisResult } from '../services/aiService';
@@ -76,7 +76,7 @@ const CustomizedDot = (props: any) => {
 
 const MetricBowler = () => {
   const { id } = useParams();
-  const { bowlers, updateBowler, addBowler } = useApp();
+  const { bowlers, updateBowler } = useApp();
   const toast = useToast();
   
   const [startDate, setStartDate] = useState(() => {
