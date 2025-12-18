@@ -3,7 +3,6 @@ import { useApp } from '../context/AppContext';
 import { Transformer } from 'markmap-lib';
 import { Markmap } from 'markmap-view';
 import { Toolbar } from 'markmap-toolbar';
-import { Split } from 'lucide-react';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/default.css';
 
