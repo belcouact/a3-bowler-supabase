@@ -15,7 +15,7 @@ import { useToast } from '../context/ToastContext';
 const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { bowlers, a3Cases, addBowler, updateBowler, addA3Case, updateA3Case, deleteBowler, deleteA3Case } = useApp();
+  const { bowlers, a3Cases, addBowler, updateBowler, addA3Case, updateA3Case, deleteBowler, deleteA3Case, isLoading: isDataLoading } = useApp();
   const { user, logout, isLoading } = useAuth();
   const toast = useToast();
   

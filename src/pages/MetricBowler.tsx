@@ -506,6 +506,9 @@ const MetricBowler = () => {
                 fullLabel: month.label,
                 target: parseFloat(metric.monthlyData?.[month.key]?.target || '0') || null,
                 actual: parseFloat(metric.monthlyData?.[month.key]?.actual || '0') || null,
+                rule: metric.targetMeetingRule,
+                rawTarget: metric.monthlyData?.[month.key]?.target,
+                rawActual: metric.monthlyData?.[month.key]?.actual
               }));
 
               const scale = chartScales[metric.id] || { min: '', max: '' };

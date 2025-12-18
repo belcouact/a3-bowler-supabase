@@ -108,9 +108,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [bowlers, setBowlers] = useState<Bowler[]>([]);
   const [a3Cases, setA3Cases] = useState<A3Case[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
+      setIsLoading(true);
       // 1. Try Local Storage first to be instant
       const localDataKey = `user_data_${user.username}`;
       const localData = localStorage.getItem(localDataKey);
@@ -136,6 +138,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         })
         .catch(err => {
           console.error("Failed to load user data:", err);
+        })
+        .finally(() => {
+          setIsLoading(false);
         });
     } else {
         setBowlers([]);
