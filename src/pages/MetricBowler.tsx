@@ -676,6 +676,7 @@ const MetricBowler = () => {
                           dot={<CustomizedDot />} 
                           activeDot={{ r: 5 }} 
                           name="Actual"
+                          connectNulls
                         />
                         <Line 
                           type="monotone" 
@@ -684,7 +685,28 @@ const MetricBowler = () => {
                           strokeWidth={2} 
                           strokeDasharray="5 5" 
                           dot={false}
-                          name="Target" 
+                          name="Target"
+                          connectNulls 
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="minTarget" 
+                          stroke="#ef4444" 
+                          strokeWidth={1} 
+                          strokeDasharray="3 3" 
+                          dot={false}
+                          name="Min Target"
+                          connectNulls 
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="maxTarget" 
+                          stroke="#ef4444" 
+                          strokeWidth={1} 
+                          strokeDasharray="3 3" 
+                          dot={false}
+                          name="Max Target"
+                          connectNulls 
                         />
                       </LineChart>
                     </ResponsiveContainer>

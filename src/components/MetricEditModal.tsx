@@ -33,6 +33,8 @@ const MetricEditModal = ({ isOpen, onClose, metric, onSave, startDate }: MetricE
     return months;
   }, [startDate]);
 
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     if (isOpen && metric) {
       const initialData: Record<string, MetricData> = {};
@@ -40,6 +42,7 @@ const MetricEditModal = ({ isOpen, onClose, metric, onSave, startDate }: MetricE
         initialData[month.key] = metric.monthlyData?.[month.key] || { target: '', actual: '' };
       });
       setMonthlyData(initialData);
+      setError(null);
     }
   }, [isOpen, metric, displayMonths]);
 
@@ -53,12 +56,45 @@ const MetricEditModal = ({ isOpen, onClose, metric, onSave, startDate }: MetricE
         [field]: value
       }
     }));
+    setError(null);
+  };
+
+  const validateInput = (): boolean => {
+    if (metric.targetMeetingRule !== 'within_range') return true;
+
+    for (const month of displayMonths) {
+        const target = monthlyData[month.key]?.target;
+        if (target) {
+            // Check format {min,max}
+            const match = target.match(/^\{(-?[\d.]+)\s*,\s*(-?[\d.]+)\}$/);
+            if (!match) {
+                setError(`Invalid format for ${month.label}: Target must be {min, max} (e.g., {5, 10})`);
+                return false;
+            }
+            
+            const min = parseFloat(match[1]);
+            const max = parseFloat(match[2]);
+            
+            if (isNaN(min) || isNaN(max)) {
+                 setError(`Invalid numbers for ${month.label}: Target must contain valid numbers`);
+                 return false;
+            }
+
+            if (min >= max) {
+                setError(`Invalid range for ${month.label}: Min value must be strictly smaller than Max value`);
+                return false;
+            }
+        }
+    }
+    return true;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(metric.id, monthlyData);
-    onClose();
+    if (validateInput()) {
+        onSave(metric.id, monthlyData);
+        onClose();
+    }
   };
 
   return (
@@ -79,6 +115,9 @@ const MetricEditModal = ({ isOpen, onClose, metric, onSave, startDate }: MetricE
                     Edit Data: {metric.name}
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">Enter Target and Actual values for each month.</p>
+                    {error && (
+                        <p className="text-sm text-red-600 mt-2 font-medium">{error}</p>
+                    )}
                 </div>
                 <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-500">
                   <X className="w-5 h-5" />
