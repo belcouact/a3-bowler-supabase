@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, MousePointer, Keyboard, FileSpreadsheet, MessageSquare, TrendingUp, Target } from 'lucide-react';
+import { X, MousePointer, Keyboard, FileSpreadsheet, MessageSquare, TrendingUp, Target, Edit, Sparkles } from 'lucide-react';
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -43,6 +43,18 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     <h4 className="text-sm font-medium text-gray-900">Editing Data</h4>
                     <p className="text-sm text-gray-500">
                       Click on any Target or Actual cell to edit its value. Changes are saved automatically.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <Edit className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div className="ml-3">
+                    <h4 className="text-sm font-medium text-gray-900">Bowler Info</h4>
+                    <p className="text-sm text-gray-500">
+                      Double-click on the Bowler Name or Description in the header to edit the Bowler information.
                     </p>
                   </div>
                 </div>
@@ -103,6 +115,18 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     <h4 className="text-sm font-medium text-gray-900">Charts & Scales</h4>
                     <p className="text-sm text-gray-500">
                       Scroll down to view trend charts. Click the Settings icon on a chart to adjust its Y-axis scale.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <Sparkles className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div className="ml-3">
+                    <h4 className="text-sm font-medium text-gray-900">AI Analysis</h4>
+                    <p className="text-sm text-gray-500">
+                      Click the Sparkles icon on any chart to get an AI-powered analysis of the metric's performance trend.
                     </p>
                   </div>
                 </div>

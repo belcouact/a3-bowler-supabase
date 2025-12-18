@@ -95,6 +95,11 @@ const MetricBowler = () => {
   const [chartSettingsOpen, setChartSettingsOpen] = useState<Record<string, boolean>>({});
   const [chartScales, setChartScales] = useState<Record<string, { min: string; max: string }>>({});
 
+  // Bowler Edit State
+  const [isEditingBowler, setIsEditingBowler] = useState(false);
+  const [editBowlerName, setEditBowlerName] = useState('');
+  const [editBowlerDesc, setEditBowlerDesc] = useState('');
+
   // AI Analysis State
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
@@ -131,6 +136,17 @@ const MetricBowler = () => {
   const selectedBowler = bowlers.find(b => b.id === id);
   const title = selectedBowler ? selectedBowler.name : 'Metric Bowler';
   const metrics = selectedBowler?.metrics || [];
+
+  const handleBowlerSave = () => {
+    if (selectedBowler) {
+        updateBowler({
+            ...selectedBowler,
+            name: editBowlerName,
+            description: editBowlerDesc
+        });
+    }
+    setIsEditingBowler(false);
+  };
 
   const handleAIAnalysis = async (metric: Metric) => {
     setAnalyzingMetrics(prev => ({ ...prev, [metric.id]: true }));
@@ -426,11 +442,50 @@ const MetricBowler = () => {
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       <div className="px-6 py-5 border-b border-gray-200 bg-white flex justify-between items-center">
-        <div>
-           <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
-           <p className="text-sm text-gray-500 mt-1">
-             {selectedBowler?.description || 'Track key performance indicators and monthly targets.'}
-           </p>
+        <div 
+            onDoubleClick={() => {
+                if (selectedBowler) {
+                    setEditBowlerName(selectedBowler.name);
+                    setEditBowlerDesc(selectedBowler.description || '');
+                    setIsEditingBowler(true);
+                }
+            }}
+            className="flex-1 mr-4"
+        >
+           {isEditingBowler ? (
+               <div 
+                 className="flex flex-col space-y-2 max-w-md"
+                 onBlur={(e) => {
+                     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                         handleBowlerSave();
+                     }
+                 }}
+               >
+                   <input 
+                       type="text" 
+                       value={editBowlerName}
+                       onChange={(e) => setEditBowlerName(e.target.value)}
+                       onKeyDown={(e) => e.key === 'Enter' && handleBowlerSave()}
+                       className="text-xl font-semibold text-gray-900 border-b border-gray-300 focus:border-blue-500 outline-none"
+                       autoFocus
+                   />
+                   <input 
+                       type="text" 
+                       value={editBowlerDesc}
+                       onChange={(e) => setEditBowlerDesc(e.target.value)}
+                       onKeyDown={(e) => e.key === 'Enter' && handleBowlerSave()}
+                       className="text-sm text-gray-500 border-b border-gray-300 focus:border-blue-500 outline-none w-full"
+                       placeholder="Description"
+                   />
+               </div>
+           ) : (
+               <>
+                   <h3 className="text-xl font-semibold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors" title="Double-click to edit">{title}</h3>
+                   <p className="text-sm text-gray-500 mt-1 cursor-pointer hover:text-gray-700" title="Double-click to edit">
+                     {selectedBowler?.description || 'Track key performance indicators and monthly targets.'}
+                   </p>
+               </>
+           )}
         </div>
         <div className="text-right flex flex-col items-end">
              {selectedBowler?.champion && <p className="text-sm text-gray-600 mb-2">Champion: {selectedBowler.champion}</p>}
