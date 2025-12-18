@@ -59,31 +59,51 @@ export const authService = {
   },
 
   async changePassword(data: any) {
-    const response = await fetch(`${API_BASE_URL}/api/change-password`, {
+    let response = await fetch(`${API_BASE_URL}/api/change-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      throw new Error('Change password failed');
+    if (response.status === 404) {
+      response = await fetch(`${API_BASE_URL}/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
     }
-    return response.json();
+    const json = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(json.error || json.message || 'Change password failed');
+    }
+    return json;
   },
 
   async updateProfile(data: any) {
-    const response = await fetch(`${API_BASE_URL}/api/update-profile`, {
+    let response = await fetch(`${API_BASE_URL}/api/update-profile`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      throw new Error('Update profile failed');
+    if (response.status === 404) {
+      response = await fetch(`${API_BASE_URL}/update-profile`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
     }
-    return response.json();
+    const json = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(json.error || json.message || 'Update profile failed');
+    }
+    return json;
   },
 
   async getUser(username: string) {
