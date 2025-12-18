@@ -150,7 +150,11 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
                             ? 'bg-blue-600 text-white rounded-br-none' 
                             : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'
                         }`}>
-                            {msg.content}
+                            {msg.role === 'user' ? (
+                                <div className="whitespace-pre-wrap">{msg.content}</div>
+                            ) : (
+                                renderMessageContent(msg.content)
+                            )}
                         </div>
                     </div>
                  ))}
