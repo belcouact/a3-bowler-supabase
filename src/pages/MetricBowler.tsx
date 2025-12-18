@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { Info, Settings, HelpCircle, Sparkles, Loader2 } from 'lucide-react';
-import { useApp, Metric } from '../context/AppContext';
+import { Info, Settings, Download, Upload, HelpCircle, Sparkles, Loader2 } from 'lucide-react';
+import { useApp, Metric, Bowler } from '../context/AppContext';
+import { ImportModal } from '../components/ImportModal';
 import { HelpModal } from '../components/HelpModal';
 import { AIAnalysisModal } from '../components/AIAnalysisModal';
 import { analyzeMetric, AnalysisResult } from '../services/aiService';
@@ -76,7 +77,7 @@ const CustomizedDot = (props: any) => {
 
 const MetricBowler = () => {
   const { id } = useParams();
-  const { bowlers, updateBowler } = useApp();
+  const { bowlers, updateBowler, addBowler } = useApp();
   const toast = useToast();
   
   const [startDate, setStartDate] = useState(() => {
@@ -89,6 +90,7 @@ const MetricBowler = () => {
     return `${today.getFullYear() + 1}-04`;
   });
 
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [chartSettingsOpen, setChartSettingsOpen] = useState<Record<string, boolean>>({});
   const [chartScales, setChartScales] = useState<Record<string, { min: string; max: string }>>({});
@@ -287,6 +289,63 @@ const MetricBowler = () => {
     }
   };
 
+  const handleImport = (importedData: Record<string, { bowler: Partial<Bowler>, metrics: Metric[] }>) => {
+    let createdCount = 0;
+    let updatedCount = 0;
+
+    Object.entries(importedData).forEach(([bowlerName, { bowler, metrics }]) => {
+      const existingBowler = bowlers.find(b => b.name === bowlerName);
+
+      if (existingBowler) {
+        // Merge with existing metrics
+        const mergedMetrics = [...(existingBowler.metrics || [])];
+        
+        metrics.forEach(impMetric => {
+          const existingMetricIndex = mergedMetrics.findIndex(m => m.name === impMetric.name);
+          
+          if (existingMetricIndex >= 0) {
+            // Update existing metric
+            const existingMetric = mergedMetrics[existingMetricIndex];
+            mergedMetrics[existingMetricIndex] = {
+              ...existingMetric,
+              ...impMetric,
+              id: existingMetric.id, // Preserve ID
+              monthlyData: {
+                ...existingMetric.monthlyData,
+                ...impMetric.monthlyData
+              }
+            };
+          } else {
+            // Add new metric
+            mergedMetrics.push(impMetric);
+          }
+        });
+
+        updateBowler({
+          ...existingBowler,
+          ...bowler,
+          metrics: mergedMetrics
+        });
+        updatedCount++;
+      } else {
+        // Create new bowler
+        addBowler({
+          name: bowlerName,
+          ...bowler,
+          metrics: metrics,
+          description: bowler.description || 'Imported from CSV'
+        });
+        createdCount++;
+      }
+    });
+
+    if (createdCount > 0 || updatedCount > 0) {
+        // If we are currently viewing a bowler, and that bowler was updated, the UI will auto-update via context.
+        // If we created a new bowler and we weren't viewing any, or we want to switch to it? 
+        // For now, just stay where we are.
+    }
+  };
+
   const handleKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
     field: 'target' | 'actual',
@@ -332,6 +391,48 @@ const MetricBowler = () => {
     } else if (e.key === 'Enter') {
       (e.target as HTMLInputElement).blur();
     }
+  };
+
+  const handleDownloadCSV = () => {
+    if (!selectedBowler || metrics.length === 0) {
+      toast.info("No data to download.");
+      return;
+    }
+
+    // 1. Create Header Row
+    // Header: Bowler Name, Metric Name, Scope, Type, 2024/Jan, 2024/Feb...
+    const monthHeaders = displayMonths.map(m => `"${m.label}"`).join(',');
+    const header = `"Bowler Name","Metric Name","Scope","Type",${monthHeaders}\n`;
+
+    // 2. Create Data Rows
+    const rows = metrics.flatMap(metric => {
+      const basicInfo = `"${selectedBowler.name}","${metric.name}","${metric.scope || ''}"`;
+      
+      const targetRowData = displayMonths.map(m => {
+        return `"${metric.monthlyData?.[m.key]?.target || ''}"`;
+      }).join(',');
+
+      const actualRowData = displayMonths.map(m => {
+        return `"${metric.monthlyData?.[m.key]?.actual || ''}"`;
+      }).join(',');
+
+      return [
+        `${basicInfo},"Target",${targetRowData}`,
+        `${basicInfo},"Actual",${actualRowData}`
+      ];
+    }).join('\n');
+
+    // 3. Combine and Download
+    const csvContent = "\uFEFF" + header + rows;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${selectedBowler.name}_metrics_${startDate || 'all'}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   if (!id && bowlers.length > 0) {
@@ -398,6 +499,20 @@ const MetricBowler = () => {
               >
                 <HelpCircle className="h-4 w-4" />
               </button>
+              <button
+                onClick={() => setIsImportModalOpen(true)}
+                className="inline-flex items-center p-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                title="Import CSV"
+              >
+                <Upload className="h-4 w-4" />
+              </button>
+              <button
+                onClick={handleDownloadCSV}
+                 className="inline-flex items-center p-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                 title="Download CSV"
+               >
+                 <Download className="h-4 w-4" />
+               </button>
                <input 
                  type="month" 
                  id="startDate"
@@ -742,6 +857,12 @@ const MetricBowler = () => {
         </div>
       )}
 
+      <ImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImport={handleImport}
+      />
+      
       <HelpModal
         isOpen={isHelpModalOpen} 
         onClose={() => setIsHelpModalOpen(false)} 

@@ -13,7 +13,7 @@ const API_BASE_URL = 'https://login.study-llm.me';
 
 export const authService = {
   async signup(data: any) {
-    const response = await fetch(`${API_BASE_URL}/api/signup`, {
+    const response = await fetch(`${API_BASE_URL}/signup`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -27,7 +27,7 @@ export const authService = {
   },
 
   async login(data: any) {
-    const response = await fetch(`${API_BASE_URL}/api/login`, {
+    const response = await fetch(`${API_BASE_URL}/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -45,9 +45,7 @@ export const authService = {
   async logout() {
     // Assuming logout might need a token or session handling, but based on description it's just a POST
     // If the API relies on cookies, we need credentials: 'include'
-    // Note: The worker does not currently have a /api/logout endpoint, so this might 404.
-    // We keep it for consistency if the backend adds it later.
-    const response = await fetch(`${API_BASE_URL}/api/logout`, {
+    const response = await fetch(`${API_BASE_URL}/logout`, {
       method: 'POST',
     });
     if (!response.ok) {
@@ -59,55 +57,35 @@ export const authService = {
   },
 
   async changePassword(data: any) {
-    let response = await fetch(`${API_BASE_URL}/api/change-password`, {
+    const response = await fetch(`${API_BASE_URL}/change-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
-    if (response.status === 404) {
-      response = await fetch(`${API_BASE_URL}/change-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-    }
-    const json = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(json.error || json.message || 'Change password failed');
+      throw new Error('Change password failed');
     }
-    return json;
+    return response.json();
   },
 
   async updateProfile(data: any) {
-    let response = await fetch(`${API_BASE_URL}/api/update-profile`, {
+    const response = await fetch(`${API_BASE_URL}/update-profile`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
-    if (response.status === 404) {
-      response = await fetch(`${API_BASE_URL}/update-profile`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-    }
-    const json = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(json.error || json.message || 'Update profile failed');
+      throw new Error('Update profile failed');
     }
-    return json;
+    return response.json();
   },
 
   async getUser(username: string) {
-    const response = await fetch(`${API_BASE_URL}/api/user/${username}`);
+    const response = await fetch(`${API_BASE_URL}/user/${username}`);
     if (!response.ok) {
       throw new Error('Failed to fetch user profile');
     }

@@ -26,9 +26,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (data: any) => {
     setIsLoading(true);
     try {
-      await authService.login(data);
-      // Login response only returns success status, so we need to fetch user profile
-      const userProfile = await authService.getUser(data.username);
+      const response = await authService.login(data);
+      // Assuming response contains user profile or we fetch it separately
+      // Based on prompt: "Validates credentials and returns user profile."
+      const userProfile = response.user || response; 
       setUser(userProfile);
       localStorage.setItem('user', JSON.stringify(userProfile));
     } catch (error) {

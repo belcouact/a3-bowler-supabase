@@ -1,7 +1,7 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, Link as LinkIcon, FileText, ExternalLink, Upload, Download } from 'lucide-react';
+import { Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, Link as LinkIcon, FileText, ExternalLink } from 'lucide-react';
 import clsx from 'clsx';
-import { useApp, A3Case, Bowler, Metric } from '../context/AppContext';
+import { useApp, A3Case, Bowler } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
 import A3CaseModal from './A3CaseModal';
@@ -12,9 +12,6 @@ import { AIChatModal } from './AIChatModal';
 import { AppInfoModal } from './AppInfoModal';
 import { dataService } from '../services/dataService';
 import { useToast } from '../context/ToastContext';
-import { ImportModal } from './ImportModal';
-
-const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const Layout = () => {
   const location = useLocation();
@@ -38,7 +35,6 @@ const Layout = () => {
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [isAppInfoOpen, setIsAppInfoOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const handleSaveData = async () => {
     if (!user) {
@@ -55,133 +51,6 @@ const Layout = () => {
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const handleImport = (importedData: Record<string, { bowler: Partial<Bowler>, metrics: Metric[] }>) => {
-    let createdCount = 0;
-    let updatedCount = 0;
-
-    Object.entries(importedData).forEach(([bowlerName, { bowler, metrics }]) => {
-      const existingBowler = bowlers.find(b => b.name === bowlerName);
-
-      if (existingBowler) {
-        const mergedMetrics = [...(existingBowler.metrics || [])];
-        
-        metrics.forEach(impMetric => {
-          const existingMetricIndex = mergedMetrics.findIndex(m => m.name === impMetric.name);
-          
-          if (existingMetricIndex >= 0) {
-            const existingMetric = mergedMetrics[existingMetricIndex];
-            mergedMetrics[existingMetricIndex] = {
-              ...existingMetric,
-              ...impMetric,
-              id: existingMetric.id,
-              monthlyData: {
-                ...existingMetric.monthlyData,
-                ...impMetric.monthlyData
-              }
-            };
-          } else {
-            mergedMetrics.push(impMetric);
-          }
-        });
-
-        updateBowler({
-          ...existingBowler,
-          ...bowler,
-          metrics: mergedMetrics
-        });
-        updatedCount++;
-      } else {
-        addBowler({
-          name: bowlerName,
-          ...bowler,
-          metrics: metrics,
-          description: bowler.description || 'Imported from CSV'
-        });
-        createdCount++;
-      }
-    });
-
-    if (createdCount > 0 || updatedCount > 0) {
-      toast.success(`Imported data for ${createdCount} new bowler(s) and updated ${updatedCount} existing.`);
-    }
-  };
-
-  const handleDownloadAllBowlersCSV = () => {
-    if (!isMetricBowler) return;
-
-    if (!bowlers || bowlers.length === 0) {
-      toast.info('No data to download.');
-      return;
-    }
-
-    const bowlerMetricPairs: { bowler: Bowler; metric: Metric }[] = [];
-    bowlers.forEach(b => {
-      (b.metrics || []).forEach(m => {
-        bowlerMetricPairs.push({ bowler: b, metric: m });
-      });
-    });
-
-    if (bowlerMetricPairs.length === 0) {
-      toast.info('No metrics to download.');
-      return;
-    }
-
-    const monthKeySet = new Set<string>();
-    bowlerMetricPairs.forEach(({ metric }) => {
-      const monthlyData = metric.monthlyData || {};
-      Object.keys(monthlyData).forEach(key => {
-        if (key && /^\d{4}-\d{2}$/.test(key)) {
-          monthKeySet.add(key);
-        }
-      });
-    });
-
-    const monthKeys = Array.from(monthKeySet).sort((a, b) => {
-      const [ay, am] = a.split('-').map(Number);
-      const [by, bm] = b.split('-').map(Number);
-      if (ay === by) return am - bm;
-      return ay - by;
-    });
-
-    const monthHeaders = monthKeys.map(key => {
-      const [yearStr, monthStr] = key.split('-');
-      const monthIndex = parseInt(monthStr, 10) - 1;
-      const monthName = allMonths[monthIndex] || monthStr;
-      return `"${yearStr}/${monthName}"`;
-    }).join(',');
-
-    const header = `"Bowler Name","Metric Name","Scope","Type"${monthKeys.length > 0 ? `,${monthHeaders}` : ''}\n`;
-
-    const rows = bowlerMetricPairs.map(({ bowler, metric }) => {
-      const basicInfo = `"${bowler.name}","${metric.name}","${metric.scope || ''}"`;
-      const monthlyData = metric.monthlyData || {};
-
-      const targetRowData = monthKeys.map(key => {
-        return `"${monthlyData[key]?.target || ''}"`;
-      }).join(',');
-
-      const actualRowData = monthKeys.map(key => {
-        return `"${monthlyData[key]?.actual || ''}"`;
-      }).join(',');
-
-      return [
-        `${basicInfo},"Target"${monthKeys.length > 0 ? `,${targetRowData}` : ''}`,
-        `${basicInfo},"Actual"${monthKeys.length > 0 ? `,${actualRowData}` : ''}`
-      ].join('\n');
-    }).join('\n');
-
-    const csvContent = "\uFEFF" + header + rows;
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'all_bowlers_metrics.csv';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   };
 
   const handlePlusClick = () => {
@@ -312,24 +181,6 @@ const Layout = () => {
         </div>
         
         <div className="flex items-center space-x-4">
-          {isMetricBowler && (
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setIsImportModalOpen(true)}
-                className="h-9 w-9 flex items-center justify-center rounded-lg bg-emerald-500 text-white shadow-sm hover:bg-emerald-600"
-                title="Import CSV"
-              >
-                <Upload className="w-4 h-4" />
-              </button>
-              <button
-                onClick={handleDownloadAllBowlersCSV}
-                className="h-9 w-9 flex items-center justify-center rounded-lg bg-blue-500 text-white shadow-sm hover:bg-blue-600"
-                title="Download All Bowlers CSV"
-              >
-                <Download className="w-4 h-4" />
-              </button>
-            </div>
-          )}
           <button
             onClick={() => setIsAIChatOpen(true)}
             className="flex items-center px-3 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors"
@@ -540,12 +391,6 @@ const Layout = () => {
       <AppInfoModal
         isOpen={isAppInfoOpen}
         onClose={() => setIsAppInfoOpen(false)}
-      />
-
-      <ImportModal
-        isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
-        onImport={handleImport}
       />
     </div>
   );
