@@ -271,14 +271,7 @@ const Layout = () => {
           </div>
           
           <nav className="flex space-x-1">
-             <button
-              onClick={handleExit}
-              className="flex items-center px-3 md:px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 text-gray-600 hover:bg-gray-100 hover:text-red-600"
-              title="Exit to Main App"
-            >
-              <ExternalLink className="w-5 h-5 md:w-4 md:h-4 md:mr-2 text-gray-400" />
-              <span className="hidden md:inline">Exit</span>
-            </button>
+
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname.startsWith(item.path);
@@ -303,6 +296,13 @@ const Layout = () => {
         </div>
         
         <div className="flex items-center space-x-4">
+          <button
+            onClick={handleExit}
+            className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-red-600 transition-colors"
+            title="Exit to Main App"
+          >
+            <ExternalLink className="w-4 h-4" />
+          </button>
           {isMetricBowler && (
             <>
               <button
