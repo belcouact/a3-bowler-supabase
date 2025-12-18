@@ -5,6 +5,7 @@ import { Markmap } from 'markmap-view';
 import { Toolbar } from 'markmap-toolbar';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/default.css';
+import clsx from 'clsx';
 
 // Register highlight.js globally so markmap might pick it up if it checks window
 if (typeof window !== 'undefined') {
@@ -84,6 +85,7 @@ const MarkmapPage = () => {
   const [svgRef, setSvgRef] = useState<SVGSVGElement | null>(null);
   const [mm, setMm] = useState<Markmap | null>(null);
   const [splitPosition, setSplitPosition] = useState(40); // Percentage
+  const [activeTab, setActiveTab] = useState<'Mind Map' | 'Text Input'>('Mind Map');
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -200,46 +202,100 @@ const MarkmapPage = () => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-gray-50 overflow-hidden" ref={containerRef}>
-      <div className="flex-none p-4 bg-white border-b border-gray-200 flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500">Visualize your goals and problems</p>
-        </div>
-        <div className="flex items-center space-x-4">
-             <label className="flex items-center space-x-2 text-sm text-gray-600">
-                <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" onChange={handleUseExample} />
-                <span>Show Example</span>
-             </label>
-        </div>
+    <div className="flex flex-col h-full bg-white">
+      {/* Tab Bar */}
+      <div className="flex border-b border-gray-200 bg-white">
+        <button
+          className={clsx(
+            "px-6 py-3 font-medium text-sm transition-colors relative", 
+            activeTab === 'Mind Map' 
+              ? "text-blue-600" 
+              : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+          )}
+          onClick={() => setActiveTab('Mind Map')}
+        >
+          Mind Map
+          {activeTab === 'Mind Map' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
+          )}
+        </button>
+        <button
+          className={clsx(
+            "px-6 py-3 font-medium text-sm transition-colors relative", 
+            activeTab === 'Text Input' 
+              ? "text-blue-600" 
+              : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+          )}
+          onClick={() => setActiveTab('Text Input')}
+        >
+          Text Input
+          {activeTab === 'Text Input' && (
+             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
+          )}
+        </button>
       </div>
 
-      <div className="flex-1 flex overflow-hidden relative">
-        {/* Editor Pane */}
+      <div className="flex-1 relative overflow-hidden">
+        {/* Mind Map View (Split) */}
         <div 
-            style={{ width: `${splitPosition}%` }} 
-            className="flex flex-col border-r border-gray-200 bg-white"
+          className={clsx("h-full w-full", activeTab === 'Mind Map' ? "flex" : "hidden")} 
+          ref={containerRef}
         >
+          <div 
+            style={{ width: `${splitPosition}%` }} 
+            className="h-full border-r border-gray-200 flex flex-col bg-white"
+          >
+            <div className="p-2 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Markdown Editor</span>
+              <div className="flex items-center space-x-2">
+                 <label className="flex items-center space-x-1 cursor-pointer text-xs text-gray-600 hover:text-gray-900">
+                    <input 
+                      type="checkbox" 
+                      className="rounded text-blue-600 focus:ring-blue-500"
+                      onChange={handleUseExample}
+                    />
+                    <span>Load Example</span>
+                 </label>
+              </div>
+            </div>
             <textarea
-                className="flex-1 w-full p-4 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
-                value={markdown}
-                onChange={handleMarkdownChange}
-                placeholder="Type your markdown here..."
+              className="flex-1 w-full p-4 resize-none focus:outline-none focus:ring-inset focus:ring-2 focus:ring-blue-500/50 font-mono text-sm leading-relaxed"
+              value={markdown}
+              onChange={handleMarkdownChange}
+              placeholder="Enter markdown here..."
             />
+          </div>
+          
+          {/* Draggable Handle */}
+          <div
+            className="w-1 h-full cursor-col-resize bg-transparent hover:bg-blue-400 absolute z-10 transition-colors"
+            style={{ left: `${splitPosition}%`, transform: 'translateX(-50%)' }}
+            onMouseDown={handleMouseDown}
+          />
+
+          <div 
+            style={{ width: `${100 - splitPosition}%` }} 
+            className="h-full relative bg-gray-50"
+            ref={wrapperRef}
+          >
+            <svg className="w-full h-full" ref={setSvgRef} />
+          </div>
         </div>
 
-        {/* Resizer Handle */}
-        <div
-          className="w-1 cursor-col-resize hover:bg-blue-500 bg-gray-200 transition-colors z-10 shrink-0"
-          onMouseDown={handleMouseDown}
-        />
-
-        {/* Preview Pane */}
-        <div 
-            className="flex-1 h-full relative bg-white min-w-0"
-            ref={wrapperRef}
-        >
-          <svg className="w-full h-full" ref={setSvgRef} />
+        {/* Text Input View (Full) */}
+        <div className={clsx("h-full w-full p-6 bg-gray-50", activeTab === 'Text Input' ? "block" : "hidden")}>
+           <div className="h-full max-w-5xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col">
+              <div className="p-3 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                 <span className="text-sm font-semibold text-gray-700">Full Text Editor</span>
+                 <span className="text-xs text-gray-500">Changes here update the Mind Map automatically</span>
+              </div>
+              <textarea
+                className="flex-1 w-full p-6 resize-none focus:outline-none font-mono text-sm leading-relaxed"
+                value={markdown}
+                onChange={handleMarkdownChange}
+                placeholder="Enter markdown text here..."
+              />
+           </div>
         </div>
       </div>
     </div>
