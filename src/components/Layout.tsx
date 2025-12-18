@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, Link as LinkIcon, FileText, ExternalLink, Upload, Download, MoreVertical } from 'lucide-react';
+import { Plus, BarChart3, Target, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, Link as LinkIcon, FileText, ExternalLink, Upload, Download, MoreVertical } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case, Bowler, Metric } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
@@ -38,6 +38,15 @@ const Layout = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+
+  const toggleGroup = (group: string) => {
+    setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
+  };
+
+  const isGroupExpanded = (group: string) => {
+    return expandedGroups[group] !== false; // Default to expanded
+  };
 
   const handleImport = (importedData: Record<string, { bowler: Partial<Bowler>, metrics: Metric[] }>) => {
     let createdCount = 0;
@@ -514,30 +523,101 @@ const Layout = () => {
             {/* Add Item Form */}
             
             <div className="flex-1 overflow-y-auto p-3 space-y-1">
-              {isMetricBowler && bowlers.map((bowler) => (
-                <Link
-                  key={bowler.id}
-                  to={`/metric-bowler/${bowler.id}`}
-                  onDoubleClick={(e) => {
-                      e.preventDefault();
-                      setEditingBowler(bowler);
-                      setIsBowlerModalOpen(true);
-                  }}
-                  className={clsx(
-                    "group flex items-center py-2.5 text-sm font-medium rounded-lg transition-all",
-                    isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
-                    location.pathname === `/metric-bowler/${bowler.id}`
-                      ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                      : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                  )}
-                  title={!isSidebarOpen ? bowler.name : undefined}
-                >
-                  <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
-                    <Target className={clsx("w-4 h-4 flex-shrink-0", isSidebarOpen ? "mr-3" : "mr-0", location.pathname === `/metric-bowler/${bowler.id}` ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
-                    {isSidebarOpen && <span className="truncate">{bowler.name}</span>}
-                  </div>
-                </Link>
-              ))}
+              {isMetricBowler && (() => {
+                  const ungrouped = bowlers.filter(b => !b.objective);
+                  const grouped = bowlers.filter(b => !!b.objective).reduce((acc, bowler) => {
+                      const group = bowler.objective!;
+                      if (!acc[group]) acc[group] = [];
+                      acc[group].push(bowler);
+                      return acc;
+                  }, {} as Record<string, Bowler[]>);
+                  
+                  const sortedGroups = Object.keys(grouped).sort();
+
+                  return (
+                      <>
+                        {/* Ungrouped Items */}
+                        {ungrouped.map(bowler => (
+                            <Link
+                                key={bowler.id}
+                                to={`/metric-bowler/${bowler.id}`}
+                                onDoubleClick={(e) => {
+                                    e.preventDefault();
+                                    setEditingBowler(bowler);
+                                    setIsBowlerModalOpen(true);
+                                }}
+                                className={clsx(
+                                    "group flex items-center py-2.5 text-sm font-medium rounded-lg transition-all",
+                                    isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
+                                    location.pathname === `/metric-bowler/${bowler.id}`
+                                    ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                                )}
+                                title={!isSidebarOpen ? bowler.name : undefined}
+                            >
+                                <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
+                                    <Target className={clsx("w-4 h-4 flex-shrink-0", isSidebarOpen ? "mr-3" : "mr-0", location.pathname === `/metric-bowler/${bowler.id}` ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
+                                    {isSidebarOpen && <span className="truncate">{bowler.name}</span>}
+                                </div>
+                            </Link>
+                        ))}
+
+                        {/* Grouped Items */}
+                        {sortedGroups.map(group => (
+                            <div key={group} className="mt-2">
+                                <button
+                                    onClick={() => toggleGroup(group)}
+                                    className={clsx(
+                                        "flex items-center w-full text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 hover:text-gray-700 transition-colors",
+                                        isSidebarOpen ? "px-3" : "justify-center"
+                                    )}
+                                    title={group}
+                                >
+                                    {isSidebarOpen ? (
+                                        <>
+                                            {isGroupExpanded(group) ? <ChevronDown className="w-3 h-3 mr-1" /> : <ChevronRight className="w-3 h-3 mr-1" />}
+                                            <span className="truncate">{group}</span>
+                                        </>
+                                    ) : (
+                                        <div className="flex justify-center w-full">
+                                            {isGroupExpanded(group) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                                        </div>
+                                    )}
+                                </button>
+                                
+                                {isGroupExpanded(group) && (
+                                    <div className={clsx("space-y-1", isSidebarOpen && "pl-3 border-l-2 border-gray-100 ml-2")}>
+                                        {grouped[group].map(bowler => (
+                                            <Link
+                                                key={bowler.id}
+                                                to={`/metric-bowler/${bowler.id}`}
+                                                onDoubleClick={(e) => {
+                                                    e.preventDefault();
+                                                    setEditingBowler(bowler);
+                                                    setIsBowlerModalOpen(true);
+                                                }}
+                                                className={clsx(
+                                                    "group flex items-center py-2 text-sm font-medium rounded-lg transition-all",
+                                                    isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
+                                                    location.pathname === `/metric-bowler/${bowler.id}`
+                                                    ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                                                )}
+                                                title={!isSidebarOpen ? bowler.name : undefined}
+                                            >
+                                                <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
+                                                    <Target className={clsx("w-4 h-4 flex-shrink-0", isSidebarOpen ? "mr-3" : "mr-0", location.pathname === `/metric-bowler/${bowler.id}` ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
+                                                    {isSidebarOpen && <span className="truncate">{bowler.name}</span>}
+                                                </div>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                      </>
+                  );
+              })()}
 
               {isA3Analysis && a3Cases.map((a3) => (
                 <Link
