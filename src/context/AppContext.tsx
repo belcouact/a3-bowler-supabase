@@ -167,15 +167,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       id: generateShortId(),
       ...data,
     };
-    const newBowlers = [...bowlers, newBowler];
-    setBowlers(newBowlers);
-    persistData(newBowlers, a3Cases);
+    setBowlers(prev => {
+      const newBowlers = [...prev, newBowler];
+      persistData(newBowlers, a3Cases);
+      return newBowlers;
+    });
   };
 
   const updateBowler = (updatedBowler: Bowler) => {
-    const newBowlers = bowlers.map(b => b.id === updatedBowler.id ? updatedBowler : b);
-    setBowlers(newBowlers);
-    persistData(newBowlers, a3Cases);
+    setBowlers(prev => {
+      const newBowlers = prev.map(b => b.id === updatedBowler.id ? updatedBowler : b);
+      persistData(newBowlers, a3Cases);
+      return newBowlers;
+    });
   };
 
   const addA3Case = (caseData: Omit<A3Case, 'id'>) => {
@@ -183,27 +187,35 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       id: generateShortId(),
       ...caseData
     };
-    const newA3Cases = [...a3Cases, newCase];
-    setA3Cases(newA3Cases);
-    persistData(bowlers, newA3Cases);
+    setA3Cases(prev => {
+      const newA3Cases = [...prev, newCase];
+      persistData(bowlers, newA3Cases);
+      return newA3Cases;
+    });
   };
 
   const updateA3Case = (updatedCase: A3Case) => {
-    const newA3Cases = a3Cases.map(c => c.id === updatedCase.id ? updatedCase : c);
-    setA3Cases(newA3Cases);
-    persistData(bowlers, newA3Cases);
+    setA3Cases(prev => {
+      const newA3Cases = prev.map(c => c.id === updatedCase.id ? updatedCase : c);
+      persistData(bowlers, newA3Cases);
+      return newA3Cases;
+    });
   };
 
   const deleteBowler = (id: string) => {
-    const newBowlers = bowlers.filter((b) => b.id !== id);
-    setBowlers(newBowlers);
-    persistData(newBowlers, a3Cases);
+    setBowlers(prev => {
+      const newBowlers = prev.filter((b) => b.id !== id);
+      persistData(newBowlers, a3Cases);
+      return newBowlers;
+    });
   };
 
   const deleteA3Case = (id: string) => {
-    const newA3Cases = a3Cases.filter((c) => c.id !== id);
-    setA3Cases(newA3Cases);
-    persistData(bowlers, newA3Cases);
+    setA3Cases(prev => {
+      const newA3Cases = prev.filter((c) => c.id !== id);
+      persistData(bowlers, newA3Cases);
+      return newA3Cases;
+    });
   };
 
   return (

@@ -72,7 +72,7 @@ const CustomizedDot = (props: any) => {
 
 const MetricBowler = () => {
   const { id } = useParams();
-  const { bowlers, updateBowler } = useApp();
+  const { bowlers, updateBowler, addBowler } = useApp();
   const toast = useToast();
   
   const [startDate, setStartDate] = useState(() => {
