@@ -1,7 +1,7 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, Link as LinkIcon, FileText, ExternalLink } from 'lucide-react';
+import { Plus, BarChart3, Target, ChevronLeft, ChevronRight, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, Link as LinkIcon, FileText, ExternalLink, Upload, Download } from 'lucide-react';
 import clsx from 'clsx';
-import { useApp, A3Case, Bowler } from '../context/AppContext';
+import { useApp, A3Case, Bowler, Metric } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
 import A3CaseModal from './A3CaseModal';
@@ -12,6 +12,7 @@ import { AIChatModal } from './AIChatModal';
 import { AppInfoModal } from './AppInfoModal';
 import { dataService } from '../services/dataService';
 import { useToast } from '../context/ToastContext';
+import { ImportModal } from './ImportModal';
 
 const Layout = () => {
   const location = useLocation();
@@ -35,6 +36,128 @@ const Layout = () => {
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [isAppInfoOpen, setIsAppInfoOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+
+  const handleImport = (importedData: Record<string, { bowler: Partial<Bowler>, metrics: Metric[] }>) => {
+    let createdCount = 0;
+    let updatedCount = 0;
+
+    Object.entries(importedData).forEach(([bowlerName, { bowler, metrics }]) => {
+      const existingBowler = bowlers.find(b => b.name === bowlerName);
+
+      if (existingBowler) {
+        const mergedMetrics = [...(existingBowler.metrics || [])];
+
+        metrics.forEach(impMetric => {
+          const existingMetricIndex = mergedMetrics.findIndex(m => m.name === impMetric.name);
+
+          if (existingMetricIndex >= 0) {
+            const existingMetric = mergedMetrics[existingMetricIndex];
+            mergedMetrics[existingMetricIndex] = {
+              ...existingMetric,
+              ...impMetric,
+              id: existingMetric.id,
+              monthlyData: {
+                ...existingMetric.monthlyData,
+                ...impMetric.monthlyData
+              }
+            };
+          } else {
+            mergedMetrics.push(impMetric);
+          }
+        });
+
+        updateBowler({
+          ...existingBowler,
+          ...bowler,
+          metrics: mergedMetrics
+        });
+        updatedCount++;
+      } else {
+        addBowler({
+          name: bowlerName,
+          ...bowler,
+          metrics,
+          description: bowler.description || 'Imported from CSV'
+        });
+        createdCount++;
+      }
+    });
+
+    if (createdCount === 0 && updatedCount === 0) {
+      toast.info('No data imported.');
+    } else {
+      toast.success(`Import completed: ${createdCount} created, ${updatedCount} updated.`);
+    }
+  };
+
+  const handleDownloadAllCSV = () => {
+    if (bowlers.length === 0) {
+      toast.info('No data to download.');
+      return;
+    }
+
+    const monthKeySet = new Set<string>();
+
+    bowlers.forEach(bowler => {
+      (bowler.metrics || []).forEach(metric => {
+        const monthly = metric.monthlyData || {};
+        Object.keys(monthly).forEach(key => monthKeySet.add(key));
+      });
+    });
+
+    const monthKeys = Array.from(monthKeySet).sort();
+
+    if (monthKeys.length === 0) {
+      toast.info('No metric data to download.');
+      return;
+    }
+
+    const monthLabels = monthKeys.map(key => {
+      const [year, monthStr] = key.split('-');
+      const monthIndex = parseInt(monthStr, 10) - 1;
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthName = monthNames[monthIndex] || monthStr;
+      return `${year}/${monthName}`;
+    });
+
+    const header = `"Bowler Name","Metric Name","Scope","Type",${monthLabels.map(l => `"${l}"`).join(',')}\n`;
+
+    const rows = bowlers.flatMap(bowler =>
+      (bowler.metrics || []).flatMap(metric => {
+        const basicInfo = `"${bowler.name}","${metric.name}","${metric.scope || ''}"`;
+
+        const targetRowData = monthKeys
+          .map(key => `"${metric.monthlyData?.[key]?.target || ''}"`)
+          .join(',');
+
+        const actualRowData = monthKeys
+          .map(key => `"${metric.monthlyData?.[key]?.actual || ''}"`)
+          .join(',');
+
+        return [
+          `${basicInfo},"Target",${targetRowData}`,
+          `${basicInfo},"Actual",${actualRowData}`
+        ];
+      })
+    ).join('\n');
+
+    if (!rows) {
+      toast.info('No metric rows to download.');
+      return;
+    }
+
+    const csvContent = '\uFEFF' + header + rows;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'all_bowlers_metrics.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   const handleSaveData = async () => {
     if (!user) {
@@ -116,7 +239,6 @@ const Layout = () => {
   };
 
   const navItems = [
-    { path: '/mindmap', label: 'Front Page', icon: LinkIcon },
     { path: '/metric-bowler', label: 'Metric Bowler', icon: Target },
     { path: '/a3-analysis', label: 'A3 Analysis', icon: Zap },
   ];
@@ -181,6 +303,32 @@ const Layout = () => {
         </div>
         
         <div className="flex items-center space-x-4">
+          {isMetricBowler && (
+            <>
+              <button
+                onClick={() => navigate('/mindmap')}
+                className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-colors"
+                title="Visualize objectives"
+              >
+                <LinkIcon className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setIsImportModalOpen(true)}
+                className="p-2 rounded-md bg-green-500 text-white shadow-sm hover:bg-green-600 transition-colors"
+                title="Import CSV"
+              >
+                <Upload className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleDownloadAllCSV}
+                className="p-2 rounded-md bg-blue-500 text-white shadow-sm hover:bg-blue-600 transition-colors"
+                title="Download all bowlers"
+              >
+                <Download className="w-4 h-4" />
+              </button>
+            </>
+          )}
+
           <button
             onClick={() => setIsAIChatOpen(true)}
             className="flex items-center px-3 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors"
@@ -376,6 +524,12 @@ const Layout = () => {
       <LoginModal 
         isOpen={isLoginModalOpen} 
         onClose={() => setIsLoginModalOpen(false)} 
+      />
+
+      <ImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImport={handleImport}
       />
 
       <AccountSettingsModal 
