@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useApp, MindMapNodeData } from '../../context/AppContext';
 import { MindMap } from '../../components/MindMap';
-import { FileText } from 'lucide-react';
 
 const WhyAnalysis = () => {
   const { id } = useParams();
@@ -11,7 +10,6 @@ const WhyAnalysis = () => {
 
   // We use local state to avoid flickering but sync with context
   const [rootCause, setRootCause] = useState('');
-  const [convertedText, setConvertedText] = useState('');
 
   useEffect(() => {
     if (currentCase) {
@@ -20,6 +18,42 @@ const WhyAnalysis = () => {
         }
     }
   }, [currentCase]); // We don't include rootCause in deps to avoid loop, just listen to currentCase changes
+
+  // Auto-generate text structure from nodes and update rootCause
+  useEffect(() => {
+    if (!currentCase?.mindMapNodes) return;
+
+    const nodes = currentCase.mindMapNodes;
+    if (nodes.length === 0) return;
+
+    const roots = nodes.filter(n => !n.parentId);
+    let text = '';
+
+    const traverse = (nodeId: string, depth: number) => {
+        const children = nodes.filter(n => n.parentId === nodeId);
+        children.sort((a, b) => a.y - b.y);
+        
+        for (const child of children) {
+            const indent = '  '.repeat(depth);
+            text += `${indent}- ${child.text}\n`;
+            traverse(child.id, depth + 1);
+        }
+    };
+
+    roots.sort((a, b) => a.y - b.y);
+    for (const root of roots) {
+        text += `${root.text}\n`;
+        traverse(root.id, 1);
+    }
+    
+    // Only update if changed to avoid loops and unnecessary updates
+    if (text !== currentCase.rootCause) {
+        updateA3Case({
+            ...currentCase,
+            rootCause: text
+        });
+    }
+  }, [currentCase?.mindMapNodes, updateA3Case, currentCase?.id]); // Use specific dependencies to be safe, though currentCase checks inside handle it.
 
   const handleNodesChange = useCallback((newNodes: MindMapNodeData[]) => {
       if (!currentCase) return;
@@ -103,23 +137,7 @@ const WhyAnalysis = () => {
          <MindMap initialNodes={currentCase.mindMapNodes} onChange={handleNodesChange} />
       </div>
 
-      {/* Conversion Section */}
-      <div className="flex flex-col space-y-2">
-          <button
-            onClick={generateTextStructure}
-            className="self-start flex items-center px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            <FileText className="w-4 h-4 mr-2 text-gray-500" />
-            Convert to Text
-          </button>
-          
-          {convertedText && (
-            <div className="bg-gray-50 p-4 rounded-md border border-gray-200 mt-2">
-                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Text Representation</h4>
-                <pre className="text-sm text-gray-800 whitespace-pre-wrap font-mono">{convertedText}</pre>
-            </div>
-          )}
-      </div>
+      {/* Conversion Section Removed */}
 
       <div className="mt-6">
         <label htmlFor="rootCause" className="block text-sm font-medium text-gray-700 mb-2">

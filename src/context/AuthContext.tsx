@@ -60,11 +60,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await authService.logout();
       setUser(null);
       localStorage.removeItem('user');
+      window.location.href = 'https://study-llm.me/apps/a3-bowler/metric-bowler';
     } catch (error) {
       console.error('Logout error:', error);
       // Force logout on client side even if server fails
       setUser(null);
       localStorage.removeItem('user');
+      window.location.href = 'https://study-llm.me/apps/a3-bowler/metric-bowler';
     } finally {
       setIsLoading(false);
     }
