@@ -97,6 +97,7 @@ interface AppContextType {
   updateA3Case: (a3Case: A3Case) => void;
   deleteBowler: (id: string) => void;
   deleteA3Case: (id: string) => void;
+  isLoading: boolean;
 }
 
 // Context

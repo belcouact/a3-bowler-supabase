@@ -47,6 +47,29 @@ const isViolation = (
   return false;
 };
 
+const CustomizedDot = (props: any) => {
+  const { cx, cy, payload } = props;
+  
+  // If no coordinates, don't render
+  if (cx === undefined || cy === undefined) return null;
+
+  const violation = isViolation(
+    payload.rule,
+    payload.rawTarget,
+    payload.rawActual
+  );
+
+  if (violation) {
+    return (
+      <circle cx={cx} cy={cy} r={5} fill="#dc2626" stroke="#fff" strokeWidth={2} />
+    );
+  }
+
+  return (
+    <circle cx={cx} cy={cy} r={3} fill="#3b82f6" strokeWidth={0} />
+  );
+};
+
 const MetricBowler = () => {
   const { id } = useParams();
   const { bowlers, updateBowler } = useApp();
