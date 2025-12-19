@@ -122,11 +122,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                 setDashboardMarkdown(data.dashboardMarkdown);
             }
             // Update local storage to match backend
-            localStorage.setItem(localDataKey, JSON.stringify({ 
-                bowlers: data.bowlers || [], 
-                a3Cases: data.a3Cases || [],
-                dashboardMarkdown: data.dashboardMarkdown || DEFAULT_MARKDOWN
-            }));
+            try {
+                localStorage.setItem(localDataKey, JSON.stringify({ 
+                    bowlers: data.bowlers || [], 
+                    a3Cases: data.a3Cases || [],
+                    dashboardMarkdown: data.dashboardMarkdown || DEFAULT_MARKDOWN
+                }));
+            } catch (e) {
+                console.warn("Failed to update local storage cache (Quota Exceeded or disabled). App will continue to function.", e);
+            }
         } else if (!data.success) {
             throw new Error(data.message || "Failed to load data");
         }

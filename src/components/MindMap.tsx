@@ -163,7 +163,7 @@ const MindMapNode = ({
                 
                 {/* Color Picker Popup */}
                 {showColorPicker && (
-                    <div className="absolute top-full right-0 mt-1 p-2 bg-white rounded-lg shadow-xl border border-gray-200 flex gap-1 z-50 min-w-[140px] flex-wrap" onMouseDown={e => e.stopPropagation()}>
+                    <div className="absolute top-full right-0 mt-1 p-2 bg-white rounded-lg shadow-xl border border-gray-200 flex gap-1 z-[70] min-w-[140px] flex-wrap" onMouseDown={e => e.stopPropagation()}>
                         {COLORS.map((color) => (
                             <button
                                 key={color.name}

@@ -10,7 +10,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-[70] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
       <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={onClose}></div>
 
@@ -62,7 +62,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                      <ul className="list-none space-y-1 text-sm text-gray-500">
                        <li className="flex items-center">
                          <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                         <span><strong className="text-gray-700">Green:</strong> All metrics met targets.</span>
+                         <span><strong className="text-gray-700">Green:</strong> All metrics met targets in the latest month.</span>
                        </li>
                        <li className="flex items-center">
                           <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
@@ -70,7 +70,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                         </li>
                        <li className="flex items-center">
                          <span className="w-2 h-2 bg-yellow-400 rounded-full mr-2"></span>
-                         <span><strong className="text-gray-700">Yellow:</strong> Any metric missed target recently (1-2 months).</span>
+                         <span><strong className="text-gray-700">Yellow:</strong> Any metric missed target in latest month or last 2 months.</span>
                        </li>
                      </ul>
                   </div>

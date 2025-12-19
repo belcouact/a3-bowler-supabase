@@ -451,7 +451,7 @@ const Layout = () => {
             <button
                 onClick={() => navigate('/mindmap')}
                 className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-colors"
-                title="Mindmap your ideas"
+                title="Mindmap ideas"
               >
                 <BrainCircuit className="w-4 h-4" />
               </button>
