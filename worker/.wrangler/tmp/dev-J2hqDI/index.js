@@ -76,8 +76,22 @@ var index_default = {
               await env.BOWLER_DATA.delete(key);
             }
           }
-          for (const bowler of bowlers) {
-            const bowlerToSave = { ...bowler, userId };
+          for (let i = 0; i < bowlers.length; i++) {
+            const bowler = bowlers[i];
+            const bowlerToSave = {
+              ...bowler,
+              userId,
+              // Ensure sequence is saved in the record as well (as 'order')
+              order: i
+            };
+            if (bowlerToSave.metrics && Array.isArray(bowlerToSave.metrics)) {
+              bowlerToSave.metrics = bowlerToSave.metrics.map((m) => ({
+                ...m,
+                targetMeetingRule: m.targetMeetingRule || "gte",
+                definition: m.definition || "",
+                owner: m.owner || ""
+              }));
+            }
             await env.BOWLER_DATA.put(`user:${userId}:bowler:${bowler.id}`, JSON.stringify(bowlerToSave));
           }
         }

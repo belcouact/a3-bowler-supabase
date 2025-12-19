@@ -51,8 +51,25 @@ export default {
           }
 
           // 4. Update/Create items from payload
-          for (const bowler of bowlers) {
-            const bowlerToSave = { ...bowler, userId: userId };
+          for (let i = 0; i < bowlers.length; i++) {
+            const bowler = bowlers[i];
+            const bowlerToSave = { 
+                ...bowler, 
+                userId: userId,
+                // Ensure sequence is saved in the record as well (as 'order')
+                order: i 
+            };
+            
+            // Ensure metrics have default fields if missing
+            if (bowlerToSave.metrics && Array.isArray(bowlerToSave.metrics)) {
+                bowlerToSave.metrics = bowlerToSave.metrics.map((m: any) => ({
+                    ...m,
+                    targetMeetingRule: m.targetMeetingRule || 'gte',
+                    definition: m.definition || '',
+                    owner: m.owner || ''
+                }));
+            }
+
             await env.BOWLER_DATA.put(`user:${userId}:bowler:${bowler.id}`, JSON.stringify(bowlerToSave));
           }
         }

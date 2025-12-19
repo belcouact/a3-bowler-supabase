@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, MousePointer, MessageSquare, Target, Edit, Sparkles, BrainCircuit, NotepadText } from 'lucide-react';
+import { X, MousePointer, MessageSquare, Target, Edit, Sparkles } from 'lucide-react';
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -112,29 +112,6 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   </div>
                 </div>
 
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    <BrainCircuit className="h-5 w-5 text-blue-500" />
-                  </div>
-                  <div className="ml-3">
-                    <h4 className="text-sm font-medium text-gray-900">Mindmap</h4>
-                    <p className="text-sm text-gray-500">
-                      Use the Mindmap tool to visualize your problem solving process or brainstorm ideas.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    <NotepadText className="h-5 w-5 text-blue-500" />
-                  </div>
-                  <div className="ml-3">
-                    <h4 className="text-sm font-medium text-gray-900">One Click Summary</h4>
-                    <p className="text-sm text-gray-500">
-                      Generate a comprehensive summary of all your metrics and A3 cases with a single click.
-                    </p>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
