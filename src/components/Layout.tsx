@@ -275,6 +275,7 @@ const Layout = () => {
       const context = JSON.stringify({
         bowlers: bowlers.map(b => ({
           name: b.name,
+          group: b.objective || 'Ungrouped',
           description: b.description,
           metrics: (b.metrics || []).map(m => ({
             name: m.name,
@@ -292,15 +293,34 @@ const Layout = () => {
         }))
       });
       
-      const prompt = `Provide a concise executive summary of the metrics and A3 cases.
+      const prompt = `Provide a comprehensive performance summary.
+      
       Analyze the data based on each metric's 'targetMeetingRule' (e.g., gte, lte, within_range) and 'attribute'.
+      Group the metrics by their 'group' field.
       
       Return the response in STRICT JSON format with the following structure:
       {
-        "executiveSummary": "A concise high-level performance snapshot using emojis.",
-        "keyAchievements": ["List of key successes or stable metrics"],
-        "areasForImprovement": ["List of metrics that are failing in the latest month or have consecutive failures in recent months"],
-        "strategicRecommendations": ["Actionable improvement suggestions incorporating industry best practices"]
+        "executiveSummary": "A concise high-level performance snapshot.",
+        "performanceGroups": [
+          {
+            "groupName": "Group Name",
+            "metrics": [
+              {
+                "name": "Metric Name",
+                "latestPerformance": "Value vs Target (e.g., '0.5 vs <1.0') and status emoji (✅/❌)",
+                "trendAnalysis": "3-month trend description (e.g., 'Stable', 'Improving') with emoji (➡️/↗️/↘️)"
+              }
+            ]
+          }
+        ],
+        "areasOfConcern": [
+          {
+            "metricName": "Metric Name",
+            "groupName": "Group Name",
+            "issue": "Brief description of the issue (e.g., 'Consistently missing target')",
+            "suggestion": "Detailed, actionable improvement suggestion based on industry best practices (2-3 sentences)"
+          }
+        ]
       }
       Do not include any markdown formatting (like \`\`\`json). Just the raw JSON object.`;
       
