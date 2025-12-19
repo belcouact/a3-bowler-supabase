@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Plus, BarChart3, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, Workflow, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, BrainCircuit } from 'lucide-react';
+import { Plus, BarChart3, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, BrainCircuit } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
 import { Bowler, Metric } from '../types';
@@ -290,7 +290,7 @@ const Layout = () => {
         }))
       });
       
-      const prompt = "Provide a comprehensive summary about all the metrics by Group, by Bowler. Assess performance of the latest month, and also trend for the last months. Highlight concerns. Suggest improvement ideas. Also include A3 case highlevel summary of problem & status & progress.";
+      const prompt = "Provide a comprehensive and visually engaging executive summary of the metrics. Use emojis (e.g., 🟢, 🔴, ⚠️, 📈, 📉) liberally to visually represent status and trends. \n\nStructure the report with:\n1. **Executive Overview**: High-level performance snapshot.\n2. **Detailed Analysis**: By Group/Bowler. **CRITICAL**: For each metric/bowler, include specific **Industry Insights** or **Benchmarks** to provide context (e.g., 'Industry avg is X%').\n3. **Strategic Recommendations**: Actionable improvement suggestions based on the data and industry best practices.\n4. **A3 Problem Solving Status**: Summary of active cases.\n\nMake the output look like a professional business intelligence report.";
       
       const summary = await generateComprehensiveSummary(context, prompt);
       setSummaryContent(summary);

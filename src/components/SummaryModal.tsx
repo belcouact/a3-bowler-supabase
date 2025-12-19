@@ -1,5 +1,4 @@
-import React from 'react';
-import { X, FileText, Loader2, Download, Copy } from 'lucide-react';
+import { X, Loader2, Download, Copy, Sparkles, Lightbulb, TrendingUp } from 'lucide-react';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { useToast } from '../context/ToastContext';
 
@@ -41,45 +40,61 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
         <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
-          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div className="sm:flex sm:items-start">
-              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-teal-100 sm:mx-0 sm:h-10 sm:w-10">
-                <FileText className="h-6 w-6 text-teal-600" />
-              </div>
-              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                <div className="flex justify-between items-center">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                    Comprehensive Summary
+          
+          {/* Header */}
+          <div className="bg-gradient-to-r from-indigo-50 via-white to-white px-4 py-4 sm:px-6 border-b border-indigo-100 flex justify-between items-center">
+            <div className="flex items-center">
+                <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-indigo-100 shadow-sm mr-4">
+                    <Sparkles className="h-5 w-5 text-indigo-600" />
+                </div>
+                <div>
+                    <h3 className="text-lg leading-6 font-bold text-gray-900" id="modal-title">
+                    Smart Summary & Insights
                     </h3>
-                    <button
-                    onClick={onClose}
-                    className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none"
-                    >
-                    <span className="sr-only">Close</span>
-                    <X className="h-6 w-6" />
-                    </button>
+                    <div className="flex items-center mt-1 space-x-3 text-xs font-medium text-gray-500">
+                        <span className="flex items-center bg-green-50 text-green-700 px-2 py-0.5 rounded-full border border-green-100">
+                            <TrendingUp className="w-3 h-3 mr-1" /> Performance Analysis
+                        </span>
+                        <span className="flex items-center bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-100">
+                            <Lightbulb className="w-3 h-3 mr-1" /> Industry Context
+                        </span>
+                    </div>
                 </div>
-                
-                <div className="mt-4 min-h-[300px] max-h-[60vh] overflow-y-auto">
-                    {isLoading ? (
-                        <div className="flex flex-col items-center justify-center h-full py-10">
-                            <Loader2 className="w-12 h-12 animate-spin text-teal-600 mb-4" />
-                            <p className="text-gray-500">Generating comprehensive summary...</p>
-                            <p className="text-gray-400 text-sm mt-2">This may take a few moments.</p>
+            </div>
+            <button
+                onClick={onClose}
+                className="bg-white rounded-md p-1 text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none transition-all"
+            >
+                <span className="sr-only">Close</span>
+                <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="px-4 py-5 sm:p-6 bg-white">
+            <div className="min-h-[300px] max-h-[60vh] overflow-y-auto rounded-xl border border-gray-200 bg-gray-50/30 p-6 shadow-inner">
+                {isLoading ? (
+                    <div className="flex flex-col items-center justify-center h-full py-16">
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-indigo-200 rounded-full animate-ping opacity-25"></div>
+                            <Loader2 className="relative w-12 h-12 animate-spin text-indigo-600 mb-4" />
                         </div>
-                    ) : (
-                        <div className="prose prose-sm max-w-none">
-                            <MarkdownRenderer content={content} />
-                        </div>
-                    )}
-                </div>
-              </div>
+                        <h4 className="text-lg font-medium text-gray-900 mb-1">Generating AI Report</h4>
+                        <p className="text-gray-500 text-sm max-w-xs mx-auto">Analyzing performance metrics, identifying trends, and gathering industry benchmarks...</p>
+                    </div>
+                ) : (
+                    <div className="prose prose-sm max-w-none prose-indigo prose-headings:text-indigo-900 prose-a:text-indigo-600">
+                        <MarkdownRenderer content={content} />
+                    </div>
+                )}
             </div>
           </div>
-          <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+
+          {/* Footer */}
+          <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-200">
             <button
               type="button"
-              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-teal-600 text-base font-medium text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               onClick={handleDownload}
               disabled={isLoading || !content}
             >
@@ -88,7 +103,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
             </button>
             <button
               type="button"
-              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               onClick={handleCopy}
               disabled={isLoading || !content}
             >
