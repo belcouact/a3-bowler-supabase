@@ -93,7 +93,7 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-indigo-50/80">
-                  <div className="h-9 w-9 bg-indigo-500 flex items-center justify-center">
+                  <div className="h-9 w-9 shrink-0 rounded-lg bg-indigo-500 flex items-center justify-center">
                     <LayoutDashboard className="h-5 w-5 text-white" />
                   </div>
                   <div className="ml-3">
@@ -105,7 +105,7 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-purple-50/80">
-                  <div className="h-9 w-9 bg-purple-500 flex items-center justify-center">
+                  <div className="h-9 w-9 shrink-0 rounded-lg bg-purple-500 flex items-center justify-center">
                     <Layers className="h-5 w-5 text-white" />
                   </div>
                   <div className="ml-3">
