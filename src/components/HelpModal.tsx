@@ -42,7 +42,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   <div className="ml-3">
                     <h4 className="text-sm font-medium text-gray-900">Editing Data</h4>
                     <p className="text-sm text-gray-500">
-                      Click on any Target or Actual cell to edit its value. Changes are saved automatically.
+                      Click on any Target or Actual cell to edit its value.
                     </p>
                   </div>
                 </div>
@@ -57,7 +57,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                       Double-click on the Bowler Name or Description in the header to edit the Bowler information.
                     </p>
                     <p className="text-sm text-gray-500 mb-2">
-                       The sidebar color indicator reflects the latest month's status:
+                       The sidebar color indicator reflects the bowler's status:
                      </p>
                      <ul className="list-none space-y-1 text-sm text-gray-500">
                        <li className="flex items-center">

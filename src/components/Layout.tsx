@@ -561,7 +561,7 @@ const Layout = () => {
                     className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600"
                   >
                     <BrainCircuit className="w-4 h-4 mr-3" />
-                    Mindmap your ideas
+                    Mindmap ideas
                   </button>
                   <button
                     onClick={() => {

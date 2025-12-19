@@ -194,6 +194,37 @@ export default {
           }
         }
 
+        // Apply sequence sorting
+        const sequenceData = await env.BOWLER_DATA.get(`user:${userId}:bowler_sequence`);
+        if (sequenceData) {
+            try {
+                const sequence = JSON.parse(sequenceData);
+                if (Array.isArray(sequence)) {
+                    const bowlerMap = new Map(bowlers.map(b => [b.id, b]));
+                    const sortedBowlers: any[] = [];
+                    
+                    // Add bowlers in sequence order
+                    for (const id of sequence) {
+                        if (bowlerMap.has(id)) {
+                            sortedBowlers.push(bowlerMap.get(id));
+                            bowlerMap.delete(id);
+                        }
+                    }
+                    
+                    // Add any remaining bowlers that weren't in the sequence
+                    for (const bowler of bowlerMap.values()) {
+                        sortedBowlers.push(bowler);
+                    }
+                    
+                    // Replace the original array
+                    bowlers.length = 0;
+                    bowlers.push(...sortedBowlers);
+                }
+            } catch (e) {
+                console.error("Failed to parse bowler sequence", e);
+            }
+        }
+
         const a3List = await env.BOWLER_DATA.list({ prefix: `user:${userId}:a3:` });
         for (const key of a3List.keys) {
           const value = await env.BOWLER_DATA.get(key.name);
