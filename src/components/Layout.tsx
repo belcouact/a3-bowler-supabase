@@ -356,7 +356,7 @@ const Layout = () => {
         </div>
       )}
       {/* Top Bar */}
-      <header className="bg-white border-b border-gray-200 z-10 shadow-sm h-16 flex items-center px-6 justify-between">
+      <header className="bg-white border-b border-gray-200 z-[60] shadow-sm h-16 flex items-center px-6 justify-between relative">
         <div className="flex items-center space-x-8">
           <div className="flex items-center space-x-2">
             <div className="bg-blue-600 p-1.5 rounded-lg">
@@ -407,31 +407,27 @@ const Layout = () => {
             >
               <ExternalLink className="w-4 h-4" />
             </button>
-            {isMetricBowler && (
-              <>
-                <button
-                  onClick={() => navigate('/mindmap')}
-                  className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-colors"
-                  title="Mindmap your ideas"
-                >
-                  <Workflow className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setIsImportModalOpen(true)}
-                  className="p-2 rounded-md bg-green-500 text-white shadow-sm hover:bg-green-600 transition-colors"
-                  title="Import CSV"
-                >
-                  <Upload className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={handleDownloadAllCSV}
-                  className="p-2 rounded-md bg-blue-500 text-white shadow-sm hover:bg-blue-600 transition-colors"
-                  title="Download all bowlers"
-                >
-                  <Download className="w-4 h-4" />
-                </button>
-              </>
-            )}
+            <button
+              onClick={() => navigate('/mindmap')}
+              className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-colors"
+              title="Mindmap your ideas"
+            >
+              <Workflow className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setIsImportModalOpen(true)}
+              className="p-2 rounded-md bg-green-500 text-white shadow-sm hover:bg-green-600 transition-colors"
+              title="Import CSV"
+            >
+              <Upload className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleDownloadAllCSV}
+              className="p-2 rounded-md bg-blue-500 text-white shadow-sm hover:bg-blue-600 transition-colors"
+              title="Download all bowlers"
+            >
+              <Download className="w-4 h-4" />
+            </button>
 
             <button
               onClick={() => {
@@ -486,50 +482,46 @@ const Layout = () => {
                     Exit App
                   </button>
                   
-                  {isMetricBowler && (
-                    <>
-                      <button
-                        onClick={() => {
-                          navigate('/mindmap');
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600"
-                      >
-                        <Workflow className="w-4 h-4 mr-3" />
-                        Mindmap your ideas
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsImportModalOpen(true);
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-green-600"
-                      >
-                        <Upload className="w-4 h-4 mr-3" />
-                        Import CSV
-                      </button>
-                      <button
-                        onClick={() => {
-                          handleDownloadAllCSV();
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600"
-                      >
-                        <Download className="w-4 h-4 mr-3" />
-                        Download
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsConsolidateModalOpen(true);
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-purple-600"
-                      >
-                        <Layers className="w-4 h-4 mr-3" />
-                        Consolidate
-                      </button>
-                    </>
-                  )}
+                  <button
+                    onClick={() => {
+                      navigate('/mindmap');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600"
+                  >
+                    <Workflow className="w-4 h-4 mr-3" />
+                    Mindmap your ideas
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsImportModalOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-green-600"
+                  >
+                    <Upload className="w-4 h-4 mr-3" />
+                    Import CSV
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleDownloadAllCSV();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600"
+                  >
+                    <Download className="w-4 h-4 mr-3" />
+                    Download
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsConsolidateModalOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-purple-600"
+                  >
+                    <Layers className="w-4 h-4 mr-3" />
+                    Consolidate
+                  </button>
 
                   <button
                     onClick={() => {
