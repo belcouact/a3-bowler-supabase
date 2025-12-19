@@ -73,7 +73,7 @@ console.log('hello, JavaScript')
 \`\`\`
 
 | Products | Price |
-|-|-|
+| - | - |
 | Apple | 4 |
 | Banana | 2 |
 
@@ -121,7 +121,11 @@ const MarkmapPage = () => {
   // Initialize Markmap for Mind Map Tab
   useEffect(() => {
     if (svgRef && !mm) {
-      const newMm = Markmap.create(svgRef);
+      const newMm = Markmap.create(svgRef, {
+        maxWidth: 200,
+        nodeMinHeight: 16,
+        paddingX: 8,
+      });
       setMm(newMm);
       
       // Add toolbar
@@ -139,7 +143,11 @@ const MarkmapPage = () => {
   // Initialize Markmap for Text Input Tab
   useEffect(() => {
     if (textInputSvgRef && !textInputMm) {
-      const newMm = Markmap.create(textInputSvgRef);
+      const newMm = Markmap.create(textInputSvgRef, {
+        maxWidth: 200,
+        nodeMinHeight: 16,
+        paddingX: 8,
+      });
       setTextInputMm(newMm);
       
       // Add toolbar
