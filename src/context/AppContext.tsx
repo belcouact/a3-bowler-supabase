@@ -60,6 +60,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     if (user) {
       setIsLoading(true);
       // 1. Try Local Storage first to be instant
@@ -68,9 +69,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       if (localData) {
         try {
           const parsed = JSON.parse(localData);
-          setBowlers(parsed.bowlers || []);
-          setA3Cases(parsed.a3Cases || []);
-          setDashboardMarkdown(parsed.dashboardMarkdown || DEFAULT_MARKDOWN);
+          if (isMounted) {
+            setBowlers(parsed.bowlers || []);
+            setA3Cases(parsed.a3Cases || []);
+            setDashboardMarkdown(parsed.dashboardMarkdown || DEFAULT_MARKDOWN);
+          }
         } catch (e) {
           console.error("Failed to parse local data", e);
         }
@@ -79,7 +82,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       // 2. Load user data from backend (Source of Truth)
       dataService.loadData(user.username)
         .then(data => {
-          if (data.success) {
+          if (isMounted && data.success) {
             setBowlers(data.bowlers || []);
             setA3Cases(data.a3Cases || []);
             if (data.dashboardMarkdown) {
@@ -97,13 +100,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           console.error("Failed to load user data:", err);
         })
         .finally(() => {
-          setIsLoading(false);
+          if (isMounted) setIsLoading(false);
         });
     } else {
         setBowlers([]);
         setA3Cases([]);
         setDashboardMarkdown(DEFAULT_MARKDOWN);
     }
+    return () => {
+      isMounted = false;
+    };
   }, [user?.username]);
 
   const saveToLocalStorage = (newBowlers: Bowler[], newA3Cases: A3Case[], newMarkdown: string) => {

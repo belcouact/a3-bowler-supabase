@@ -66,21 +66,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-    setIsLoading(true);
-    try {
-      await authService.logout();
-      setUser(null);
-      localStorage.removeItem('user');
-      window.location.href = 'https://study-llm.me/apps/a3-bowler/metric-bowler';
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Force logout on client side even if server fails
-      setUser(null);
-      localStorage.removeItem('user');
-      window.location.href = 'https://study-llm.me/apps/a3-bowler/metric-bowler';
-    } finally {
-      setIsLoading(false);
-    }
+    // Simply redirect to the default page without loading data or waiting for server
+    setUser(null);
+    localStorage.removeItem('user');
+    window.location.href = 'https://study-llm.me/apps/a3-bowler/metric-bowler';
   };
 
   const refreshUser = async (silent: boolean = false) => {
