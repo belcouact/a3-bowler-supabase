@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, ZoomIn, ZoomOut, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, ZoomIn, ZoomOut, ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import clsx from 'clsx';
 import { addDays, formatDate, isWeekend } from '../../utils/dateUtils';
 import ActionModal, { ActionTask } from '../../components/ActionModal';
@@ -328,6 +329,53 @@ const ActionPlan = () => {
 
   // --- Drag Logic ---
 
+  const onDragEnd = (result: DropResult) => {
+    const { source, destination } = result;
+
+    if (!destination) return;
+    if (source.droppableId === destination.droppableId && source.index === destination.index) return;
+
+    const buckets: Record<string, ActionTask[]> = { ungrouped: [] };
+    const ungrouped = tasks.filter(t => !t.group);
+    buckets['ungrouped'] = [...ungrouped];
+    
+    const grouped = tasks.filter(t => !!t.group).reduce((acc, task) => {
+        const group = task.group!;
+        if (!acc[group]) acc[group] = [];
+        acc[group].push(task);
+        return acc;
+    }, {} as Record<string, ActionTask[]>);
+    Object.assign(buckets, grouped);
+    
+    const sourceKey = source.droppableId === 'ungrouped' ? 'ungrouped' : source.droppableId.replace('group-', '');
+    const destKey = destination.droppableId === 'ungrouped' ? 'ungrouped' : destination.droppableId.replace('group-', '');
+    
+    const sourceList = buckets[sourceKey];
+    const destList = buckets[destKey];
+    if (!sourceList || !destList) return;
+    
+    const [movedItem] = sourceList.splice(source.index, 1);
+    
+    if (sourceKey !== destKey) {
+        if (destKey === 'ungrouped') {
+            movedItem.group = undefined;
+        } else {
+            movedItem.group = destKey;
+        }
+    }
+    
+    destList.splice(destination.index, 0, movedItem);
+    
+    const sortedGroupKeys = Object.keys(buckets).filter(k => k !== 'ungrouped').sort();
+    let newTasks = [...buckets['ungrouped']];
+    sortedGroupKeys.forEach(key => {
+        newTasks = [...newTasks, ...buckets[key]];
+    });
+    
+    setTasks(newTasks);
+    persistTasks(newTasks);
+  };
+
   const handleMouseDown = (e: React.MouseEvent, task: ActionTask, type: 'move' | 'resize-left' | 'resize-right') => {
     e.stopPropagation();
     e.preventDefault();
@@ -549,41 +597,112 @@ const ActionPlan = () => {
                       <Plus className="w-3 h-3" />
                     </button>
                 </div>
-                {groupedTasks.map((row) => {
-                    if (row.type === 'group') {
-                        const isExpanded = expandedGroups[row.name] !== false;
-                        return (
-                             <div 
-                                key={row.id} 
-                                className="h-[32px] border-b border-gray-100 flex items-center px-4 bg-gray-100 hover:bg-gray-200 cursor-pointer"
-                                onClick={() => toggleGroup(row.name)}
-                            >
-                                {isExpanded ? <ChevronDown className="w-3 h-3 mr-2 text-gray-600" /> : <ChevronRight className="w-3 h-3 mr-2 text-gray-600" />}
-                                <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">{row.name}</span>
-                            </div>
-                        );
-                    }
-                    
-                    const task = row.task;
+                <DragDropContext onDragEnd={onDragEnd}>
+                  {(() => {
+                    const buckets: Record<string, ActionTask[]> = { ungrouped: [] };
+                    const ungrouped = tasks.filter(t => !t.group);
+                    buckets['ungrouped'] = [...ungrouped];
+                    const grouped = tasks.filter(t => !!t.group).reduce((acc, task) => {
+                        const group = task.group!;
+                        if (!acc[group]) acc[group] = [];
+                        acc[group].push(task);
+                        return acc;
+                    }, {} as Record<string, ActionTask[]>);
+                    const sortedGroupKeys = Object.keys(grouped).sort();
+
                     return (
-                    <div 
-                        key={task.id} 
-                        className="h-[48px] border-b border-gray-100 flex items-center px-4 hover:bg-gray-50 group cursor-pointer"
-                        onDoubleClick={(e) => handleTaskDoubleClick(e, task)}
-                        title={task.description}
-                    >
-                        <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium text-gray-900 truncate">{task.name || 'Untitled Task'}</div>
-                            <div className="text-xs text-gray-500 truncate">{task.owner}</div>
-                        </div>
-                        <div className={clsx(
-                            "w-2 h-2 rounded-full flex-shrink-0 ml-2",
-                            task.status === 'Completed' ? "bg-green-500" :
-                            task.status === 'In Progress' ? "bg-blue-500" : "bg-gray-300"
-                        )} />
-                    </div>
+                      <>
+                        <Droppable droppableId="ungrouped">
+                          {(provided) => (
+                            <div ref={provided.innerRef} {...provided.droppableProps}>
+                              {buckets['ungrouped'].map((task, index) => (
+                                <Draggable key={task.id} draggableId={task.id} index={index}>
+                                  {(provided) => (
+                                    <div
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      className="h-[48px] border-b border-gray-100 flex items-center px-4 hover:bg-gray-50 group cursor-pointer bg-white"
+                                      onDoubleClick={(e) => handleTaskDoubleClick(e, task)}
+                                      title={task.description}
+                                    >
+                                        <div 
+                                          {...provided.dragHandleProps}
+                                          className="mr-2 text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-600"
+                                        >
+                                          <GripVertical className="w-4 h-4" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-sm font-medium text-gray-900 truncate">{task.name || 'Untitled Task'}</div>
+                                            <div className="text-xs text-gray-500 truncate">{task.owner}</div>
+                                        </div>
+                                        <div className={clsx(
+                                            "w-2 h-2 rounded-full flex-shrink-0 ml-2",
+                                            task.status === 'Completed' ? "bg-green-500" :
+                                            task.status === 'In Progress' ? "bg-blue-500" : "bg-gray-300"
+                                        )} />
+                                    </div>
+                                  )}
+                                </Draggable>
+                              ))}
+                              {provided.placeholder}
+                            </div>
+                          )}
+                        </Droppable>
+
+                        {sortedGroupKeys.map(group => (
+                            <div key={group}>
+                                <div 
+                                    className="h-[32px] border-b border-gray-100 flex items-center px-4 bg-gray-100 hover:bg-gray-200 cursor-pointer"
+                                    onClick={() => toggleGroup(group)}
+                                >
+                                    {expandedGroups[group] !== false ? <ChevronDown className="w-3 h-3 mr-2 text-gray-600" /> : <ChevronRight className="w-3 h-3 mr-2 text-gray-600" />}
+                                    <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">{group}</span>
+                                </div>
+                                
+                                {expandedGroups[group] !== false && (
+                                    <Droppable droppableId={`group-${group}`}>
+                                      {(provided) => (
+                                        <div ref={provided.innerRef} {...provided.droppableProps}>
+                                            {grouped[group].map((task, index) => (
+                                                <Draggable key={task.id} draggableId={task.id} index={index}>
+                                                  {(provided) => (
+                                                    <div
+                                                      ref={provided.innerRef}
+                                                      {...provided.draggableProps}
+                                                      className="h-[48px] border-b border-gray-100 flex items-center px-4 hover:bg-gray-50 group cursor-pointer bg-white"
+                                                      onDoubleClick={(e) => handleTaskDoubleClick(e, task)}
+                                                      title={task.description}
+                                                    >
+                                                        <div 
+                                                          {...provided.dragHandleProps}
+                                                          className="mr-2 text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-600"
+                                                        >
+                                                          <GripVertical className="w-4 h-4" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="text-sm font-medium text-gray-900 truncate">{task.name || 'Untitled Task'}</div>
+                                                            <div className="text-xs text-gray-500 truncate">{task.owner}</div>
+                                                        </div>
+                                                        <div className={clsx(
+                                                            "w-2 h-2 rounded-full flex-shrink-0 ml-2",
+                                                            task.status === 'Completed' ? "bg-green-500" :
+                                                            task.status === 'In Progress' ? "bg-blue-500" : "bg-gray-300"
+                                                        )} />
+                                                    </div>
+                                                  )}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                        </div>
+                                      )}
+                                    </Droppable>
+                                )}
+                            </div>
+                        ))}
+                      </>
                     );
-                })}
+                  })()}
+                </DragDropContext>
                  {/* Empty rows filler */}
                  {Array.from({ length: Math.max(0, 10 - tasks.length) }).map((_, i) => (
                     <div key={`empty-${i}`} className="h-[48px] border-b border-gray-50 bg-gray-50/10"></div>

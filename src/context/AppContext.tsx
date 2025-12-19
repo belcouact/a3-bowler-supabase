@@ -16,6 +16,8 @@ interface AppContextType {
   updateA3Case: (a3Case: A3Case) => void;
   deleteBowler: (id: string) => void;
   deleteA3Case: (id: string) => void;
+  reorderBowlers: (bowlers: Bowler[]) => void;
+  reorderA3Cases: (a3Cases: A3Case[]) => void;
   isLoading: boolean;
   dashboardMarkdown: string;
   updateDashboardMarkdown: (markdown: string) => void;
@@ -195,6 +197,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const reorderBowlers = (newBowlers: Bowler[]) => {
+    setBowlers(newBowlers);
+    saveToLocalStorage(newBowlers, a3Cases, dashboardMarkdown);
+  };
+
+  const reorderA3Cases = (newA3Cases: A3Case[]) => {
+    setA3Cases(newA3Cases);
+    saveToLocalStorage(bowlers, newA3Cases, dashboardMarkdown);
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -206,6 +218,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         updateA3Case,
         deleteBowler,
         deleteA3Case,
+        reorderBowlers,
+        reorderA3Cases,
         isLoading,
         dashboardMarkdown,
         updateDashboardMarkdown

@@ -1,4 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Plus, BarChart3, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, Link as LinkIcon, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
@@ -19,7 +20,7 @@ import { getBowlerStatusColor } from '../utils/metricUtils';
 const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { bowlers, a3Cases, addBowler, updateBowler, addA3Case, updateA3Case, deleteBowler, deleteA3Case, isLoading: isDataLoading, dashboardMarkdown } = useApp();
+  const { bowlers, a3Cases, addBowler, updateBowler, addA3Case, updateA3Case, deleteBowler, deleteA3Case, reorderBowlers, reorderA3Cases, isLoading: isDataLoading, dashboardMarkdown } = useApp();
   const { user, logout, isLoading } = useAuth();
   const toast = useToast();
   
@@ -48,6 +49,92 @@ const Layout = () => {
 
   const isGroupExpanded = (group: string) => {
     return expandedGroups[group] !== false; // Default to expanded
+  };
+
+  const onDragEnd = (result: DropResult) => {
+    const { source, destination } = result;
+
+    if (!destination) return;
+    if (source.droppableId === destination.droppableId && source.index === destination.index) return;
+
+    if (isMetricBowler) {
+      const buckets: Record<string, Bowler[]> = { ungrouped: [] };
+      const ungrouped = bowlers.filter(b => !b.objective);
+      buckets['ungrouped'] = [...ungrouped];
+      
+      const grouped = bowlers.filter(b => !!b.objective).reduce((acc, bowler) => {
+          const group = bowler.objective!;
+          if (!acc[group]) acc[group] = [];
+          acc[group].push(bowler);
+          return acc;
+      }, {} as Record<string, Bowler[]>);
+      Object.assign(buckets, grouped);
+      
+      const sourceKey = source.droppableId === 'ungrouped' ? 'ungrouped' : source.droppableId.replace('group-', '');
+      const destKey = destination.droppableId === 'ungrouped' ? 'ungrouped' : destination.droppableId.replace('group-', '');
+      
+      const sourceList = buckets[sourceKey];
+      const destList = buckets[destKey];
+      if (!sourceList || !destList) return;
+      
+      const [movedItem] = sourceList.splice(source.index, 1);
+      
+      if (sourceKey !== destKey) {
+          if (destKey === 'ungrouped') {
+              movedItem.objective = undefined;
+          } else {
+              movedItem.objective = destKey;
+          }
+      }
+      
+      destList.splice(destination.index, 0, movedItem);
+      
+      const sortedGroupKeys = Object.keys(buckets).filter(k => k !== 'ungrouped').sort();
+      let newBowlers = [...buckets['ungrouped']];
+      sortedGroupKeys.forEach(key => {
+          newBowlers = [...newBowlers, ...buckets[key]];
+      });
+      reorderBowlers(newBowlers);
+
+    } else if (isA3Analysis) {
+      const buckets: Record<string, A3Case[]> = { ungrouped: [] };
+      const ungrouped = a3Cases.filter(a => !a.group);
+      buckets['ungrouped'] = [...ungrouped];
+      
+      const grouped = a3Cases.filter(a => !!a.group).reduce((acc, a3) => {
+          const group = a3.group!;
+          if (!acc[group]) acc[group] = [];
+          acc[group].push(a3);
+          return acc;
+      }, {} as Record<string, A3Case[]>);
+      Object.assign(buckets, grouped);
+      
+      const sourceKey = source.droppableId === 'ungrouped' ? 'ungrouped' : source.droppableId.replace('group-', '');
+      const destKey = destination.droppableId === 'ungrouped' ? 'ungrouped' : destination.droppableId.replace('group-', '');
+      
+      const sourceList = buckets[sourceKey];
+      const destList = buckets[destKey];
+      if (!sourceList || !destList) return;
+      
+      const [movedItem] = sourceList.splice(source.index, 1);
+      
+      if (sourceKey !== destKey) {
+          if (destKey === 'ungrouped') {
+              movedItem.group = undefined;
+          } else {
+              movedItem.group = destKey;
+          }
+      }
+      
+      destList.splice(destination.index, 0, movedItem);
+      
+      const sortedGroupKeys = Object.keys(buckets).filter(k => k !== 'ungrouped').sort();
+      let newA3Cases = [...buckets['ungrouped']];
+      sortedGroupKeys.forEach(key => {
+          newA3Cases = [...newA3Cases, ...buckets[key]];
+      });
+      reorderA3Cases(newA3Cases);
+    }
   };
 
   const handleImport = (importedData: Record<string, { bowler: Partial<Bowler>, metrics: Metric[] }>) => {
@@ -537,38 +624,54 @@ const Layout = () => {
                   const sortedGroups = Object.keys(grouped).sort();
 
                   return (
-                      <>
-                        {/* Ungrouped Items */}
-                        {ungrouped.map(bowler => (
-                            <Link
-                                key={bowler.id}
-                                to={`/metric-bowler/${bowler.id}`}
-                                onDoubleClick={(e) => {
-                                    e.preventDefault();
-                                    setEditingBowler(bowler);
-                                    setIsBowlerModalOpen(true);
-                                }}
-                                className={clsx(
-                                    "group flex items-center py-2.5 text-sm font-medium rounded-lg transition-all",
-                                    isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
-                                    location.pathname === `/metric-bowler/${bowler.id}`
-                                    ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                                )}
-                                title={!isSidebarOpen ? bowler.name : undefined}
-                            >
-                                <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
-                                    <div className={clsx(
-                                        "w-5 h-5 flex-shrink-0 flex items-center justify-center rounded text-[10px] font-bold uppercase transition-colors",
-                                        isSidebarOpen ? "mr-3" : "mr-0",
-                                        bowler.statusColor || getBowlerStatusColor(bowler)
-                                    )}>
-                                        {bowler.name?.charAt(0) || '?'}
+                    <DragDropContext onDragEnd={onDragEnd}>
+                      <Droppable droppableId="ungrouped">
+                        {(provided) => (
+                          <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-1">
+                            {/* Ungrouped Items */}
+                            {ungrouped.map((bowler, index) => (
+                                <Draggable key={bowler.id} draggableId={bowler.id} index={index}>
+                                  {(provided) => (
+                                    <div
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      {...provided.dragHandleProps}
+                                    >
+                                      <Link
+                                          to={`/metric-bowler/${bowler.id}`}
+                                          onDoubleClick={(e) => {
+                                              e.preventDefault();
+                                              setEditingBowler(bowler);
+                                              setIsBowlerModalOpen(true);
+                                          }}
+                                          className={clsx(
+                                              "group flex items-center py-2.5 text-sm font-medium rounded-lg transition-all",
+                                              isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
+                                              location.pathname === `/metric-bowler/${bowler.id}`
+                                              ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                              : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                                          )}
+                                          title={!isSidebarOpen ? bowler.name : undefined}
+                                      >
+                                          <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
+                                              <div className={clsx(
+                                                  "w-5 h-5 flex-shrink-0 flex items-center justify-center rounded text-[10px] font-bold uppercase transition-colors",
+                                                  isSidebarOpen ? "mr-3" : "mr-0",
+                                                  bowler.statusColor || getBowlerStatusColor(bowler)
+                                              )}>
+                                                  {bowler.name?.charAt(0) || '?'}
+                                              </div>
+                                              {isSidebarOpen && <span className="truncate">{bowler.name}</span>}
+                                          </div>
+                                      </Link>
                                     </div>
-                                    {isSidebarOpen && <span className="truncate">{bowler.name}</span>}
-                                </div>
-                            </Link>
-                        ))}
+                                  )}
+                                </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
 
                         {/* Grouped Items */}
                         {sortedGroups.map(group => (
@@ -594,42 +697,60 @@ const Layout = () => {
                                 </button>
                                 
                                 {isGroupExpanded(group) && (
-                                    <div className={clsx("space-y-1", isSidebarOpen && "pl-3 border-l-2 border-gray-100 ml-2")}>
-                                        {grouped[group].map(bowler => (
-                                            <Link
-                                                key={bowler.id}
-                                                to={`/metric-bowler/${bowler.id}`}
-                                                onDoubleClick={(e) => {
-                                                    e.preventDefault();
-                                                    setEditingBowler(bowler);
-                                                    setIsBowlerModalOpen(true);
-                                                }}
-                                                className={clsx(
-                                                    "group flex items-center py-2 text-sm font-medium rounded-lg transition-all",
-                                                    isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
-                                                    location.pathname === `/metric-bowler/${bowler.id}`
-                                                    ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                                                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                                                )}
-                                                title={!isSidebarOpen ? bowler.name : undefined}
-                                            >
-                                                <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
-                                                    <div className={clsx(
-                                                        "w-5 h-5 flex-shrink-0 flex items-center justify-center rounded text-[10px] font-bold uppercase transition-colors",
-                                                        isSidebarOpen ? "mr-3" : "mr-0",
-                                                        bowler.statusColor || getBowlerStatusColor(bowler)
-                                                    )}>
-                                                        {bowler.name?.charAt(0) || '?'}
+                                    <Droppable droppableId={`group-${group}`}>
+                                      {(provided) => (
+                                        <div 
+                                          ref={provided.innerRef}
+                                          {...provided.droppableProps}
+                                          className={clsx("space-y-1", isSidebarOpen && "pl-3 border-l-2 border-gray-100 ml-2")}
+                                        >
+                                            {grouped[group].map((bowler, index) => (
+                                                <Draggable key={bowler.id} draggableId={bowler.id} index={index}>
+                                                  {(provided) => (
+                                                    <div
+                                                      ref={provided.innerRef}
+                                                      {...provided.draggableProps}
+                                                      {...provided.dragHandleProps}
+                                                    >
+                                                      <Link
+                                                          to={`/metric-bowler/${bowler.id}`}
+                                                          onDoubleClick={(e) => {
+                                                              e.preventDefault();
+                                                              setEditingBowler(bowler);
+                                                              setIsBowlerModalOpen(true);
+                                                          }}
+                                                          className={clsx(
+                                                              "group flex items-center py-2 text-sm font-medium rounded-lg transition-all",
+                                                              isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
+                                                              location.pathname === `/metric-bowler/${bowler.id}`
+                                                              ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                                              : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                                                          )}
+                                                          title={!isSidebarOpen ? bowler.name : undefined}
+                                                      >
+                                                          <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
+                                                              <div className={clsx(
+                                                                  "w-5 h-5 flex-shrink-0 flex items-center justify-center rounded text-[10px] font-bold uppercase transition-colors",
+                                                                  isSidebarOpen ? "mr-3" : "mr-0",
+                                                                  bowler.statusColor || getBowlerStatusColor(bowler)
+                                                              )}>
+                                                                  {bowler.name?.charAt(0) || '?'}
+                                                              </div>
+                                                              {isSidebarOpen && <span className="truncate">{bowler.name}</span>}
+                                                          </div>
+                                                      </Link>
                                                     </div>
-                                                    {isSidebarOpen && <span className="truncate">{bowler.name}</span>}
-                                                </div>
-                                            </Link>
-                                        ))}
-                                    </div>
+                                                  )}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                        </div>
+                                      )}
+                                    </Droppable>
                                 )}
                             </div>
                         ))}
-                      </>
+                    </DragDropContext>
                   );
               })()}
 
@@ -645,32 +766,48 @@ const Layout = () => {
                   const sortedGroups = Object.keys(grouped).sort();
 
                   return (
-                      <>
-                        {/* Ungrouped Items */}
-                        {ungrouped.map(a3 => (
-                            <Link
-                                key={a3.id}
-                                to={`/a3-analysis/${a3.id}/problem-statement`}
-                                onDoubleClick={(e) => {
-                                    e.preventDefault();
-                                    setEditingA3Case(a3);
-                                    setIsA3ModalOpen(true);
-                                }}
-                                className={clsx(
-                                    "group flex items-center py-2.5 text-sm font-medium rounded-lg transition-all",
-                                    isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
-                                    location.pathname.includes(`/a3-analysis/${a3.id}`)
-                                    ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                                )}
-                                title={a3.description || (!isSidebarOpen ? a3.title : undefined)}
-                            >
-                                <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
-                                    <FileText className={clsx("w-4 h-4 flex-shrink-0", isSidebarOpen ? "mr-3" : "mr-0", location.pathname.includes(`/a3-analysis/${a3.id}`) ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
-                                    {isSidebarOpen && <span className="truncate">{a3.title}</span>}
-                                </div>
-                            </Link>
-                        ))}
+                    <DragDropContext onDragEnd={onDragEnd}>
+                      <Droppable droppableId="ungrouped">
+                        {(provided) => (
+                          <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-1">
+                            {/* Ungrouped Items */}
+                            {ungrouped.map((a3, index) => (
+                                <Draggable key={a3.id} draggableId={a3.id} index={index}>
+                                  {(provided) => (
+                                    <div
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      {...provided.dragHandleProps}
+                                    >
+                                        <Link
+                                            to={`/a3-analysis/${a3.id}/problem-statement`}
+                                            onDoubleClick={(e) => {
+                                                e.preventDefault();
+                                                setEditingA3Case(a3);
+                                                setIsA3ModalOpen(true);
+                                            }}
+                                            className={clsx(
+                                                "group flex items-center py-2.5 text-sm font-medium rounded-lg transition-all",
+                                                isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
+                                                location.pathname.includes(`/a3-analysis/${a3.id}`)
+                                                ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                                : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                                            )}
+                                            title={a3.description || (!isSidebarOpen ? a3.title : undefined)}
+                                        >
+                                            <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
+                                                <FileText className={clsx("w-4 h-4 flex-shrink-0", isSidebarOpen ? "mr-3" : "mr-0", location.pathname.includes(`/a3-analysis/${a3.id}`) ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
+                                                {isSidebarOpen && <span className="truncate">{a3.title}</span>}
+                                            </div>
+                                        </Link>
+                                    </div>
+                                  )}
+                                </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
 
                         {/* Grouped Items */}
                         {sortedGroups.map(group => (
@@ -696,36 +833,54 @@ const Layout = () => {
                                 </button>
                                 
                                 {isGroupExpanded(group) && (
-                                    <div className={clsx("space-y-1", isSidebarOpen && "pl-3 border-l-2 border-gray-100 ml-2")}>
-                                        {grouped[group].map(a3 => (
-                                            <Link
-                                                key={a3.id}
-                                                to={`/a3-analysis/${a3.id}/problem-statement`}
-                                                onDoubleClick={(e) => {
-                                                    e.preventDefault();
-                                                    setEditingA3Case(a3);
-                                                    setIsA3ModalOpen(true);
-                                                }}
-                                                className={clsx(
-                                                    "group flex items-center py-2 text-sm font-medium rounded-lg transition-all",
-                                                    isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
-                                                    location.pathname.includes(`/a3-analysis/${a3.id}`)
-                                                    ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                                                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                                                )}
-                                                title={a3.description || (!isSidebarOpen ? a3.title : undefined)}
-                                            >
-                                                <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
-                                                    <FileText className={clsx("w-4 h-4 flex-shrink-0", isSidebarOpen ? "mr-3" : "mr-0", location.pathname.includes(`/a3-analysis/${a3.id}`) ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
-                                                    {isSidebarOpen && <span className="truncate">{a3.title}</span>}
-                                                </div>
-                                            </Link>
-                                        ))}
-                                    </div>
+                                    <Droppable droppableId={`group-${group}`}>
+                                      {(provided) => (
+                                        <div 
+                                          ref={provided.innerRef}
+                                          {...provided.droppableProps}
+                                          className={clsx("space-y-1", isSidebarOpen && "pl-3 border-l-2 border-gray-100 ml-2")}
+                                        >
+                                            {grouped[group].map((a3, index) => (
+                                                <Draggable key={a3.id} draggableId={a3.id} index={index}>
+                                                  {(provided) => (
+                                                    <div
+                                                      ref={provided.innerRef}
+                                                      {...provided.draggableProps}
+                                                      {...provided.dragHandleProps}
+                                                    >
+                                                        <Link
+                                                            to={`/a3-analysis/${a3.id}/problem-statement`}
+                                                            onDoubleClick={(e) => {
+                                                                e.preventDefault();
+                                                                setEditingA3Case(a3);
+                                                                setIsA3ModalOpen(true);
+                                                            }}
+                                                            className={clsx(
+                                                                "group flex items-center py-2 text-sm font-medium rounded-lg transition-all",
+                                                                isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
+                                                                location.pathname.includes(`/a3-analysis/${a3.id}`)
+                                                                ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                                                : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                                                            )}
+                                                            title={a3.description || (!isSidebarOpen ? a3.title : undefined)}
+                                                        >
+                                                            <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
+                                                                <FileText className={clsx("w-4 h-4 flex-shrink-0", isSidebarOpen ? "mr-3" : "mr-0", location.pathname.includes(`/a3-analysis/${a3.id}`) ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
+                                                                {isSidebarOpen && <span className="truncate">{a3.title}</span>}
+                                                            </div>
+                                                        </Link>
+                                                    </div>
+                                                  )}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                        </div>
+                                      )}
+                                    </Droppable>
                                 )}
                             </div>
                         ))}
-                      </>
+                      </DragDropContext>
                   );
               })()}
 

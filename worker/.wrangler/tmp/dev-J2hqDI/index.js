@@ -57,20 +57,39 @@ var index_default = {
     if (request.method === "POST" && url.pathname === "/save") {
       try {
         const data = await request.json();
-        const { bowlers, a3Cases, userId } = data;
+        const { bowlers, a3Cases, userId, dashboardMarkdown } = data;
         if (!userId) {
           return new Response(JSON.stringify({ success: false, error: "User ID is required" }), {
             status: 400,
             headers: { ...corsHeaders, "Content-Type": "application/json" }
           });
         }
+        if (dashboardMarkdown !== void 0) {
+          await env.BOWLER_DATA.put(`user:${userId}:dashboard`, JSON.stringify({ content: dashboardMarkdown }));
+        }
         if (bowlers && Array.isArray(bowlers)) {
+          const existingList = await env.BOWLER_DATA.list({ prefix: `user:${userId}:bowler:` });
+          const existingKeys = new Set(existingList.keys.map((k) => k.name));
+          const keysToKeep = new Set(bowlers.map((b) => `user:${userId}:bowler:${b.id}`));
+          for (const key of existingKeys) {
+            if (!keysToKeep.has(key)) {
+              await env.BOWLER_DATA.delete(key);
+            }
+          }
           for (const bowler of bowlers) {
             const bowlerToSave = { ...bowler, userId };
             await env.BOWLER_DATA.put(`user:${userId}:bowler:${bowler.id}`, JSON.stringify(bowlerToSave));
           }
         }
         if (a3Cases && Array.isArray(a3Cases)) {
+          const existingList = await env.BOWLER_DATA.list({ prefix: `user:${userId}:a3:` });
+          const existingKeys = new Set(existingList.keys.map((k) => k.name));
+          const keysToKeep = new Set(a3Cases.map((a) => `user:${userId}:a3:${a.id}`));
+          for (const key of existingKeys) {
+            if (!keysToKeep.has(key)) {
+              await env.BOWLER_DATA.delete(key);
+            }
+          }
           for (const a3 of a3Cases) {
             const a3ToSave = { ...a3, userId };
             await env.BOWLER_DATA.put(`user:${userId}:a3:${a3.id}`, JSON.stringify(a3ToSave));
