@@ -85,7 +85,9 @@ export const authService = {
   },
 
   async getUser(username: string) {
-    const response = await fetch(`${API_BASE_URL}/user/${encodeURIComponent(username)}`);
+    // Note: We keep @ unencoded because the server might not decode the path parameter
+    const encodedUsername = encodeURIComponent(username).replace(/%40/g, '@');
+    const response = await fetch(`${API_BASE_URL}/user/${encodedUsername}`);
     if (!response.ok) {
       throw new Error('Failed to fetch user profile');
     }

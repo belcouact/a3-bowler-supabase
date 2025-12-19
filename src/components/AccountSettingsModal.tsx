@@ -80,9 +80,16 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
           isPublic
         }
       });
-      // Refresh user data after successful update
-      await refreshUser();
+      
       toast.success('Profile updated successfully');
+      
+      // Refresh user data after successful update
+      try {
+        await refreshUser();
+      } catch (error) {
+        console.warn('Background refresh failed:', error);
+        // We don't show an error toast here because the update was successful
+      }
     } catch (error: any) {
       toast.error(error.message || 'Failed to update profile');
     } finally {
