@@ -365,7 +365,7 @@ const Layout = () => {
             <h1 className="text-xl font-bold text-gray-900 tracking-tight hidden md:block">Performance Tracker</h1>
             <button 
                 onClick={() => setIsAppInfoOpen(true)}
-                className="text-gray-400 hover:text-blue-600 transition-colors ml-1"
+                className="p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors ml-2 shadow-sm"
                 title="About this app"
             >
                 <Info className="w-5 h-5" />
