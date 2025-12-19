@@ -296,6 +296,7 @@ const Layout = () => {
       const prompt = `Provide a comprehensive performance summary.
       
       Analyze the data based on each metric's 'targetMeetingRule' (e.g., gte, lte, within_range) and 'attribute'.
+      Identify metrics that have missed their target for 3 consecutive months (current month + previous 2).
       Group the metrics by their 'group' field.
       
       Return the response in STRICT JSON format with the following structure:
@@ -308,7 +309,7 @@ const Layout = () => {
               {
                 "name": "Metric Name",
                 "latestPerformance": "Value vs Target (e.g., '0.5 vs <1.0') and status emoji (✅/❌)",
-                "trendAnalysis": "3-month trend description (e.g., 'Stable', 'Improving') with emoji (➡️/↗️/↘️)"
+                "trendAnalysis": "If the metric has missed its target for 3 consecutive months, provide a brief trend description (e.g., '3-mo Fail ↘️'). Otherwise, return null."
               }
             ]
           }

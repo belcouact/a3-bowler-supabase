@@ -13,7 +13,7 @@ interface SummaryModalProps {
 interface MetricPerformance {
   name: string;
   latestPerformance: string;
-  trendAnalysis: string;
+  trendAnalysis: string | null;
 }
 
 interface PerformanceGroup {
@@ -65,7 +65,8 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
         parsedData.performanceGroups.forEach(group => {
             textToCopy += `\nGroup: ${group.groupName}\n`;
             group.metrics.forEach(m => {
-                textToCopy += `- ${m.name}: ${m.latestPerformance} | Trend: ${m.trendAnalysis}\n`;
+                const trendText = m.trendAnalysis ? ` | Trend: ${m.trendAnalysis}` : '';
+                textToCopy += `- ${m.name}: ${m.latestPerformance}${trendText}\n`;
             });
         });
 
@@ -101,7 +102,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
 
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-7xl sm:w-full">
           
           {/* Header */}
           <div className="bg-gradient-to-r from-indigo-50 via-white to-white px-4 py-4 sm:px-6 border-b border-indigo-100 flex justify-between items-center flex-shrink-0">
@@ -130,7 +131,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
           </div>
 
           {/* Content */}
-          <div className="px-4 py-5 sm:p-6 bg-white overflow-y-auto custom-scrollbar max-h-[70vh]">
+          <div className="px-4 py-5 sm:p-6 bg-white overflow-y-auto custom-scrollbar max-h-[85vh]">
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center h-full py-16">
                     <div className="relative">
@@ -187,25 +188,33 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
                             <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
                                 <h4 className="text-base font-semibold text-gray-800 flex items-center">
                                     <TrendingUp className="w-4 h-4 mr-2 text-purple-600" />
-                                    Recent 3 Months Trend
+                                    Consecutive Failing Trends
                                 </h4>
                             </div>
                             <div className="p-4 space-y-6">
-                                {parsedData.performanceGroups.map((group, idx) => (
-                                    <div key={idx} className="space-y-2">
-                                        <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100 pb-1">
-                                            {group.groupName}
-                                        </h5>
-                                        <div className="space-y-2">
-                                            {group.metrics.map((metric, mIdx) => (
-                                                <div key={mIdx} className="flex justify-between items-center text-sm">
-                                                    <span className="font-medium text-gray-700">{metric.name}</span>
-                                                    <span className="text-gray-600 bg-gray-50 px-2 py-1 rounded-md text-xs">{metric.trendAnalysis}</span>
-                                                </div>
-                                            ))}
+                                {parsedData.performanceGroups.map((group, idx) => {
+                                    const failingMetrics = group.metrics.filter(m => m.trendAnalysis && m.trendAnalysis.trim() !== '');
+                                    if (failingMetrics.length === 0) return null;
+
+                                    return (
+                                        <div key={idx} className="space-y-2">
+                                            <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100 pb-1">
+                                                {group.groupName}
+                                            </h5>
+                                            <div className="space-y-2">
+                                                {failingMetrics.map((metric, mIdx) => (
+                                                    <div key={mIdx} className="flex justify-between items-center text-sm">
+                                                        <span className="font-medium text-gray-700">{metric.name}</span>
+                                                        <span className="text-gray-600 bg-gray-50 px-2 py-1 rounded-md text-xs">{metric.trendAnalysis}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
+                                {parsedData.performanceGroups.every(g => g.metrics.every(m => !m.trendAnalysis || m.trendAnalysis.trim() === '')) && (
+                                     <p className="text-sm text-gray-500 italic text-center py-4">No consecutive failing metrics identified.</p>
+                                )}
                             </div>
                         </div>
                     </div>
