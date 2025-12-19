@@ -434,14 +434,14 @@ const Layout = () => {
 
             <button
               onClick={() => setIsAIChatOpen(true)}
-              className="flex items-center px-3 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors"
+              className="p-2 bg-indigo-600 text-white rounded-md shadow-sm hover:bg-indigo-700 transition-colors"
               title="Ask AI"
             >
               <Sparkles className="w-4 h-4" />
             </button>
             <button
               onClick={() => setIsConsolidateModalOpen(true)}
-              className="flex items-center px-3 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700 transition-colors"
+              className="p-2 bg-purple-600 text-white rounded-md shadow-sm hover:bg-purple-700 transition-colors"
               title="Consolidate Bowlers"
             >
               <Layers className="w-4 h-4" />
@@ -528,7 +528,7 @@ const Layout = () => {
           <button
             onClick={handleSaveData}
             disabled={isSaving}
-            className="flex items-center px-3 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
+            className="p-2 bg-green-600 text-white rounded-md shadow-sm hover:bg-green-700 transition-colors disabled:opacity-50"
             title={isSaving ? "Saving..." : "Save Data"}
           >
             {isSaving ? (
