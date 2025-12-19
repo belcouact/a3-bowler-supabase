@@ -85,7 +85,7 @@ export const authService = {
   },
 
   async getUser(username: string) {
-    const response = await fetch(`${API_BASE_URL}/user/${username}`);
+    const response = await fetch(`${API_BASE_URL}/user/${encodeURIComponent(username)}`);
     if (!response.ok) {
       throw new Error('Failed to fetch user profile');
     }

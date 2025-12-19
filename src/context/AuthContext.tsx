@@ -24,13 +24,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  const normalizeUser = (apiUser: any): User => {
+    const { profile, ...rest } = apiUser;
+    return {
+      ...rest,
+      ...(profile || {}),
+      isPublicProfile: profile?.isPublic ?? rest.isPublicProfile ?? rest.isPublic
+    };
+  };
+
   const login = async (data: any) => {
     setIsLoading(true);
     try {
       const response = await authService.login(data);
       // Assuming response contains user profile or we fetch it separately
       // Based on prompt: "Validates credentials and returns user profile."
-      const userProfile = response.user || response; 
+      const apiUser = response.user || response; 
+      const userProfile = normalizeUser(apiUser);
       setUser(userProfile);
       localStorage.setItem('user', JSON.stringify(userProfile));
     } catch (error) {
@@ -78,7 +88,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!silent) setIsLoading(true);
     try {
       const response = await authService.getUser(user.username);
-      const updatedUser = response.user || response;
+      const apiUser = response.user || response;
+      const updatedUser = normalizeUser(apiUser);
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
     } catch (error) {
