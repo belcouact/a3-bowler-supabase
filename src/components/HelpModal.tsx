@@ -52,10 +52,27 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     <Edit className="h-5 w-5 text-blue-500" />
                   </div>
                   <div className="ml-3">
-                    <h4 className="text-sm font-medium text-gray-900">Bowler Info</h4>
-                    <p className="text-sm text-gray-500">
+                    <h4 className="text-sm font-medium text-gray-900">Bowler Info & Status Rules</h4>
+                    <p className="text-sm text-gray-500 mb-2">
                       Double-click on the Bowler Name or Description in the header to edit the Bowler information.
                     </p>
+                    <p className="text-sm text-gray-500 mb-2">
+                       The sidebar color indicator reflects the latest month's status:
+                     </p>
+                     <ul className="list-none space-y-1 text-sm text-gray-500">
+                       <li className="flex items-center">
+                         <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                         <span><strong className="text-gray-700">Green:</strong> All metrics met targets.</span>
+                       </li>
+                       <li className="flex items-center">
+                          <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                          <span><strong className="text-gray-700">Red:</strong> Any metric failed for 3 consecutive months.</span>
+                        </li>
+                       <li className="flex items-center">
+                         <span className="w-2 h-2 bg-yellow-400 rounded-full mr-2"></span>
+                         <span><strong className="text-gray-700">Yellow:</strong> Any metric missed target recently (1-2 months).</span>
+                       </li>
+                     </ul>
                   </div>
                 </div>
 
@@ -131,7 +148,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                      <ul className="list-none space-y-1 text-sm text-gray-500">
                        <li className="flex items-center">
                          <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-                         <span><strong className="text-gray-700">Green:</strong> All metrics met their targets.</span>
+                         <span><strong className="text-gray-700">Green:</strong> All metrics met their targets in the latest month.</span>
                        </li>
                        <li className="flex items-center">
                   <span className="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
@@ -139,7 +156,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 </li>
                        <li className="flex items-center">
                          <span className="w-3 h-3 bg-yellow-400 rounded-full mr-2"></span>
-                         <span><strong className="text-gray-700">Yellow/Gray:</strong> No data available for the latest month.</span>
+                         <span><strong className="text-gray-700">Yellow:</strong> Latest month or last 2 months missed the target for any of the metrics.</span>
                        </li>
                      </ul>
                    </div>
