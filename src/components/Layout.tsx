@@ -279,7 +279,9 @@ const Layout = () => {
           metrics: (b.metrics || []).map(m => ({
             name: m.name,
             scope: m.scope,
-            monthlyData: m.monthlyData
+            monthlyData: m.monthlyData,
+            targetMeetingRule: m.targetMeetingRule,
+            attribute: m.attribute
           }))
         })),
         a3Cases: a3Cases.map(c => ({
@@ -290,16 +292,15 @@ const Layout = () => {
         }))
       });
       
-      const prompt = `Provide a comprehensive executive summary of the metrics and A3 cases.
+      const prompt = `Provide a concise executive summary of the metrics and A3 cases.
+      Analyze the data based on each metric's 'targetMeetingRule' (e.g., gte, lte, within_range) and 'attribute'.
+      
       Return the response in STRICT JSON format with the following structure:
       {
-        "executiveSummary": "A high-level performance snapshot using emojis.",
+        "executiveSummary": "A concise high-level performance snapshot using emojis.",
         "keyAchievements": ["List of key successes or stable metrics"],
-        "areasForImprovement": ["List of metrics that are struggling or degrading"],
-        "industryInsights": [
-          { "metric": "Metric Name", "insight": "Specific industry benchmark or context" }
-        ],
-        "strategicRecommendations": ["Actionable improvement suggestions"]
+        "areasForImprovement": ["List of metrics that are failing in the latest month or have consecutive failures in recent months"],
+        "strategicRecommendations": ["Actionable improvement suggestions incorporating industry best practices"]
       }
       Do not include any markdown formatting (like \`\`\`json). Just the raw JSON object.`;
       

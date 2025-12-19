@@ -14,7 +14,6 @@ interface SummaryData {
   executiveSummary: string;
   keyAchievements: string[];
   areasForImprovement: string[];
-  industryInsights: Array<{ metric: string; insight: string }>;
   strategicRecommendations: string[];
 }
 
@@ -83,9 +82,6 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
                         <span className="flex items-center bg-green-50 text-green-700 px-2 py-0.5 rounded-full border border-green-100">
                             <TrendingUp className="w-3 h-3 mr-1" /> Performance Analysis
                         </span>
-                        <span className="flex items-center bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-100">
-                            <Lightbulb className="w-3 h-3 mr-1" /> Industry Context
-                        </span>
                     </div>
                 </div>
             </div>
@@ -107,7 +103,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
                         <Loader2 className="relative w-12 h-12 animate-spin text-indigo-600 mb-4" />
                     </div>
                     <h4 className="text-lg font-medium text-gray-900 mb-1">Generating AI Report</h4>
-                    <p className="text-gray-500 text-sm max-w-xs mx-auto text-center">Analyzing performance metrics, identifying trends, and gathering industry benchmarks...</p>
+                    <p className="text-gray-500 text-sm max-w-xs mx-auto text-center">Analyzing performance metrics, identifying trends, and generating strategic recommendations...</p>
                 </div>
             ) : isJson && parsedData ? (
                 <div className="space-y-8">
@@ -153,27 +149,6 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
                                     </li>
                                 ))}
                             </ul>
-                        </div>
-                    </div>
-
-                    {/* Industry Insights */}
-                    <div>
-                        <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                            <Lightbulb className="w-5 h-5 mr-2 text-amber-500" />
-                            Industry Context & Benchmarks
-                        </h4>
-                        <div className="grid grid-cols-1 gap-3">
-                            {parsedData.industryInsights.map((item, idx) => (
-                                <div key={idx} className="flex items-start bg-amber-50/30 p-4 rounded-lg border border-amber-100">
-                                    <div className="flex-shrink-0 mt-0.5">
-                                        <TrendingUp className="w-4 h-4 text-amber-600" />
-                                    </div>
-                                    <div className="ml-3">
-                                        <span className="text-sm font-semibold text-gray-900 block mb-0.5">{item.metric}</span>
-                                        <span className="text-sm text-gray-600">{item.insight}</span>
-                                    </div>
-                                </div>
-                            ))}
                         </div>
                     </div>
 
