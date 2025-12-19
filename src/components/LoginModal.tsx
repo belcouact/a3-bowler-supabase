@@ -331,7 +331,6 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                           <option value="Commercial">Commercial</option>
                           <option value="SC">SC</option>
                           <option value="Technical">Technical</option>
-                          <option value="R&D">R&D</option>
                         </select>
                     </div>
                   </div>

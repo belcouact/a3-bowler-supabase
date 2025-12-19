@@ -249,7 +249,6 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
                       <option value="Commercial">Commercial</option>
                       <option value="SC">SC</option>
                       <option value="Technical">Technical</option>
-                      <option value="R&D">R&D</option>
                     </select>
                   </div>
                 
@@ -257,7 +256,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
                     <div className="border border-gray-200 rounded-md p-4 flex items-center justify-between">
                         <div>
                             <h4 className="text-sm font-medium text-gray-900">Public Profile</h4>
-                            <p className="text-xs text-gray-500">Allow others to consolidate your projects</p>
+                            <p className="text-xs text-gray-500">Allow others to consolidate your bowlers</p>
                         </div>
                         <button 
                             type="button"
