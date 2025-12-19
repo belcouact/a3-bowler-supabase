@@ -38,15 +38,15 @@ export default {
         if (bowlers && Array.isArray(bowlers)) {
           // 1. Get all existing bowler keys for this user
           const existingList = await env.BOWLER_DATA.list({ prefix: `user:${userId}:bowler:` });
-          const existingKeys = new Set(existingList.keys.map(k => k.name));
+          const existingKeys = new Set(existingList.keys.map((k: any) => k.name));
           
           // 2. Identify keys to keep (based on incoming payload)
           const keysToKeep = new Set(bowlers.map(b => `user:${userId}:bowler:${b.id}`));
           
           // 3. Delete keys that are not in the payload
           for (const key of existingKeys) {
-            if (!keysToKeep.has(key)) {
-              await env.BOWLER_DATA.delete(key);
+            if (!keysToKeep.has(key as string)) {
+              await env.BOWLER_DATA.delete(key as string);
             }
           }
 
@@ -61,15 +61,15 @@ export default {
         if (a3Cases && Array.isArray(a3Cases)) {
            // 1. Get all existing A3 keys for this user
            const existingList = await env.BOWLER_DATA.list({ prefix: `user:${userId}:a3:` });
-           const existingKeys = new Set(existingList.keys.map(k => k.name));
+           const existingKeys = new Set(existingList.keys.map((k: any) => k.name));
            
            // 2. Identify keys to keep
            const keysToKeep = new Set(a3Cases.map(a => `user:${userId}:a3:${a.id}`));
            
            // 3. Delete keys that are not in the payload
            for (const key of existingKeys) {
-             if (!keysToKeep.has(key)) {
-               await env.BOWLER_DATA.delete(key);
+             if (!keysToKeep.has(key as string)) {
+               await env.BOWLER_DATA.delete(key as string);
              }
            }
 
@@ -111,15 +111,15 @@ export default {
         let listComplete = false;
         
         while (!listComplete) {
-            const list = await env.BOWLER_DATA.list({ prefix: 'user:', cursor });
+            const list: any = await env.BOWLER_DATA.list({ prefix: 'user:', cursor });
             cursor = list.cursor;
             listComplete = list.list_complete;
             
             // Filter for bowler keys
-            const bowlerKeys = list.keys.filter(k => k.name.includes(':bowler:'));
+            const bowlerKeys = list.keys.filter((k: any) => k.name.includes(':bowler:'));
             
             if (bowlerKeys.length > 0) {
-                 const batchPromises = bowlerKeys.map(key => env.BOWLER_DATA.get(key.name, 'json'));
+                 const batchPromises = bowlerKeys.map((key: any) => env.BOWLER_DATA.get(key.name, 'json'));
                  const batchResults = await Promise.all(batchPromises);
                  
                  for (const data of batchResults) {
