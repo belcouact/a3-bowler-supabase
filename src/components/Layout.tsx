@@ -556,7 +556,15 @@ const Layout = () => {
                                 title={!isSidebarOpen ? bowler.name : undefined}
                             >
                                 <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
-                                    <Target className={clsx("w-4 h-4 flex-shrink-0", isSidebarOpen ? "mr-3" : "mr-0", location.pathname === `/metric-bowler/${bowler.id}` ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
+                                    <div className={clsx(
+                                        "w-5 h-5 flex-shrink-0 flex items-center justify-center rounded text-[10px] font-bold uppercase transition-colors",
+                                        isSidebarOpen ? "mr-3" : "mr-0",
+                                        location.pathname === `/metric-bowler/${bowler.id}` 
+                                            ? "bg-blue-100 text-blue-700" 
+                                            : "bg-gray-200 text-gray-600 group-hover:bg-gray-300"
+                                    )}>
+                                        {bowler.name?.charAt(0) || '?'}
+                                    </div>
                                     {isSidebarOpen && <span className="truncate">{bowler.name}</span>}
                                 </div>
                             </Link>
@@ -606,7 +614,15 @@ const Layout = () => {
                                                 title={!isSidebarOpen ? bowler.name : undefined}
                                             >
                                                 <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
-                                                    <Target className={clsx("w-4 h-4 flex-shrink-0", isSidebarOpen ? "mr-3" : "mr-0", location.pathname === `/metric-bowler/${bowler.id}` ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
+                                                    <div className={clsx(
+                                                        "w-5 h-5 flex-shrink-0 flex items-center justify-center rounded text-[10px] font-bold uppercase transition-colors",
+                                                        isSidebarOpen ? "mr-3" : "mr-0",
+                                                        location.pathname === `/metric-bowler/${bowler.id}` 
+                                                            ? "bg-blue-100 text-blue-700" 
+                                                            : "bg-gray-200 text-gray-600 group-hover:bg-gray-300"
+                                                    )}>
+                                                        {bowler.name?.charAt(0) || '?'}
+                                                    </div>
                                                     {isSidebarOpen && <span className="truncate">{bowler.name}</span>}
                                                 </div>
                                             </Link>
