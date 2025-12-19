@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, MousePointer, MessageSquare, Target, Edit, Sparkles } from 'lucide-react';
+import { X, MousePointer, MessageSquare, Target, Edit, Sparkles, BrainCircuit, NotepadText, Circle } from 'lucide-react';
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -16,7 +16,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
 
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+        <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6">
           <div className="absolute top-0 right-0 pt-4 pr-4">
             <button
               type="button"
@@ -34,7 +34,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 Metric Bowler User Guide
               </h3>
               
-              <div className="space-y-4">
+              <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
                 <div className="flex items-start">
                   <div className="flex-shrink-0">
                     <MousePointer className="h-5 w-5 text-blue-500" />
@@ -94,6 +94,57 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     </p>
                   </div>
                 </div>
+
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <BrainCircuit className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div className="ml-3">
+                    <h4 className="text-sm font-medium text-gray-900">Mindmap</h4>
+                    <p className="text-sm text-gray-500">
+                      Use the Mindmap tool to visualize your problem solving process or brainstorm ideas.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <NotepadText className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div className="ml-3">
+                    <h4 className="text-sm font-medium text-gray-900">One Click Summary</h4>
+                    <p className="text-sm text-gray-500">
+                      Generate a comprehensive summary of all your metrics and A3 cases with a single click.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                   <div className="flex-shrink-0">
+                    <Circle className="h-5 w-5 text-gray-400" />
+                   </div>
+                   <div className="ml-3">
+                     <h4 className="text-sm font-medium text-gray-900">Bowler Color Rules</h4>
+                     <p className="text-sm text-gray-500 mb-2">
+                       The color indicator next to the Bowler name in the sidebar represents the status of the latest month's data:
+                     </p>
+                     <ul className="list-none space-y-1 text-sm text-gray-500">
+                       <li className="flex items-center">
+                         <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                         <span><strong className="text-gray-700">Green:</strong> All metrics met their targets.</span>
+                       </li>
+                       <li className="flex items-center">
+                  <span className="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+                  <span><strong className="text-gray-700">Red:</strong> At least one metric failed to meet its target for 3 consecutive months.</span>
+                </li>
+                       <li className="flex items-center">
+                         <span className="w-3 h-3 bg-yellow-400 rounded-full mr-2"></span>
+                         <span><strong className="text-gray-700">Yellow/Gray:</strong> No data available for the latest month.</span>
+                       </li>
+                     </ul>
+                   </div>
+                </div>
+
               </div>
             </div>
           </div>

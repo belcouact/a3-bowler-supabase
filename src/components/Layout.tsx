@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Plus, BarChart3, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, Workflow, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText } from 'lucide-react';
+import { Plus, BarChart3, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, Workflow, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, BrainCircuit } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
 import { Bowler, Metric } from '../types';
@@ -449,12 +449,12 @@ const Layout = () => {
               <ExternalLink className="w-4 h-4" />
             </button>
             <button
-              onClick={() => navigate('/mindmap')}
-              className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-colors"
-              title="Mindmap your ideas"
-            >
-              <Workflow className="w-4 h-4" />
-            </button>
+                onClick={() => navigate('/mindmap')}
+                className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-colors"
+                title="Mindmap your ideas"
+              >
+                <BrainCircuit className="w-4 h-4" />
+              </button>
             <button
               onClick={() => setIsImportModalOpen(true)}
               className="p-2 rounded-md bg-green-500 text-white shadow-sm hover:bg-green-600 transition-colors"
@@ -475,7 +475,7 @@ const Layout = () => {
               className="p-2 bg-teal-600 text-white rounded-md shadow-sm hover:bg-teal-700 transition-colors"
               title="One Click Summary by AI"
             >
-              <Zap className="w-4 h-4" />
+              <NotepadText className="w-4 h-4" />
             </button>
             <button
               onClick={() => setIsAIChatOpen(true)}
@@ -527,7 +527,7 @@ const Layout = () => {
                     }}
                     className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600"
                   >
-                    <Workflow className="w-4 h-4 mr-3" />
+                    <BrainCircuit className="w-4 h-4 mr-3" />
                     Mindmap your ideas
                   </button>
                   <button

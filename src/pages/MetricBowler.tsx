@@ -360,7 +360,6 @@ const MetricBowler = () => {
         </div>
         <div className="text-right flex flex-col items-end">
              {selectedBowler?.champion && <p className="text-sm text-gray-600 mb-2">Champion: {selectedBowler.champion}</p>}
-             {selectedBowler?.tag && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-3">{selectedBowler.tag}</span>}
             
             <div className="flex items-center space-x-2">
               <button
