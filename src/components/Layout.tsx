@@ -279,6 +279,8 @@ const Layout = () => {
           metrics: (b.metrics || []).map(m => ({
             name: m.name,
             scope: m.scope,
+            definition: m.definition,
+            attribute: m.attribute,
             monthlyData: m.monthlyData
           }))
         })),
@@ -290,7 +292,7 @@ const Layout = () => {
         }))
       });
       
-      const prompt = "Provide a concise executive summary. Use emojis (e.g., 🟢, 🔴, ⚠️, 📈, 📉) liberally. \n\nStructure the report with:\n1. **Executive Overview**: Brief performance snapshot.\n2. **Critical Issues**: Focus mainly on metrics **not meeting the target** in the latest month or having **consecutive failing months**. \n3. **Strategic Recommendations**: Actionable improvement suggestions based on **industry experience and best practices**. (Do NOT include specific industry benchmarks).\n4. **A3 Problem Solving Status**: Brief summary of active cases.\n\nMake the output look like a professional business intelligence report. Keep the analysis concise.";
+      const prompt = "Provide a concise executive summary. Use emojis (e.g., 🟢, 🔴, ⚠️, 📈, 📉) liberally. \n\nStructure the report with:\n1. **Executive Overview**: Brief performance snapshot.\n2. **Critical Issues**: Focus mainly on metrics **not meeting the target** in the latest month or having **consecutive failing months**. \n3. **Strategic Recommendations**: Actionable improvement suggestions based on **industry experience and best practices**. \n   - **IMPORTANT**: Tailor suggestions specifically to the **Metric Definition** and **Attribute** provided in the data.\n   - (Do NOT include specific industry benchmarks).\n4. **A3 Problem Solving Status**: Brief summary of active cases.\n\nMake the output look like a professional business intelligence report. Keep the analysis concise.";
       
       const summary = await generateComprehensiveSummary(context, prompt);
       setSummaryContent(summary);

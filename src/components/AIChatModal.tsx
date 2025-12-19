@@ -64,10 +64,7 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initi
         role: 'system',
         content: `You are an AI assistant for the Metric Bowler & A3 Problem Solving application. 
         Here is the current data in the application: ${context}.
-        Answer the user's questions based on this data. 
-        - Be **concise** and helpful. 
-        - When suggesting improvements, rely on **industry best practices** and experience rather than specific benchmarks.
-        - Focus on identifying gaps where targets are not met.`
+        Answer the user's questions based on this data. Be concise and helpful.`
       };
 
       const historyMessages = messages.filter(m => m.role !== 'system');
