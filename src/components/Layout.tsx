@@ -1,7 +1,8 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Plus, BarChart3, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, Link as LinkIcon, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp } from 'lucide-react';
 import clsx from 'clsx';
-import { useApp, A3Case, Bowler, Metric } from '../context/AppContext';
+import { useApp, A3Case } from '../context/AppContext';
+import { Bowler, Metric } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
 import A3CaseModal from './A3CaseModal';
@@ -560,7 +561,7 @@ const Layout = () => {
                                     <div className={clsx(
                                         "w-5 h-5 flex-shrink-0 flex items-center justify-center rounded text-[10px] font-bold uppercase transition-colors",
                                         isSidebarOpen ? "mr-3" : "mr-0",
-                                        getBowlerStatusColor(bowler)
+                                        bowler.statusColor || getBowlerStatusColor(bowler)
                                     )}>
                                         {bowler.name?.charAt(0) || '?'}
                                     </div>
@@ -616,7 +617,7 @@ const Layout = () => {
                                                     <div className={clsx(
                                                         "w-5 h-5 flex-shrink-0 flex items-center justify-center rounded text-[10px] font-bold uppercase transition-colors",
                                                         isSidebarOpen ? "mr-3" : "mr-0",
-                                                        getBowlerStatusColor(bowler)
+                                                        bowler.statusColor || getBowlerStatusColor(bowler)
                                                     )}>
                                                         {bowler.name?.charAt(0) || '?'}
                                                     </div>

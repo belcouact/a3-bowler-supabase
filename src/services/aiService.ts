@@ -1,4 +1,4 @@
-import { Metric } from '../context/AppContext';
+import { Metric } from '../types';
 
 export interface AnalysisResult {
   trend: 'stable' | 'capable' | 'unstable' | 'incapable' | 'improving' | 'degrading';

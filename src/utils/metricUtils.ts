@@ -1,4 +1,4 @@
-import { Bowler, Metric } from '../context/AppContext';
+import { Bowler, Metric } from '../types';
 
 export const isViolation = (
   rule: 'gte' | 'lte' | 'within_range' | undefined,

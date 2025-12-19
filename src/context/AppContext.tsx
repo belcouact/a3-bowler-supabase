@@ -2,94 +2,10 @@ import { createContext, useContext, useState, ReactNode, useEffect } from 'react
 import { dataService } from '../services/dataService';
 import { useAuth } from './AuthContext';
 import { generateShortId } from '../utils/idUtils';
+import { Bowler, A3Case, Metric, MetricData, MindMapNodeData, ActionPlanTaskData, DataAnalysisImage } from '../types';
+import { getBowlerStatusColor } from '../utils/metricUtils';
 
-// Types
-export interface MetricData {
-  target: string;
-  actual: string;
-  targetNote?: string;
-  actualNote?: string;
-}
-
-export interface Metric {
-  id: string;
-  name: string;
-  definition: string;
-  owner: string;
-  scope: string;
-  attribute: string;
-  targetMeetingRule?: 'gte' | 'lte' | 'within_range';
-  monthlyData?: Record<string, MetricData>;
-}
-
-export interface Bowler {
-  id: string;
-  name: string;
-  description?: string;
-  objective?: string;
-  champion?: string;
-  commitment?: string;
-  tag?: string;
-  metrics?: Metric[];
-}
-
-export interface MindMapNodeData {
-  id: string;
-  text: string;
-  x: number;
-  y: number;
-  width?: number;
-  height?: number;
-  customWidth?: number;
-  customHeight?: number;
-  parentId: string | null;
-  type?: 'root' | 'child';
-  color?: string;
-}
-
-export interface ActionPlanTaskData {
-  id: string;
-  name: string;
-  description?: string;
-  owner: string;
-  group?: string;
-  startDate: string;
-  endDate: string;
-  status: 'Not Started' | 'In Progress' | 'Completed';
-  progress: number;
-}
-
-export interface DataAnalysisImage {
-  id: string;
-  src: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-export interface A3Case {
-  id: string;
-  title: string;
-  description?: string;
-  owner?: string;
-  group?: string;
-  priority?: 'Low' | 'Medium' | 'High';
-  startDate?: string;
-  endDate?: string;
-  status?: string;
-  problemStatement?: string;
-  results?: string;
-  mindMapNodes?: MindMapNodeData[];
-  mindMapText?: string;
-  rootCause?: string;
-  actionPlanTasks?: ActionPlanTaskData[];
-  dataAnalysisObservations?: string;
-  dataAnalysisImages?: DataAnalysisImage[];
-  dataAnalysisCanvasHeight?: number;
-  resultImages?: DataAnalysisImage[];
-  resultCanvasHeight?: number;
-}
+export type { Bowler, A3Case, Metric, MetricData, MindMapNodeData, ActionPlanTaskData, DataAnalysisImage };
 
 interface AppContextType {
   bowlers: Bowler[];
@@ -190,9 +106,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user?.username]);
 
-  const persistData = (newBowlers: Bowler[], newA3Cases: A3Case[], newMarkdown: string) => {
+  const saveToLocalStorage = (newBowlers: Bowler[], newA3Cases: A3Case[], newMarkdown: string) => {
     if (user) {
-      // 1. Save to Local Storage immediately
+      // 1. Save to Local Storage immediately (Local Cache)
       const localDataKey = `user_data_${user.username}`;
       try {
         localStorage.setItem(localDataKey, JSON.stringify({ 
@@ -203,13 +119,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       } catch (e) {
         console.error("Local Storage save failed", e);
       }
-      // Auto-save to backend has been disabled as per request
+      // Note: Auto-save to backend is DISABLED. 
+      // Saving to backend only happens when the user manually clicks the "Save" button in Layout.tsx.
     }
   };
 
   const updateDashboardMarkdown = (markdown: string) => {
       setDashboardMarkdown(markdown);
-      persistData(bowlers, a3Cases, markdown);
+      saveToLocalStorage(bowlers, a3Cases, markdown);
   };
 
   const addBowler = (data: Omit<Bowler, 'id'>) => {
@@ -219,15 +136,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     };
     setBowlers(prev => {
       const newBowlers = [...prev, newBowler];
-      persistData(newBowlers, a3Cases, dashboardMarkdown);
+      saveToLocalStorage(newBowlers, a3Cases, dashboardMarkdown);
       return newBowlers;
     });
   };
 
-  const updateBowler = (updatedBowler: Bowler) => {
+  const updateBowler = (bowler: Bowler) => {
+    // Automatically calculate status color on update
+    const statusColor = getBowlerStatusColor(bowler);
+    const updatedBowler = { ...bowler, statusColor };
+
     setBowlers(prev => {
-      const newBowlers = prev.map(b => b.id === updatedBowler.id ? updatedBowler : b);
-      persistData(newBowlers, a3Cases, dashboardMarkdown);
+      const newBowlers = prev.map((b) => (b.id === updatedBowler.id ? updatedBowler : b));
+      saveToLocalStorage(newBowlers, a3Cases, dashboardMarkdown);
       return newBowlers;
     });
   };
@@ -239,7 +160,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     };
     setA3Cases(prev => {
       const newA3Cases = [...prev, newCase];
-      persistData(bowlers, newA3Cases, dashboardMarkdown);
+      saveToLocalStorage(bowlers, newA3Cases, dashboardMarkdown);
       return newA3Cases;
     });
   };
@@ -247,7 +168,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const updateA3Case = (updatedCase: A3Case) => {
     setA3Cases(prev => {
       const newA3Cases = prev.map(c => c.id === updatedCase.id ? updatedCase : c);
-      persistData(bowlers, newA3Cases, dashboardMarkdown);
+      saveToLocalStorage(bowlers, newA3Cases, dashboardMarkdown);
       return newA3Cases;
     });
   };
@@ -255,7 +176,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const deleteBowler = (id: string) => {
     setBowlers(prev => {
       const newBowlers = prev.filter((b) => b.id !== id);
-      persistData(newBowlers, a3Cases, dashboardMarkdown);
+      saveToLocalStorage(newBowlers, a3Cases, dashboardMarkdown);
       return newBowlers;
     });
   };
@@ -263,7 +184,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const deleteA3Case = (id: string) => {
     setA3Cases(prev => {
       const newA3Cases = prev.filter((c) => c.id !== id);
-      persistData(bowlers, newA3Cases, dashboardMarkdown);
+      saveToLocalStorage(bowlers, newA3Cases, dashboardMarkdown);
       return newA3Cases;
     });
   };
