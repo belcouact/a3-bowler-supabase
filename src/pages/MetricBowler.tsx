@@ -339,7 +339,7 @@ const MetricBowler = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
       <div className="px-6 py-5 border-b border-gray-200 bg-white flex justify-between items-center">
         <div 
             onDoubleClick={() => {
@@ -418,7 +418,7 @@ const MetricBowler = () => {
              </div>
         </div>
       </div>
-      <div className="overflow-x-auto no-scrollbar">
+      <div className="overflow-x-auto overflow-y-hidden no-scrollbar">
         <table className="min-w-full divide-y divide-gray-200 table-auto">
           <thead className="bg-gray-50">
             <tr>
