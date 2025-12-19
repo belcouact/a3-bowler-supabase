@@ -290,7 +290,7 @@ const Layout = () => {
         }))
       });
       
-      const prompt = "Provide a comprehensive and visually engaging executive summary of the metrics. Use emojis (e.g., 🟢, 🔴, ⚠️, 📈, 📉) liberally to visually represent status and trends. \n\nStructure the report with:\n1. **Executive Overview**: High-level performance snapshot.\n2. **Detailed Analysis**: By Group/Bowler. **CRITICAL**: For each metric/bowler, include specific **Industry Insights** or **Benchmarks** to provide context (e.g., 'Industry avg is X%').\n3. **Strategic Recommendations**: Actionable improvement suggestions based on the data and industry best practices.\n4. **A3 Problem Solving Status**: Summary of active cases.\n\nMake the output look like a professional business intelligence report.";
+      const prompt = "Provide a concise executive summary. Use emojis (e.g., 🟢, 🔴, ⚠️, 📈, 📉) liberally. \n\nStructure the report with:\n1. **Executive Overview**: Brief performance snapshot.\n2. **Critical Issues**: Focus mainly on metrics **not meeting the target** in the latest month or having **consecutive failing months**. \n3. **Strategic Recommendations**: Actionable improvement suggestions based on **industry experience and best practices**. (Do NOT include specific industry benchmarks).\n4. **A3 Problem Solving Status**: Brief summary of active cases.\n\nMake the output look like a professional business intelligence report. Keep the analysis concise.";
       
       const summary = await generateComprehensiveSummary(context, prompt);
       setSummaryContent(summary);

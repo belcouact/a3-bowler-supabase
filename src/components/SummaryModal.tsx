@@ -80,7 +80,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
                             <Loader2 className="relative w-12 h-12 animate-spin text-indigo-600 mb-4" />
                         </div>
                         <h4 className="text-lg font-medium text-gray-900 mb-1">Generating AI Report</h4>
-                        <p className="text-gray-500 text-sm max-w-xs mx-auto">Analyzing performance metrics, identifying trends, and gathering industry benchmarks...</p>
+                        <p className="text-gray-500 text-sm max-w-xs mx-auto">Analyzing performance metrics, identifying critical issues, and gathering industry best practices...</p>
                     </div>
                 ) : (
                     <div className="prose prose-sm max-w-none prose-indigo prose-headings:text-indigo-900 prose-a:text-indigo-600">

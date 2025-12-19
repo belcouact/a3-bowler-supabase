@@ -105,13 +105,17 @@ export const analyzeMetric = async (metric: Metric): Promise<AnalysisResult> => 
   
   2. **Calculate Achievement Rate:** % of points meeting the target.
 
-  3. **Suggestions:** Provide 3-5 specific, actionable suggestions. 
+  3. **Suggestions:** Provide 3-5 specific, actionable suggestions based on **industry experience and best practices**. 
+     - Do NOT include specific numerical industry benchmarks.
      - If "unstable", suggest looking for special causes of variation.
      - If "incapable", suggest process redesign or resource adjustment.
      - If "improving", suggest standardizing the new methods.
      - Relate suggestions to the Metric Definition and Attribute.
 
-  4. **Summary:** Provide a professional statistical summary. Mention stability (variation), capability (meeting targets), and any significant shifts. Avoid generic phrases.
+  4. **Summary:** Provide a **concise** professional statistical summary. 
+     - **CRITICAL:** Focus mainly on why the metric is **not meeting the target** in the latest month or has **consecutive failing months**. 
+     - If the metric is healthy/meeting targets, keep the summary very brief.
+     - Mention stability (variation) and capability.
 
   Response Format (JSON ONLY):
   {
