@@ -13,7 +13,7 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({ isOpen, onClos
   if (!isOpen || !result) return null;
 
   const getTrendIcon = () => {
-    switch (result.trend) {
+    switch (result.trend as string) {
       case 'capable':
         return <Award className="w-6 h-6 text-green-600" />;
       case 'improving':

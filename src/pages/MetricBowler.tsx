@@ -8,46 +8,10 @@ import { AIAnalysisModal } from '../components/AIAnalysisModal';
 import { analyzeMetric, AnalysisResult } from '../services/aiService';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useToast } from '../context/ToastContext';
+import { isViolation } from '../utils/metricUtils';
 
 const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-const isViolation = (
-  rule: 'gte' | 'lte' | 'within_range' | undefined,
-  targetStr: string | undefined,
-  actualStr: string | undefined
-): boolean => {
-  if (!actualStr || !targetStr) return false;
-  
-  const actual = parseFloat(actualStr);
-  if (isNaN(actual)) return false;
-
-  const effectiveRule = rule || 'gte';
-
-  if (effectiveRule === 'gte') {
-    const target = parseFloat(targetStr);
-    if (isNaN(target)) return false;
-    return actual < target;
-  }
-
-  if (effectiveRule === 'lte') {
-    const target = parseFloat(targetStr);
-    if (isNaN(target)) return false;
-    return actual > target;
-  }
-
-  if (effectiveRule === 'within_range') {
-    const match = targetStr.match(/^[{\[]?\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*[}\]]?$/);
-    if (match) {
-      const min = parseFloat(match[1]);
-      const max = parseFloat(match[2]);
-      if (!isNaN(min) && !isNaN(max)) {
-        return actual < min || actual > max;
-      }
-    }
-  }
-
-  return false;
-};
 
 const CustomizedDot = (props: any) => {
   const { cx, cy, payload } = props;
