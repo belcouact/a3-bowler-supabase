@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, MousePointer, MessageSquare, Target, Edit, Sparkles, BrainCircuit, NotepadText, Circle } from 'lucide-react';
+import { X, MousePointer, MessageSquare, Target, Edit, Sparkles, BrainCircuit, NotepadText } from 'lucide-react';
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -135,37 +135,10 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     </p>
                   </div>
                 </div>
-
-                <div className="flex items-start">
-                   <div className="flex-shrink-0">
-                    <Circle className="h-5 w-5 text-gray-400" />
-                   </div>
-                   <div className="ml-3">
-                     <h4 className="text-sm font-medium text-gray-900">Bowler Color Rules</h4>
-                     <p className="text-sm text-gray-500 mb-2">
-                       The color indicator next to the Bowler name in the sidebar represents the status of the latest month's data:
-                     </p>
-                     <ul className="list-none space-y-1 text-sm text-gray-500">
-                       <li className="flex items-center">
-                         <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-                         <span><strong className="text-gray-700">Green:</strong> All metrics met their targets in the latest month.</span>
-                       </li>
-                       <li className="flex items-center">
-                  <span className="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
-                  <span><strong className="text-gray-700">Red:</strong> At least one metric failed to meet its target for 3 consecutive months.</span>
-                </li>
-                       <li className="flex items-center">
-                         <span className="w-3 h-3 bg-yellow-400 rounded-full mr-2"></span>
-                         <span><strong className="text-gray-700">Yellow:</strong> Latest month or last 2 months missed the target for any of the metrics.</span>
-                       </li>
-                     </ul>
-                   </div>
-                </div>
-
               </div>
             </div>
           </div>
-          
+
           <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
             <button
               type="button"
