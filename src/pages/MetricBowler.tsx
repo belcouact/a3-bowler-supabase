@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, Navigate } from 'react-router-dom';
 import { Info, Settings, HelpCircle, Sparkles, Loader2 } from 'lucide-react';
 import { useApp, Metric } from '../context/AppContext';
@@ -103,6 +104,12 @@ const MetricBowler = () => {
   const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
   const [analyzingMetricName, setAnalyzingMetricName] = useState('');
   const [analyzingMetrics, setAnalyzingMetrics] = useState<Record<string, boolean>>({});
+
+  const [tooltip, setTooltip] = useState<{
+    x: number;
+    y: number;
+    content: React.ReactNode;
+  } | null>(null);
 
   const displayMonths = useMemo(() => {
     const [startYearStr, startMonthStr] = startDate.split('-');
@@ -459,18 +466,30 @@ const MetricBowler = () => {
                         <div className="flex flex-col">
                             <div className="flex items-center flex-wrap">
                                 <span className="mr-2">{metric.name}</span>
-                                <div className="group relative inline-block">
+                                <div 
+                                    className="inline-block"
+                                    onMouseEnter={(e) => {
+                                        const rect = e.currentTarget.getBoundingClientRect();
+                                        setTooltip({
+                                            x: rect.right + 8,
+                                            y: rect.top,
+                                            content: (
+                                                <>
+                                                    <p className="font-semibold mb-1">Definition:</p>
+                                                    <p className="mb-2">{metric.definition || 'N/A'}</p>
+                                                    
+                                                    <p className="font-semibold mb-1">Owner:</p>
+                                                    <p className="mb-2">{metric.owner || 'N/A'}</p>
+                                                    
+                                                    <p className="font-semibold mb-1">Attribute:</p>
+                                                    <p>{metric.attribute || 'N/A'}</p>
+                                                </>
+                                            )
+                                        });
+                                    }}
+                                    onMouseLeave={() => setTooltip(null)}
+                                >
                                     <Info className="w-3.5 h-3.5 text-gray-400 hover:text-blue-500 cursor-help" />
-                                    <div className="absolute left-full top-0 ml-2 w-64 p-3 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 whitespace-normal break-words">
-                                        <p className="font-semibold mb-1">Definition:</p>
-                                        <p className="mb-2">{metric.definition || 'N/A'}</p>
-                                        
-                                        <p className="font-semibold mb-1">Owner:</p>
-                                        <p className="mb-2">{metric.owner || 'N/A'}</p>
-                                        
-                                        <p className="font-semibold mb-1">Attribute:</p>
-                                        <p>{metric.attribute || 'N/A'}</p>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -753,6 +772,16 @@ const MetricBowler = () => {
         result={analysisResult}
         metricName={analyzingMetricName}
       />
+
+      {tooltip && createPortal(
+        <div 
+          className="fixed p-3 bg-gray-800 text-white text-xs rounded shadow-lg z-[9999] whitespace-normal break-words w-64 pointer-events-none"
+          style={{ left: tooltip.x, top: tooltip.y }}
+        >
+          {tooltip.content}
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
