@@ -15,7 +15,7 @@ export const ConsolidateModal: React.FC<ConsolidateModalProps> = ({ isOpen, onCl
   const [tagInput, setTagInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
-  const { addBowler, bowlers } = useApp();
+  const { addBowler, updateBowler, bowlers } = useApp();
   const toast = useToast();
 
   if (!isOpen) return null;
@@ -51,26 +51,22 @@ export const ConsolidateModal: React.FC<ConsolidateModalProps> = ({ isOpen, onCl
         // If I add them, I should check if they exist.
         
         let addedCount = 0;
+        let updatedCount = 0;
         newBowlers.forEach(newBowler => {
-           // Check if bowler with same ID exists? 
-           // If we are consolidating from other users, IDs might clash if they are not unique UUIDs.
-           // Assuming UUIDs.
            const exists = bowlers.some(b => b.id === newBowler.id);
            if (!exists) {
                addBowler(newBowler);
                addedCount++;
            } else {
-               // Update? Or Ignore?
-               // Usually consolidate implies getting the latest or merging.
-               // For simplicity, we only add new ones or maybe we should update existing ones?
-               // Let's stick to adding new ones for now to avoid overwriting user's local edits without asking.
+               updateBowler(newBowler);
+               updatedCount++;
            }
         });
         
-        if (addedCount > 0) {
-            toast.success(`Successfully consolidated ${addedCount} bowlers.`);
+        if (addedCount > 0 || updatedCount > 0) {
+            toast.success(`Successfully consolidated: ${addedCount} added, ${updatedCount} updated.`);
         } else {
-            toast.info('No new bowlers found with these tags.');
+            toast.info('No new or updated bowlers found with these tags.');
         }
         onClose();
         setTagInput('');
