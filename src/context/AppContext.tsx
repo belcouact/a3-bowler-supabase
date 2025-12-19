@@ -188,7 +188,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setA3Cases([]);
         setDashboardMarkdown(DEFAULT_MARKDOWN);
     }
-  }, [user]);
+  }, [user?.username]);
 
   const persistData = (newBowlers: Bowler[], newA3Cases: A3Case[], newMarkdown: string) => {
     if (user) {

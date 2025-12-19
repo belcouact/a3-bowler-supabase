@@ -93,7 +93,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
   const handleRefreshProfile = async () => {
     setIsLoading(true);
     try {
-        await refreshUser();
+        await refreshUser(true);
         toast.success('Profile reloaded');
     } catch (error: any) {
         toast.error('Failed to reload profile');

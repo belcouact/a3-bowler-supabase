@@ -471,9 +471,9 @@ const ActionPlan = () => {
 
 
   return (
-    <div className="flex flex-col h-full bg-white shadow border border-gray-200 overflow-hidden">
+    <div className="flex flex-col h-full bg-white shadow border border-gray-200 overflow-auto">
       {/* Header Controls */}
-      <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-white z-20 relative">
+      <div className="flex justify-start gap-4 items-center p-4 border-b border-gray-200 bg-white z-20 sticky left-0">
         <div className="flex items-center space-x-4">
             {/* View Presets */}
             <div className="flex bg-gray-100 rounded-md p-1">
@@ -536,9 +536,9 @@ const ActionPlan = () => {
       </div>
 
       {/* Gantt Chart Container */}
-      <div className="flex-1 overflow-auto relative select-none">
+      <div className="flex-1 relative select-none">
         <div className="flex min-w-max">
-            <div className="sticky left-0 z-20 bg-white border-r border-gray-200 shadow-sm w-64 flex-shrink-0">
+            <div className="sticky left-0 z-40 bg-white border-r border-gray-200 shadow-sm w-64 flex-shrink-0">
                 <div className="h-[60px] border-b border-gray-200 bg-gray-50 flex items-center justify-between px-4 font-semibold text-xs text-gray-500 uppercase tracking-wider sticky top-0 z-30">
                     <span>Task Details</span>
                     <button
@@ -593,7 +593,7 @@ const ActionPlan = () => {
             {/* Right: Timeline Grid */}
             <div className="relative">
                 {/* Header: Dates */}
-                <div className="flex h-[60px] border-b border-gray-200 bg-gray-50 sticky top-0 z-10">
+                <div className="flex h-[60px] border-b border-gray-200 bg-gray-50 sticky top-0 z-20">
                     {gridColumns.map((col, i) => {
                         const isToday = timeScale === 'day' ? formatDate(col.date) === formatDate(new Date()) : false;
                         
