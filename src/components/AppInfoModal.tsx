@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { X, LayoutDashboard, FileText, Sparkles, Upload, Download, Info, Layers, Zap, TrendingUp } from 'lucide-react';
+import { X, LayoutDashboard, FileText, Sparkles, Upload, Download, Layers, Zap, TrendingUp } from 'lucide-react';
 
 interface AppInfoModalProps {
   isOpen: boolean;
@@ -48,27 +48,6 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                 bowler chart with A3 analysis, enhanced by AI to summarize patterns and support root cause
                 thinking.
               </p>
-            </div>
-
-            <div className="border-t border-gray-100 pt-6 mt-6">
-                <h4 className="text-sm font-semibold text-gray-900 mb-2">Bowler Status Rules</h4>
-                <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 space-y-2">
-                    <div className="flex items-center">
-                        <span className="w-3 h-3 rounded-full bg-green-500 mr-2"></span>
-                        <span className="font-medium mr-2">Green:</span>
-                        <span>All metrics met their targets in the latest month.</span>
-                    </div>
-                    <div className="flex items-center">
-                        <span className="w-3 h-3 rounded-full bg-red-500 mr-2"></span>
-                        <span className="font-medium mr-2">Red:</span>
-                        <span>Any metric missed its target for 3 consecutive months.</span>
-                    </div>
-                    <div className="flex items-center">
-                        <span className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></span>
-                        <span className="font-medium mr-2">Yellow:</span>
-                        <span>Mixed performance or insufficient data to determine Green/Red status.</span>
-                    </div>
-                </div>
             </div>
 
             <div className="border-t border-gray-100 pt-6 mt-6">
