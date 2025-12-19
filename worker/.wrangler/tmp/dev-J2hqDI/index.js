@@ -110,6 +110,46 @@ var index_default = {
         });
       }
     }
+    if (request.method === "POST" && url.pathname === "/consolidate") {
+      try {
+        const { tags } = await request.json();
+        if (!tags || !Array.isArray(tags) || tags.length === 0) {
+          return new Response(JSON.stringify({ success: false, error: "Tags list is required" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+        const allBowlers = [];
+        let cursor = void 0;
+        let listComplete = false;
+        while (!listComplete) {
+          const list = await env.BOWLER_DATA.list({ prefix: "user:", cursor });
+          cursor = list.cursor;
+          listComplete = list.list_complete;
+          const bowlerKeys = list.keys.filter((k) => k.name.includes(":bowler:"));
+          if (bowlerKeys.length > 0) {
+            const batchPromises = bowlerKeys.map((key) => env.BOWLER_DATA.get(key.name, "json"));
+            const batchResults = await Promise.all(batchPromises);
+            for (const data of batchResults) {
+              if (data && typeof data === "object") {
+                const bowler = data;
+                if (bowler.tag && tags.includes(bowler.tag)) {
+                  allBowlers.push(bowler);
+                }
+              }
+            }
+          }
+        }
+        return new Response(JSON.stringify({ success: true, bowlers: allBowlers }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+    }
     if (request.method === "GET" && url.pathname === "/load") {
       const userId = url.searchParams.get("userId");
       if (!userId) {

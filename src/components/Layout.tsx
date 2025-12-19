@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Plus, BarChart3, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, Link as LinkIcon, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp } from 'lucide-react';
+import { Plus, BarChart3, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, Link as LinkIcon, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
 import { Bowler, Metric } from '../types';
@@ -14,6 +14,7 @@ import { AIChatModal } from './AIChatModal';
 import { AppInfoModal } from './AppInfoModal';
 import { dataService } from '../services/dataService';
 import { useToast } from '../context/ToastContext';
+import { ConsolidateModal } from './ConsolidateModal';
 import { ImportModal } from './ImportModal';
 import { getBowlerStatusColor } from '../utils/metricUtils';
 
@@ -37,6 +38,7 @@ const Layout = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+  const [isConsolidateModalOpen, setIsConsolidateModalOpen] = useState(false);
   const [isAppInfoOpen, setIsAppInfoOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -436,6 +438,13 @@ const Layout = () => {
               title="Ask AI"
             >
               <Sparkles className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setIsConsolidateModalOpen(true)}
+              className="flex items-center px-3 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700 transition-colors"
+              title="Consolidate Bowlers"
+            >
+              <Layers className="w-4 h-4" />
             </button>
           </div>
 
@@ -946,6 +955,11 @@ const Layout = () => {
       <AppInfoModal
         isOpen={isAppInfoOpen}
         onClose={() => setIsAppInfoOpen(false)}
+      />
+
+      <ConsolidateModal
+        isOpen={isConsolidateModalOpen}
+        onClose={() => setIsConsolidateModalOpen(false)}
       />
     </div>
   );

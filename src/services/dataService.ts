@@ -54,4 +54,20 @@ export const dataService = {
         return { success: false, bowlers: [], a3Cases: [] };
     }
   },
+
+  async consolidateBowlers(tags: string[]) {
+    const response = await fetch(`${API_BASE_URL}/consolidate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ tags }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to consolidate bowlers');
+    }
+
+    return response.json();
+  },
 };
