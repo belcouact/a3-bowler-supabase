@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Plus, BarChart3, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, Link as LinkIcon, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers } from 'lucide-react';
+import { Plus, BarChart3, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, Workflow, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
 import { Bowler, Metric } from '../types';
@@ -411,9 +411,9 @@ const Layout = () => {
                 <button
                   onClick={() => navigate('/mindmap')}
                   className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-colors"
-                  title="Visualize objectives"
+                  title="Mindmap your ideas"
                 >
-                  <LinkIcon className="w-4 h-4" />
+                  <Workflow className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setIsImportModalOpen(true)}

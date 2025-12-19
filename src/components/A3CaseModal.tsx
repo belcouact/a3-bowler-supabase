@@ -105,7 +105,7 @@ const A3CaseModal = ({ isOpen, onClose, onSave, onDelete, initialData }: A3CaseM
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Owner</label>
                   <input
@@ -122,6 +122,15 @@ const A3CaseModal = ({ isOpen, onClose, onSave, onDelete, initialData }: A3CaseM
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     value={formData.group}
                     onChange={(e) => setFormData({ ...formData, group: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Tag</label>
+                  <input
+                    type="text"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={formData.tag}
+                    onChange={(e) => setFormData({ ...formData, tag: e.target.value })}
                   />
                 </div>
               </div>
