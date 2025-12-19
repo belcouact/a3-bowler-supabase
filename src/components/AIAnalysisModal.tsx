@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, TrendingUp, TrendingDown, Minus, Activity, AlertTriangle, CheckCircle } from 'lucide-react';
+import { X, TrendingUp, TrendingDown, Minus, Activity, AlertTriangle, CheckCircle, Award, XCircle } from 'lucide-react';
 import { AnalysisResult } from '../services/aiService';
 
 interface AIAnalysisModalProps {
@@ -14,12 +14,23 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({ isOpen, onClos
 
   const getTrendIcon = () => {
     switch (result.trend) {
-      case 'increasing':
-        return <TrendingUp className="w-6 h-6 text-blue-600" />;
-      case 'decreasing':
+      case 'capable':
+        return <Award className="w-6 h-6 text-green-600" />;
+      case 'improving':
+        return <TrendingUp className="w-6 h-6 text-green-600" />;
+      case 'degrading':
         return <TrendingDown className="w-6 h-6 text-red-600" />;
       case 'stable':
-        return <Minus className="w-6 h-6 text-gray-600" />;
+        return <Minus className="w-6 h-6 text-blue-600" />;
+      case 'unstable':
+        return <Activity className="w-6 h-6 text-orange-600" />;
+      case 'incapable':
+        return <XCircle className="w-6 h-6 text-red-600" />;
+      // Backwards compatibility
+      case 'increasing':
+        return <TrendingUp className="w-6 h-6 text-green-600" />;
+      case 'decreasing':
+        return <TrendingDown className="w-6 h-6 text-red-600" />;
       case 'fluctuating':
         return <Activity className="w-6 h-6 text-orange-600" />;
       default:
