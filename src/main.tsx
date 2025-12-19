@@ -8,12 +8,12 @@ import { ToastProvider } from './context/ToastContext'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <AuthProvider>
-      <AppProvider>
-        <ToastProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <AppProvider>
           <App />
-        </ToastProvider>
-      </AppProvider>
-    </AuthProvider>
+        </AppProvider>
+      </AuthProvider>
+    </ToastProvider>
   </React.StrictMode>,
 )

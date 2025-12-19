@@ -25,7 +25,7 @@ const A3Analysis = () => {
     { path: 'why-analysis', label: 'Why Analysis', icon: GitBranch },
     { path: 'action-plan', label: 'Action Plan', icon: Calendar },
     { path: 'result', label: 'Result', icon: CheckCircle },
-    { path: 'summary', label: 'Summary', icon: FileText },
+    { path: 'summary', label: 'Report', icon: FileText },
   ];
 
   if (!selectedCase) {

@@ -62,7 +62,7 @@ const Summary = () => {
   return (
     <div className="space-y-6" ref={contentRef}>
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-bold text-gray-900">A3 Problem Solving Summary</h3>
+        <h3 className="text-xl font-bold text-gray-900">A3 Problem Solving Report</h3>
         <button 
           onClick={handleExportPDF}
           disabled={isExporting}

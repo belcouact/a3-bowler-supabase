@@ -34,7 +34,7 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
           <div className="bg-white px-4 pt-5 pb-6 sm:px-8 sm:pt-8 sm:pb-8">
             <div className="mb-6 text-center flex flex-col items-center">
               <div className="p-3 bg-blue-100 rounded-full mb-3">
-                 <Activity className="w-10 h-10 text-blue-600" />
+                 <TrendingUp className="w-10 h-10 text-blue-600" />
               </div>
               <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">A3 Bowler</h2>
               <p className="mt-1 text-sm text-gray-500">AI-Assisted Performance Tracker & A3 Problem Solving</p>

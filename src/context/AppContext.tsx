@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from 'react';
 import { dataService } from '../services/dataService';
 import { useAuth } from './AuthContext';
+import { useToast } from './ToastContext';
 import { generateShortId } from '../utils/idUtils';
 import { Bowler, A3Case, Metric, MetricData, MindMapNodeData, ActionPlanTaskData, DataAnalysisImage } from '../types';
 import { getBowlerStatusColor } from '../utils/metricUtils';
@@ -56,35 +57,65 @@ const DEFAULT_MARKDOWN = `# A3 Bowler
 // Provider
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
+  const { error } = useToast();
   const [bowlers, setBowlers] = useState<Bowler[]>([]);
   const [a3Cases, setA3Cases] = useState<A3Case[]>([]);
   const [dashboardMarkdown, setDashboardMarkdown] = useState<string>(DEFAULT_MARKDOWN);
   const [isLoading, setIsLoading] = useState(false);
+  
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    let isMounted = true;
-    if (user) {
-      setIsLoading(true);
-      // 1. Try Local Storage first to be instant
-      const localDataKey = `user_data_${user.username}`;
-      const localData = localStorage.getItem(localDataKey);
-      if (localData) {
-        try {
-          const parsed = JSON.parse(localData);
-          if (isMounted) {
+    isMountedRef.current = true;
+    return () => { isMountedRef.current = false; };
+  }, []);
+
+  const loadUserData = useCallback(async (username: string) => {
+    if (!isMountedRef.current) return;
+    setIsLoading(true);
+    
+    // Clear any existing timeout
+    if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
+
+    // Set 15s timeout
+    loadingTimeoutRef.current = setTimeout(() => {
+        if (isMountedRef.current) {
+            setIsLoading(false);
+            error("Data loading timed out", {
+                duration: 0,
+                action: {
+                    label: "Retry",
+                    onClick: () => loadUserData(username)
+                }
+            });
+        }
+    }, 15000);
+
+    // 1. Try Local Storage first (Instant)
+    const localDataKey = `user_data_${username}`;
+    const localData = localStorage.getItem(localDataKey);
+    if (localData) {
+      try {
+        const parsed = JSON.parse(localData);
+        if (isMountedRef.current) {
             setBowlers(parsed.bowlers || []);
             setA3Cases(parsed.a3Cases || []);
             setDashboardMarkdown(parsed.dashboardMarkdown || DEFAULT_MARKDOWN);
-          }
-        } catch (e) {
-          console.error("Failed to parse local data", e);
         }
+      } catch (e) {
+        console.error("Failed to parse local data", e);
       }
+    }
 
-      // 2. Load user data from backend (Source of Truth)
-      dataService.loadData(user.username)
-        .then(data => {
-          if (isMounted && data.success) {
+    // 2. Load from backend
+    try {
+        const data = await dataService.loadData(username);
+        
+        // If we are here, clear timeout
+        if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
+        
+        if (isMountedRef.current && data.success) {
             setBowlers(data.bowlers || []);
             setA3Cases(data.a3Cases || []);
             if (data.dashboardMarkdown) {
@@ -96,23 +127,38 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                 a3Cases: data.a3Cases || [],
                 dashboardMarkdown: data.dashboardMarkdown || DEFAULT_MARKDOWN
             }));
-          }
-        })
-        .catch(err => {
-          console.error("Failed to load user data:", err);
-        })
-        .finally(() => {
-          if (isMounted) setIsLoading(false);
-        });
+        } else if (!data.success) {
+            throw new Error(data.message || "Failed to load data");
+        }
+    } catch (err) {
+        if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
+        console.error("Failed to load user data:", err);
+        if (isMountedRef.current) {
+             error("Failed to load data", {
+                duration: 0,
+                action: {
+                    label: "Retry",
+                    onClick: () => loadUserData(username)
+                }
+            });
+        }
+    } finally {
+        if (isMountedRef.current) setIsLoading(false);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (user) {
+        loadUserData(user.username);
     } else {
         setBowlers([]);
         setA3Cases([]);
         setDashboardMarkdown(DEFAULT_MARKDOWN);
     }
     return () => {
-      isMounted = false;
+        if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
     };
-  }, [user?.username]);
+  }, [user, loadUserData]);
 
   const saveToLocalStorage = (newBowlers: Bowler[], newA3Cases: A3Case[], newMarkdown: string) => {
     if (user) {

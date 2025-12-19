@@ -5,13 +5,26 @@ interface ToastItem {
   id: string;
   message: string;
   type: ToastType;
+  duration?: number;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+}
+
+interface ToastOptions {
+  duration?: number;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 interface ToastContextType {
-  showToast: (message: string, type: ToastType) => void;
-  success: (message: string) => void;
-  error: (message: string) => void;
-  info: (message: string) => void;
+  showToast: (message: string, type: ToastType, options?: ToastOptions) => void;
+  success: (message: string, options?: ToastOptions) => void;
+  error: (message: string, options?: ToastOptions) => void;
+  info: (message: string, options?: ToastOptions) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -23,14 +36,14 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
-  const showToast = useCallback((message: string, type: ToastType) => {
+  const showToast = useCallback((message: string, type: ToastType, options?: ToastOptions) => {
     const id = Date.now().toString() + Math.random().toString(36).substring(2);
-    setToasts((prev) => [...prev, { id, message, type }]);
+    setToasts((prev) => [...prev, { id, message, type, ...options }]);
   }, []);
 
-  const success = useCallback((message: string) => showToast(message, 'success'), [showToast]);
-  const error = useCallback((message: string) => showToast(message, 'error'), [showToast]);
-  const info = useCallback((message: string) => showToast(message, 'info'), [showToast]);
+  const success = useCallback((message: string, options?: ToastOptions) => showToast(message, 'success', options), [showToast]);
+  const error = useCallback((message: string, options?: ToastOptions) => showToast(message, 'error', options), [showToast]);
+  const info = useCallback((message: string, options?: ToastOptions) => showToast(message, 'info', options), [showToast]);
 
   return (
     <ToastContext.Provider value={{ showToast, success, error, info }}>
@@ -43,6 +56,8 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
                 message={toast.message}
                 type={toast.type}
                 onClose={removeToast}
+                duration={toast.duration}
+                action={toast.action}
               />
           </div>
         ))}
