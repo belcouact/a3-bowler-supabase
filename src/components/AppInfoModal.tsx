@@ -54,7 +54,7 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
               <h4 className="text-sm font-semibold text-gray-900 mb-4">Key Features</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-green-50/80">
-                  <div className="h-9 w-9 rounded-md bg-green-500 flex items-center justify-center">
+                  <div className="h-9 w-9 bg-green-500 flex items-center justify-center">
                     <Sparkles className="h-5 w-5 text-white" />
                   </div>
                   <div className="ml-3">
@@ -66,7 +66,7 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-teal-50/80">
-                  <div className="h-9 w-9 rounded-md bg-teal-500 flex items-center justify-center">
+                  <div className="h-9 w-9 bg-teal-500 flex items-center justify-center">
                     <Zap className="h-5 w-5 text-white" />
                   </div>
                   <div className="ml-3">
@@ -78,7 +78,7 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-blue-50/80">
-                  <div className="h-9 w-9 rounded-md bg-blue-500 flex items-center justify-center">
+                  <div className="h-9 w-9 bg-blue-500 flex items-center justify-center">
                     <div className="flex">
                         <Upload className="h-3 w-3 text-white mr-0.5" />
                         <Download className="h-3 w-3 text-white" />
@@ -93,7 +93,7 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-indigo-50/80">
-                  <div className="h-9 w-9 rounded-md bg-indigo-500 flex items-center justify-center">
+                  <div className="h-9 w-9 bg-indigo-500 flex items-center justify-center">
                     <LayoutDashboard className="h-5 w-5 text-white" />
                   </div>
                   <div className="ml-3">
@@ -105,7 +105,7 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-purple-50/80">
-                  <div className="h-9 w-9 rounded-md bg-purple-500 flex items-center justify-center">
+                  <div className="h-9 w-9 bg-purple-500 flex items-center justify-center">
                     <Layers className="h-5 w-5 text-white" />
                   </div>
                   <div className="ml-3">
@@ -117,7 +117,7 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-orange-50/80">
-                  <div className="h-9 w-9 rounded-md bg-orange-500 flex items-center justify-center">
+                  <div className="h-9 w-9 bg-orange-500 flex items-center justify-center">
                     <FileText className="h-5 w-5 text-white" />
                   </div>
                   <div className="ml-3">
