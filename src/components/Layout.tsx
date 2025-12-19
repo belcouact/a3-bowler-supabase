@@ -279,9 +279,6 @@ const Layout = () => {
           metrics: (b.metrics || []).map(m => ({
             name: m.name,
             scope: m.scope,
-            definition: m.definition,
-            attribute: m.attribute,
-            targetMeetingRule: m.targetMeetingRule,
             monthlyData: m.monthlyData
           }))
         })),
@@ -293,7 +290,18 @@ const Layout = () => {
         }))
       });
       
-      const prompt = "Provide a concise executive summary. Use emojis (e.g., 🟢, 🔴, ⚠️, 📈, 📉) liberally. \n\nStructure the report with:\n1. **Executive Overview**: Brief performance snapshot.\n2. **Critical Issues**: Focus mainly on metrics **not meeting the target** in the latest month or having **consecutive failing months**. \n   - **CRITICAL**: Use the **Target Meeting Rule** (e.g., 'gte' means Actual >= Target is good, 'lte' means Actual <= Target is good) to correctly identify failing metrics.\n3. **Strategic Recommendations**: Actionable improvement suggestions based on **industry experience and best practices**. \n   - **IMPORTANT**: Tailor suggestions specifically to the **Metric Definition** and **Attribute** provided in the data.\n   - (Do NOT include specific industry benchmarks).\n4. **A3 Problem Solving Status**: Brief summary of active cases.\n\nMake the output look like a professional business intelligence report. Keep the analysis concise.";
+      const prompt = `Provide a comprehensive executive summary of the metrics and A3 cases.
+      Return the response in STRICT JSON format with the following structure:
+      {
+        "executiveSummary": "A high-level performance snapshot using emojis.",
+        "keyAchievements": ["List of key successes or stable metrics"],
+        "areasForImprovement": ["List of metrics that are struggling or degrading"],
+        "industryInsights": [
+          { "metric": "Metric Name", "insight": "Specific industry benchmark or context" }
+        ],
+        "strategicRecommendations": ["Actionable improvement suggestions"]
+      }
+      Do not include any markdown formatting (like \`\`\`json). Just the raw JSON object.`;
       
       const summary = await generateComprehensiveSummary(context, prompt);
       setSummaryContent(summary);

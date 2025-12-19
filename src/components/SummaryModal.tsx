@@ -1,6 +1,7 @@
-import { X, Loader2, Download, Copy, Sparkles, Lightbulb, TrendingUp } from 'lucide-react';
-import { MarkdownRenderer } from './MarkdownRenderer';
+import React from 'react';
+import { X, Loader2, Download, Copy, Sparkles, Lightbulb, TrendingUp, CheckCircle, AlertTriangle, Target } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { MarkdownRenderer } from './MarkdownRenderer';
 
 interface SummaryModalProps {
   isOpen: boolean;
@@ -9,22 +10,49 @@ interface SummaryModalProps {
   isLoading: boolean;
 }
 
+interface SummaryData {
+  executiveSummary: string;
+  keyAchievements: string[];
+  areasForImprovement: string[];
+  industryInsights: Array<{ metric: string; insight: string }>;
+  strategicRecommendations: string[];
+}
+
 export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, content, isLoading }) => {
   const toast = useToast();
 
   if (!isOpen) return null;
 
+  let parsedData: SummaryData | null = null;
+  let isJson = false;
+
+  try {
+    if (content && !isLoading) {
+      const cleanContent = content.replace(/```json/g, '').replace(/```/g, '').trim();
+      parsedData = JSON.parse(cleanContent);
+      isJson = true;
+    }
+  } catch (e) {
+    // Content might be plain text/markdown if old version or parsing failed
+    isJson = false;
+  }
+
   const handleCopy = () => {
-    navigator.clipboard.writeText(content);
+    // If structured data, copy a formatted string, otherwise copy raw content
+    const textToCopy = isJson && parsedData ? 
+        `Executive Summary:\n${parsedData.executiveSummary}\n\nKey Achievements:\n${parsedData.keyAchievements.join('\n')}\n\nAreas for Improvement:\n${parsedData.areasForImprovement.join('\n')}\n\nStrategic Recommendations:\n${parsedData.strategicRecommendations.join('\n')}` 
+        : content;
+        
+    navigator.clipboard.writeText(textToCopy);
     toast.success('Summary copied to clipboard!');
   };
 
   const handleDownload = () => {
-    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' });
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `metric_bowler_summary_${new Date().toISOString().split('T')[0]}.md`;
+    link.download = `metric_bowler_summary_${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -71,23 +99,110 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
           </div>
 
           {/* Content */}
-          <div className="px-4 py-5 sm:p-6 bg-white">
-            <div className="min-h-[300px] max-h-[60vh] overflow-y-auto rounded-xl border border-gray-200 bg-gray-50/30 p-6 shadow-inner">
-                {isLoading ? (
-                    <div className="flex flex-col items-center justify-center h-full py-16">
-                        <div className="relative">
-                            <div className="absolute inset-0 bg-indigo-200 rounded-full animate-ping opacity-25"></div>
-                            <Loader2 className="relative w-12 h-12 animate-spin text-indigo-600 mb-4" />
+          <div className="px-4 py-5 sm:p-6 bg-white min-h-[400px] max-h-[70vh] overflow-y-auto custom-scrollbar">
+            {isLoading ? (
+                <div className="flex flex-col items-center justify-center h-full py-16">
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-indigo-200 rounded-full animate-ping opacity-25"></div>
+                        <Loader2 className="relative w-12 h-12 animate-spin text-indigo-600 mb-4" />
+                    </div>
+                    <h4 className="text-lg font-medium text-gray-900 mb-1">Generating AI Report</h4>
+                    <p className="text-gray-500 text-sm max-w-xs mx-auto text-center">Analyzing performance metrics, identifying trends, and gathering industry benchmarks...</p>
+                </div>
+            ) : isJson && parsedData ? (
+                <div className="space-y-8">
+                    {/* Executive Summary */}
+                    <div className="bg-gradient-to-br from-indigo-50 to-white p-6 rounded-xl border border-indigo-100 shadow-sm">
+                        <h4 className="text-lg font-semibold text-indigo-900 mb-3 flex items-center">
+                            <Target className="w-5 h-5 mr-2 text-indigo-600" />
+                            Executive Overview
+                        </h4>
+                        <p className="text-gray-700 leading-relaxed text-sm md:text-base">
+                            {parsedData.executiveSummary}
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Key Achievements */}
+                        <div className="bg-green-50/50 p-5 rounded-xl border border-green-100">
+                            <h4 className="text-base font-semibold text-green-800 mb-3 flex items-center">
+                                <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
+                                Key Achievements
+                            </h4>
+                            <ul className="space-y-2">
+                                {parsedData.keyAchievements.map((item, idx) => (
+                                    <li key={idx} className="flex items-start text-sm text-gray-700">
+                                        <span className="w-1.5 h-1.5 bg-green-400 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                                        {item}
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
-                        <h4 className="text-lg font-medium text-gray-900 mb-1">Generating AI Report</h4>
-                        <p className="text-gray-500 text-sm max-w-xs mx-auto">Analyzing performance metrics, identifying critical issues, and gathering industry best practices...</p>
+
+                        {/* Areas for Improvement */}
+                        <div className="bg-red-50/50 p-5 rounded-xl border border-red-100">
+                            <h4 className="text-base font-semibold text-red-800 mb-3 flex items-center">
+                                <AlertTriangle className="w-4 h-4 mr-2 text-red-600" />
+                                Areas for Improvement
+                            </h4>
+                            <ul className="space-y-2">
+                                {parsedData.areasForImprovement.map((item, idx) => (
+                                    <li key={idx} className="flex items-start text-sm text-gray-700">
+                                        <span className="w-1.5 h-1.5 bg-red-400 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                                        {item}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
                     </div>
-                ) : (
-                    <div className="prose prose-sm max-w-none prose-indigo prose-headings:text-indigo-900 prose-a:text-indigo-600">
-                        <MarkdownRenderer content={content} />
+
+                    {/* Industry Insights */}
+                    <div>
+                        <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                            <Lightbulb className="w-5 h-5 mr-2 text-amber-500" />
+                            Industry Context & Benchmarks
+                        </h4>
+                        <div className="grid grid-cols-1 gap-3">
+                            {parsedData.industryInsights.map((item, idx) => (
+                                <div key={idx} className="flex items-start bg-amber-50/30 p-4 rounded-lg border border-amber-100">
+                                    <div className="flex-shrink-0 mt-0.5">
+                                        <TrendingUp className="w-4 h-4 text-amber-600" />
+                                    </div>
+                                    <div className="ml-3">
+                                        <span className="text-sm font-semibold text-gray-900 block mb-0.5">{item.metric}</span>
+                                        <span className="text-sm text-gray-600">{item.insight}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                )}
-            </div>
+
+                    {/* Strategic Recommendations */}
+                    <div className="bg-blue-50/50 p-6 rounded-xl border border-blue-100">
+                        <h4 className="text-lg font-semibold text-blue-900 mb-4 flex items-center">
+                            <Sparkles className="w-5 h-5 mr-2 text-blue-600" />
+                            Strategic Recommendations
+                        </h4>
+                        <div className="grid grid-cols-1 gap-4">
+                            {parsedData.strategicRecommendations.map((item, idx) => (
+                                <div key={idx} className="flex items-start">
+                                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold mt-0.5">
+                                        {idx + 1}
+                                    </div>
+                                    <p className="ml-3 text-sm text-gray-700 leading-relaxed pt-1">
+                                        {item}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                // Fallback for non-JSON content or errors
+                <div className="prose prose-sm max-w-none prose-indigo prose-headings:text-indigo-900 prose-a:text-indigo-600">
+                    <MarkdownRenderer content={content} />
+                </div>
+            )}
           </div>
 
           {/* Footer */}
@@ -99,7 +214,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
               disabled={isLoading || !content}
             >
               <Download className="w-4 h-4 mr-2" />
-              Download Report
+              Download JSON
             </button>
             <button
               type="button"
