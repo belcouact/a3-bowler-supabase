@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { X, Plus, Trash2, Info } from 'lucide-react';
 import { Bowler, Metric } from '../context/AppContext';
 import clsx from 'clsx';
 import { generateShortId } from '../utils/idUtils';
@@ -166,7 +166,10 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Group</label>
+                                <label className="block text-sm font-medium text-gray-700 flex items-center" title="Group multiple bowlers under one group">
+                                    Group
+                                    <Info className="w-4 h-4 ml-1 text-gray-400 cursor-help" />
+                                </label>
                                 <input
                                     type="text"
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
@@ -185,17 +188,32 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
-                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Commitment</label>
-                                <input
-                                    type="text"
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Team</label>
+                                <select
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                     value={generalData.commitment}
                                     onChange={(e) => setGeneralData({ ...generalData, commitment: e.target.value })}
-                                />
+                                >
+                                    <option value="">Select Team</option>
+                                    <option value="Quality">Quality</option>
+                                    <option value="Engineering">Engineering</option>
+                                    <option value="R&D">R&D</option>
+                                    <option value="Workshop">Workshop</option>
+                                    <option value="Production">Production</option>
+                                    <option value="GBS">GBS</option>
+                                    <option value="Procurement">Procurement</option>
+                                    <option value="Planning">Planning</option>
+                                    <option value="EH&S">EH&S</option>
+                                    <option value="Facility">Facility</option>
+                                    <option value="Sales & Marketing">Sales & Marketing</option>
+                                </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Tag</label>
+                                <label className="block text-sm font-medium text-gray-700 flex items-center" title="For consolidation purpose">
+                                    Tag
+                                    <Info className="w-4 h-4 ml-1 text-gray-400 cursor-help" />
+                                </label>
                                 <input
                                     type="text"
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
@@ -263,7 +281,10 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
                                                 />
                                             </div>
                                             <div className="col-span-3">
-                                                <label className="block text-xs font-medium text-gray-500">Scope</label>
+                                                <label className="block text-xs font-medium text-gray-500 flex items-center" title="What is included for this metric measurement">
+                                                    Scope
+                                                    <Info className="w-3 h-3 ml-1 text-gray-400 cursor-help" />
+                                                </label>
                                                 <input
                                                     type="text"
                                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1 px-2 text-sm"
