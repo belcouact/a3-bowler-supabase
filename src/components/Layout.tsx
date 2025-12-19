@@ -16,6 +16,8 @@ import { dataService } from '../services/dataService';
 import { useToast } from '../context/ToastContext';
 import { ConsolidateModal } from './ConsolidateModal';
 import { ImportModal } from './ImportModal';
+import { SummaryModal } from './SummaryModal';
+import { generateComprehensiveSummary } from '../services/aiService';
 import { getBowlerStatusColor } from '../utils/metricUtils';
 
 const Layout = () => {
@@ -39,6 +41,9 @@ const Layout = () => {
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [initialAIPrompt, setInitialAIPrompt] = useState<string | undefined>(undefined);
+  const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
+  const [summaryContent, setSummaryContent] = useState('');
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [isConsolidateModalOpen, setIsConsolidateModalOpen] = useState(false);
   const [isAppInfoOpen, setIsAppInfoOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -261,6 +266,42 @@ const Layout = () => {
     URL.revokeObjectURL(url);
   };
 
+  const handleOneClickSummary = async () => {
+    setIsGeneratingSummary(true);
+    setSummaryContent('');
+    setIsSummaryModalOpen(true);
+    
+    try {
+      const context = JSON.stringify({
+        bowlers: bowlers.map(b => ({
+          name: b.name,
+          description: b.description,
+          metrics: (b.metrics || []).map(m => ({
+            name: m.name,
+            scope: m.scope,
+            monthlyData: m.monthlyData
+          }))
+        })),
+        a3Cases: a3Cases.map(c => ({
+          title: c.title,
+          problemStatement: c.problemStatement,
+          status: c.status,
+          rootCause: c.rootCause
+        }))
+      });
+      
+      const prompt = "Provide a comprehensive summary about all the metrics by Group, by Bowler. Assess performance of the latest month, and also trend for the last months. Highlight concerns. Suggest improvement ideas. Also include A3 case highlevel summary of problem & status & progress.";
+      
+      const summary = await generateComprehensiveSummary(context, prompt);
+      setSummaryContent(summary);
+    } catch (error) {
+      console.error('Summary generation error:', error);
+      setSummaryContent("Failed to generate summary. Please try again.");
+    } finally {
+      setIsGeneratingSummary(false);
+    }
+  };
+
   const handleSaveData = async () => {
     if (!user) {
       toast.error('Please login to save data.');
@@ -430,10 +471,7 @@ const Layout = () => {
             </button>
 
             <button
-              onClick={() => {
-                  setInitialAIPrompt("Provide a comprehensive summary about all the metrics by Group, by Bowler. Assess performance of the latest month, and also trend for the last months. Highlight concerns. Suggest improvement ideas. Also include A3 case highlevel summary of problem & status & progress.");
-                  setIsAIChatOpen(true);
-              }}
+              onClick={handleOneClickSummary}
               className="p-2 bg-teal-600 text-white rounded-md shadow-sm hover:bg-teal-700 transition-colors"
               title="One Click Summary by AI"
             >
@@ -525,8 +563,7 @@ const Layout = () => {
 
                   <button
                     onClick={() => {
-                      setInitialAIPrompt("Provide a comprehensive summary about all the metrics by Group, by Bowler. Assess performance of the latest month, and also trend for the last months. Highlight concerns. Suggest improvement ideas. Also include A3 case highlevel summary of problem & status & progress.");
-                      setIsAIChatOpen(true);
+                      handleOneClickSummary();
                       setIsMobileMenuOpen(false);
                     }}
                     className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-teal-600"

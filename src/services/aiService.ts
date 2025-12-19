@@ -168,3 +168,38 @@ export const analyzeMetric = async (metric: Metric): Promise<AnalysisResult> => 
   }
 };
 
+export const generateComprehensiveSummary = async (context: string, prompt: string): Promise<string> => {
+  try {
+    const response = await fetch('https://multi-model-worker.study-llm.me/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'deepseek',
+        messages: [
+          {
+            role: 'system',
+            content: `You are an AI assistant for the Metric Bowler & A3 Problem Solving application. 
+            Here is the current data in the application: ${context}.
+            Answer the user's questions based on this data. Be concise and helpful.`
+          },
+          { role: 'user', content: prompt }
+        ],
+        stream: false
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || data.choices?.[0]?.delta?.content || "Sorry, I couldn't generate a response.";
+
+  } catch (error) {
+    console.error('AI Summary Error:', error);
+    return "Sorry, there was an error generating the summary. Please try again later.";
+  }
+};
+
