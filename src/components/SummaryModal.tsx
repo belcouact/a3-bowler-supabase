@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Loader2, Download, Copy, Sparkles, Lightbulb, TrendingUp, CheckCircle, AlertTriangle, Target } from 'lucide-react';
+import { X, Loader2, Download, Copy, Sparkles, TrendingUp, CheckCircle, AlertTriangle, Target } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { MarkdownRenderer } from './MarkdownRenderer';
 
@@ -66,10 +66,10 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
 
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-0 sm:align-middle sm:w-full sm:h-full sm:rounded-none h-screen w-screen">
           
           {/* Header */}
-          <div className="bg-gradient-to-r from-indigo-50 via-white to-white px-4 py-4 sm:px-6 border-b border-indigo-100 flex justify-between items-center">
+          <div className="bg-gradient-to-r from-indigo-50 via-white to-white px-4 py-4 sm:px-6 border-b border-indigo-100 flex justify-between items-center flex-shrink-0">
             <div className="flex items-center">
                 <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-indigo-100 shadow-sm mr-4">
                     <Sparkles className="h-5 w-5 text-indigo-600" />
@@ -95,7 +95,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
           </div>
 
           {/* Content */}
-          <div className="px-4 py-5 sm:p-6 bg-white min-h-[400px] max-h-[70vh] overflow-y-auto custom-scrollbar">
+          <div className="px-4 py-5 sm:p-6 bg-white overflow-y-auto custom-scrollbar flex-grow" style={{ height: 'calc(100vh - 140px)' }}>
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center h-full py-16">
                     <div className="relative">
@@ -181,7 +181,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
           </div>
 
           {/* Footer */}
-          <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-200">
+          <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-200 absolute bottom-0 w-full">
             <button
               type="button"
               className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
