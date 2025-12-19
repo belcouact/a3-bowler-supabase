@@ -5,6 +5,7 @@ import { useApp } from '../context/AppContext';
 interface AIChatModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialPrompt?: string;
 }
 
 interface Message {
@@ -85,13 +86,14 @@ const renderMessageContent = (content: string) => {
   });
 };
 
-export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => {
+export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initialPrompt }) => {
   const { bowlers, a3Cases } = useApp();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const selectedModel = 'deepseek';
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const hasProcessedPrompt = useRef(false);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -119,10 +121,10 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
     });
   };
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || isLoading) return;
 
-    const userMessage: Message = { role: 'user', content: input };
+    const userMessage: Message = { role: 'user', content: text };
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setInput('');
@@ -174,6 +176,19 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
       setIsLoading(false);
     }
   };
+
+  const handleSend = () => sendMessage(input);
+
+  useEffect(() => {
+    if (isOpen && initialPrompt && !hasProcessedPrompt.current) {
+        sendMessage(initialPrompt);
+        hasProcessedPrompt.current = true;
+    }
+    if (!isOpen) {
+        hasProcessedPrompt.current = false;
+        setMessages([]); 
+    }
+  }, [isOpen, initialPrompt]);
 
   if (!isOpen) return null;
 

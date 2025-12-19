@@ -38,6 +38,7 @@ const Layout = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+  const [initialAIPrompt, setInitialAIPrompt] = useState<string | undefined>(undefined);
   const [isConsolidateModalOpen, setIsConsolidateModalOpen] = useState(false);
   const [isAppInfoOpen, setIsAppInfoOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -433,6 +434,16 @@ const Layout = () => {
             )}
 
             <button
+              onClick={() => {
+                  setInitialAIPrompt("Provide a comprehensive summary about all the metrics by Group, by Bowler. Assess performance of the latest month, and also trend for the last months. Highlight concerns. Suggest improvement ideas. Also include A3 case highlevel summary of problem & status & progress.");
+                  setIsAIChatOpen(true);
+              }}
+              className="p-2 bg-teal-600 text-white rounded-md shadow-sm hover:bg-teal-700 transition-colors"
+              title="One Click Summary by AI"
+            >
+              <Zap className="w-4 h-4" />
+            </button>
+            <button
               onClick={() => setIsAIChatOpen(true)}
               className="p-2 bg-indigo-600 text-white rounded-md shadow-sm hover:bg-indigo-700 transition-colors"
               title="Ask AI"
@@ -484,8 +495,8 @@ const Layout = () => {
                         }}
                         className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600"
                       >
-                        <LinkIcon className="w-4 h-4 mr-3" />
-                        Visualize
+                        <Workflow className="w-4 h-4 mr-3" />
+                        Mindmap your ideas
                       </button>
                       <button
                         onClick={() => {
@@ -519,6 +530,18 @@ const Layout = () => {
                       </button>
                     </>
                   )}
+
+                  <button
+                    onClick={() => {
+                      setInitialAIPrompt("Provide a comprehensive summary about all the metrics by Group, by Bowler. Assess performance of the latest month, and also trend for the last months. Highlight concerns. Suggest improvement ideas. Also include A3 case highlevel summary of problem & status & progress.");
+                      setIsAIChatOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-teal-600"
+                  >
+                    <Zap className="w-4 h-4 mr-3" />
+                    One Click Summary
+                  </button>
 
                   <button
                     onClick={() => {
@@ -959,7 +982,11 @@ const Layout = () => {
 
       <AIChatModal
         isOpen={isAIChatOpen}
-        onClose={() => setIsAIChatOpen(false)}
+        onClose={() => {
+            setIsAIChatOpen(false);
+            setInitialAIPrompt(undefined);
+        }}
+        initialPrompt={initialAIPrompt}
       />
 
       <AppInfoModal
