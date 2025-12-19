@@ -61,7 +61,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
     const headers = simpleParseLine(lines[0]);
     const bowlerNameIndex = headers.findIndex(h => h.toLowerCase().includes('bowler name'));
     const descriptionIndex = headers.findIndex(h => h.toLowerCase().includes('description'));
-    const objectiveIndex = headers.findIndex(h => h.toLowerCase().includes('objective'));
+    const groupIndex = headers.findIndex(h => h.toLowerCase().includes('group'));
     const championIndex = headers.findIndex(h => h.toLowerCase().includes('champion'));
     const commitmentIndex = headers.findIndex(h => h.toLowerCase().includes('commitment'));
     const tagIndex = headers.findIndex(h => h.toLowerCase().includes('tag'));
@@ -154,7 +154,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
         const scope = row[scopeIndex];
         
         const description = descriptionIndex !== -1 ? row[descriptionIndex] : undefined;
-        const objective = objectiveIndex !== -1 ? row[objectiveIndex] : undefined;
+        const group = groupIndex !== -1 ? row[groupIndex] : undefined;
         const champion = championIndex !== -1 ? row[championIndex] : undefined;
         const commitment = commitmentIndex !== -1 ? row[commitmentIndex] : undefined;
         const tag = tagIndex !== -1 ? row[tagIndex] : undefined;
@@ -186,7 +186,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                 bowler: {
                     name: bowlerName,
                     description,
-                    objective,
+                    group,
                     champion,
                     commitment,
                     tag
@@ -198,7 +198,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
             // Usually metadata is same for all rows of same bowler, but let's update just in case
             const b = result[bowlerName].bowler;
             if (description) b.description = description;
-            if (objective) b.objective = objective;
+            if (group) b.group = group;
             if (champion) b.champion = champion;
             if (commitment) b.commitment = commitment;
             if (tag) b.tag = tag;

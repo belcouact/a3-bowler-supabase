@@ -67,11 +67,11 @@ const Layout = () => {
 
     if (isMetricBowler) {
       const buckets: Record<string, Bowler[]> = { ungrouped: [] };
-      const ungrouped = bowlers.filter(b => !b.objective);
+      const ungrouped = bowlers.filter(b => !b.group);
       buckets['ungrouped'] = [...ungrouped];
       
-      const grouped = bowlers.filter(b => !!b.objective).reduce((acc, bowler) => {
-          const group = bowler.objective!;
+      const grouped = bowlers.filter(b => !!b.group).reduce((acc, bowler) => {
+          const group = bowler.group!;
           if (!acc[group]) acc[group] = [];
           acc[group].push(bowler);
           return acc;
@@ -89,9 +89,9 @@ const Layout = () => {
       
       if (sourceKey !== destKey) {
           if (destKey === 'ungrouped') {
-              movedItem.objective = undefined;
+              movedItem.group = undefined;
           } else {
-              movedItem.objective = destKey;
+              movedItem.group = destKey;
           }
       }
       
@@ -275,7 +275,7 @@ const Layout = () => {
       const context = JSON.stringify({
         bowlers: bowlers.map(b => ({
           name: b.name,
-          group: b.objective || 'Ungrouped',
+          group: b.group || 'Ungrouped',
           description: b.description,
           metrics: (b.metrics || []).map(m => ({
             name: m.name,
@@ -717,9 +717,9 @@ const Layout = () => {
             
             <div className="flex-1 overflow-y-auto p-3 space-y-1">
               {isMetricBowler && (() => {
-                  const ungrouped = bowlers.filter(b => !b.objective);
-                  const grouped = bowlers.filter(b => !!b.objective).reduce((acc, bowler) => {
-                      const group = bowler.objective!;
+                  const ungrouped = bowlers.filter(b => !b.group);
+                  const grouped = bowlers.filter(b => !!b.group).reduce((acc, bowler) => {
+                      const group = bowler.group!;
                       if (!acc[group]) acc[group] = [];
                       acc[group].push(bowler);
                       return acc;

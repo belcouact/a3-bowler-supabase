@@ -201,6 +201,7 @@ export default {
           const value = await env.BOWLER_DATA.get(key.name);
           if (value) {
             const data = JSON.parse(value);
+            
             // Verify userId matches (though key prefix ensures this)
             if (data.userId === userId || data.userAccountId === userId) {
                 bowlers.push(data);
@@ -211,36 +212,12 @@ export default {
           }
         }
 
-        // Apply sequence sorting
-        const sequenceData = await env.BOWLER_DATA.get(`user:${userId}:bowler_sequence`);
-        if (sequenceData) {
-            try {
-                const sequence = JSON.parse(sequenceData);
-                if (Array.isArray(sequence)) {
-                    const bowlerMap = new Map(bowlers.map(b => [b.id, b]));
-                    const sortedBowlers: any[] = [];
-                    
-                    // Add bowlers in sequence order
-                    for (const id of sequence) {
-                        if (bowlerMap.has(id)) {
-                            sortedBowlers.push(bowlerMap.get(id));
-                            bowlerMap.delete(id);
-                        }
-                    }
-                    
-                    // Add any remaining bowlers that weren't in the sequence
-                    for (const bowler of bowlerMap.values()) {
-                        sortedBowlers.push(bowler);
-                    }
-                    
-                    // Replace the original array
-                    bowlers.length = 0;
-                    bowlers.push(...sortedBowlers);
-                }
-            } catch (e) {
-                console.error("Failed to parse bowler sequence", e);
-            }
-        }
+        // Sort by order field
+        bowlers.sort((a, b) => {
+            const orderA = typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER;
+            const orderB = typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER;
+            return orderA - orderB;
+        });
 
         const a3List = await env.BOWLER_DATA.list({ prefix: `user:${userId}:a3:` });
         for (const key of a3List.keys) {

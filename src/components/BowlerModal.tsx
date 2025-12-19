@@ -21,7 +21,7 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
   const [generalData, setGeneralData] = useState({
     name: '',
     description: '',
-    objective: '',
+    group: '',
     champion: '',
     commitment: '',
     tag: '',
@@ -37,7 +37,7 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
         setGeneralData({
           name: initialData.name,
           description: initialData.description || '',
-          objective: initialData.objective || '',
+          group: initialData.group || '',
           champion: initialData.champion || '',
           commitment: initialData.commitment || '',
           tag: initialData.tag || '',
@@ -48,7 +48,7 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
         setGeneralData({
           name: '',
           description: '',
-          objective: '',
+          group: '',
           champion: '',
           commitment: '',
           tag: '',
@@ -173,8 +173,8 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
                                 <input
                                     type="text"
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                    value={generalData.objective}
-                                    onChange={(e) => setGeneralData({ ...generalData, objective: e.target.value })}
+                                    value={generalData.group}
+                                    onChange={(e) => setGeneralData({ ...generalData, group: e.target.value })}
                                 />
                             </div>
                             <div>

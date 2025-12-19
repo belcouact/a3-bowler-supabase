@@ -201,29 +201,11 @@ var index_default = {
             }
           }
         }
-        const sequenceData = await env.BOWLER_DATA.get(`user:${userId}:bowler_sequence`);
-        if (sequenceData) {
-          try {
-            const sequence = JSON.parse(sequenceData);
-            if (Array.isArray(sequence)) {
-              const bowlerMap = new Map(bowlers.map((b) => [b.id, b]));
-              const sortedBowlers = [];
-              for (const id of sequence) {
-                if (bowlerMap.has(id)) {
-                  sortedBowlers.push(bowlerMap.get(id));
-                  bowlerMap.delete(id);
-                }
-              }
-              for (const bowler of bowlerMap.values()) {
-                sortedBowlers.push(bowler);
-              }
-              bowlers.length = 0;
-              bowlers.push(...sortedBowlers);
-            }
-          } catch (e) {
-            console.error("Failed to parse bowler sequence", e);
-          }
-        }
+        bowlers.sort((a, b) => {
+          const orderA = typeof a.order === "number" ? a.order : Number.MAX_SAFE_INTEGER;
+          const orderB = typeof b.order === "number" ? b.order : Number.MAX_SAFE_INTEGER;
+          return orderA - orderB;
+        });
         const a3List = await env.BOWLER_DATA.list({ prefix: `user:${userId}:a3:` });
         for (const key of a3List.keys) {
           const value = await env.BOWLER_DATA.get(key.name);

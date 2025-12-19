@@ -20,7 +20,7 @@ export interface Bowler {
   id: string;
   name: string;
   description?: string;
-  objective?: string;
+  group?: string;
   champion?: string;
   commitment?: string;
   tag?: string;
