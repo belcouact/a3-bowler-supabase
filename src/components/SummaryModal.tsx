@@ -102,7 +102,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
 
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-7xl sm:w-full">
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-[75vw] sm:w-full">
           
           {/* Header */}
           <div className="bg-gradient-to-r from-indigo-50 via-white to-white px-4 py-4 sm:px-6 border-b border-indigo-100 flex justify-between items-center flex-shrink-0">
@@ -131,7 +131,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
           </div>
 
           {/* Content */}
-          <div className="px-4 py-5 sm:p-6 bg-white overflow-y-auto custom-scrollbar max-h-[85vh]">
+          <div className="px-4 py-5 sm:p-6 bg-white overflow-y-auto custom-scrollbar max-h-[75vh]">
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center h-full py-16">
                     <div className="relative">
