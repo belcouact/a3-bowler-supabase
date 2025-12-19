@@ -275,7 +275,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
-                        Country
+                        Region
                       </label>
                       <div className="relative">
                          {/* Using simple select for now */}
@@ -284,17 +284,17 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                           onChange={(e) => setCountry(e.target.value)}
                           className="w-full border border-gray-300 rounded-md px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                         >
-                          <option value="">Select Country</option>
-                          <option value="USA">USA</option>
+                          <option value="">Select Region</option>
                           <option value="China">China</option>
-                          <option value="Germany">Germany</option>
-                          <option value="Mexico">Mexico</option>
+                          <option value="US">US</option>
+                          <option value="EMEA">EMEA</option>
+                          <option value="APAC">APAC</option>
                         </select>
                       </div>
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
-                        Plant
+                        Plant/Office
                       </label>
                       <div className="relative">
                         <select
@@ -302,10 +302,16 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                           onChange={(e) => setPlant(e.target.value)}
                           className="w-full border border-gray-300 rounded-md px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                         >
-                          <option value="">Select Plant</option>
-                          <option value="Plant A">Plant A</option>
-                          <option value="Plant B">Plant B</option>
-                          <option value="Plant C">Plant C</option>
+                          <option value="">Select Plant/Office</option>
+                          <option value="BJ">BJ</option>
+                          <option value="SH">SH</option>
+                          <option value="TW">TW</option>
+                          <option value="SZFTZ">SZFTZ</option>
+                          <option value="SZBAN">SZBAN</option>
+                          <option value="EM1">EM1</option>
+                          <option value="EM5">EM5</option>
+                          <option value="LOV">LOV</option>
+                          <option value="PU3">PU3</option>
                         </select>
                       </div>
                     </div>
@@ -313,7 +319,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
 
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
-                      Team
+                      Functional Team
                     </label>
                     <div className="relative">
                        <select
@@ -321,11 +327,11 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                           onChange={(e) => setTeam(e.target.value)}
                           className="w-full border border-gray-300 rounded-md px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                         >
-                          <option value="">Select Team</option>
-                          <option value="Operations">Operations</option>
-                          <option value="Safety">Safety</option>
-                          <option value="Quality">Quality</option>
-                          <option value="Logistics">Logistics</option>
+                          <option value="">Select Functional Team</option>
+                          <option value="Commercial">Commercial</option>
+                          <option value="SC">SC</option>
+                          <option value="Technical">Technical</option>
+                          <option value="R&D">R&D</option>
                         </select>
                     </div>
                   </div>

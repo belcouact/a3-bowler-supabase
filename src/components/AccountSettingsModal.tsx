@@ -208,40 +208,48 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Country</label>
+                    <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Region</label>
                     <select
                       value={country}
                       onChange={(e) => setCountry(e.target.value)}
                       className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
                     >
                       <option value="China">China</option>
-                      <option value="USA">USA</option>
-                      <option value="Germany">Germany</option>
+                      <option value="US">US</option>
+                      <option value="EMEA">EMEA</option>
+                      <option value="APAC">APAC</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Plant</label>
+                    <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Plant/Office</label>
                     <select
                       value={plant}
                       onChange={(e) => setPlant(e.target.value)}
                       className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
                     >
+                      <option value="BJ">BJ</option>
+                      <option value="SH">SH</option>
+                      <option value="TW">TW</option>
                       <option value="SZFTZ">SZFTZ</option>
-                      <option value="Plant A">Plant A</option>
-                      <option value="Plant B">Plant B</option>
+                      <option value="SZBAN">SZBAN</option>
+                      <option value="EM1">EM1</option>
+                      <option value="EM5">EM5</option>
+                      <option value="LOV">LOV</option>
+                      <option value="PU3">PU3</option>
                     </select>
                   </div>
                 </div>
                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Team</label>
+                    <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Functional Team</label>
                     <select
                       value={team}
                       onChange={(e) => setTeam(e.target.value)}
                       className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
                     >
-                      <option value="GBS">GBS</option>
-                      <option value="Engineering">Engineering</option>
-                      <option value="HR">HR</option>
+                      <option value="Commercial">Commercial</option>
+                      <option value="SC">SC</option>
+                      <option value="Technical">Technical</option>
+                      <option value="R&D">R&D</option>
                     </select>
                   </div>
                 
