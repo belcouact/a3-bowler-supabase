@@ -463,7 +463,7 @@ const Layout = () => {
                   className="fixed inset-0 z-30" 
                   onClick={() => setIsMobileMenuOpen(false)}
                 />
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-40 border border-gray-200">
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-[100] border border-gray-200">
                   <button
                     onClick={() => {
                       handleExit();
@@ -506,6 +506,16 @@ const Layout = () => {
                       >
                         <Download className="w-4 h-4 mr-3" />
                         Download
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsConsolidateModalOpen(true);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-purple-600"
+                      >
+                        <Layers className="w-4 h-4 mr-3" />
+                        Consolidate
                       </button>
                     </>
                   )}
