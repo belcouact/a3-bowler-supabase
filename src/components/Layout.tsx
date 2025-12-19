@@ -568,7 +568,7 @@ const Layout = () => {
                     }}
                     className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-teal-600"
                   >
-                    <Zap className="w-4 h-4 mr-3" />
+                    <NotepadText className="w-4 h-4 mr-3" />
                     One Click Summary
                   </button>
 
@@ -1016,6 +1016,13 @@ const Layout = () => {
             setInitialAIPrompt(undefined);
         }}
         initialPrompt={initialAIPrompt}
+      />
+
+      <SummaryModal
+        isOpen={isSummaryModalOpen}
+        onClose={() => setIsSummaryModalOpen(false)}
+        content={summaryContent}
+        isLoading={isGeneratingSummary}
       />
 
       <AppInfoModal
