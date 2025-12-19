@@ -63,7 +63,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [dashboardMarkdown, setDashboardMarkdown] = useState<string>(DEFAULT_MARKDOWN);
   const [isLoading, setIsLoading] = useState(false);
   
-  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMountedRef = useRef(true);
 
   useEffect(() => {

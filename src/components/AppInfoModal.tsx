@@ -20,7 +20,7 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 sm:px-6 flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <div className="h-7 w-7 rounded-full bg-blue-100 flex items-center justify-center">
-                <Info className="w-4 h-4 text-blue-600" />
+                <TrendingUp className="w-4 h-4 text-blue-600" />
               </div>
               <h3 className="text-sm font-medium text-gray-900" id="modal-title">
                 About A3 Bowler
