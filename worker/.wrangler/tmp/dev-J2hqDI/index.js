@@ -120,6 +120,7 @@ var index_default = {
           });
         }
         const allBowlers = [];
+        const allA3Cases = [];
         let cursor = void 0;
         let listComplete = false;
         while (!listComplete) {
@@ -139,8 +140,21 @@ var index_default = {
               }
             }
           }
+          const a3Keys = list.keys.filter((k) => k.name.includes(":a3:"));
+          if (a3Keys.length > 0) {
+            const batchPromises = a3Keys.map((key) => env.BOWLER_DATA.get(key.name, "json"));
+            const batchResults = await Promise.all(batchPromises);
+            for (const data of batchResults) {
+              if (data && typeof data === "object") {
+                const a3 = data;
+                if (a3.tag && tags.includes(a3.tag)) {
+                  allA3Cases.push(a3);
+                }
+              }
+            }
+          }
         }
-        return new Response(JSON.stringify({ success: true, bowlers: allBowlers }), {
+        return new Response(JSON.stringify({ success: true, bowlers: allBowlers, a3Cases: allA3Cases }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
       } catch (err) {

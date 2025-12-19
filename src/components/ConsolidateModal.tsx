@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { dataService } from '../services/dataService';
 import { useToast } from '../context/ToastContext';
-import { Bowler } from '../types';
+import { Bowler, A3Case } from '../types';
 
 interface ConsolidateModalProps {
   isOpen: boolean;
@@ -15,7 +15,7 @@ export const ConsolidateModal: React.FC<ConsolidateModalProps> = ({ isOpen, onCl
   const [tagInput, setTagInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
-  const { addBowler, updateBowler, bowlers } = useApp();
+  const { addBowler, updateBowler, bowlers, addA3Case, updateA3Case, a3Cases } = useApp();
   const toast = useToast();
 
   if (!isOpen) return null;
@@ -43,35 +43,55 @@ export const ConsolidateModal: React.FC<ConsolidateModalProps> = ({ isOpen, onCl
     setIsLoading(true);
     try {
       const response = await dataService.consolidateBowlers(tags);
-      if (response.success && response.bowlers) {
-        const newBowlers = response.bowlers as Bowler[];
+      if (response.success) {
+        const newBowlers = (response.bowlers || []) as Bowler[];
+        const newA3Cases = (response.a3Cases || []) as A3Case[];
         
-        // Filter out bowlers that are already in the list to avoid duplicates (optional but good UX)
-        // Or just add them all? The prompt says "consolidate".
-        // If I add them, I should check if they exist.
-        
-        let addedCount = 0;
-        let updatedCount = 0;
+        let addedBowlersCount = 0;
+        let updatedBowlersCount = 0;
+        let addedA3Count = 0;
+        let updatedA3Count = 0;
+
         newBowlers.forEach(newBowler => {
            const exists = bowlers.some(b => b.id === newBowler.id);
            if (!exists) {
                addBowler(newBowler);
-               addedCount++;
+               addedBowlersCount++;
            } else {
                updateBowler(newBowler);
-               updatedCount++;
+               updatedBowlersCount++;
            }
         });
+
+        newA3Cases.forEach(newA3 => {
+            const exists = a3Cases.some(a => a.id === newA3.id);
+            if (!exists) {
+                addA3Case(newA3);
+                addedA3Count++;
+            } else {
+                updateA3Case(newA3);
+                updatedA3Count++;
+            }
+        });
         
-        if (addedCount > 0 || updatedCount > 0) {
-            toast.success(`Successfully consolidated: ${addedCount} added, ${updatedCount} updated.`);
+        const totalAdded = addedBowlersCount + addedA3Count;
+        const totalUpdated = updatedBowlersCount + updatedA3Count;
+        
+        if (totalAdded > 0 || totalUpdated > 0) {
+            const parts = [];
+            if (addedBowlersCount > 0) parts.push(`${addedBowlersCount} bowlers added`);
+            if (updatedBowlersCount > 0) parts.push(`${updatedBowlersCount} bowlers updated`);
+            if (addedA3Count > 0) parts.push(`${addedA3Count} A3s added`);
+            if (updatedA3Count > 0) parts.push(`${updatedA3Count} A3s updated`);
+            
+            toast.success(`Successfully consolidated: ${parts.join(', ')}.`);
         } else {
-            toast.info('No new or updated bowlers found with these tags.');
+            toast.info('No new or updated items found with these tags.');
         }
         onClose();
         setTagInput('');
       } else {
-        toast.error('Failed to consolidate bowlers.');
+        toast.error('Failed to consolidate items.');
       }
     } catch (error) {
       console.error('Consolidate error:', error);
@@ -106,7 +126,7 @@ export const ConsolidateModal: React.FC<ConsolidateModalProps> = ({ isOpen, onCl
               autoFocus
             />
             <p className="mt-1 text-xs text-gray-500">
-              Enter tags to filter and consolidate bowlers from the database.
+              Enter tags to filter and consolidate bowlers and A3 cases from the database.
             </p>
           </div>
 

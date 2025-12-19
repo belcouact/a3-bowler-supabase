@@ -69,6 +69,7 @@ export interface A3Case {
   description?: string;
   owner?: string;
   group?: string;
+  tag?: string;
   priority?: 'Low' | 'Medium' | 'High';
   startDate?: string;
   endDate?: string;

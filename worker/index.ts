@@ -107,6 +107,7 @@ export default {
         }
 
         const allBowlers: any[] = [];
+        const allA3Cases: any[] = [];
         let cursor: string | undefined = undefined;
         let listComplete = false;
         
@@ -131,9 +132,26 @@ export default {
                     }
                  }
             }
+
+            // Filter for A3 keys
+            const a3Keys = list.keys.filter((k: any) => k.name.includes(':a3:'));
+
+            if (a3Keys.length > 0) {
+                 const batchPromises = a3Keys.map((key: any) => env.BOWLER_DATA.get(key.name, 'json'));
+                 const batchResults = await Promise.all(batchPromises);
+                 
+                 for (const data of batchResults) {
+                    if (data && typeof data === 'object') {
+                        const a3 = data as any;
+                        if (a3.tag && tags.includes(a3.tag)) {
+                            allA3Cases.push(a3);
+                        }
+                    }
+                 }
+            }
         }
         
-        return new Response(JSON.stringify({ success: true, bowlers: allBowlers }), {
+        return new Response(JSON.stringify({ success: true, bowlers: allBowlers, a3Cases: allA3Cases }), {
              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
 
