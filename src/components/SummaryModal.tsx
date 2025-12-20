@@ -141,13 +141,39 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
           {/* Content */}
           <div className="px-4 py-5 sm:p-6 bg-white overflow-y-auto custom-scrollbar max-h-[75vh]">
             {isLoading ? (
-                <div className="flex flex-col items-center justify-center h-full py-16">
-                    <div className="relative">
-                        <div className="absolute inset-0 bg-indigo-200 rounded-full animate-ping opacity-25"></div>
-                        <Loader2 className="relative w-12 h-12 animate-spin text-indigo-600 mb-4" />
+                <div className="flex flex-col items-center justify-center h-full py-16 space-y-8">
+                    <div className="relative w-32 h-32">
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 opacity-30 blur-sm"></div>
+                        <div className="absolute inset-3 rounded-full border-2 border-indigo-200 border-dashed animate-spin"></div>
+                        <div className="absolute inset-6 rounded-full bg-white flex items-center justify-center shadow-md">
+                            <Sparkles className="w-7 h-7 text-indigo-600 animate-pulse" />
+                        </div>
+                        <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 flex space-x-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce"></span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '0.15s' }}></span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-pink-400 animate-bounce" style={{ animationDelay: '0.3s' }}></span>
+                        </div>
                     </div>
-                    <h4 className="text-lg font-medium text-gray-900 mb-1">Generating AI Report</h4>
-                    <p className="text-gray-500 text-sm max-w-xs mx-auto text-center">Analyzing performance metrics, identifying trends, and generating strategic recommendations...</p>
+                    <div className="text-center space-y-2">
+                        <h4 className="text-lg font-medium text-gray-900">Crafting your AI summary</h4>
+                        <p className="text-gray-500 text-sm max-w-xs mx-auto">
+                            Analyzing metrics, trends, and A3 cases to surface the most important insights.
+                        </p>
+                    </div>
+                    <div className="flex items-center space-x-4 text-xs text-gray-400">
+                        <div className="flex items-center space-x-1 px-2 py-1 rounded-full bg-gray-50 border border-gray-100 animate-pulse">
+                            <Activity className="w-3 h-3 text-indigo-500" />
+                            <span>Scanning metrics</span>
+                        </div>
+                        <div className="flex items-center space-x-1 px-2 py-1 rounded-full bg-gray-50 border border-gray-100 animate-pulse" style={{ animationDelay: '0.15s' }}>
+                            <TrendingUp className="w-3 h-3 text-purple-500" />
+                            <span>Finding trends</span>
+                        </div>
+                        <div className="flex items-center space-x-1 px-2 py-1 rounded-full bg-gray-50 border border-gray-100 animate-pulse" style={{ animationDelay: '0.3s' }}>
+                            <AlertTriangle className="w-3 h-3 text-red-500" />
+                            <span>Highlighting risks</span>
+                        </div>
+                    </div>
                 </div>
             ) : isJson && parsedData ? (
                 <div className="space-y-8">
