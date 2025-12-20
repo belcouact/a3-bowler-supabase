@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useApp, MindMapNodeData } from '../../context/AppContext';
 import { MindMap } from '../../components/MindMap';
-import { Sparkles, Loader2, AlertCircle, X } from 'lucide-react';
+import { Sparkles, Loader2, AlertCircle, X, Lightbulb } from 'lucide-react';
 
 const WhyAnalysis = () => {
   const { id } = useParams();
@@ -115,7 +115,7 @@ You will receive:
 
 Your task is to propose practical improvement actions that address the root cause.
 
-Respond in the SAME language as the user's problem statement.
+Respond in English, even if the user's inputs are in another language.
 
 Structure the answer with markdown headings:
 ## Short-term Actions
@@ -202,12 +202,12 @@ ${root}`
             {isGeneratingActions ? (
               <>
                 <Loader2 className="animate-spin -ml-0.5 mr-2 h-3 w-3" />
-                Generating actions...
+                <span className="hidden sm:inline">Generating actions...</span>
               </>
             ) : (
               <>
-                <Sparkles className="-ml-0.5 mr-2 h-3 w-3" />
-                AI Improvement Actions
+                <Lightbulb className="-ml-0.5 mr-0 sm:mr-2 h-3 w-3" />
+                <span className="hidden sm:inline">AI Improvement Actions</span>
               </>
             )}
           </button>

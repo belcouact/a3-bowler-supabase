@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useApp, DataAnalysisImage } from '../../context/AppContext';
 import { useState, useEffect, useRef } from 'react';
 import ImageCanvas from '../../components/ImageCanvas';
-import { Sparkles, Loader2, AlertCircle } from 'lucide-react';
+import { Sparkles, Loader2, AlertCircle, BarChart3 } from 'lucide-react';
 
 const DataAnalysis = () => {
   const { id } = useParams();
@@ -84,7 +84,7 @@ Your tasks:
 2) Suggest what additional data or evidence should be collected if needed.
 3) Briefly discuss potential implications or likely causes suggested by the data.
 
-Respond in the SAME language as the user's problem statement.
+Respond in English, even if the user's inputs are in another language.
 
 Structure the answer with clear markdown headings:
 ## Data Adequacy
@@ -162,12 +162,12 @@ ${observations}`
               {isAnalyzing ? (
                 <>
                   <Loader2 className="animate-spin -ml-0.5 mr-2 h-3 w-3" />
-                  Analyzing...
+                  <span className="hidden sm:inline">Analyzing...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="-ml-0.5 mr-2 h-3 w-3" />
-                  AI Evidence Review
+                  <BarChart3 className="-ml-0.5 mr-0 sm:mr-2 h-3 w-3" />
+                  <span className="hidden sm:inline">AI Evidence Review</span>
                 </>
               )}
             </button>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Sparkles, Loader2, CheckCircle, AlertCircle, X } from 'lucide-react';
+import { Sparkles, Loader2, CheckCircle, AlertCircle, X, ClipboardList, Route } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
 interface AssessmentResult {
@@ -46,10 +46,9 @@ const ProblemStatement = () => {
           The user will provide a Problem Statement.
           
           Instructions:
-          1. Detect the language of the user's problem statement.
-          2. Assess if the problem statement is good using the 5W2H criteria (Who, What, Where, When, Which, How Often, How Much Impact).
-          3. Provide a critique in the SAME language as the user's input.
-          4. Offer an improved, clearer version of the problem statement in the SAME language as the user's input.
+          1. Assess if the problem statement is good using the 5W2H criteria (Who, What, Where, When, Which, How Often, How Much Impact).
+          2. Provide a critique in English, even if the input is in another language.
+          3. Offer an improved, clearer version of the problem statement in English.
           
           Requirements:
           - **Critique**: Be specific about what is missing or vague. Use Markdown.
@@ -122,7 +121,7 @@ const ProblemStatement = () => {
 
           Your task:
           - Generate a practical troubleshooting plan to address this problem.
-          - Use the SAME language as the user's problem statement.
+          - Respond in English by default, even if the input is in another language.
           
           Structure the response as clear sections with markdown headings:
           1. Immediate Checks
@@ -198,12 +197,12 @@ const ProblemStatement = () => {
                   {isAssessing ? (
                     <>
                       <Loader2 className="animate-spin -ml-0.5 mr-2 h-3 w-3" />
-                      Assessing...
+                      <span className="hidden sm:inline">Assessing...</span>
                     </>
                   ) : (
                     <>
-                      <Sparkles className="-ml-0.5 mr-2 h-3 w-3" />
-                      AI Assessment
+                      <ClipboardList className="-ml-0.5 mr-0 sm:mr-2 h-3 w-3" />
+                      <span className="hidden sm:inline">AI Assessment</span>
                     </>
                   )}
                 </button>
@@ -215,12 +214,12 @@ const ProblemStatement = () => {
                   {isGeneratingPlan ? (
                     <>
                       <Loader2 className="animate-spin -ml-0.5 mr-2 h-3 w-3" />
-                      Generating plan...
+                      <span className="hidden sm:inline">Generating plan...</span>
                     </>
                   ) : (
                     <>
-                      <Sparkles className="-ml-0.5 mr-2 h-3 w-3" />
-                      AI Troubleshooting Plan
+                      <Route className="-ml-0.5 mr-0 sm:mr-2 h-3 w-3" />
+                      <span className="hidden sm:inline">AI Troubleshooting Plan</span>
                     </>
                   )}
                 </button>
