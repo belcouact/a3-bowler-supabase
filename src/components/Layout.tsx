@@ -279,6 +279,7 @@ const Layout = () => {
       Analyze the data based on each metric's 'targetMeetingRule' (e.g., gte, lte, within_range) and 'attribute'.
       Identify metrics that have missed their target for 3 consecutive months (current month + previous 2).
       Group the metrics by their 'group' field.
+      Also analyze the A3 problem-solving data and produce an overall A3 summary that highlights the main problems, root causes, current status, and overall progress across A3 cases.
       
       Return the response in STRICT JSON format with the following structure:
       {
@@ -295,6 +296,7 @@ const Layout = () => {
             ]
           }
         ],
+        "a3Summary": "Narrative summary of A3 cases, grouped logically where relevant. Cover open vs closed status, key problem themes, dominant root causes, and overall progress in the A3 portfolio.",
         "areasOfConcern": [
           {
             "metricName": "Metric Name",

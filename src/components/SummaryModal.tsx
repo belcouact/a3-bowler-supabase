@@ -31,6 +31,7 @@ interface AreaOfConcern {
 interface SummaryData {
   executiveSummary: string;
   performanceGroups: PerformanceGroup[];
+  a3Summary?: string;
   areasOfConcern: AreaOfConcern[];
 }
 
@@ -57,10 +58,13 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
   }
 
   const handleCopy = () => {
-    // If structured data, copy a formatted string, otherwise copy raw content
     if (isJson && parsedData) {
         let textToCopy = `Executive Summary:\n${parsedData.executiveSummary}\n\n`;
         
+        if (parsedData.a3Summary && parsedData.a3Summary.trim() !== '') {
+          textToCopy += `A3 Problem Solving Summary:\n${parsedData.a3Summary}\n\n`;
+        }
+
         textToCopy += `Performance Analysis:\n`;
         parsedData.performanceGroups.forEach(group => {
             textToCopy += `\nGroup: ${group.groupName}\n`;
@@ -83,7 +87,8 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
   };
 
   const handleDownload = () => {
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
+    const dataToDownload = isJson && parsedData ? JSON.stringify(parsedData, null, 2) : content;
+    const blob = new Blob([dataToDownload], { type: 'text/plain;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -143,7 +148,6 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
                 </div>
             ) : isJson && parsedData ? (
                 <div className="space-y-8">
-                    {/* Executive Summary */}
                     <div className="bg-gradient-to-br from-indigo-50 to-white p-6 rounded-xl border border-indigo-100 shadow-sm">
                         <h4 className="text-lg font-semibold text-indigo-900 mb-3 flex items-center">
                             <Target className="w-5 h-5 mr-2 text-indigo-600" />
@@ -154,7 +158,6 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
                         </p>
                     </div>
 
-                    {/* Split View: Performance & Trends */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Left: Latest Performance */}
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -218,6 +221,18 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
                             </div>
                         </div>
                     </div>
+
+                    {parsedData.a3Summary && parsedData.a3Summary.trim() !== '' && (
+                      <div className="bg-gradient-to-br from-blue-50 to-white p-6 rounded-xl border border-blue-100 shadow-sm">
+                        <h4 className="text-lg font-semibold text-blue-900 mb-3 flex items-center">
+                          <Sparkles className="w-5 h-5 mr-2 text-blue-600" />
+                          A3 Problem Solving Summary
+                        </h4>
+                        <p className="text-gray-700 leading-relaxed text-sm md:text-base">
+                          {parsedData.a3Summary}
+                        </p>
+                      </div>
+                    )}
 
                     {/* Areas of Concern & Suggestions */}
                     <div className="bg-red-50/30 p-6 rounded-xl border border-red-100">
