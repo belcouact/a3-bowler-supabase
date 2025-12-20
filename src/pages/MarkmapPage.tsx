@@ -44,6 +44,7 @@ const MarkmapPage = () => {
   
   // Independent state for Text Input tab
   const [textInputMarkdown, setTextInputMarkdown] = useState('');
+  const [isTextSidebarOpen, setIsTextSidebarOpen] = useState(false);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -252,7 +253,7 @@ const MarkmapPage = () => {
         >
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="absolute top-4 left-2 bg-white border border-gray-200 rounded-full p-1 shadow-sm hover:bg-gray-50 z-20 text-gray-500"
+            className="absolute top-4 left-2 bg-white border border-gray-200 rounded-full p-1 shadow-sm hover:bg-gray-50 z-[30] text-gray-500"
           >
             {isSidebarOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
           </button>
@@ -293,29 +294,42 @@ const MarkmapPage = () => {
 
         <div 
           id="text-input-container"
-          className={clsx("h-full w-full", activeTab === 'Text Input' ? "flex" : "hidden")} 
+          className={clsx("h-full w-full relative", activeTab === 'Text Input' ? "flex" : "hidden")} 
         >
-          <div 
-            style={{ width: `${textInputSplitPosition}%` }} 
-            className="h-full border-r border-gray-200 flex flex-col bg-white"
+          <button
+            onClick={() => setIsTextSidebarOpen(!isTextSidebarOpen)}
+            className="absolute top-4 left-2 bg-white border border-gray-200 rounded-full p-1 shadow-sm hover:bg-gray-50 z-[30] text-gray-500"
           >
-            <textarea
-              className="flex-1 w-full p-4 resize-none focus:outline-none focus:ring-inset focus:ring-2 focus:ring-blue-500/50 font-mono text-sm leading-relaxed"
-              value={textInputMarkdown}
-              onChange={handleTextInputChange}
-              placeholder="Enter markdown here..."
-            />
+            {isTextSidebarOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+          </button>
+          <div 
+            style={{ width: isTextSidebarOpen ? `${textInputSplitPosition}%` : 0 }} 
+            className={clsx(
+              "h-full border-r border-gray-200 flex flex-col bg-white transition-[width] duration-300 overflow-hidden",
+              !isTextSidebarOpen && "border-none"
+            )}
+          >
+            {isTextSidebarOpen && (
+              <textarea
+                className="flex-1 w-full p-4 resize-none focus:outline-none focus:ring-inset focus:ring-2 focus:ring-blue-500/50 font-mono text-sm leading-relaxed"
+                value={textInputMarkdown}
+                onChange={handleTextInputChange}
+                placeholder="Enter markdown here..."
+              />
+            )}
           </div>
           
           {/* Draggable Handle */}
-          <div
-            className="w-1 h-full cursor-col-resize bg-transparent hover:bg-blue-400 absolute z-10 transition-colors"
-            style={{ left: `${textInputSplitPosition}%`, transform: 'translateX(-50%)' }}
-            onMouseDown={handleTextInputMouseDown}
-          />
+          {isTextSidebarOpen && (
+            <div
+              className="w-1 h-full cursor-col-resize bg-transparent hover:bg-blue-400 absolute z-10 transition-colors"
+              style={{ left: `${textInputSplitPosition}%`, transform: 'translateX(-50%)' }}
+              onMouseDown={handleTextInputMouseDown}
+            />
+          )}
 
           <div 
-            style={{ width: `${100 - textInputSplitPosition}%` }} 
+            style={{ width: isTextSidebarOpen ? `${100 - textInputSplitPosition}%` : '100%' }} 
             className="h-full relative bg-gray-50"
             ref={textInputWrapperRef}
           >
