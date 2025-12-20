@@ -7,6 +7,7 @@ import { Bowler, Metric } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
 import A3CaseModal from './A3CaseModal';
+import { MindmapModal } from './MindmapModal';
 import BowlerModal from './BowlerModal';
 import LoginModal from './LoginModal';
 import { AccountSettingsModal } from './AccountSettingsModal';
@@ -49,6 +50,7 @@ const Layout = () => {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [isMindmapModalOpen, setIsMindmapModalOpen] = useState(false);
 
   const toggleGroup = (group: string) => {
     setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
@@ -342,11 +344,13 @@ const Layout = () => {
 
   const handlePlusClick = () => {
     if (isMetricBowler) {
-        setEditingBowler(null);
-        setIsBowlerModalOpen(true);
+      setEditingBowler(null);
+      setIsBowlerModalOpen(true);
+    } else if (isA3Analysis) {
+      setEditingA3Case(null);
+      setIsA3ModalOpen(true);
     } else {
-        setEditingA3Case(null);
-        setIsA3ModalOpen(true);
+      setIsMindmapModalOpen(true);
     }
   };
 
@@ -1052,6 +1056,11 @@ const Layout = () => {
       <ConsolidateModal
         isOpen={isConsolidateModalOpen}
         onClose={() => setIsConsolidateModalOpen(false)}
+      />
+
+      <MindmapModal
+        isOpen={isMindmapModalOpen}
+        onClose={() => setIsMindmapModalOpen(false)}
       />
     </div>
   );
