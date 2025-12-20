@@ -6,6 +6,7 @@ import { Toolbar } from 'markmap-toolbar';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/default.css';
 import clsx from 'clsx';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 // Register highlight.js globally so markmap might pick it up if it checks window
 if (typeof window !== 'undefined') {
@@ -32,53 +33,6 @@ if (transformer.assets && transformer.assets.styles) {
     // Attempt to inject style to preserve whitespace if needed, but mainly we rely on markmap's rendering
 }
 
-
-
-const EXAMPLE_MARKDOWN = `---
-title: markmap
-markmap:
-  colorFreezeLevel: 2
-  maxWidth: 400
----
-
-## Links
-
-- \`https://markmap.js.org/\`
-- \`https://github.com/gera2ld/markmap\`
-
-## Related Projects
-
-- \`https://github.com/gera2ld/coc-markmap\` for Neovim
-- \`https://marketplace.visualstudio.com/items?itemName=gera2ld.markmap-vscode\` for VSCode
-- \`https://github.com/emacs-eaf/eaf-markmap\` for Emacs
-
-## Features
-
-Note that if blocks and lists appear at the same level, the lists will be ignored.
-
-### Lists
-
-- **strong** ~~del~~ *italic* ==highlight==
-- \`inline code\`
-- [x] checkbox
-- Now we can wrap very very very very long text with the \`maxWidth\` option
-- Ordered list
-  1. item 1
-  2. item 2
-
-### Blocks
-
-\`\`\`js
-console.log('hello, JavaScript')
-\`\`\`
-
-| Products | Price |
-| - | - |
-| Apple | 4 |
-| Banana | 2 |
-
-![](https://markmap.js.org/favicon.png)`;
-
 const MarkmapPage = () => {
   const { dashboardMarkdown, updateDashboardMarkdown } = useApp();
   const [markdown, setMarkdown] = useState(dashboardMarkdown);
@@ -86,6 +40,7 @@ const MarkmapPage = () => {
   const [mm, setMm] = useState<Markmap | null>(null);
   const [splitPosition, setSplitPosition] = useState(40); // Percentage
   const [activeTab, setActiveTab] = useState<'Mind Map' | 'Text Input'>('Mind Map');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Independent state for Text Input tab
   const [textInputMarkdown, setTextInputMarkdown] = useState('');
@@ -240,9 +195,6 @@ const MarkmapPage = () => {
   };
 
   const handleTextInputMouseMove = (e: MouseEvent) => {
-    // Reuse containerRef or create a new one for Text Input tab if needed, 
-    // but since we are replacing the view, we can assume the container is the same size context
-    // Ideally we should use a ref specific to the Text Input tab container
     const container = document.getElementById('text-input-container');
     if (container) {
       const containerRect = container.getBoundingClientRect();
@@ -258,49 +210,8 @@ const MarkmapPage = () => {
     document.removeEventListener('mouseup', handleTextInputMouseUp);
   };
 
-
-  const handleUseExample = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      setMarkdown(EXAMPLE_MARKDOWN);
-      updateDashboardMarkdown(EXAMPLE_MARKDOWN);
-    } else {
-      const defaultVal = `# A3 Bowler
-## Metric Bowler
-- Track KPIs
-  - Safety
-  - Quality
-  - Delivery
-  - Cost
-- Monthly Targets
-  - Plan
-  - Actual
-- Gap Analysis
-  - Deviation
-  - Reason
-## A3 Problem Solving
-- Problem Statement
-  - Description
-  - Impact
-- Root Cause Analysis
-  - 5 Whys
-  - Fishbone
-- Action Plan
-  - What
-  - Who
-  - When
-`;
-      setMarkdown(defaultVal);
-      updateDashboardMarkdown(defaultVal);
-    }
-  };
-
   return (
     <div className="flex flex-col h-full bg-white">
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-100 bg-white">
-          <p className="text-sm font-bold text-gray-700">Visualize objects to metrics</p>
-      </div>
-
       {/* Tab Bar */}
       <div className="flex border-b border-gray-200 bg-white">
         <button
@@ -336,43 +247,43 @@ const MarkmapPage = () => {
       <div className="flex-1 relative overflow-hidden">
         {/* Mind Map View (Split) */}
         <div 
-          className={clsx("h-full w-full", activeTab === 'Mind Map' ? "flex" : "hidden")} 
+          className={clsx("h-full w-full relative", activeTab === 'Mind Map' ? "flex" : "hidden")} 
           ref={containerRef}
         >
-          <div 
-            style={{ width: `${splitPosition}%` }} 
-            className="h-full border-r border-gray-200 flex flex-col bg-white"
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="absolute top-4 left-2 bg-white border border-gray-200 rounded-full p-1 shadow-sm hover:bg-gray-50 z-20 text-gray-500"
           >
-            <div className="p-2 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Markdown Editor</span>
-              <div className="flex items-center space-x-2">
-                 <label className="flex items-center space-x-1 cursor-pointer text-xs text-gray-600 hover:text-gray-900">
-                    <input 
-                      type="checkbox" 
-                      className="rounded text-blue-600 focus:ring-blue-500"
-                      onChange={handleUseExample}
-                    />
-                    <span>Load Example</span>
-                 </label>
-              </div>
-            </div>
-            <textarea
-              className="flex-1 w-full p-4 resize-none focus:outline-none focus:ring-inset focus:ring-2 focus:ring-blue-500/50 font-mono text-sm leading-relaxed"
-              value={markdown}
-              onChange={handleMarkdownChange}
-              placeholder="Enter markdown here..."
-            />
+            {isSidebarOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+          </button>
+          <div 
+            style={{ width: isSidebarOpen ? `${splitPosition}%` : 0 }} 
+            className={clsx(
+              "h-full border-r border-gray-200 flex flex-col bg-white transition-[width] duration-300 overflow-hidden",
+              !isSidebarOpen && "border-none"
+            )}
+          >
+            {isSidebarOpen && (
+              <textarea
+                className="flex-1 w-full p-4 resize-none focus:outline-none focus:ring-inset focus:ring-2 focus:ring-blue-500/50 font-mono text-sm leading-relaxed"
+                value={markdown}
+                onChange={handleMarkdownChange}
+                placeholder="Enter markdown here..."
+              />
+            )}
           </div>
           
           {/* Draggable Handle */}
-          <div
-            className="w-1 h-full cursor-col-resize bg-transparent hover:bg-blue-400 absolute z-10 transition-colors"
-            style={{ left: `${splitPosition}%`, transform: 'translateX(-50%)' }}
-            onMouseDown={handleMouseDown}
-          />
+          {isSidebarOpen && (
+            <div
+              className="w-1 h-full cursor-col-resize bg-transparent hover:bg-blue-400 absolute z-10 transition-colors"
+              style={{ left: `${splitPosition}%`, transform: 'translateX(-50%)' }}
+              onMouseDown={handleMouseDown}
+            />
+          )}
 
           <div 
-            style={{ width: `${100 - splitPosition}%` }} 
+            style={{ width: isSidebarOpen ? `${100 - splitPosition}%` : '100%' }} 
             className="h-full relative bg-gray-50"
             ref={wrapperRef}
           >
@@ -380,7 +291,6 @@ const MarkmapPage = () => {
           </div>
         </div>
 
-        {/* Text Input View (Same as Mind Map View but Independent) */}
         <div 
           id="text-input-container"
           className={clsx("h-full w-full", activeTab === 'Text Input' ? "flex" : "hidden")} 
@@ -389,10 +299,6 @@ const MarkmapPage = () => {
             style={{ width: `${textInputSplitPosition}%` }} 
             className="h-full border-r border-gray-200 flex flex-col bg-white"
           >
-            <div className="p-2 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Markdown Editor</span>
-              {/* Optional: Add example loader or other tools here if needed */}
-            </div>
             <textarea
               className="flex-1 w-full p-4 resize-none focus:outline-none focus:ring-inset focus:ring-2 focus:ring-blue-500/50 font-mono text-sm leading-relaxed"
               value={textInputMarkdown}
