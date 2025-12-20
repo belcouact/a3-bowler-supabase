@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mail, Lock, User, Info, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, Info, Loader2, LogIn, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import clsx from 'clsx';
 
@@ -86,20 +86,27 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
         setSuccessMessage('');
       }}
       className={clsx(
-        "flex-1 py-4 text-sm font-medium transition-colors border-b-2",
+        "flex-1 py-3 text-xs font-medium tracking-wide transition-colors border-b-2",
         activeTab === id
-          ? "border-blue-600 text-blue-600"
-          : "border-transparent text-gray-500 hover:text-gray-700"
+          ? "border-blue-600 text-blue-600 bg-blue-50/40"
+          : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50/60"
       )}
     >
-      {label}
+      <span className="inline-flex items-center justify-center gap-2">
+        {id === 'login' ? (
+          <LogIn className="h-3.5 w-3.5" />
+        ) : (
+          <UserPlus className="h-3.5 w-3.5" />
+        )}
+        <span>{label}</span>
+      </span>
     </button>
   );
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] px-3 py-4">
       <div className={clsx(
-        "bg-white rounded-xl w-full shadow-xl overflow-hidden transition-all max-h-[88vh] overflow-y-auto border border-gray-100",
+        "bg-white rounded-xl w-full shadow-xl overflow-hidden transition-all max-h-[88vh] overflow-y-auto no-scrollbar border border-gray-100",
         activeTab === 'signup' ? "max-w-xl" : "max-w-md"
       )}>
         {/* Tabs */}
@@ -121,9 +128,9 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
           )}
 
           {activeTab === 'login' ? (
-            <form onSubmit={handleLogin} className="space-y-6">
+            <form onSubmit={handleLogin} className="space-y-5 text-sm">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
                   Username
                 </label>
                 <div className="relative">
@@ -142,7 +149,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
                   Password
                 </label>
                 <div className="relative">
@@ -186,7 +193,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                 {/* Left Column - Account Details */}
                 <div className="space-y-3 bg-gray-50/60 rounded-lg border border-gray-100 p-4">
                   <h3 className="flex items-center justify-between text-sm font-semibold text-gray-800 border-b pb-2">
