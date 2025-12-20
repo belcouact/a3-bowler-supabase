@@ -5,19 +5,25 @@ import { useApp } from '../context/AppContext';
 interface MindmapModalProps {
   isOpen: boolean;
   onClose: () => void;
+  mode: 'create' | 'edit';
 }
 
-export const MindmapModal = ({ isOpen, onClose }: MindmapModalProps) => {
+export const MindmapModal = ({ isOpen, onClose, mode }: MindmapModalProps) => {
   const { dashboardMarkdown, dashboardTitle, updateDashboardMarkdown } = useApp();
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
 
   useEffect(() => {
     if (isOpen) {
-      setTitle(dashboardTitle || '');
-      setText(dashboardMarkdown || '');
+      if (mode === 'edit') {
+        setTitle(dashboardTitle || '');
+        setText(dashboardMarkdown || '');
+      } else {
+        setTitle('');
+        setText('');
+      }
     }
-  }, [isOpen, dashboardMarkdown, dashboardTitle]);
+  }, [isOpen, dashboardMarkdown, dashboardTitle, mode]);
 
   if (!isOpen) return null;
 

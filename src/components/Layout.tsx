@@ -52,6 +52,7 @@ const Layout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [isMindmapModalOpen, setIsMindmapModalOpen] = useState(false);
+  const [mindmapModalMode, setMindmapModalMode] = useState<'create' | 'edit'>('edit');
   const [isBowlerFilterOpen, setIsBowlerFilterOpen] = useState(false);
   const [bowlerFilterField, setBowlerFilterField] = useState<'team' | 'group' | 'tag' | ''>('');
   const [bowlerFilterValue, setBowlerFilterValue] = useState<string>('');
@@ -354,8 +355,14 @@ const Layout = () => {
       setEditingA3Case(null);
       setIsA3ModalOpen(true);
     } else {
+      setMindmapModalMode('create');
       setIsMindmapModalOpen(true);
     }
+  };
+
+  const handleEditMindmap = () => {
+    setMindmapModalMode('edit');
+    setIsMindmapModalOpen(true);
   };
 
   const handleSaveA3Case = (data: Omit<A3Case, 'id'>) => {
@@ -798,7 +805,7 @@ const Layout = () => {
                         new Set(
                           bowlers
                             .map((b) => {
-                              if (bowlerFilterField === 'team') return b.champion;
+                              if (bowlerFilterField === 'team') return b.commitment;
                               if (bowlerFilterField === 'group') return b.group;
                               if (bowlerFilterField === 'tag') return b.tag;
                               return undefined;
@@ -825,7 +832,7 @@ const Layout = () => {
                           return true;
                       }
                       if (bowlerFilterField === 'team') {
-                          return (bowler.champion || '') === bowlerFilterValue;
+                          return (bowler.commitment || '') === bowlerFilterValue;
                       }
                       if (bowlerFilterField === 'group') {
                           return (bowler.group || '') === bowlerFilterValue;
