@@ -17,7 +17,7 @@ import { useToast } from '../context/ToastContext';
 import { ConsolidateModal } from './ConsolidateModal';
 import { ImportModal } from './ImportModal';
 import { SummaryModal } from './SummaryModal';
-import { generateComprehensiveSummary } from '../services/aiService';
+import { generateComprehensiveSummary, generateAIContext } from '../services/aiService';
 import { getBowlerStatusColor } from '../utils/metricUtils';
 
 const Layout = () => {
@@ -272,22 +272,7 @@ const Layout = () => {
     setIsSummaryModalOpen(true);
     
     try {
-      const context = JSON.stringify({
-        bowlers: bowlers.map(b => ({
-          ...b,
-          group: b.group || 'Ungrouped'
-        })),
-        a3Cases: a3Cases.map(c => {
-          const clone = { ...c };
-          // Exclude image/visual data
-          delete clone.mindMapNodes;
-          delete clone.dataAnalysisImages;
-          delete clone.resultImages;
-          delete clone.dataAnalysisCanvasHeight;
-          delete clone.resultCanvasHeight;
-          return clone;
-        })
-      });
+      const context = generateAIContext(bowlers, a3Cases);
       
       const prompt = `Provide a comprehensive performance summary.
       

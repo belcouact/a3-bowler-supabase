@@ -1,4 +1,4 @@
-import { Metric } from '../types';
+import { Metric, Bowler, A3Case } from '../types';
 
 export interface AnalysisResult {
   trend: 'stable' | 'capable' | 'unstable' | 'incapable' | 'improving' | 'degrading';
@@ -201,5 +201,23 @@ export const generateComprehensiveSummary = async (context: string, prompt: stri
     console.error('AI Summary Error:', error);
     return "Sorry, there was an error generating the summary. Please try again later.";
   }
+};
+
+export const generateAIContext = (bowlers: Bowler[], a3Cases: A3Case[]): string => {
+  return JSON.stringify({
+    bowlers: bowlers.map(b => ({
+      ...b,
+      group: b.group || 'Ungrouped'
+    })),
+    a3Cases: a3Cases.map(c => {
+      const clone = { ...c };
+      delete clone.mindMapNodes;
+      delete clone.dataAnalysisImages;
+      delete clone.resultImages;
+      delete clone.dataAnalysisCanvasHeight;
+      delete clone.resultCanvasHeight;
+      return clone;
+    })
+  });
 };
 

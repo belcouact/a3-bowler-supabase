@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Bot, Loader2, Sparkles } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { MarkdownRenderer } from './MarkdownRenderer';
+import { generateAIContext } from '../services/aiService';
 
 interface AIChatModalProps {
   isOpen: boolean;
@@ -29,26 +30,6 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initi
     }
   }, [messages]);
 
-  const generateContext = () => {
-    return JSON.stringify({
-      bowlers: bowlers.map(b => ({
-        name: b.name,
-        description: b.description,
-        metrics: (b.metrics || []).map(m => ({
-          name: m.name,
-          scope: m.scope,
-          monthlyData: m.monthlyData
-        }))
-      })),
-      a3Cases: a3Cases.map(c => ({
-        title: c.title,
-        problemStatement: c.problemStatement,
-        status: c.status,
-        rootCause: c.rootCause
-      }))
-    });
-  };
-
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
 
@@ -59,7 +40,7 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initi
     setIsLoading(true);
 
     try {
-      const context = generateContext();
+      const context = generateAIContext(bowlers, a3Cases);
       const systemMessage: Message = {
         role: 'system',
         content: `You are an AI assistant for the Metric Bowler & A3 Problem Solving application. 
