@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Download, Copy, Sparkles, TrendingUp, AlertTriangle, Target, Activity, ArrowRight } from 'lucide-react';
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { useToast } from '../context/ToastContext';
 import { MarkdownRenderer } from './MarkdownRenderer';
 
@@ -38,6 +39,7 @@ interface SummaryData {
 
 export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, content, isLoading }) => {
   const toast = useToast();
+  const modalRef = React.useRef<HTMLDivElement | null>(null);
 
   if (!isOpen) return null;
 
@@ -86,73 +88,45 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
     toast.success('Summary copied to clipboard!');
   };
 
-  const handleDownload = () => {
-    const doc = new jsPDF({
-      unit: 'pt',
-      format: 'a4',
-    });
-
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 40;
-    const maxWidth = pageWidth - margin * 2;
-    let cursorY = margin;
-
-    const addTextBlock = (title: string, body: string) => {
-      if (!body || body.trim() === '') return;
-
-      const titleLines = doc.splitTextToSize(title, maxWidth);
-      const bodyLines = doc.splitTextToSize(body, maxWidth);
-      const blockLines = [...titleLines, '', ...bodyLines];
-
-      blockLines.forEach((line) => {
-        if (cursorY > pageHeight - margin) {
-          doc.addPage();
-          cursorY = margin;
-        }
-        doc.text(line, margin, cursorY);
-        cursorY += 16;
-      });
-
-      cursorY += 8;
-    };
-
-    if (isJson && parsedData) {
-      addTextBlock('Executive Summary', parsedData.executiveSummary);
-
-      if (parsedData.a3Summary && parsedData.a3Summary.trim() !== '') {
-        addTextBlock('A3 Problem Solving Summary', parsedData.a3Summary);
-      }
-
-      let performanceText = '';
-      parsedData.performanceGroups.forEach((group) => {
-        performanceText += `\n[Group] ${group.groupName}\n`;
-        group.metrics.forEach((m) => {
-          const trendText =
-            m.trendAnalysis && m.trendAnalysis.trim() !== ''
-              ? ` | Trend: ${m.trendAnalysis}`
-              : '';
-          performanceText += `- ${m.name}: ${m.latestPerformance}${trendText}\n`;
-        });
-      });
-      addTextBlock('Performance Analysis', performanceText.trim());
-
-      let concernText = '';
-      parsedData.areasOfConcern.forEach((area) => {
-        concernText += `- ${area.metricName} (${area.groupName}): ${area.issue}\n  Suggestion: ${area.suggestion}\n\n`;
-      });
-      if (!concernText) {
-        concernText = 'No major areas of concern identified. Keep up the good work!';
-      }
-      addTextBlock('Areas of Concern & Recommendations', concernText.trim());
-    } else {
-      const clean = content.replace(/```[\s\S]*?```/g, '').trim() || content;
-      addTextBlock('Summary', clean);
+  const handleDownload = async () => {
+    if (!modalRef.current) {
+      toast.error('Unable to capture summary for PDF.');
+      return;
     }
 
-    const filename = `metric_bowler_summary_${new Date().toISOString().split('T')[0]}.pdf`;
-    doc.save(filename);
-    toast.success('PDF downloaded!');
+    try {
+      const element = modalRef.current;
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'pt', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
+      const renderWidth = imgWidth * ratio;
+      const renderHeight = imgHeight * ratio;
+      const x = (pageWidth - renderWidth) / 2;
+      const y = (pageHeight - renderHeight) / 2;
+
+      pdf.addImage(imgData, 'PNG', x, y, renderWidth, renderHeight);
+
+      const filename = `metric_bowler_summary_${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(filename);
+      toast.success('PDF downloaded!');
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast.error('Failed to generate PDF. Please try again.');
+    }
   };
 
   return (
@@ -162,7 +136,10 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
 
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-[75vw] sm:w-full">
+        <div
+          ref={modalRef}
+          className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-[75vw] sm:w-full"
+        >
           
           {/* Header */}
           <div className="bg-gradient-to-r from-indigo-50 via-white to-white px-4 py-4 sm:px-6 border-b border-indigo-100 flex justify-between items-center flex-shrink-0">
