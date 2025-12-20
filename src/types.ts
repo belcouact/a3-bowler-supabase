@@ -24,6 +24,7 @@ export interface Bowler {
   champion?: string;
   commitment?: string;
   tag?: string;
+  metricStartDate?: string;
   metrics?: Metric[];
   statusColor?: string;
 }

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, Navigate } from 'react-router-dom';
 import { Info, Settings, HelpCircle, Sparkles, Loader2 } from 'lucide-react';
@@ -52,7 +52,10 @@ const MetricBowler = () => {
 
   const [stopDate, setStopDate] = useState(() => {
     const today = new Date();
-    return `${today.getFullYear() + 1}-04`;
+    const startYear = today.getFullYear();
+    const startMonthIndex = 3;
+    const end = new Date(startYear, startMonthIndex + 11, 1);
+    return `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}`;
   });
 
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
@@ -106,6 +109,19 @@ const MetricBowler = () => {
   const selectedBowler = bowlers.find(b => b.id === id);
   const title = selectedBowler ? selectedBowler.name : 'Metric Bowler';
   const metrics = selectedBowler?.metrics || [];
+
+  useEffect(() => {
+    if (selectedBowler?.metricStartDate) {
+      setStartDate(selectedBowler.metricStartDate);
+      const [yearStr, monthStr] = selectedBowler.metricStartDate.split('-');
+      const startYear = parseInt(yearStr, 10);
+      const startMonthIndex = parseInt(monthStr, 10) - 1;
+      if (!isNaN(startYear) && !isNaN(startMonthIndex)) {
+        const end = new Date(startYear, startMonthIndex + 11, 1);
+        setStopDate(`${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}`);
+      }
+    }
+  }, [selectedBowler?.metricStartDate]);
 
   const handleBowlerSave = () => {
     if (selectedBowler) {
@@ -373,7 +389,16 @@ const MetricBowler = () => {
                  type="month" 
                  id="startDate"
                  value={startDate}
-                 onChange={(e) => setStartDate(e.target.value)}
+                 onChange={(e) => {
+                   const value = e.target.value;
+                   setStartDate(value);
+                   if (selectedBowler) {
+                     updateBowler({
+                       ...selectedBowler,
+                       metricStartDate: value,
+                     });
+                   }
+                 }}
                  className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-1 border"
                  title="Start Date"
                />

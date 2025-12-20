@@ -342,6 +342,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                           <option value="EM5">EM5</option>
                           <option value="LOV">LOV</option>
                           <option value="PU3">PU3</option>
+                          <option value="Others">Others</option>
                         </select>
                       </div>
                     </div>
