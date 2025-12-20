@@ -489,62 +489,7 @@ const Layout = () => {
             <button
               onClick={handleOneClickSummary}
               className="p-2 bg-teal-600 text-white rounded-md shadow-sm hover:bg-teal-700 transition-colors"
-              title="One Click Summary<<<<
-      const context = JSON.stringify({
-        bowlers: bowlers.map(b => ({
-          name: b.name,
-          group: b.group || 'Ungrouped',
-          description: b.description,
-          metrics: (b.metrics || []).map(m => ({
-            name: m.name,
-            scope: m.scope,
-            monthlyData: m.monthlyData,
-            targetMeetingRule: m.targetMeetingRule,
-            attribute: m.attribute
-          }))
-        })),
-        a3Cases: a3Cases.map(c => ({
-          title: c.title,
-          problemStatement: c.problemStatement,
-          status: c.status,
-          rootCause: c.rootCause
-        }))
-      });
-====
-      const context = JSON.stringify({
-        bowlers: bowlers.map(b => ({
-          name: b.name,
-          group: b.group || 'Ungrouped',
-          description: b.description,
-          champion: b.champion,
-          commitment: b.commitment,
-          tag: b.tag,
-          metrics: (b.metrics || []).map(m => ({
-            name: m.name,
-            scope: m.scope,
-            monthlyData: m.monthlyData,
-            targetMeetingRule: m.targetMeetingRule,
-            attribute: m.attribute
-          }))
-        })),
-        a3Cases: a3Cases.map(c => ({
-          title: c.title,
-          description: c.description,
-          owner: c.owner,
-          group: c.group,
-          tag: c.tag,
-          priority: c.priority,
-          startDate: c.startDate,
-          endDate: c.endDate,
-          status: c.status,
-          problemStatement: c.problemStatement,
-          results: c.results,
-          rootCause: c.rootCause,
-          actionPlanTasks: c.actionPlanTasks,
-          dataAnalysisObservations: c.dataAnalysisObservations
-        }))
-      });
->>>>"
+              title="One Click Summary"
             >
               <NotepadText className="w-4 h-4" />
             </button>
