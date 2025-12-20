@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useApp, MindMapNodeData } from '../../context/AppContext';
 import { MindMap } from '../../components/MindMap';
+import { Sparkles, Loader2, AlertCircle, X } from 'lucide-react';
 
 const WhyAnalysis = () => {
   const { id } = useParams();
@@ -10,6 +11,9 @@ const WhyAnalysis = () => {
 
   // We use local state to avoid flickering but sync with context
   const [rootCause, setRootCause] = useState('');
+  const [isGeneratingActions, setIsGeneratingActions] = useState(false);
+  const [actionsPlan, setActionsPlan] = useState<string | null>(null);
+  const [actionsError, setActionsError] = useState<string | null>(null);
 
   useEffect(() => {
     if (currentCase) {
@@ -85,6 +89,79 @@ const WhyAnalysis = () => {
       }
   };
 
+  const handleGenerateActions = async () => {
+    if (!currentCase) return;
+
+    const problem = currentCase.problemStatement || '';
+    const observations = currentCase.dataAnalysisObservations || '';
+    const root = rootCause || currentCase.rootCause || '';
+
+    if (!problem.trim() || !root.trim()) return;
+
+    setIsGeneratingActions(true);
+    setActionsError(null);
+    setActionsPlan(null);
+
+    try {
+      const messages = [
+        {
+          role: 'system',
+          content: `You are an expert continuous improvement and operations coach.
+
+You will receive:
+- A3 Problem Statement
+- Key observations from data analysis
+- Identified root cause
+
+Your task is to propose practical improvement actions that address the root cause.
+
+Respond in the SAME language as the user's problem statement.
+
+Structure the answer with markdown headings:
+## Short-term Actions
+## Long-term Actions
+
+Under each heading, list concise, actionable bullet points. Focus on actions that are realistic in a manufacturing or service environment.`
+        },
+        {
+          role: 'user',
+          content: `Problem Statement:
+${problem}
+
+Key Observations from Data:
+${observations}
+
+Identified Root Cause:
+${root}`
+        }
+      ];
+
+      const response = await fetch('https://multi-model-worker.study-llm.me/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'deepseek',
+          messages,
+          stream: false
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to generate improvement actions');
+
+      const data = await response.json();
+      let content = data.choices?.[0]?.message?.content || '';
+      content = content.replace(/^```[\s\S]*?```/g, '').trim();
+
+      setActionsPlan(content);
+    } catch (err) {
+      setActionsError('Failed to generate improvement actions. Please try again.');
+    } finally {
+      setIsGeneratingActions(false);
+    }
+  };
+
 
 
   if (!currentCase) {
@@ -108,9 +185,33 @@ const WhyAnalysis = () => {
       {/* Conversion Section Removed */}
 
       <div className="mt-6">
-        <label htmlFor="rootCause" className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="flex items-center justify-between mb-2">
+          <label htmlFor="rootCause" className="block text-sm font-medium text-gray-700">
             Identified Root Cause
-        </label>
+          </label>
+          <button
+            type="button"
+            onClick={handleGenerateActions}
+            disabled={
+              isGeneratingActions ||
+              !currentCase.problemStatement ||
+              !(rootCause || currentCase.rootCause)
+            }
+            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isGeneratingActions ? (
+              <>
+                <Loader2 className="animate-spin -ml-0.5 mr-2 h-3 w-3" />
+                Generating actions...
+              </>
+            ) : (
+              <>
+                <Sparkles className="-ml-0.5 mr-2 h-3 w-3" />
+                AI Improvement Actions
+              </>
+            )}
+          </button>
+        </div>
         <textarea
             id="rootCause"
             rows={8}
@@ -119,6 +220,40 @@ const WhyAnalysis = () => {
             value={rootCause}
             onChange={handleRootCauseChange}
         />
+        {actionsError && (
+          <div className="mt-3 rounded-md bg-red-50 p-3">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <AlertCircle className="h-4 w-4 text-red-400" aria-hidden="true" />
+              </div>
+              <div className="ml-2 text-sm text-red-700">
+                {actionsError}
+              </div>
+            </div>
+          </div>
+        )}
+        {actionsPlan && (
+          <div className="mt-4 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+            <div className="bg-blue-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-xs font-bold text-blue-900 flex items-center">
+                <Sparkles className="h-4 w-4 mr-2 text-blue-600" />
+                AI Improvement Actions
+              </h3>
+              <button
+                type="button"
+                className="text-gray-400 hover:text-gray-500"
+                onClick={() => setActionsPlan(null)}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-4">
+              <div className="prose prose-sm max-w-none text-gray-700 bg-gray-50 p-3 rounded-md text-sm whitespace-pre-wrap">
+                {actionsPlan}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
