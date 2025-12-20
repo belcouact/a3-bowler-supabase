@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Plus, BarChart3, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, BrainCircuit } from 'lucide-react';
+import { Plus, BarChart3, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, BrainCircuit, Filter } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
 import { Bowler, Metric } from '../types';
@@ -52,6 +52,9 @@ const Layout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [isMindmapModalOpen, setIsMindmapModalOpen] = useState(false);
+  const [isBowlerFilterOpen, setIsBowlerFilterOpen] = useState(false);
+  const [bowlerFilterField, setBowlerFilterField] = useState<'team' | 'group' | 'tag' | ''>('');
+  const [bowlerFilterValue, setBowlerFilterValue] = useState<string>('');
 
   const toggleGroup = (group: string) => {
     setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
@@ -712,6 +715,46 @@ const Layout = () => {
                   <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wider truncate">
                     {isMetricBowler ? 'Bowler Lists' : isMindmapPage ? 'Mindmap ideas' : 'A3 Cases'}
                   </h2>
+                  <div className="flex items-center gap-1">
+                    {isMetricBowler && (
+                      <button
+                        onClick={() => setIsBowlerFilterOpen(!isBowlerFilterOpen)}
+                        className={clsx(
+                          "p-1 rounded-md border transition-colors",
+                          isBowlerFilterOpen
+                            ? "bg-gray-200 border-gray-300 text-gray-800"
+                            : "bg-white border-gray-200 text-gray-500 hover:bg-gray-100"
+                        )}
+                        title="Filter Bowler lists by Team, Group, or Tag"
+                      >
+                        <Filter className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button 
+                      onClick={handlePlusClick}
+                      className="p-1 rounded-md hover:bg-blue-100 text-blue-600 transition-colors"
+                      title="Add New"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center gap-1">
+                  {isMetricBowler && (
+                    <button
+                      onClick={() => setIsBowlerFilterOpen(!isBowlerFilterOpen)}
+                      className={clsx(
+                        "p-1 rounded-md border transition-colors",
+                        isBowlerFilterOpen
+                          ? "bg-gray-200 border-gray-300 text-gray-800"
+                          : "bg-white border-gray-200 text-gray-500 hover:bg-gray-100"
+                      )}
+                      title="Filter Bowler lists"
+                    >
+                      <Filter className="w-4 h-4" />
+                    </button>
+                  )}
                   <button 
                     onClick={handlePlusClick}
                     className="p-1 rounded-md hover:bg-blue-100 text-blue-600 transition-colors"
@@ -719,24 +762,84 @@ const Layout = () => {
                   >
                     <Plus className="w-5 h-5" />
                   </button>
-                </>
-              ) : (
-                <button 
-                    onClick={handlePlusClick}
-                    className="p-1 rounded-md hover:bg-blue-100 text-blue-600 transition-colors"
-                    title="Add New"
-                  >
-                    <Plus className="w-5 h-5" />
-                  </button>
+                </div>
               )}
             </div>
 
-            {/* Add Item Form */}
-            
+            {isMetricBowler && isSidebarOpen && isBowlerFilterOpen && (
+              <div className="px-3 pt-2 pb-3 border-b border-gray-100 bg-gray-50 space-y-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-gray-600">Filter by</span>
+                  <select
+                    className="flex-1 rounded border border-gray-300 bg-white py-1 px-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    value={bowlerFilterField}
+                    onChange={(e) => {
+                      const value = e.target.value as 'team' | 'group' | 'tag' | '';
+                      setBowlerFilterField(value);
+                      setBowlerFilterValue('');
+                    }}
+                  >
+                    <option value="">None</option>
+                    <option value="team">Team</option>
+                    <option value="group">Group</option>
+                    <option value="tag">Tag</option>
+                  </select>
+                </div>
+                {bowlerFilterField && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-500">Value</span>
+                    <select
+                      className="flex-1 rounded border border-gray-300 bg-white py-1 px-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                      value={bowlerFilterValue}
+                      onChange={(e) => setBowlerFilterValue(e.target.value)}
+                    >
+                      <option value="">All</option>
+                      {Array.from(
+                        new Set(
+                          bowlers
+                            .map((b) => {
+                              if (bowlerFilterField === 'team') return b.champion;
+                              if (bowlerFilterField === 'group') return b.group;
+                              if (bowlerFilterField === 'tag') return b.tag;
+                              return undefined;
+                            })
+                            .filter((v): v is string => !!v)
+                        )
+                      )
+                        .sort()
+                        .map((value) => (
+                          <option key={value} value={value}>
+                            {value}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="flex-1 overflow-y-auto p-3 space-y-1">
               {isMetricBowler && (() => {
-                  const ungrouped = bowlers.filter(b => !b.group);
-                  const grouped = bowlers.filter(b => !!b.group).reduce((acc, bowler) => {
+                  const matchesFilter = (bowler: Bowler) => {
+                      if (!bowlerFilterField || !bowlerFilterValue) {
+                          return true;
+                      }
+                      if (bowlerFilterField === 'team') {
+                          return (bowler.champion || '') === bowlerFilterValue;
+                      }
+                      if (bowlerFilterField === 'group') {
+                          return (bowler.group || '') === bowlerFilterValue;
+                      }
+                      if (bowlerFilterField === 'tag') {
+                          return (bowler.tag || '') === bowlerFilterValue;
+                      }
+                      return true;
+                  };
+
+                  const filteredBowlers = bowlers.filter(matchesFilter);
+
+                  const ungrouped = filteredBowlers.filter(b => !b.group);
+                  const grouped = filteredBowlers.filter(b => !!b.group).reduce((acc, bowler) => {
                       const group = bowler.group!;
                       if (!acc[group]) acc[group] = [];
                       acc[group].push(bowler);
