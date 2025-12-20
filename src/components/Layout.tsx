@@ -32,7 +32,7 @@ const Layout = () => {
   const isA3Analysis = location.pathname.includes('/a3-analysis');
   const isMindMap = location.pathname.includes('/mindmap');
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isA3ModalOpen, setIsA3ModalOpen] = useState(false);
   const [editingA3Case, setEditingA3Case] = useState<A3Case | null>(null);
   const [isBowlerModalOpen, setIsBowlerModalOpen] = useState(false);
