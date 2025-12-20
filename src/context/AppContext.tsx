@@ -4,10 +4,10 @@ import { dataService } from '../services/dataService';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
 import { generateShortId } from '../utils/idUtils';
-import { Bowler, A3Case, Metric, MetricData, MindMapNodeData, ActionPlanTaskData, DataAnalysisImage } from '../types';
+import { Bowler, A3Case, Metric, MetricData, MindMapNodeData, ActionPlanTaskData, DataAnalysisImage, DashboardMindmap } from '../types';
 import { getBowlerStatusColor } from '../utils/metricUtils';
 
-export type { Bowler, A3Case, Metric, MetricData, MindMapNodeData, ActionPlanTaskData, DataAnalysisImage };
+export type { Bowler, A3Case, Metric, MetricData, MindMapNodeData, ActionPlanTaskData, DataAnalysisImage, DashboardMindmap };
 
 interface AppContextType {
   bowlers: Bowler[];
@@ -23,7 +23,10 @@ interface AppContextType {
   isLoading: boolean;
   dashboardMarkdown: string;
   dashboardTitle: string;
-  updateDashboardMarkdown: (markdown: string, title?: string) => void;
+  dashboardMindmaps: DashboardMindmap[];
+  activeMindmapId: string | null;
+  setActiveMindmap: (id: string) => void;
+  updateDashboardMarkdown: (markdown: string, title?: string, options?: { createNew?: boolean }) => void;
 }
 
 // Context
@@ -64,6 +67,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [a3Cases, setA3Cases] = useState<A3Case[]>([]);
   const [dashboardMarkdown, setDashboardMarkdown] = useState<string>(DEFAULT_MARKDOWN);
   const [dashboardTitle, setDashboardTitle] = useState<string>('');
+  const [dashboardMindmaps, setDashboardMindmaps] = useState<DashboardMindmap[]>([]);
+  const [activeMindmapId, setActiveMindmapId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -133,10 +138,34 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             const data = (typeof localData === 'string') ? JSON.parse(localData) : localData;
             const markdown = data.dashboardMarkdown || DEFAULT_MARKDOWN;
             const title = data.dashboardTitle || extractTitleFromMarkdown(markdown);
+            const mindmaps = (data.dashboardMindmaps || []) as DashboardMindmap[];
+            const cachedActiveId = (data.activeMindmapId as string | undefined) || null;
+
             setBowlers(data.bowlers || []);
             setA3Cases(data.a3Cases || []);
-            setDashboardMarkdown(markdown);
-            setDashboardTitle(title);
+
+            if (mindmaps.length > 0) {
+                const activeId = cachedActiveId && mindmaps.some(m => m.id === cachedActiveId)
+                  ? cachedActiveId
+                  : mindmaps[0].id;
+                const active = mindmaps.find(m => m.id === activeId)!;
+                setDashboardMindmaps(mindmaps);
+                setActiveMindmapId(activeId);
+                setDashboardMarkdown(active.markdown);
+                setDashboardTitle(active.title);
+            } else {
+                const id = generateShortId();
+                const initialMindmap: DashboardMindmap = {
+                  id,
+                  title,
+                  markdown,
+                  createdAt: new Date().toISOString()
+                };
+                setDashboardMindmaps([initialMindmap]);
+                setActiveMindmapId(id);
+                setDashboardMarkdown(markdown);
+                setDashboardTitle(title);
+            }
         }
     } catch (e) {
         console.error("Failed to load local data", e);
@@ -152,19 +181,57 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         if (isMountedRef.current && data.success) {
             const markdown = data.dashboardMarkdown || DEFAULT_MARKDOWN;
             const title = data.dashboardTitle || extractTitleFromMarkdown(markdown);
+            const mindmaps = (data.dashboardMindmaps || []) as DashboardMindmap[];
+            const backendActiveId = (data.activeMindmapId as string | undefined) || null;
+
             setBowlers(data.bowlers || []);
             setA3Cases(data.a3Cases || []);
-            setDashboardMarkdown(markdown);
-            setDashboardTitle(title);
-            try {
-                await set(localDataKey, { 
-                    bowlers: data.bowlers || [], 
-                    a3Cases: data.a3Cases || [],
-                    dashboardMarkdown: markdown,
-                    dashboardTitle: title
-                });
-            } catch (e) {
-                console.warn("Failed to update local cache.", e);
+
+            if (mindmaps.length > 0) {
+                const activeId = backendActiveId && mindmaps.some(m => m.id === backendActiveId)
+                  ? backendActiveId
+                  : mindmaps[0].id;
+                const active = mindmaps.find(m => m.id === activeId)!;
+                setDashboardMindmaps(mindmaps);
+                setActiveMindmapId(activeId);
+                setDashboardMarkdown(active.markdown);
+                setDashboardTitle(active.title);
+                try {
+                    await set(localDataKey, { 
+                        bowlers: data.bowlers || [], 
+                        a3Cases: data.a3Cases || [],
+                        dashboardMarkdown: active.markdown,
+                        dashboardTitle: active.title,
+                        dashboardMindmaps: mindmaps,
+                        activeMindmapId: activeId
+                    });
+                } catch (e) {
+                    console.warn("Failed to update local cache.", e);
+                }
+            } else {
+                const id = generateShortId();
+                const initialMindmap: DashboardMindmap = {
+                  id,
+                  title,
+                  markdown,
+                  createdAt: new Date().toISOString()
+                };
+                setDashboardMindmaps([initialMindmap]);
+                setActiveMindmapId(id);
+                setDashboardMarkdown(markdown);
+                setDashboardTitle(title);
+                try {
+                    await set(localDataKey, { 
+                        bowlers: data.bowlers || [], 
+                        a3Cases: data.a3Cases || [],
+                        dashboardMarkdown: markdown,
+                        dashboardTitle: title,
+                        dashboardMindmaps: [initialMindmap],
+                        activeMindmapId: id
+                    });
+                } catch (e) {
+                    console.warn("Failed to update local cache.", e);
+                }
             }
         } else if (!data.success) {
             throw new Error(data.message || "Failed to load data");
@@ -192,6 +259,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     } else {
         setBowlers([]);
         setA3Cases([]);
+        setDashboardMindmaps([]);
+        setActiveMindmapId(null);
         setDashboardMarkdown(DEFAULT_MARKDOWN);
         setDashboardTitle('');
     }
@@ -200,7 +269,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [user, loadUserData]);
 
-  const saveToLocalCache = (newBowlers: Bowler[], newA3Cases: A3Case[], newMarkdown: string, newTitle: string) => {
+  const saveToLocalCache = (
+    newBowlers: Bowler[],
+    newA3Cases: A3Case[],
+    newMarkdown: string,
+    newTitle: string,
+    newMindmaps: DashboardMindmap[] = dashboardMindmaps,
+    newActiveMindmapId: string | null = activeMindmapId
+  ) => {
     if (user) {
       // 1. Save to IndexedDB immediately (Local Cache)
       const localDataKey = `user_data_${user.username}`;
@@ -209,7 +285,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           bowlers: newBowlers, 
           a3Cases: newA3Cases,
           dashboardMarkdown: newMarkdown,
-          dashboardTitle: newTitle
+          dashboardTitle: newTitle,
+          dashboardMindmaps: newMindmaps,
+          activeMindmapId: newActiveMindmapId
       }).catch(e => {
         console.error("Local Cache save failed", e);
       });
@@ -218,11 +296,57 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateDashboardMarkdown = (markdown: string, title?: string) => {
-      const effectiveTitle = title ?? dashboardTitle;
-      setDashboardMarkdown(markdown);
-      setDashboardTitle(effectiveTitle);
-      saveToLocalCache(bowlers, a3Cases, markdown, effectiveTitle);
+  const setActiveMindmap = (id: string) => {
+    setDashboardMindmaps(prev => {
+      const mindmaps = prev.length > 0 ? prev : [{
+        id,
+        title: dashboardTitle || extractTitleFromMarkdown(dashboardMarkdown) || 'Mindmap',
+        markdown: dashboardMarkdown || DEFAULT_MARKDOWN,
+        createdAt: new Date().toISOString()
+      }];
+      const target = mindmaps.find(m => m.id === id) || mindmaps[0];
+      setActiveMindmapId(target.id);
+      setDashboardMarkdown(target.markdown);
+      setDashboardTitle(target.title);
+      saveToLocalCache(bowlers, a3Cases, target.markdown, target.title, mindmaps, target.id);
+      return mindmaps;
+    });
+  };
+
+  const updateDashboardMarkdown = (markdown: string, title?: string, options?: { createNew?: boolean }) => {
+      const createNew = options?.createNew ?? false;
+      const baseTitle = title ?? extractTitleFromMarkdown(markdown) || 'Mindmap';
+
+      setDashboardMindmaps(prev => {
+        const now = new Date().toISOString();
+        let newMindmaps: DashboardMindmap[];
+        let newActiveId: string;
+
+        if (!createNew && activeMindmapId && prev.some(m => m.id === activeMindmapId)) {
+          newMindmaps = prev.map(m =>
+            m.id === activeMindmapId
+              ? { ...m, title: baseTitle, markdown, updatedAt: now }
+              : m
+          );
+          newActiveId = activeMindmapId;
+        } else {
+          const id = generateShortId();
+          const newEntry: DashboardMindmap = {
+            id,
+            title: baseTitle,
+            markdown,
+            createdAt: now
+          };
+          newMindmaps = [...prev, newEntry];
+          newActiveId = id;
+        }
+
+        setActiveMindmapId(newActiveId);
+        setDashboardMarkdown(markdown);
+        setDashboardTitle(baseTitle);
+        saveToLocalCache(bowlers, a3Cases, markdown, baseTitle, newMindmaps, newActiveId);
+        return newMindmaps;
+      });
   };
 
   const addBowler = (data: Omit<Bowler, 'id'>) => {
@@ -311,6 +435,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         isLoading,
         dashboardMarkdown,
         dashboardTitle,
+        dashboardMindmaps,
+        activeMindmapId,
+        setActiveMindmap,
         updateDashboardMarkdown
       }}
     >

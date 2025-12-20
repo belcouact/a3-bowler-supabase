@@ -24,7 +24,24 @@ import { getBowlerStatusColor } from '../utils/metricUtils';
 const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { bowlers, a3Cases, addBowler, updateBowler, addA3Case, updateA3Case, deleteBowler, deleteA3Case, reorderBowlers, reorderA3Cases, isLoading: isDataLoading, dashboardMarkdown, dashboardTitle } = useApp();
+  const {
+    bowlers,
+    a3Cases,
+    addBowler,
+    updateBowler,
+    addA3Case,
+    updateA3Case,
+    deleteBowler,
+    deleteA3Case,
+    reorderBowlers,
+    reorderA3Cases,
+    isLoading: isDataLoading,
+    dashboardMarkdown,
+    dashboardTitle,
+    dashboardMindmaps,
+    activeMindmapId,
+    setActiveMindmap
+  } = useApp();
   const { user, logout, isLoading } = useAuth();
   const toast = useToast();
   
@@ -337,7 +354,15 @@ const Layout = () => {
     }
     setIsSaving(true);
       try {
-        await dataService.saveData(bowlers, a3Cases, user.username, dashboardMarkdown, dashboardTitle);
+        await dataService.saveData(
+          bowlers,
+          a3Cases,
+          user.username,
+          dashboardMarkdown,
+          dashboardTitle,
+          dashboardMindmaps,
+          activeMindmapId
+        );
         toast.success('Data saved successfully!');
       } catch (error) {
       console.error('Save error:', error);
@@ -358,11 +383,6 @@ const Layout = () => {
       setMindmapModalMode('create');
       setIsMindmapModalOpen(true);
     }
-  };
-
-  const handleEditMindmap = () => {
-    setMindmapModalMode('edit');
-    setIsMindmapModalOpen(true);
   };
 
   const handleSaveA3Case = (data: Omit<A3Case, 'id'>) => {
@@ -987,28 +1007,45 @@ const Layout = () => {
               })()}
 
               {isMindmapPage && !isMetricBowler && !isA3Analysis && (
-                <div className="space-y-2">
-                  <div
-                    className={clsx(
-                      "rounded-lg border border-indigo-100 bg-indigo-50/70 px-3 py-2 cursor-pointer",
-                      !isSidebarOpen && "flex items-center justify-center"
-                    )}
-                    onDoubleClick={handleEditMindmap}
-                    title={!isSidebarOpen ? (dashboardTitle || 'No mindmap title yet') : undefined}
-                  >
-                    {isSidebarOpen ? (
-                      <>
-                        <div className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
-                          Current mindmap
+                <div className="space-y-1">
+                  {dashboardMindmaps.length === 0 ? (
+                    <div className={clsx("text-center py-8 text-gray-400 text-sm italic", isSidebarOpen ? "px-4" : "px-1 text-xs")}>
+                      {isSidebarOpen ? "No mindmaps yet. Click + to add one." : "Empty"}
+                    </div>
+                  ) : (
+                    dashboardMindmaps.map((mindmap) => (
+                      <button
+                        key={mindmap.id}
+                        onClick={() => setActiveMindmap(mindmap.id)}
+                        onDoubleClick={(e) => {
+                          e.preventDefault();
+                          setActiveMindmap(mindmap.id);
+                          setMindmapModalMode('edit');
+                          setIsMindmapModalOpen(true);
+                        }}
+                        className={clsx(
+                          "group flex items-center py-2 text-sm font-medium rounded-lg transition-all w-full",
+                          isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
+                          activeMindmapId === mindmap.id
+                            ? "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200"
+                            : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                        )}
+                        title={!isSidebarOpen ? mindmap.title : undefined}
+                      >
+                        <div className={clsx("flex items-center", isSidebarOpen ? "truncate" : "justify-center w-full")}>
+                          <div
+                            className={clsx(
+                              "w-5 h-5 flex-shrink-0 flex items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold uppercase text-indigo-700",
+                              isSidebarOpen ? "mr-3" : "mr-0"
+                            )}
+                          >
+                            {mindmap.title?.charAt(0) || <BrainCircuit className="w-3 h-3" />}
+                          </div>
+                          {isSidebarOpen && <span className="truncate">{mindmap.title}</span>}
                         </div>
-                        <div className="mt-1 text-sm font-medium text-indigo-900 truncate">
-                          {dashboardTitle || 'No mindmap title yet'}
-                        </div>
-                      </>
-                    ) : (
-                      <BrainCircuit className="w-5 h-5 text-indigo-600" />
-                    )}
-                  </div>
+                      </button>
+                    ))
+                  )}
                 </div>
               )}
 

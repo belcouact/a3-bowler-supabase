@@ -64,6 +64,14 @@ export interface DataAnalysisImage {
   height: number;
 }
 
+export interface DashboardMindmap {
+  id: string;
+  title: string;
+  markdown: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface A3Case {
   id: string;
   title: string;

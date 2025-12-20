@@ -25,8 +25,10 @@ export default {
           userId: string;
           dashboardMarkdown?: string;
           dashboardTitle?: string;
+          dashboardMindmaps?: any[];
+          activeMindmapId?: string;
         };
-        const { bowlers, a3Cases, userId, dashboardMarkdown, dashboardTitle } = data;
+        const { bowlers, a3Cases, userId, dashboardMarkdown, dashboardTitle, dashboardMindmaps, activeMindmapId } = data;
 
         if (!userId) {
            return new Response(JSON.stringify({ success: false, error: 'User ID is required' }), {
@@ -35,14 +37,16 @@ export default {
           });
         }
 
-        // Save Dashboard Markdown and Title
-        if (dashboardMarkdown !== undefined || dashboardTitle !== undefined) {
+        const dashboardPayload: any = {};
+        if (dashboardMarkdown !== undefined) dashboardPayload.content = dashboardMarkdown;
+        if (dashboardTitle !== undefined) dashboardPayload.title = dashboardTitle;
+        if (dashboardMindmaps !== undefined) dashboardPayload.mindmaps = dashboardMindmaps;
+        if (activeMindmapId !== undefined) dashboardPayload.activeMindmapId = activeMindmapId;
+
+        if (Object.keys(dashboardPayload).length > 0) {
           await env.BOWLER_DATA.put(
             `user:${userId}:dashboard`,
-            JSON.stringify({
-              content: dashboardMarkdown ?? '',
-              title: dashboardTitle ?? ''
-            })
+            JSON.stringify(dashboardPayload)
           );
         }
 
@@ -222,6 +226,8 @@ export default {
         const a3Cases: any[] = [];
         let dashboardMarkdown: string | undefined;
         let dashboardTitle: string | undefined;
+        let dashboardMindmaps: any[] | undefined;
+        let activeMindmapId: string | undefined;
 
         // Load dashboard markdown and title
         const dashboardRaw = await env.BOWLER_DATA.get(`user:${userId}:dashboard`);
@@ -233,6 +239,12 @@ export default {
             } else if (parsed && typeof parsed === 'object') {
               dashboardMarkdown = parsed.content ?? '';
               dashboardTitle = parsed.title ?? '';
+              if (Array.isArray(parsed.mindmaps)) {
+                dashboardMindmaps = parsed.mindmaps;
+              }
+              if (typeof parsed.activeMindmapId === 'string') {
+                activeMindmapId = parsed.activeMindmapId;
+              }
             }
           } catch (e) {
             dashboardMarkdown = dashboardRaw as string;
@@ -283,7 +295,9 @@ export default {
           bowlers,
           a3Cases,
           dashboardMarkdown,
-          dashboardTitle
+          dashboardTitle,
+          dashboardMindmaps,
+          activeMindmapId
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });

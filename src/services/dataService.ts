@@ -10,15 +10,24 @@ export const dataService = {
     a3Cases: any[],
     userId: string,
     dashboardMarkdown?: string,
-    dashboardTitle?: string
+    dashboardTitle?: string,
+    dashboardMindmaps?: any[],
+    activeMindmapId?: string | null
   ) {
-    const payload = {
+    const payload: any = {
       bowlers,
       a3Cases,
       userId,
       dashboardMarkdown,
-      dashboardTitle
+      dashboardTitle,
     };
+
+    if (dashboardMindmaps !== undefined) {
+      payload.dashboardMindmaps = dashboardMindmaps;
+    }
+    if (activeMindmapId !== undefined && activeMindmapId !== null) {
+      payload.activeMindmapId = activeMindmapId;
+    }
 
     const response = await fetch(`${API_BASE_URL}/save`, {
       method: 'POST',

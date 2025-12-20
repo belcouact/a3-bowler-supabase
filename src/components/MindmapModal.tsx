@@ -29,7 +29,7 @@ export const MindmapModal = ({ isOpen, onClose, mode }: MindmapModalProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateDashboardMarkdown(text || '', title || undefined);
+    updateDashboardMarkdown(text || '', title || undefined, { createNew: mode === 'create' });
     onClose();
   };
 
