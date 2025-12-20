@@ -496,14 +496,14 @@ const Layout = () => {
             <button
               onClick={() => setIsAIChatOpen(true)}
               className="p-2 bg-indigo-600 text-white rounded-md shadow-sm hover:bg-indigo-700 transition-colors"
-              title="Ask AI"
+              title="Chat with AI"
             >
               <Sparkles className="w-4 h-4" />
             </button>
             <button
               onClick={() => setIsConsolidateModalOpen(true)}
               className="p-2 bg-purple-600 text-white rounded-md shadow-sm hover:bg-purple-700 transition-colors"
-              title="Consolidate Bowlers"
+              title="Consolidate Bowlers & A3"
             >
               <Layers className="w-4 h-4" />
             </button>
