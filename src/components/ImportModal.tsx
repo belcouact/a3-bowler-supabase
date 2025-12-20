@@ -326,9 +326,18 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                     <li><span className="font-mono font-medium">Metric Name</span> (Required)</li>
                     <li><span className="font-mono font-medium">Scope</span> (Required)</li>
                     <li><span className="font-mono font-medium">Description, Objective, Champion, Commitment, Tag</span> (Optional)</li>
-                    <li><span className="font-mono font-medium">Definition, Owner, Attribute, Target Rule</span> (Optional)</li>
+                    <li><span className="font-mono font-medium">Definition, Owner, Attribute, Target Meeting Rule</span> (Optional)</li>
                     <li>
-                      Date Columns format: <span className="font-mono">YYYY/MMM Target</span> and <span className="font-mono">YYYY/MMM Actual</span>
+                      Recommended format (matches Download CSV):
+                      <br />
+                      <span className="font-mono font-medium">Type</span> column with values <span className="font-mono">Target</span> or <span className="font-mono">Actual</span>, plus date columns <span className="font-mono">YYYY/MMM</span>.
+                      <br />
+                      <span className="text-gray-400 italic">Example header: "Bowler Name","Metric Name","Definition","Owner","Scope","Attribute","Target Meeting Rule","Type","2024/Jan","2024/Feb",...</span>
+                    </li>
+                    <li>
+                      Legacy format also supported:
+                      <br />
+                      Date columns as <span className="font-mono">YYYY/MMM Target</span> and <span className="font-mono">YYYY/MMM Actual</span>
                       <br />
                       <span className="text-gray-400 italic">Example: "2024/Jan Target", "2024/Jan Actual"</span>
                     </li>
