@@ -979,6 +979,19 @@ const Layout = () => {
                   );
               })()}
 
+              {isMindmapPage && !isMetricBowler && !isA3Analysis && (
+                <div className="space-y-2">
+                  <div className="rounded-lg border border-indigo-100 bg-indigo-50/70 px-3 py-2">
+                    <div className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
+                      Current mindmap
+                    </div>
+                    <div className="mt-1 text-sm font-medium text-indigo-900 truncate">
+                      {dashboardTitle || 'No mindmap title yet'}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {isA3Analysis && (() => {
                   const ungrouped = a3Cases.filter(a => !a.group);
                   const grouped = a3Cases.filter(a => !!a.group).reduce((acc, a3) => {
