@@ -30,7 +30,6 @@ const Layout = () => {
   // Identify active module based on path
   const isMetricBowler = location.pathname.includes('/metric-bowler');
   const isA3Analysis = location.pathname.includes('/a3-analysis');
-  const isMindMap = location.pathname.includes('/mindmap');
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isA3ModalOpen, setIsA3ModalOpen] = useState(false);
