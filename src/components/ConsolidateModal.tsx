@@ -15,7 +15,7 @@ export const ConsolidateModal: React.FC<ConsolidateModalProps> = ({ isOpen, onCl
   const [tagInput, setTagInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
-  const { addBowler, updateBowler, bowlers, addA3Case, updateA3Case, a3Cases } = useApp();
+  const { addBowler, updateBowler, bowlers, addA3Case, updateA3Case, a3Cases, reorderBowlers, reorderA3Cases } = useApp();
   const toast = useToast();
 
   if (!isOpen) return null;
@@ -52,32 +52,59 @@ export const ConsolidateModal: React.FC<ConsolidateModalProps> = ({ isOpen, onCl
         let addedA3Count = 0;
         let updatedA3Count = 0;
 
+        // Map for efficient lookup
+        const existingBowlerMap = new Map(bowlers.map(b => [b.id, b]));
+        const existingA3Map = new Map(a3Cases.map(a => [a.id, a]));
+
+        // Process Bowlers
+        const updatedBowlersList = [...bowlers];
         newBowlers.forEach(newBowler => {
-           const exists = bowlers.some(b => b.id === newBowler.id);
-           if (!exists) {
-               addBowler(newBowler);
-               addedBowlersCount++;
+           if (existingBowlerMap.has(newBowler.id)) {
+               // Update existing bowler in place
+               const index = updatedBowlersList.findIndex(b => b.id === newBowler.id);
+               if (index !== -1) {
+                   updatedBowlersList[index] = newBowler;
+                   updatedBowlersCount++;
+               }
            } else {
-               updateBowler(newBowler);
-               updatedBowlersCount++;
+               // Add new bowler to the end
+               updatedBowlersList.push(newBowler);
+               addedBowlersCount++;
            }
         });
 
+        // Process A3 Cases
+        const updatedA3List = [...a3Cases];
         newA3Cases.forEach(newA3 => {
-            const exists = a3Cases.some(a => a.id === newA3.id);
-            if (!exists) {
-                addA3Case(newA3);
-                addedA3Count++;
+            if (existingA3Map.has(newA3.id)) {
+                // Update existing A3 in place
+                const index = updatedA3List.findIndex(a => a.id === newA3.id);
+                if (index !== -1) {
+                    updatedA3List[index] = newA3;
+                    updatedA3Count++;
+                }
             } else {
-                updateA3Case(newA3);
-                updatedA3Count++;
+                // Add new A3 to the end
+                updatedA3List.push(newA3);
+                addedA3Count++;
             }
         });
+        
+        // Batch update via reorder function which sets state directly
+        // This preserves order and is more efficient than calling add/update individually
         
         const totalAdded = addedBowlersCount + addedA3Count;
         const totalUpdated = updatedBowlersCount + updatedA3Count;
         
         if (totalAdded > 0 || totalUpdated > 0) {
+            // Apply updates
+            if (addedBowlersCount > 0 || updatedBowlersCount > 0) {
+                reorderBowlers(updatedBowlersList);
+            }
+            if (addedA3Count > 0 || updatedA3Count > 0) {
+                reorderA3Cases(updatedA3List);
+            }
+
             const parts = [];
             if (addedBowlersCount > 0) parts.push(`${addedBowlersCount} bowlers added`);
             if (updatedBowlersCount > 0) parts.push(`${updatedBowlersCount} bowlers updated`);
