@@ -19,8 +19,14 @@ export default {
 
     if (request.method === 'POST' && url.pathname === '/save') {
       try {
-        const data = await request.json() as { bowlers: any[], a3Cases: any[], userId: string, dashboardMarkdown?: string };
-        const { bowlers, a3Cases, userId, dashboardMarkdown } = data;
+        const data = await request.json() as {
+          bowlers: any[];
+          a3Cases: any[];
+          userId: string;
+          dashboardMarkdown?: string;
+          dashboardTitle?: string;
+        };
+        const { bowlers, a3Cases, userId, dashboardMarkdown, dashboardTitle } = data;
 
         if (!userId) {
            return new Response(JSON.stringify({ success: false, error: 'User ID is required' }), {
@@ -29,9 +35,15 @@ export default {
           });
         }
 
-        // Save Dashboard Markdown
-        if (dashboardMarkdown !== undefined) {
-          await env.BOWLER_DATA.put(`user:${userId}:dashboard`, JSON.stringify({ content: dashboardMarkdown }));
+        // Save Dashboard Markdown and Title
+        if (dashboardMarkdown !== undefined || dashboardTitle !== undefined) {
+          await env.BOWLER_DATA.put(
+            `user:${userId}:dashboard`,
+            JSON.stringify({
+              content: dashboardMarkdown ?? '',
+              title: dashboardTitle ?? ''
+            })
+          );
         }
 
         // Save bowlers
@@ -208,6 +220,24 @@ export default {
       try {
         const bowlers: any[] = [];
         const a3Cases: any[] = [];
+        let dashboardMarkdown: string | undefined;
+        let dashboardTitle: string | undefined;
+
+        // Load dashboard markdown and title
+        const dashboardRaw = await env.BOWLER_DATA.get(`user:${userId}:dashboard`);
+        if (dashboardRaw) {
+          try {
+            const parsed = JSON.parse(dashboardRaw as string);
+            if (typeof parsed === 'string') {
+              dashboardMarkdown = parsed;
+            } else if (parsed && typeof parsed === 'object') {
+              dashboardMarkdown = parsed.content ?? '';
+              dashboardTitle = parsed.title ?? '';
+            }
+          } catch (e) {
+            dashboardMarkdown = dashboardRaw as string;
+          }
+        }
 
         // List keys for the user
         // Ensure we are reading data that was written with the same userId
@@ -248,7 +278,13 @@ export default {
           }
         }
 
-        return new Response(JSON.stringify({ success: true, bowlers, a3Cases }), {
+        return new Response(JSON.stringify({
+          success: true,
+          bowlers,
+          a3Cases,
+          dashboardMarkdown,
+          dashboardTitle
+        }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } catch (err: any) {

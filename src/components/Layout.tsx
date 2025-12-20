@@ -24,13 +24,14 @@ import { getBowlerStatusColor } from '../utils/metricUtils';
 const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { bowlers, a3Cases, addBowler, updateBowler, addA3Case, updateA3Case, deleteBowler, deleteA3Case, reorderBowlers, reorderA3Cases, isLoading: isDataLoading, dashboardMarkdown } = useApp();
+  const { bowlers, a3Cases, addBowler, updateBowler, addA3Case, updateA3Case, deleteBowler, deleteA3Case, reorderBowlers, reorderA3Cases, isLoading: isDataLoading, dashboardMarkdown, dashboardTitle } = useApp();
   const { user, logout, isLoading } = useAuth();
   const toast = useToast();
   
   // Identify active module based on path
   const isMetricBowler = location.pathname.includes('/metric-bowler');
   const isA3Analysis = location.pathname.includes('/a3-analysis');
+  const isMindmapPage = location.pathname.includes('/mindmap');
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isA3ModalOpen, setIsA3ModalOpen] = useState(false);
@@ -332,7 +333,7 @@ const Layout = () => {
     }
     setIsSaving(true);
       try {
-        await dataService.saveData(bowlers, a3Cases, user.username, dashboardMarkdown);
+        await dataService.saveData(bowlers, a3Cases, user.username, dashboardMarkdown, dashboardTitle);
         toast.success('Data saved successfully!');
       } catch (error) {
       console.error('Save error:', error);
@@ -439,10 +440,24 @@ const Layout = () => {
           </div>
           
           <nav className="flex space-x-1">
-
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname.startsWith(item.path);
+              const isMetric = item.path === '/metric-bowler';
+              const isA3 = item.path === '/a3-analysis';
+
+              const activeIconClasses = isMetric
+                ? 'bg-blue-600 text-white'
+                : isA3
+                ? 'bg-purple-600 text-white'
+                : 'bg-blue-600 text-white';
+
+              const inactiveIconClasses = isMetric
+                ? 'bg-blue-50 text-blue-700'
+                : isA3
+                ? 'bg-purple-50 text-purple-700'
+                : 'bg-gray-100 text-gray-600';
+
               return (
                 <Link
                   key={item.path}
@@ -450,12 +465,19 @@ const Layout = () => {
                   className={clsx(
                     'flex items-center px-3 md:px-4 py-2 rounded-md text-sm font-medium transition-all duration-200',
                     isActive
-                      ? 'bg-blue-50 text-blue-700 shadow-sm'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'bg-blue-50 text-blue-800 shadow-sm'
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                   )}
                   title={item.label}
                 >
-                  <Icon className={clsx("w-5 h-5 md:w-4 md:h-4 md:mr-2", isActive ? "text-blue-600" : "text-gray-400")} />
+                  <span
+                    className={clsx(
+                      'flex items-center justify-center w-8 h-8 rounded-md mr-0 md:mr-2 transition-colors',
+                      isActive ? activeIconClasses : inactiveIconClasses
+                    )}
+                  >
+                    <Icon className="w-4 h-4" />
+                  </span>
                   <span className="hidden md:inline">{item.label}</span>
                 </Link>
               );
@@ -474,12 +496,17 @@ const Layout = () => {
               <ExternalLink className="w-4 h-4" />
             </button>
             <button
-                onClick={() => navigate('/mindmap')}
-                className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-colors"
-                title="Mindmap ideas"
-              >
-                <BrainCircuit className="w-4 h-4" />
-              </button>
+              onClick={() => navigate('/mindmap')}
+              className={clsx(
+                'p-2 rounded-md border transition-colors',
+                isMindmapPage
+                  ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+                  : 'bg-indigo-50 border-indigo-100 text-indigo-700 hover:bg-indigo-100 hover:border-indigo-200'
+              )}
+              title="Mindmap ideas"
+            >
+              <BrainCircuit className="w-4 h-4" />
+            </button>
             <button
               onClick={() => setIsImportModalOpen(true)}
               className="p-2 rounded-md bg-green-500 text-white shadow-sm hover:bg-green-600 transition-colors"
@@ -683,7 +710,7 @@ const Layout = () => {
               {isSidebarOpen ? (
                 <>
                   <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wider truncate">
-                    {isMetricBowler ? 'Bowler Lists' : 'A3 Cases'}
+                    {isMetricBowler ? 'Bowler Lists' : isMindmapPage ? 'Mindmap ideas' : 'A3 Cases'}
                   </h2>
                   <button 
                     onClick={handlePlusClick}

@@ -22,7 +22,8 @@ interface AppContextType {
   reorderA3Cases: (a3Cases: A3Case[]) => void;
   isLoading: boolean;
   dashboardMarkdown: string;
-  updateDashboardMarkdown: (markdown: string) => void;
+  dashboardTitle: string;
+  updateDashboardMarkdown: (markdown: string, title?: string) => void;
 }
 
 // Context
@@ -62,6 +63,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [bowlers, setBowlers] = useState<Bowler[]>([]);
   const [a3Cases, setA3Cases] = useState<A3Case[]>([]);
   const [dashboardMarkdown, setDashboardMarkdown] = useState<string>(DEFAULT_MARKDOWN);
+  const [dashboardTitle, setDashboardTitle] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -71,6 +73,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     isMountedRef.current = true;
     return () => { isMountedRef.current = false; };
   }, []);
+
+  const extractTitleFromMarkdown = (markdown: string): string => {
+    const lines = markdown.split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('#')) {
+        return trimmed.replace(/^#+\s*/, '');
+      }
+    }
+    return '';
+  };
 
   const loadUserData = useCallback(async (username: string) => {
     if (!isMountedRef.current) return;
@@ -117,12 +130,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         }
 
         if (localData && isMountedRef.current) {
-            // Ensure we have an object
             const data = (typeof localData === 'string') ? JSON.parse(localData) : localData;
-            
+            const markdown = data.dashboardMarkdown || DEFAULT_MARKDOWN;
+            const title = data.dashboardTitle || extractTitleFromMarkdown(markdown);
             setBowlers(data.bowlers || []);
             setA3Cases(data.a3Cases || []);
-            setDashboardMarkdown(data.dashboardMarkdown || DEFAULT_MARKDOWN);
+            setDashboardMarkdown(markdown);
+            setDashboardTitle(title);
         }
     } catch (e) {
         console.error("Failed to load local data", e);
@@ -136,17 +150,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
         
         if (isMountedRef.current && data.success) {
+            const markdown = data.dashboardMarkdown || DEFAULT_MARKDOWN;
+            const title = data.dashboardTitle || extractTitleFromMarkdown(markdown);
             setBowlers(data.bowlers || []);
             setA3Cases(data.a3Cases || []);
-            if (data.dashboardMarkdown) {
-                setDashboardMarkdown(data.dashboardMarkdown);
-            }
-            // Update local storage to match backend
+            setDashboardMarkdown(markdown);
+            setDashboardTitle(title);
             try {
                 await set(localDataKey, { 
                     bowlers: data.bowlers || [], 
                     a3Cases: data.a3Cases || [],
-                    dashboardMarkdown: data.dashboardMarkdown || DEFAULT_MARKDOWN
+                    dashboardMarkdown: markdown,
+                    dashboardTitle: title
                 });
             } catch (e) {
                 console.warn("Failed to update local cache.", e);
@@ -178,13 +193,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setBowlers([]);
         setA3Cases([]);
         setDashboardMarkdown(DEFAULT_MARKDOWN);
+        setDashboardTitle('');
     }
     return () => {
         if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
     };
   }, [user, loadUserData]);
 
-  const saveToLocalCache = (newBowlers: Bowler[], newA3Cases: A3Case[], newMarkdown: string) => {
+  const saveToLocalCache = (newBowlers: Bowler[], newA3Cases: A3Case[], newMarkdown: string, newTitle: string) => {
     if (user) {
       // 1. Save to IndexedDB immediately (Local Cache)
       const localDataKey = `user_data_${user.username}`;
@@ -192,7 +208,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       set(localDataKey, { 
           bowlers: newBowlers, 
           a3Cases: newA3Cases,
-          dashboardMarkdown: newMarkdown
+          dashboardMarkdown: newMarkdown,
+          dashboardTitle: newTitle
       }).catch(e => {
         console.error("Local Cache save failed", e);
       });
@@ -201,9 +218,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateDashboardMarkdown = (markdown: string) => {
+  const updateDashboardMarkdown = (markdown: string, title?: string) => {
+      const effectiveTitle = title ?? dashboardTitle;
       setDashboardMarkdown(markdown);
-      saveToLocalCache(bowlers, a3Cases, markdown);
+      setDashboardTitle(effectiveTitle);
+      saveToLocalCache(bowlers, a3Cases, markdown, effectiveTitle);
   };
 
   const addBowler = (data: Omit<Bowler, 'id'>) => {
@@ -213,7 +232,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     };
     setBowlers(prev => {
       const newBowlers = [...prev, newBowler];
-      saveToLocalCache(newBowlers, a3Cases, dashboardMarkdown);
+      saveToLocalCache(newBowlers, a3Cases, dashboardMarkdown, dashboardTitle);
       return newBowlers;
     });
   };
@@ -225,7 +244,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     setBowlers(prev => {
       const newBowlers = prev.map((b) => (b.id === updatedBowler.id ? updatedBowler : b));
-      saveToLocalCache(newBowlers, a3Cases, dashboardMarkdown);
+      saveToLocalCache(newBowlers, a3Cases, dashboardMarkdown, dashboardTitle);
       return newBowlers;
     });
   };
@@ -237,7 +256,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     };
     setA3Cases(prev => {
       const newA3Cases = [...prev, newCase];
-      saveToLocalCache(bowlers, newA3Cases, dashboardMarkdown);
+      saveToLocalCache(bowlers, newA3Cases, dashboardMarkdown, dashboardTitle);
       return newA3Cases;
     });
   };
@@ -245,7 +264,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const updateA3Case = (updatedCase: A3Case) => {
     setA3Cases(prev => {
       const newA3Cases = prev.map(c => c.id === updatedCase.id ? updatedCase : c);
-      saveToLocalCache(bowlers, newA3Cases, dashboardMarkdown);
+      saveToLocalCache(bowlers, newA3Cases, dashboardMarkdown, dashboardTitle);
       return newA3Cases;
     });
   };
@@ -253,7 +272,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const deleteBowler = (id: string) => {
     setBowlers(prev => {
       const newBowlers = prev.filter((b) => b.id !== id);
-      saveToLocalCache(newBowlers, a3Cases, dashboardMarkdown);
+      saveToLocalCache(newBowlers, a3Cases, dashboardMarkdown, dashboardTitle);
       return newBowlers;
     });
   };
@@ -261,19 +280,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const deleteA3Case = (id: string) => {
     setA3Cases(prev => {
       const newA3Cases = prev.filter((c) => c.id !== id);
-      saveToLocalCache(bowlers, newA3Cases, dashboardMarkdown);
+      saveToLocalCache(bowlers, newA3Cases, dashboardMarkdown, dashboardTitle);
       return newA3Cases;
     });
   };
 
   const reorderBowlers = (newBowlers: Bowler[]) => {
     setBowlers(newBowlers);
-    saveToLocalCache(newBowlers, a3Cases, dashboardMarkdown);
+    saveToLocalCache(newBowlers, a3Cases, dashboardMarkdown, dashboardTitle);
   };
 
   const reorderA3Cases = (newA3Cases: A3Case[]) => {
     setA3Cases(newA3Cases);
-    saveToLocalCache(bowlers, newA3Cases, dashboardMarkdown);
+    saveToLocalCache(bowlers, newA3Cases, dashboardMarkdown, dashboardTitle);
   };
 
   return (
@@ -291,6 +310,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         reorderA3Cases,
         isLoading,
         dashboardMarkdown,
+        dashboardTitle,
         updateDashboardMarkdown
       }}
     >

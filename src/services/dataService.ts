@@ -5,12 +5,19 @@
 const API_BASE_URL = 'https://bowler-worker.study-llm.me';
 
 export const dataService = {
-  async saveData(bowlers: any[], a3Cases: any[], userId: string, dashboardMarkdown?: string) {
+  async saveData(
+    bowlers: any[],
+    a3Cases: any[],
+    userId: string,
+    dashboardMarkdown?: string,
+    dashboardTitle?: string
+  ) {
     const payload = {
       bowlers,
       a3Cases,
       userId,
-      dashboardMarkdown
+      dashboardMarkdown,
+      dashboardTitle
     };
 
     const response = await fetch(`${API_BASE_URL}/save`, {
