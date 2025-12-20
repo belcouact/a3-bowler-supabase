@@ -113,7 +113,7 @@ const WhyAnalysis = () => {
         </label>
         <textarea
             id="rootCause"
-            rows={4}
+            rows={8}
             className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
             placeholder="Summarize the root cause identified from the analysis..."
             value={rootCause}

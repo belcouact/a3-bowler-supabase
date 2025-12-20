@@ -79,7 +79,7 @@ const Result = () => {
             <textarea
               ref={textareaRef}
               id="results"
-              rows={4}
+              rows={8}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border"
               placeholder="Describe what happened after actions were taken..."
               defaultValue={currentCase.results || ''}
