@@ -31,6 +31,7 @@ const A3CaseModal = ({ isOpen, onClose, onSave, onDelete, initialData }: A3CaseM
           description: initialData.description || '',
           owner: initialData.owner || '',
           group: initialData.group || '',
+          tag: initialData.tag || '',
           priority: initialData.priority || 'Medium',
           startDate: initialData.startDate || '',
           endDate: initialData.endDate || '',
