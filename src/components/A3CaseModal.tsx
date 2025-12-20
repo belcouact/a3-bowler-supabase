@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Trash2 } from 'lucide-react';
+import { X, Trash2, Info } from 'lucide-react';
 import { A3Case } from '../context/AppContext';
 
 interface A3CaseModalProps {
@@ -116,7 +116,10 @@ const A3CaseModal = ({ isOpen, onClose, onSave, onDelete, initialData }: A3CaseM
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Group</label>
+                  <label className="block text-sm font-medium text-gray-700 flex items-center" title="Group multiple A3 cases under one group">
+                    Group
+                    <Info className="w-4 h-4 ml-1 text-gray-400 cursor-help" />
+                  </label>
                   <input
                     type="text"
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
@@ -125,7 +128,10 @@ const A3CaseModal = ({ isOpen, onClose, onSave, onDelete, initialData }: A3CaseM
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Tag</label>
+                  <label className="block text-sm font-medium text-gray-700 flex items-center" title="For consolidation purpose">
+                    Tag
+                    <Info className="w-4 h-4 ml-1 text-gray-400 cursor-help" />
+                  </label>
                   <input
                     type="text"
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
