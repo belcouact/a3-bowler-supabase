@@ -20,6 +20,33 @@ export const ConsolidateModal: React.FC<ConsolidateModalProps> = ({ isOpen, onCl
 
   if (!isOpen) return null;
 
+  // Helper function to merge lists while preserving order from source (newItems)
+  // and keeping the position of updated items relative to the list
+  const smartMerge = <T extends { id: string }>(currentItems: T[], newItems: T[]): T[] => {
+    const newItemIds = new Set(newItems.map(i => i.id));
+    const indices = currentItems
+      .map((item, index) => newItemIds.has(item.id) ? index : -1)
+      .filter(index => index !== -1);
+    
+    const remainingItems = currentItems.filter(item => !newItemIds.has(item.id));
+    
+    if (indices.length === 0) {
+      // If no items exist, append new items to the end
+      return [...remainingItems, ...newItems];
+    }
+    
+    // Find the first position where an updated item was located
+    const firstIndex = Math.min(...indices);
+    
+    // Calculate where this position maps to in the remainingItems array
+    // by counting how many kept items were before this index
+    const itemsBeforeCount = currentItems.slice(0, firstIndex).filter(item => !newItemIds.has(item.id)).length;
+    
+    const final = [...remainingItems];
+    final.splice(itemsBeforeCount, 0, ...newItems);
+    return final;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -47,62 +74,28 @@ export const ConsolidateModal: React.FC<ConsolidateModalProps> = ({ isOpen, onCl
         const newBowlers = (response.bowlers || []) as Bowler[];
         const newA3Cases = (response.a3Cases || []) as A3Case[];
         
-        let addedBowlersCount = 0;
-        let updatedBowlersCount = 0;
-        let addedA3Count = 0;
-        let updatedA3Count = 0;
-
-        // Map for efficient lookup
-        const existingBowlerMap = new Map(bowlers.map(b => [b.id, b]));
-        const existingA3Map = new Map(a3Cases.map(a => [a.id, a]));
-
-        // Process Bowlers
-        const updatedBowlersList = [...bowlers];
-        newBowlers.forEach(newBowler => {
-           if (existingBowlerMap.has(newBowler.id)) {
-               // Update existing bowler in place
-               const index = updatedBowlersList.findIndex(b => b.id === newBowler.id);
-               if (index !== -1) {
-                   updatedBowlersList[index] = newBowler;
-                   updatedBowlersCount++;
-               }
-           } else {
-               // Add new bowler to the end
-               updatedBowlersList.push(newBowler);
-               addedBowlersCount++;
-           }
-        });
-
-        // Process A3 Cases
-        const updatedA3List = [...a3Cases];
-        newA3Cases.forEach(newA3 => {
-            if (existingA3Map.has(newA3.id)) {
-                // Update existing A3 in place
-                const index = updatedA3List.findIndex(a => a.id === newA3.id);
-                if (index !== -1) {
-                    updatedA3List[index] = newA3;
-                    updatedA3Count++;
-                }
-            } else {
-                // Add new A3 to the end
-                updatedA3List.push(newA3);
-                addedA3Count++;
-            }
-        });
+        // Calculate stats for toast
+        const existingBowlerIds = new Set(bowlers.map(b => b.id));
+        const existingA3Ids = new Set(a3Cases.map(a => a.id));
         
-        // Batch update via reorder function which sets state directly
-        // This preserves order and is more efficient than calling add/update individually
-        
+        const addedBowlersCount = newBowlers.filter(b => !existingBowlerIds.has(b.id)).length;
+        const updatedBowlersCount = newBowlers.filter(b => existingBowlerIds.has(b.id)).length;
+        const addedA3Count = newA3Cases.filter(a => !existingA3Ids.has(a.id)).length;
+        const updatedA3Count = newA3Cases.filter(a => existingA3Ids.has(a.id)).length;
+
         const totalAdded = addedBowlersCount + addedA3Count;
         const totalUpdated = updatedBowlersCount + updatedA3Count;
         
         if (totalAdded > 0 || totalUpdated > 0) {
-            // Apply updates
-            if (addedBowlersCount > 0 || updatedBowlersCount > 0) {
-                reorderBowlers(updatedBowlersList);
+            // Apply smart merge
+            if (newBowlers.length > 0) {
+                const mergedBowlers = smartMerge(bowlers, newBowlers);
+                reorderBowlers(mergedBowlers);
             }
-            if (addedA3Count > 0 || updatedA3Count > 0) {
-                reorderA3Cases(updatedA3List);
+            
+            if (newA3Cases.length > 0) {
+                const mergedA3 = smartMerge(a3Cases, newA3Cases);
+                reorderA3Cases(mergedA3);
             }
 
             const parts = [];
