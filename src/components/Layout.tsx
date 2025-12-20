@@ -277,7 +277,7 @@ const Layout = () => {
       const prompt = `Provide a comprehensive performance summary.
       
       Analyze the data based on each metric's 'targetMeetingRule' (e.g., gte, lte, within_range) and 'attribute'.
-      Identify metrics that have missed their target for 3 consecutive months (current month + previous 2).
+      Identify metrics that have missed their target for 2 or more consecutive months (current month + previous 1 or 2).
       Group the metrics by their 'group' field.
       Also analyze the A3 problem-solving data and produce an overall A3 summary that highlights the main problems, root causes, current status, and overall progress across A3 cases.
       

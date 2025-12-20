@@ -42,12 +42,12 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
 
   let parsedData: SummaryData | null = null;
   let isJson = false;
+  let rawJsonContent = '';
 
   try {
     if (content && !isLoading) {
-      const cleanContent = content.replace(/```json/g, '').replace(/```/g, '').trim();
-      parsedData = JSON.parse(cleanContent);
-      // Validate structure roughly
+      rawJsonContent = content.replace(/```json/g, '').replace(/```/g, '').trim();
+      parsedData = JSON.parse(rawJsonContent);
       if (parsedData && parsedData.executiveSummary && Array.isArray(parsedData.performanceGroups)) {
           isJson = true;
       }
@@ -59,27 +59,8 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
 
   const handleCopy = () => {
     if (isJson && parsedData) {
-        let textToCopy = `Executive Summary:\n${parsedData.executiveSummary}\n\n`;
-        
-        if (parsedData.a3Summary && parsedData.a3Summary.trim() !== '') {
-          textToCopy += `A3 Problem Solving Summary:\n${parsedData.a3Summary}\n\n`;
-        }
-
-        textToCopy += `Performance Analysis:\n`;
-        parsedData.performanceGroups.forEach(group => {
-            textToCopy += `\nGroup: ${group.groupName}\n`;
-            group.metrics.forEach(m => {
-                const trendText = m.trendAnalysis ? ` | Trend: ${m.trendAnalysis}` : '';
-                textToCopy += `- ${m.name}: ${m.latestPerformance}${trendText}\n`;
-            });
-        });
-
-        textToCopy += `\nAreas of Concern & Recommendations:\n`;
-        parsedData.areasOfConcern.forEach(area => {
-            textToCopy += `- ${area.metricName} (${area.groupName}): ${area.issue}\n  Suggestion: ${area.suggestion}\n`;
-        });
-
-        navigator.clipboard.writeText(textToCopy);
+        const jsonToCopy = rawJsonContent || JSON.stringify(parsedData, null, 2);
+        navigator.clipboard.writeText(jsonToCopy);
     } else {
         navigator.clipboard.writeText(content);
     }
@@ -87,7 +68,10 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
   };
 
   const handleDownload = () => {
-    const dataToDownload = isJson && parsedData ? JSON.stringify(parsedData, null, 2) : content;
+    const dataToDownload =
+      isJson && parsedData
+        ? (rawJsonContent || JSON.stringify(parsedData, null, 2))
+        : content;
     const blob = new Blob([dataToDownload], { type: 'text/plain;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
