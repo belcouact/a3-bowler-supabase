@@ -25,7 +25,7 @@ export const isViolation = (
   }
 
   if (effectiveRule === 'within_range') {
-    const match = targetStr.match(/^[{\[]?\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*[}\]]?$/);
+    const match = targetStr.match(/^(?:\{|\[)?\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*(?:\}|\])?$/);
     if (match) {
       const min = parseFloat(match[1]);
       const max = parseFloat(match[2]);

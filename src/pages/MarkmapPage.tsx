@@ -26,7 +26,7 @@ transformer.urlBuilder.getUrl = (url: string) => {
 // but urlBuilder is the main interception point for assets
 
 // Do not strip HTML tags, preserve all characters
-// @ts-ignore
+// @ts-expect-error markmap assets typing
 if (transformer.assets && transformer.assets.styles) {
     // Attempt to inject style to preserve whitespace if needed, but mainly we rely on markmap's rendering
 }

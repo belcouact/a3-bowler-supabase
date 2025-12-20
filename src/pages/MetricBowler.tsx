@@ -159,7 +159,7 @@ const MetricBowler = () => {
     // Validate input if it's a target field and rule is 'within_range'
     const metric = metrics.find(m => m.id === metricId);
     if (metric && field === 'target' && metric.targetMeetingRule === 'within_range') {
-        const match = value.match(/^[{\[]?\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*[}\]]?$/);
+        const match = value.match(/^(?:\{|\[)?\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*(?:\}|\])?$/);
         if (!match) {
             toast.error("Invalid format: Target must be {min, max} (e.g., {5, 10})");
             // Force re-render to reset input value by triggering a state update that doesn't change data?
@@ -576,7 +576,7 @@ const MetricBowler = () => {
 
                 if (rawTarget) {
                      // Try to parse as range first
-                     const match = rawTarget.match(/^[{\[]?\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*[}\]]?$/);
+                     const match = rawTarget.match(/^(?:\{|\[)?\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*(?:\}|\])?$/);
                      if (match) {
                          const min = parseFloat(match[1]);
                          const max = parseFloat(match[2]);

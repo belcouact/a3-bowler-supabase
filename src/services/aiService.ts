@@ -17,7 +17,7 @@ const calculateStats = (values: number[]) => {
 };
 
 const parseTarget = (targetStr: string): { min?: number; max?: number; val?: number } => {
-    const rangeMatch = targetStr.match(/^[{\[]?\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*[}\]]?$/);
+    const rangeMatch = targetStr.match(/^(?:\{|\[)?\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*(?:\}|\])?$/);
     if (rangeMatch) {
         return { min: parseFloat(rangeMatch[1]), max: parseFloat(rangeMatch[2]) };
     }
