@@ -15,7 +15,7 @@ export const ConsolidateModal: React.FC<ConsolidateModalProps> = ({ isOpen, onCl
   const [tagInput, setTagInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
-  const { addBowler, updateBowler, bowlers, addA3Case, updateA3Case, a3Cases, reorderBowlers, reorderA3Cases } = useApp();
+  const { bowlers, a3Cases, reorderBowlers, reorderA3Cases } = useApp();
   const toast = useToast();
 
   if (!isOpen) return null;
