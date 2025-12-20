@@ -59,8 +59,27 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
 
   const handleCopy = () => {
     if (isJson && parsedData) {
-        const jsonToCopy = rawJsonContent || JSON.stringify(parsedData, null, 2);
-        navigator.clipboard.writeText(jsonToCopy);
+        let textToCopy = `Executive Summary:\n${parsedData.executiveSummary}\n\n`;
+        
+        if (parsedData.a3Summary && parsedData.a3Summary.trim() !== '') {
+          textToCopy += `A3 Problem Solving Summary:\n${parsedData.a3Summary}\n\n`;
+        }
+
+        textToCopy += `Performance Analysis:\n`;
+        parsedData.performanceGroups.forEach(group => {
+            textToCopy += `\nGroup: ${group.groupName}\n`;
+            group.metrics.forEach(m => {
+                const trendText = m.trendAnalysis && m.trendAnalysis.trim() !== '' ? ` | Trend: ${m.trendAnalysis}` : '';
+                textToCopy += `- ${m.name}: ${m.latestPerformance}${trendText}\n`;
+            });
+        });
+
+        textToCopy += `\nAreas of Concern & Recommendations:\n`;
+        parsedData.areasOfConcern.forEach(area => {
+            textToCopy += `- ${area.metricName} (${area.groupName}): ${area.issue}\n  Suggestion: ${area.suggestion}\n`;
+        });
+
+        navigator.clipboard.writeText(textToCopy);
     } else {
         navigator.clipboard.writeText(content);
     }
