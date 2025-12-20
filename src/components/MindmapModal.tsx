@@ -9,8 +9,9 @@ interface MindmapModalProps {
 }
 
 export const MindmapModal = ({ isOpen, onClose, mode }: MindmapModalProps) => {
-  const { dashboardMarkdown, dashboardTitle, updateDashboardMarkdown } = useApp();
+  const { dashboardMarkdown, dashboardTitle, updateDashboardMarkdown, dashboardMindmaps, activeMindmapId } = useApp();
   const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
   const [text, setText] = useState('');
 
   useEffect(() => {
@@ -18,18 +19,24 @@ export const MindmapModal = ({ isOpen, onClose, mode }: MindmapModalProps) => {
       if (mode === 'edit') {
         setTitle(dashboardTitle || '');
         setText(dashboardMarkdown || '');
+        const active = dashboardMindmaps.find(m => m.id === activeMindmapId);
+        setDescription(active?.description || '');
       } else {
         setTitle('');
+        setDescription('');
         setText('');
       }
     }
-  }, [isOpen, dashboardMarkdown, dashboardTitle, mode]);
+  }, [isOpen, dashboardMarkdown, dashboardTitle, mode, dashboardMindmaps, activeMindmapId]);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateDashboardMarkdown(text || '', title || undefined, { createNew: mode === 'create' });
+    updateDashboardMarkdown(text || '', title || undefined, {
+      createNew: mode === 'create',
+      description
+    });
     onClose();
   };
 
@@ -84,6 +91,18 @@ export const MindmapModal = ({ isOpen, onClose, mode }: MindmapModalProps) => {
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Quarterly performance review ideas"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Description</label>
+                  <p className="mt-1 text-xs text-gray-500">Optional context or notes about this mindmap.</p>
+                  <textarea
+                    rows={3}
+                    className="mt-2 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="e.g. Ideas for quarterly performance review workshop"
                   />
                 </div>
 

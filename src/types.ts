@@ -67,6 +67,7 @@ export interface DataAnalysisImage {
 export interface DashboardMindmap {
   id: string;
   title: string;
+  description?: string;
   markdown: string;
   createdAt: string;
   updatedAt?: string;

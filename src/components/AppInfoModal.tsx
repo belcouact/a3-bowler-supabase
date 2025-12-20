@@ -135,7 +135,7 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                   <div className="ml-3">
                     <p className="text-sm font-medium text-gray-900">Optimized for Mobile</p>
                     <p className="text-xs text-gray-600 mt-1">
-                      Use the same dashboards and A3 views seamlessly on phones and tablets, just like on desktop.
+                      Use the same Bowler & A3 views seamlessly on phones and tablets, just like on desktop.
                     </p>
                   </div>
                 </div>

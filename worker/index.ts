@@ -40,7 +40,28 @@ export default {
         const dashboardPayload: any = {};
         if (dashboardMarkdown !== undefined) dashboardPayload.content = dashboardMarkdown;
         if (dashboardTitle !== undefined) dashboardPayload.title = dashboardTitle;
-        if (dashboardMindmaps !== undefined) dashboardPayload.mindmaps = dashboardMindmaps;
+
+        if (dashboardMindmaps !== undefined && Array.isArray(dashboardMindmaps)) {
+          const enrichedMindmaps = dashboardMindmaps.map((m, index) => {
+            const id =
+              typeof m.id === 'string' && m.id.length > 0
+                ? m.id
+                : (typeof (globalThis as any).crypto?.randomUUID === 'function'
+                    ? (globalThis as any).crypto.randomUUID()
+                    : `mm-${Date.now()}-${index}`);
+
+            return {
+              id,
+              title: typeof m.title === 'string' ? m.title : '',
+              description: typeof m.description === 'string' ? m.description : '',
+              markdown: typeof m.markdown === 'string' ? m.markdown : '',
+              createdAt: typeof m.createdAt === 'string' ? m.createdAt : new Date().toISOString(),
+              updatedAt: typeof m.updatedAt === 'string' ? m.updatedAt : undefined
+            };
+          });
+          dashboardPayload.mindmaps = enrichedMindmaps;
+        }
+
         if (activeMindmapId !== undefined) dashboardPayload.activeMindmapId = activeMindmapId;
 
         if (Object.keys(dashboardPayload).length > 0) {

@@ -26,7 +26,11 @@ interface AppContextType {
   dashboardMindmaps: DashboardMindmap[];
   activeMindmapId: string | null;
   setActiveMindmap: (id: string) => void;
-  updateDashboardMarkdown: (markdown: string, title?: string, options?: { createNew?: boolean }) => void;
+  updateDashboardMarkdown: (
+    markdown: string,
+    title?: string,
+    options?: { createNew?: boolean; description?: string }
+  ) => void;
 }
 
 // Context
@@ -313,9 +317,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const updateDashboardMarkdown = (markdown: string, title?: string, options?: { createNew?: boolean }) => {
+  const updateDashboardMarkdown = (
+    markdown: string,
+    title?: string,
+    options?: { createNew?: boolean; description?: string }
+  ) => {
       const createNew = options?.createNew ?? false;
       const baseTitle = title ?? (extractTitleFromMarkdown(markdown) || 'Mindmap');
+      const description = options?.description;
 
       setDashboardMindmaps(prev => {
         const now = new Date().toISOString();
@@ -325,7 +334,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         if (!createNew && activeMindmapId && prev.some(m => m.id === activeMindmapId)) {
           newMindmaps = prev.map(m =>
             m.id === activeMindmapId
-              ? { ...m, title: baseTitle, markdown, updatedAt: now }
+              ? { ...m, title: baseTitle, markdown, updatedAt: now, description: description ?? m.description }
               : m
           );
           newActiveId = activeMindmapId;
@@ -334,6 +343,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           const newEntry: DashboardMindmap = {
             id,
             title: baseTitle,
+            description,
             markdown,
             createdAt: now
           };
