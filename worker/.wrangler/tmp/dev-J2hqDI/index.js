@@ -168,6 +168,16 @@ var index_default = {
             }
           }
         }
+        const sortFn = /* @__PURE__ */ __name((a, b) => {
+          if (a.userId !== b.userId) {
+            return (a.userId || "").localeCompare(b.userId || "");
+          }
+          const orderA = typeof a.order === "number" ? a.order : Number.MAX_SAFE_INTEGER;
+          const orderB = typeof b.order === "number" ? b.order : Number.MAX_SAFE_INTEGER;
+          return orderA - orderB;
+        }, "sortFn");
+        allBowlers.sort(sortFn);
+        allA3Cases.sort(sortFn);
         return new Response(JSON.stringify({ success: true, bowlers: allBowlers, a3Cases: allA3Cases }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
