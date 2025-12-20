@@ -111,7 +111,7 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                   <div className="ml-3">
                     <p className="text-sm font-medium text-gray-900">Consolidate Bowlers</p>
                     <p className="text-xs text-gray-600 mt-1">
-                      Merge duplicate bowler entries and consolidate data efficiently.
+                      Allow adminstrator to consolidate all public accounts' bowler & A3 data to one view with one click.
                     </p>
                   </div>
                 </div>
@@ -123,7 +123,7 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                   <div className="ml-3">
                     <p className="text-sm font-medium text-gray-900">Structured A3 Problem Solving</p>
                     <p className="text-xs text-gray-600 mt-1">
-                      Capture problem statements, current condition, root causes, countermeasures, and follow-up on a single A3.
+                      Capture problem statements, root causes, countermeasures, and follow-up on a single A3.
                     </p>
                   </div>
                 </div>

@@ -167,81 +167,127 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
                                 Capture how this bowler appears in reports, who owns it, and how it is grouped.
                             </p>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Bowler Name *</label>
-                            <input
-                                type="text"
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                value={generalData.name}
-                                onChange={(e) => setGeneralData({ ...generalData, name: e.target.value })}
-                                placeholder="e.g. Plant A - Operations"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Description</label>
-                            <textarea
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                rows={3}
-                                value={generalData.description}
-                                onChange={(e) => setGeneralData({ ...generalData, description: e.target.value })}
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
+
+                        <div className="space-y-3 rounded-lg border border-gray-100 bg-gray-50/60 p-3">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 flex items-center" title="Group multiple bowlers under one group">
-                                    Group
-                                    <Info className="w-4 h-4 ml-1 text-gray-400 cursor-help" />
-                                </label>
+                                <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Bowler overview</label>
+                                <p className="mt-1 text-xs text-gray-500">
+                                    Name this bowler and describe what performance area it represents.
+                                </p>
+                            </div>
+                            <div>
+                                <label className="mt-2 block text-sm font-medium text-gray-700">Bowler Name *</label>
                                 <input
                                     type="text"
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                    value={generalData.group}
-                                    onChange={(e) => setGeneralData({ ...generalData, group: e.target.value })}
+                                    value={generalData.name}
+                                    onChange={(e) => setGeneralData({ ...generalData, name: e.target.value })}
+                                    placeholder="e.g. Plant A - Operations"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Champion</label>
-                                <input
-                                    type="text"
+                                <label className="block text-sm font-medium text-gray-700">Description</label>
+                                <textarea
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                    value={generalData.champion}
-                                    onChange={(e) => setGeneralData({ ...generalData, champion: e.target.value })}
+                                    rows={3}
+                                    value={generalData.description}
+                                    onChange={(e) => setGeneralData({ ...generalData, description: e.target.value })}
                                 />
                             </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Team</label>
-                                <select
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                    value={generalData.commitment}
-                                    onChange={(e) => setGeneralData({ ...generalData, commitment: e.target.value })}
-                                >
-                                    <option value="">Select Team</option>
-                                    <option value="Quality">Quality</option>
-                                    <option value="Engineering">Engineering</option>
-                                    <option value="R&D">R&D</option>
-                                    <option value="Workshop">Workshop</option>
-                                    <option value="Production">Production</option>
-                                    <option value="GBS">GBS</option>
-                                    <option value="Procurement">Procurement</option>
-                                    <option value="Planning">Planning</option>
-                                    <option value="EH&S">EH&S</option>
-                                    <option value="Facility">Facility</option>
-                                    <option value="Sales & Marketing">Sales & Marketing</option>
-                                </select>
+
+                        <div className="space-y-3 rounded-lg border border-gray-100 bg-white p-3">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Ownership & grouping</label>
+                                    <p className="mt-1 text-xs text-gray-500">
+                                        Define who champions this bowler and how it is grouped.
+                                    </p>
+                                </div>
+                                <div className="hidden sm:flex flex-col items-end space-y-1">
+                                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
+                                        {generalData.group || 'Ungrouped'}
+                                    </span>
+                                    {generalData.champion && (
+                                        <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 border border-blue-100">
+                                            {generalData.champion}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 flex items-center" title="For consolidation purpose">
-                                    Tag
-                                    <Info className="w-4 h-4 ml-1 text-gray-400 cursor-help" />
-                                </label>
-                                <input
-                                    type="text"
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                    value={generalData.tag}
-                                    onChange={(e) => setGeneralData({ ...generalData, tag: e.target.value })}
-                                />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 flex items-center" title="Group multiple bowlers under one group">
+                                        Group
+                                        <Info className="w-4 h-4 ml-1 text-gray-400 cursor-help" />
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        value={generalData.group}
+                                        onChange={(e) => setGeneralData({ ...generalData, group: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Champion</label>
+                                    <input
+                                        type="text"
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        value={generalData.champion}
+                                        onChange={(e) => setGeneralData({ ...generalData, champion: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3 rounded-lg border border-gray-100 bg-white p-3">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Team & tag</label>
+                                    <p className="mt-1 text-xs text-gray-500">
+                                        Connect this bowler to a team and optional consolidation tag.
+                                    </p>
+                                </div>
+                                {generalData.tag && (
+                                    <span className="hidden sm:inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700 border border-indigo-100">
+                                        {generalData.tag}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Team</label>
+                                    <select
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        value={generalData.commitment}
+                                        onChange={(e) => setGeneralData({ ...generalData, commitment: e.target.value })}
+                                    >
+                                        <option value="">Select Team</option>
+                                        <option value="Quality">Quality</option>
+                                        <option value="Engineering">Engineering</option>
+                                        <option value="R&D">R&D</option>
+                                        <option value="Workshop">Workshop</option>
+                                        <option value="Production">Production</option>
+                                        <option value="GBS">GBS</option>
+                                        <option value="Procurement">Procurement</option>
+                                        <option value="Planning">Planning</option>
+                                        <option value="EH&S">EH&S</option>
+                                        <option value="Facility">Facility</option>
+                                        <option value="Sales & Marketing">Sales & Marketing</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 flex items-center" title="For consolidation purpose">
+                                        Tag
+                                        <Info className="w-4 h-4 ml-1 text-gray-400 cursor-help" />
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        value={generalData.tag}
+                                        onChange={(e) => setGeneralData({ ...generalData, tag: e.target.value })}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
