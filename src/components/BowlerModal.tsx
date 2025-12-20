@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Plus, Trash2, Info } from 'lucide-react';
+import { X, Plus, Trash2, Info, User } from 'lucide-react';
 import { Bowler, Metric } from '../context/AppContext';
 import clsx from 'clsx';
 import { generateShortId } from '../utils/idUtils';
@@ -105,12 +105,28 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
 
         <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
           <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                {initialData ? 'Edit Metric Bowler' : 'New Metric Bowler'}
-              </h3>
-              <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
-                <X className="w-5 h-5" />
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex items-start gap-3">
+                <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 text-white shadow-md">
+                  <User className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg leading-6 font-semibold text-gray-900">
+                    {initialData ? 'Edit Metric Bowler' : 'New Metric Bowler'}
+                  </h3>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {initialData
+                      ? 'Update bowler details and metrics used in your dashboards.'
+                      : 'Set up a new bowler with key ownership and metric information.'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="ml-4 rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -145,6 +161,12 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
             <div className="min-h-[300px]">
                 {activeTab === 'General' && (
                     <div className="space-y-4">
+                        <div className="flex items-start gap-2 rounded-md border border-blue-50 bg-blue-50/80 px-3 py-2 text-xs text-blue-800">
+                            <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" />
+                            <p>
+                                Capture how this bowler appears in reports, who owns it, and how it is grouped.
+                            </p>
+                        </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Bowler Name *</label>
                             <input
@@ -227,14 +249,27 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
 
                 {activeTab === 'Metrics' && (
                     <div className="space-y-4">
-                         <div className="flex justify-end">
-                            <button
-                                onClick={handleAddMetric}
-                                className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            >
-                                <Plus className="w-4 h-4 mr-2" />
-                                Add Metric
-                            </button>
+                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-start gap-2 rounded-md border border-indigo-50 bg-indigo-50/80 px-3 py-2 text-xs text-indigo-800">
+                                <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-indigo-500" />
+                                <p>
+                                    Define the metrics tracked for this bowler, including ownership, scope, and targets.
+                                </p>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                                <span className="text-xs text-gray-500">
+                                    {metrics.length === 0
+                                        ? 'No metrics configured yet'
+                                        : `${metrics.length} metric${metrics.length > 1 ? 's' : ''} configured`}
+                                </span>
+                                <button
+                                    onClick={handleAddMetric}
+                                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                >
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Add Metric
+                                </button>
+                            </div>
                         </div>
                         
                         <div className="space-y-4 max-h-[400px] overflow-y-auto">
@@ -243,7 +278,7 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
                                     No metrics added yet. Click "Add Metric" to start.
                                 </div>
                             ) : (
-                                metrics.map((metric) => (
+                                metrics.map((metric, index) => (
                                     <div key={metric.id} className="border border-gray-200 rounded-md p-4 bg-gray-50 relative">
                                         <button 
                                             onClick={() => handleDeleteMetric(metric.id)}
@@ -252,6 +287,14 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
+                                        <div className="mb-3 flex items-center gap-2">
+                                            <div className="flex h-6 w-6 items-center justify-center rounded-full border border-gray-200 bg-white text-xs font-semibold text-gray-700 shadow-sm">
+                                                {index + 1}
+                                            </div>
+                                            <div className="text-xs font-semibold text-gray-600">
+                                                Metric {index + 1}
+                                            </div>
+                                        </div>
                                         <div className="grid grid-cols-12 gap-3">
                                             <div className="col-span-4">
                                                 <label className="block text-xs font-medium text-gray-500">Metric Name</label>
