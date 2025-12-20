@@ -20,10 +20,11 @@ export const authService = {
       },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      throw new Error('Signup failed');
+    const responseData = await response.json().catch(() => ({}));
+    if (!response.ok || responseData.success === false) {
+      throw new Error(responseData.error || responseData.message || 'Signup failed');
     }
-    return response.json();
+    return responseData;
   },
 
   async login(data: any) {
@@ -48,12 +49,11 @@ export const authService = {
     const response = await fetch(`${API_BASE_URL}/logout`, {
       method: 'POST',
     });
-    if (!response.ok) {
-        // It's possible logout is just a client-side clearing if server is stateless JWT without blacklist, 
-        // but the prompt says there is a POST /logout endpoint.
-      throw new Error('Logout failed');
+    const responseData = await response.json().catch(() => ({}));
+    if (!response.ok || responseData.success === false) {
+      throw new Error(responseData.error || responseData.message || 'Logout failed');
     }
-    return response.json();
+    return responseData;
   },
 
   async changePassword(data: any) {
@@ -64,10 +64,11 @@ export const authService = {
       },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      throw new Error('Change password failed');
+    const responseData = await response.json().catch(() => ({}));
+    if (!response.ok || responseData.success === false) {
+      throw new Error(responseData.error || responseData.message || 'Change password failed');
     }
-    return response.json();
+    return responseData;
   },
 
   async updateProfile(data: any) {
@@ -78,19 +79,21 @@ export const authService = {
       },
       body: JSON.stringify(data),
     });
-    if (!response.ok) {
-      throw new Error('Update profile failed');
+    const responseData = await response.json().catch(() => ({}));
+    if (!response.ok || responseData.success === false) {
+      throw new Error(responseData.error || responseData.message || 'Update profile failed');
     }
-    return response.json();
+    return responseData;
   },
 
   async getUser(username: string) {
     // Note: We keep @ unencoded because the server might not decode the path parameter
     const encodedUsername = encodeURIComponent(username).replace(/%40/g, '@');
     const response = await fetch(`${API_BASE_URL}/user/${encodedUsername}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch user profile');
+    const responseData = await response.json().catch(() => ({}));
+    if (!response.ok || responseData.success === false) {
+      throw new Error(responseData.error || responseData.message || 'Failed to fetch user profile');
     }
-    return response.json();
+    return responseData;
   },
 };
