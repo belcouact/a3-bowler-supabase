@@ -52,21 +52,17 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
     }
 
     try {
-      // Assuming email is used as username for now, or we can add a username field if strictly required
-      // But the design only shows Email Address.
-      // We'll send email as username or just send email if backend supports it.
-      // Based on previous code, username was required.
-      // Let's use email as username for now to match the design.
-      
       const payload = {
-        username: signupEmail.split('@')[0], // Fallback username from email
-        email: signupEmail,
+        username: signupEmail.split('@')[0],
         password: signupPassword,
         role,
-        country,
-        plant,
-        team,
-        isPublicProfile
+        profile: {
+          email: signupEmail,
+          country,
+          plant,
+          team,
+          isPublic: isPublicProfile
+        }
       };
 
       await signup(payload);
