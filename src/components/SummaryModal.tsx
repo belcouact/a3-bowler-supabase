@@ -1,7 +1,5 @@
 import React from 'react';
 import { X, Download, Copy, Sparkles, TrendingUp, AlertTriangle, Target, Activity, ArrowRight } from 'lucide-react';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import { useToast } from '../context/ToastContext';
 import { MarkdownRenderer } from './MarkdownRenderer';
 
@@ -39,7 +37,6 @@ interface SummaryData {
 
 export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, content, isLoading }) => {
   const toast = useToast();
-  const modalRef = React.useRef<HTMLDivElement | null>(null);
 
   if (!isOpen) return null;
 
@@ -88,45 +85,347 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
     toast.success('Summary copied to clipboard!');
   };
 
-  const handleDownload = async () => {
-    if (!modalRef.current) {
-      toast.error('Unable to capture summary for PDF.');
-      return;
+  const handleDownload = () => {
+    const escapeHtml = (value: string) =>
+      value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+
+    let html = '';
+
+    if (isJson && parsedData) {
+      const executive = escapeHtml(parsedData.executiveSummary);
+      const a3Summary =
+        parsedData.a3Summary && parsedData.a3Summary.trim() !== ''
+          ? `<section class="card card-a3">
+  <h2 class="card-title">A3 Problem Solving Summary</h2>
+  <p>${escapeHtml(parsedData.a3Summary)}</p>
+</section>`
+          : '';
+
+      const performanceGroupsHtml = parsedData.performanceGroups
+        .map((group) => {
+          const metricsHtml = group.metrics
+            .map((metric) => {
+              const trend = metric.trendAnalysis && metric.trendAnalysis.trim() !== '' ? ` | <span class="metric-trend">${escapeHtml(metric.trendAnalysis)}</span>` : '';
+              return `<div class="metric-row">
+  <span class="metric-name">${escapeHtml(metric.name)}</span>
+  <span class="metric-value">${escapeHtml(metric.latestPerformance)}${trend}</span>
+</div>`;
+            })
+            .join('');
+
+          const failingMetrics = group.metrics.filter(
+            (m) => m.trendAnalysis && m.trendAnalysis.trim() !== ''
+          );
+
+          const failingHtml =
+            failingMetrics.length > 0
+              ? failingMetrics
+                  .map(
+                    (metric) => `<div class="metric-row">
+  <span class="metric-name">${escapeHtml(metric.name)}</span>
+  <span class="metric-value">${escapeHtml(metric.trendAnalysis || '')}</span>
+</div>`
+                  )
+                  .join('')
+              : '';
+
+          return `<div class="group-column">
+  <h4 class="group-title">${escapeHtml(group.groupName)}</h4>
+  <div class="metrics-list">
+    ${metricsHtml}
+  </div>
+  <div class="metrics-trend-list">
+    ${failingHtml ||
+      '<p class="empty-text">No consecutive failing metrics identified.</p>'}
+  </div>
+</div>`;
+        })
+        .join('');
+
+      const concernsHtml =
+        parsedData.areasOfConcern.length > 0
+          ? parsedData.areasOfConcern
+              .map(
+                (area) => `<div class="concern-card">
+  <div class="concern-header">
+    <span class="concern-metric">${escapeHtml(area.metricName)}</span>
+    <span class="concern-group">${escapeHtml(area.groupName)}</span>
+  </div>
+  <p class="concern-issue">${escapeHtml(area.issue)}</p>
+  <p class="concern-suggestion">${escapeHtml(area.suggestion)}</p>
+</div>`
+              )
+              .join('')
+          : '<p class="empty-text">No major areas of concern identified. Keep up the good work!</p>';
+
+      html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Smart Summary & Insights</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --card-bg: #ffffff;
+      --primary: #4f46e5;
+      --primary-soft: #eef2ff;
+      --border-subtle: #e5e7eb;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --danger: #b91c1c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      background: var(--bg);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text-main);
+    }
+    .summary-root {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .summary-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-radius: 16px;
+      background: linear-gradient(90deg, #eef2ff, #ffffff);
+      border: 1px solid #e0e7ff;
+      margin-bottom: 20px;
+    }
+    .summary-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0;
+    }
+    .summary-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #ecfdf3;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+      font-size: 11px;
+      font-weight: 500;
+      margin-top: 4px;
+    }
+    .summary-tag span {
+      margin-left: 4px;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border-subtle);
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+    }
+    .card-executive {
+      background: linear-gradient(135deg, #eef2ff, #ffffff);
+      border-color: #e0e7ff;
+    }
+    .card-a3 {
+      background: linear-gradient(135deg, #eff6ff, #ffffff);
+      border-color: #bfdbfe;
+    }
+    .card-title {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .card p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .group-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b7280;
+      padding-bottom: 4px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .metrics-list,
+    .metrics-trend-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+    .metric-name {
+      color: #374151;
+      font-weight: 500;
+      margin-right: 8px;
+    }
+    .metric-value {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #f9fafb;
+      color: #4b5563;
+      white-space: nowrap;
+    }
+    .metric-trend {
+      color: #7c3aed;
+    }
+    .card-concerns {
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+    .concern-card {
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #fee2e2;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .concern-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .concern-metric {
+      font-size: 13px;
+      font-weight: 700;
+      margin-right: 6px;
+      color: #111827;
+    }
+    .concern-group {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      color: #4b5563;
+    }
+    .concern-issue {
+      font-size: 13px;
+      color: var(--danger);
+      font-weight: 500;
+      margin: 0 0 4px 0;
+    }
+    .concern-suggestion {
+      font-size: 13px;
+      color: #4b5563;
+      margin: 0;
+      font-style: italic;
+    }
+    .empty-text {
+      font-size: 13px;
+      color: #9ca3af;
+      font-style: italic;
+    }
+    @media (max-width: 640px) {
+      body { padding: 16px; }
+      .summary-header { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="summary-root">
+    <header class="summary-header">
+      <div>
+        <h1 class="summary-title">Smart Summary & Insights</h1>
+        <div class="summary-tag">
+          <span>Performance Analysis</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="card card-executive">
+      <h2 class="card-title">Executive Overview</h2>
+      <p>${executive}</p>
+    </section>
+
+    ${a3Summary}
+
+    <section class="card">
+      <h2 class="card-title">Performance Analysis</h2>
+      <div class="grid-2">
+        ${performanceGroupsHtml}
+      </div>
+    </section>
+
+    <section class="card card-concerns">
+      <h2 class="card-title">Areas of Concern & Recommendations</h2>
+      ${concernsHtml}
+    </section>
+  </div>
+</body>
+</html>`;
+    } else {
+      const safeContent = escapeHtml(content);
+      html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Smart Summary</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #f3f4f6;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #111827;
+    }
+    .card {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 16px;
+      border: 1px solid #e5e7eb;
+      padding: 20px 24px;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+      white-space: pre-wrap;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">${safeContent}</div>
+</body>
+</html>`;
     }
 
-    try {
-      const element = modalRef.current;
-
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight,
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'pt', 'a4');
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
-      const renderWidth = imgWidth * ratio;
-      const renderHeight = imgHeight * ratio;
-      const x = (pageWidth - renderWidth) / 2;
-      const y = (pageHeight - renderHeight) / 2;
-
-      pdf.addImage(imgData, 'PNG', x, y, renderWidth, renderHeight);
-
-      const filename = `metric_bowler_summary_${new Date().toISOString().split('T')[0]}.pdf`;
-      pdf.save(filename);
-      toast.success('PDF downloaded!');
-    } catch (error) {
-      console.error('PDF generation error:', error);
-      toast.error('Failed to generate PDF. Please try again.');
-    }
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `metric_bowler_summary_${new Date()
+      .toISOString()
+      .split('T')[0]}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success('HTML downloaded!');
   };
 
   return (
@@ -136,10 +435,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
 
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div
-          ref={modalRef}
-          className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-[75vw] sm:w-full"
-        >
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-[75vw] sm:w-full">
           
           {/* Header */}
           <div className="bg-gradient-to-r from-indigo-50 via-white to-white px-4 py-4 sm:px-6 border-b border-indigo-100 flex justify-between items-center flex-shrink-0">
@@ -337,7 +633,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
               disabled={isLoading || !content}
             >
               <Download className="w-4 h-4 mr-2" />
-              Download PDF
+              Download HTML
             </button>
             <button
               type="button"
