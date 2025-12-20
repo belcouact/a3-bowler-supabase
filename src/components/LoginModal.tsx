@@ -97,10 +97,10 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
   );
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] px-3 py-4">
       <div className={clsx(
-        "bg-white rounded-lg w-full shadow-xl overflow-hidden transition-all max-h-[90vh] overflow-y-auto",
-        activeTab === 'signup' ? "max-w-2xl" : "max-w-md"
+        "bg-white rounded-xl w-full shadow-xl overflow-hidden transition-all max-h-[88vh] overflow-y-auto border border-gray-100",
+        activeTab === 'signup' ? "max-w-xl" : "max-w-md"
       )}>
         {/* Tabs */}
         <div className="flex border-b border-gray-200">
@@ -108,7 +108,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
           <TabButton id="signup" label="Create Account" />
         </div>
 
-        <div className="p-6">
+        <div className="px-4 py-5 sm:px-6 sm:py-6">
           {error && (
             <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4 text-sm">
               {error}
@@ -179,15 +179,20 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
             </form>
           ) : (
             <form onSubmit={handleSignup}>
-              <div className="mb-4">
-                <h2 className="text-2xl font-bold text-gray-900">Join us</h2>
-                <p className="text-gray-500 mt-1">Create a new User in Cloudflare DB.</p>
+              <div className="mb-3">
+                <h2 className="text-xl font-semibold text-gray-900">Create your account</h2>
+                <p className="text-xs text-gray-500 mt-1">
+                  A single account lets you manage your bowlers and A3 cases across devices.
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Left Column - Account Details */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Account Details</h3>
+                <div className="space-y-3 bg-gray-50/60 rounded-lg border border-gray-100 p-4">
+                  <h3 className="flex items-center justify-between text-sm font-semibold text-gray-800 border-b pb-2">
+                    <span>Account Details</span>
+                    <span className="text-[10px] font-medium text-blue-500 uppercase tracking-wide">Step 1 of 2</span>
+                  </h3>
                   
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
@@ -266,8 +271,11 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                 </div>
 
                 {/* Right Column - Profile Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Profile Information</h3>
+                <div className="space-y-3 bg-gray-50/60 rounded-lg border border-gray-100 p-4">
+                  <h3 className="flex items-center justify-between text-sm font-semibold text-gray-800 border-b pb-2">
+                    <span>Profile Information</span>
+                    <span className="text-[10px] font-medium text-blue-500 uppercase tracking-wide">Step 2 of 2</span>
+                  </h3>
 
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
