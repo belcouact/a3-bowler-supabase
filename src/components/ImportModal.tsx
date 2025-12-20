@@ -326,7 +326,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                     <li><span className="font-mono font-medium">Metric Name</span> (Required)</li>
                     <li><span className="font-mono font-medium">Scope</span> (Required)</li>
                     <li><span className="font-mono font-medium">Type</span> (Required)</li>
-                    <li><span className="font-mono font-medium">Description, Group, Champion, Team, Tag</span> (Optional)</li>
+                    <li><span className="font-mono font-medium">Description, Group, Champion, Commitment, Tag</span> (Optional)</li>
                     <li><span className="font-mono font-medium">Definition, Owner, Attribute, Target Meeting Rule</span> (Optional)</li>
                     <li>
                       Recommended format (matches Download CSV):
