@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { X, LayoutDashboard, FileText, Sparkles, Upload, Download, Layers, Zap, TrendingUp } from 'lucide-react';
+import { X, LayoutDashboard, FileText, Sparkles, Upload, Download, Layers, TrendingUp, NotepadText, Smartphone } from 'lucide-react';
 
 interface AppInfoModalProps {
   isOpen: boolean;
@@ -67,7 +67,7 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
 
                 <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-teal-50/80">
                   <div className="h-9 w-9 shrink-0 rounded-lg bg-teal-500 flex items-center justify-center">
-                    <Zap className="h-5 w-5 text-white" />
+                    <NotepadText className="h-5 w-5 text-white" />
                   </div>
                   <div className="ml-3">
                     <p className="text-sm font-medium text-gray-900">One Click Summary</p>
@@ -130,7 +130,7 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
 
                 <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-sky-50/80">
                   <div className="h-9 w-9 shrink-0 rounded-lg bg-sky-500 flex items-center justify-center">
-                    <LayoutDashboard className="h-5 w-5 text-white" />
+                    <Smartphone className="h-5 w-5 text-white" />
                   </div>
                   <div className="ml-3">
                     <p className="text-sm font-medium text-gray-900">Optimized for Mobile</p>
