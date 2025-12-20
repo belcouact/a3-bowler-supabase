@@ -6,7 +6,6 @@ import { Toolbar } from 'markmap-toolbar';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/default.css';
 import clsx from 'clsx';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 // Register highlight.js globally so markmap might pick it up if it checks window
 if (typeof window !== 'undefined') {
@@ -38,13 +37,11 @@ const MarkmapPage = () => {
   const [markdown, setMarkdown] = useState(dashboardMarkdown);
   const [svgRef, setSvgRef] = useState<SVGSVGElement | null>(null);
   const [mm, setMm] = useState<Markmap | null>(null);
-  const [splitPosition, setSplitPosition] = useState(40); // Percentage
+  const [splitPosition, setSplitPosition] = useState(40);
   const [activeTab, setActiveTab] = useState<'Mind Map' | 'Text Input'>('Mind Map');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Independent state for Text Input tab
   const [textInputMarkdown, setTextInputMarkdown] = useState('');
-  const [isTextSidebarOpen, setIsTextSidebarOpen] = useState(false);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -246,45 +243,30 @@ const MarkmapPage = () => {
       </div>
 
       <div className="flex-1 relative overflow-hidden">
-        {/* Mind Map View (Split) */}
         <div 
-          className={clsx("h-full w-full relative", activeTab === 'Mind Map' ? "flex" : "hidden")} 
+          className={clsx("h-full w-full", activeTab === 'Mind Map' ? "flex" : "hidden")} 
           ref={containerRef}
         >
-          <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="absolute top-4 left-2 bg-white border border-gray-200 rounded-full p-1 shadow-sm hover:bg-gray-50 z-[30] text-gray-500"
-          >
-            {isSidebarOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-          </button>
           <div 
-            style={{ width: isSidebarOpen ? `${splitPosition}%` : 0 }} 
-            className={clsx(
-              "h-full border-r border-gray-200 flex flex-col bg-white transition-[width] duration-300 overflow-hidden",
-              !isSidebarOpen && "border-none"
-            )}
+            style={{ width: `${splitPosition}%` }} 
+            className="h-full border-r border-gray-200 flex flex-col bg-white"
           >
-            {isSidebarOpen && (
-              <textarea
-                className="flex-1 w-full p-4 resize-none focus:outline-none focus:ring-inset focus:ring-2 focus:ring-blue-500/50 font-mono text-sm leading-relaxed"
-                value={markdown}
-                onChange={handleMarkdownChange}
-                placeholder="Enter markdown here..."
-              />
-            )}
+            <textarea
+              className="flex-1 w-full p-4 resize-none focus:outline-none focus:ring-inset focus:ring-2 focus:ring-blue-500/50 font-mono text-sm leading-relaxed"
+              value={markdown}
+              onChange={handleMarkdownChange}
+              placeholder="Enter markdown here..."
+            />
           </div>
           
-          {/* Draggable Handle */}
-          {isSidebarOpen && (
-            <div
-              className="w-1 h-full cursor-col-resize bg-transparent hover:bg-blue-400 absolute z-10 transition-colors"
-              style={{ left: `${splitPosition}%`, transform: 'translateX(-50%)' }}
-              onMouseDown={handleMouseDown}
-            />
-          )}
+          <div
+            className="w-1 h-full cursor-col-resize bg-transparent hover:bg-blue-400 absolute z-10 transition-colors"
+            style={{ left: `${splitPosition}%`, transform: 'translateX(-50%)' }}
+            onMouseDown={handleMouseDown}
+          />
 
           <div 
-            style={{ width: isSidebarOpen ? `${100 - splitPosition}%` : '100%' }} 
+            style={{ width: `${100 - splitPosition}%` }} 
             className="h-full relative bg-gray-50"
             ref={wrapperRef}
           >
@@ -294,42 +276,28 @@ const MarkmapPage = () => {
 
         <div 
           id="text-input-container"
-          className={clsx("h-full w-full relative", activeTab === 'Text Input' ? "flex" : "hidden")} 
+          className={clsx("h-full w-full", activeTab === 'Text Input' ? "flex" : "hidden")} 
         >
-          <button
-            onClick={() => setIsTextSidebarOpen(!isTextSidebarOpen)}
-            className="absolute top-4 left-2 bg-white border border-gray-200 rounded-full p-1 shadow-sm hover:bg-gray-50 z-[30] text-gray-500"
-          >
-            {isTextSidebarOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-          </button>
           <div 
-            style={{ width: isTextSidebarOpen ? `${textInputSplitPosition}%` : 0 }} 
-            className={clsx(
-              "h-full border-r border-gray-200 flex flex-col bg-white transition-[width] duration-300 overflow-hidden",
-              !isTextSidebarOpen && "border-none"
-            )}
+            style={{ width: `${textInputSplitPosition}%` }} 
+            className="h-full border-r border-gray-200 flex flex-col bg-white"
           >
-            {isTextSidebarOpen && (
-              <textarea
-                className="flex-1 w-full p-4 resize-none focus:outline-none focus:ring-inset focus:ring-2 focus:ring-blue-500/50 font-mono text-sm leading-relaxed"
-                value={textInputMarkdown}
-                onChange={handleTextInputChange}
-                placeholder="Enter markdown here..."
-              />
-            )}
+            <textarea
+              className="flex-1 w-full p-4 resize-none focus:outline-none focus:ring-inset focus:ring-2 focus:ring-blue-500/50 font-mono text-sm leading-relaxed"
+              value={textInputMarkdown}
+              onChange={handleTextInputChange}
+              placeholder="Enter markdown here..."
+            />
           </div>
           
-          {/* Draggable Handle */}
-          {isTextSidebarOpen && (
-            <div
-              className="w-1 h-full cursor-col-resize bg-transparent hover:bg-blue-400 absolute z-10 transition-colors"
-              style={{ left: `${textInputSplitPosition}%`, transform: 'translateX(-50%)' }}
-              onMouseDown={handleTextInputMouseDown}
-            />
-          )}
+          <div
+            className="w-1 h-full cursor-col-resize bg-transparent hover:bg-blue-400 absolute z-10 transition-colors"
+            style={{ left: `${textInputSplitPosition}%`, transform: 'translateX(-50%)' }}
+            onMouseDown={handleTextInputMouseDown}
+          />
 
           <div 
-            style={{ width: isTextSidebarOpen ? `${100 - textInputSplitPosition}%` : '100%' }} 
+            style={{ width: `${100 - textInputSplitPosition}%` }} 
             className="h-full relative bg-gray-50"
             ref={textInputWrapperRef}
           >

@@ -660,7 +660,6 @@ const Layout = () => {
 
       <div className="flex flex-1">
         {/* Dynamic Sidebar */}
-        {!isMindMap && (
         <aside className={clsx(
           "bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out relative",
           isSidebarOpen ? "w-64 absolute z-50 h-full md:relative" : "w-0 md:w-16"
@@ -985,7 +984,6 @@ const Layout = () => {
             </div>
           </div>
         </aside>
-        )}
 
         {/* Main Content */}
         <main className="flex-1 bg-gray-50 min-w-0">
