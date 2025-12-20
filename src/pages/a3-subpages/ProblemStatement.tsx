@@ -8,14 +8,6 @@ interface AssessmentResult {
   improved_version: string;
 }
 
-interface TroubleshootingPlan {
-  immediate_checks: string[];
-  data_collection: string[];
-  hypotheses_to_test: string[];
-  short_term_countermeasures: string[];
-  long_term_preventive_actions: string[];
-}
-
 const ProblemStatement = () => {
   const { id } = useParams();
   const { a3Cases, updateA3Case } = useApp();
@@ -26,7 +18,7 @@ const ProblemStatement = () => {
   const [assessmentResult, setAssessmentResult] = useState<AssessmentResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
-  const [troubleshootingPlan, setTroubleshootingPlan] = useState<TroubleshootingPlan | null>(null);
+  const [troubleshootingPlan, setTroubleshootingPlan] = useState<string | null>(null);
   const [planError, setPlanError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -124,7 +116,7 @@ const ProblemStatement = () => {
       const messages = [
         {
           role: 'system',
-          content: `You are an expert manufacturing and operations troubleshooting coach.
+          content: `You are an expert troubleshooting coach, skilled in many areas.
           
           The user will provide a single Problem Statement.
 
@@ -132,16 +124,12 @@ const ProblemStatement = () => {
           - Generate a practical troubleshooting plan to address this problem.
           - Use the SAME language as the user's problem statement.
           
-          RETURN JSON ONLY with the following keys:
-          - "immediate_checks": string[] (quick checks or verifications)
-          - "data_collection": string[] (what data to gather and how)
-          - "hypotheses_to_test": string[] (plausible causes to validate)
-          - "short_term_countermeasures": string[] (containment / quick fixes)
-          - "long_term_preventive_actions": string[] (system changes to prevent recurrence)
+          Structure the response as clear sections with markdown headings:
+          1. Immediate Checks
+          2. Data Collection
+          3. Hypotheses to Test
 
-          Requirements:
-          - Each array should contain 3–7 concise, actionable bullet items.
-          - Do not include any prose outside the JSON object.`
+          For each bullet, be specific and actionable, but concise.`
         },
         {
           role: 'user',
@@ -164,52 +152,11 @@ const ProblemStatement = () => {
       if (!response.ok) throw new Error('Failed to generate troubleshooting plan');
 
       const data = await response.json();
-      let content = data.choices?.[0]?.message?.content || '{}';
+      let content = data.choices?.[0]?.message?.content || '';
 
-      content = content
-        .replace(/^```json\s*|\s*```$/g, '')
-        .replace(/^```\s*|\s*```$/g, '')
-        .trim();
+      content = content.replace(/^```[\s\S]*?```/g, '').trim();
 
-      try {
-        const parsed = JSON.parse(content) as Partial<TroubleshootingPlan>;
-
-        const normalizeArray = (value: unknown): string[] => {
-          if (Array.isArray(value)) {
-            return value
-              .map(item => (typeof item === 'string' ? item.trim() : ''))
-              .filter(item => item.length > 0);
-          }
-          if (typeof value === 'string' && value.trim()) {
-            return [value.trim()];
-          }
-          return [];
-        };
-
-        const plan: TroubleshootingPlan = {
-          immediate_checks: normalizeArray(parsed.immediate_checks),
-          data_collection: normalizeArray(parsed.data_collection),
-          hypotheses_to_test: normalizeArray(parsed.hypotheses_to_test),
-          short_term_countermeasures: normalizeArray(parsed.short_term_countermeasures),
-          long_term_preventive_actions: normalizeArray(parsed.long_term_preventive_actions),
-        };
-
-        const hasContent =
-          plan.immediate_checks.length > 0 ||
-          plan.data_collection.length > 0 ||
-          plan.hypotheses_to_test.length > 0 ||
-          plan.short_term_countermeasures.length > 0 ||
-          plan.long_term_preventive_actions.length > 0;
-
-        if (!hasContent) {
-          throw new Error('Empty plan');
-        }
-
-        setTroubleshootingPlan(plan);
-      } catch (e) {
-        console.error('Troubleshooting JSON Parse Error', e, content);
-        setPlanError('AI returned an unexpected format. Please try again.');
-      }
+      setTroubleshootingPlan(content);
     } catch (err) {
       setPlanError('Failed to generate troubleshooting plan. Please try again.');
     } finally {
@@ -384,71 +331,10 @@ const ProblemStatement = () => {
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <div className="p-4 space-y-4">
-                {troubleshootingPlan.immediate_checks.length > 0 && (
-                  <div>
-                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                      Immediate Checks
-                    </h4>
-                    <ul className="space-y-1 text-sm text-gray-700 list-disc list-inside">
-                      {troubleshootingPlan.immediate_checks.map((item, index) => (
-                        <li key={index}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {troubleshootingPlan.data_collection.length > 0 && (
-                  <div>
-                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                      Data Collection
-                    </h4>
-                    <ul className="space-y-1 text-sm text-gray-700 list-disc list-inside">
-                      {troubleshootingPlan.data_collection.map((item, index) => (
-                        <li key={index}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {troubleshootingPlan.hypotheses_to_test.length > 0 && (
-                  <div>
-                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                      Hypotheses to Test
-                    </h4>
-                    <ul className="space-y-1 text-sm text-gray-700 list-disc list-inside">
-                      {troubleshootingPlan.hypotheses_to_test.map((item, index) => (
-                        <li key={index}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {troubleshootingPlan.short_term_countermeasures.length > 0 && (
-                  <div>
-                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                      Short-term Countermeasures
-                    </h4>
-                    <ul className="space-y-1 text-sm text-gray-700 list-disc list-inside">
-                      {troubleshootingPlan.short_term_countermeasures.map((item, index) => (
-                        <li key={index}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {troubleshootingPlan.long_term_preventive_actions.length > 0 && (
-                  <div>
-                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                      Long-term Preventive Actions
-                    </h4>
-                    <ul className="space-y-1 text-sm text-gray-700 list-disc list-inside">
-                      {troubleshootingPlan.long_term_preventive_actions.map((item, index) => (
-                        <li key={index}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+              <div className="p-4">
+                <div className="prose prose-sm max-w-none text-gray-700 bg-gray-50 p-3 rounded-md text-sm whitespace-pre-wrap">
+                  {troubleshootingPlan}
+                </div>
               </div>
             </div>
           )}
