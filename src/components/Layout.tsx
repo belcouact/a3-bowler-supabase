@@ -315,7 +315,7 @@ const Layout = () => {
             "metricName": "Metric Name",
             "groupName": "Group Name",
             "issue": "Brief description of the issue (e.g., 'Consistently missing target')",
-            "suggestion": "Detailed, actionable improvement suggestion based on industry best practices (2-3 sentences)"
+            "suggestion": "Detailed, actionable improvement suggestion based on industry best practices"
           }
         ]
       }
