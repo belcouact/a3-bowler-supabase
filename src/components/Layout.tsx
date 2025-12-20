@@ -506,7 +506,7 @@ const Layout = () => {
             <button
               onClick={handleOneClickSummary}
               className="p-2 bg-teal-600 text-white rounded-md shadow-sm hover:bg-teal-700 transition-colors"
-              title="One Click Summary by AI"
+              title="One Click Summary"
             >
               <NotepadText className="w-4 h-4" />
             </button>

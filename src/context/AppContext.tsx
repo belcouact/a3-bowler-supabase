@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from 'react';
+import { get, set } from 'idb-keyval';
 import { dataService } from '../services/dataService';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
@@ -92,20 +93,39 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         }
     }, 15000);
 
-    // 1. Try Local Storage first (Instant)
+    // 1. Try Local Storage / IndexedDB (Instant)
     const localDataKey = `user_data_${username}`;
-    const localData = localStorage.getItem(localDataKey);
-    if (localData) {
-      try {
-        const parsed = JSON.parse(localData);
-        if (isMountedRef.current) {
-            setBowlers(parsed.bowlers || []);
-            setA3Cases(parsed.a3Cases || []);
-            setDashboardMarkdown(parsed.dashboardMarkdown || DEFAULT_MARKDOWN);
+    
+    try {
+        // Try IndexedDB first
+        let localData = await get(localDataKey);
+        
+        // If not in IndexedDB, try localStorage (Migration)
+        if (!localData) {
+            const lsData = localStorage.getItem(localDataKey);
+            if (lsData) {
+                try {
+                    localData = JSON.parse(lsData);
+                    // Migrate to IndexedDB
+                    await set(localDataKey, localData);
+                    // Clear from localStorage to free space
+                    localStorage.removeItem(localDataKey);
+                } catch (e) {
+                    console.error("Failed to parse/migrate localStorage data", e);
+                }
+            }
         }
-      } catch (e) {
-        console.error("Failed to parse local data", e);
-      }
+
+        if (localData && isMountedRef.current) {
+            // Ensure we have an object
+            const data = (typeof localData === 'string') ? JSON.parse(localData) : localData;
+            
+            setBowlers(data.bowlers || []);
+            setA3Cases(data.a3Cases || []);
+            setDashboardMarkdown(data.dashboardMarkdown || DEFAULT_MARKDOWN);
+        }
+    } catch (e) {
+        console.error("Failed to load local data", e);
     }
 
     // 2. Load from backend
@@ -123,13 +143,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             }
             // Update local storage to match backend
             try {
-                localStorage.setItem(localDataKey, JSON.stringify({ 
+                await set(localDataKey, { 
                     bowlers: data.bowlers || [], 
                     a3Cases: data.a3Cases || [],
                     dashboardMarkdown: data.dashboardMarkdown || DEFAULT_MARKDOWN
-                }));
+                });
             } catch (e) {
-                console.warn("Failed to update local storage cache (Quota Exceeded or disabled). App will continue to function.", e);
+                console.warn("Failed to update local cache.", e);
             }
         } else if (!data.success) {
             throw new Error(data.message || "Failed to load data");
@@ -164,19 +184,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [user, loadUserData]);
 
-  const saveToLocalStorage = (newBowlers: Bowler[], newA3Cases: A3Case[], newMarkdown: string) => {
+  const saveToLocalCache = (newBowlers: Bowler[], newA3Cases: A3Case[], newMarkdown: string) => {
     if (user) {
-      // 1. Save to Local Storage immediately (Local Cache)
+      // 1. Save to IndexedDB immediately (Local Cache)
       const localDataKey = `user_data_${user.username}`;
-      try {
-        localStorage.setItem(localDataKey, JSON.stringify({ 
-            bowlers: newBowlers, 
-            a3Cases: newA3Cases,
-            dashboardMarkdown: newMarkdown
-        }));
-      } catch (e) {
-        console.error("Local Storage save failed", e);
-      }
+      
+      set(localDataKey, { 
+          bowlers: newBowlers, 
+          a3Cases: newA3Cases,
+          dashboardMarkdown: newMarkdown
+      }).catch(e => {
+        console.error("Local Cache save failed", e);
+      });
       // Note: Auto-save to backend is DISABLED. 
       // Saving to backend only happens when the user manually clicks the "Save" button in Layout.tsx.
     }
@@ -184,7 +203,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const updateDashboardMarkdown = (markdown: string) => {
       setDashboardMarkdown(markdown);
-      saveToLocalStorage(bowlers, a3Cases, markdown);
+      saveToLocalCache(bowlers, a3Cases, markdown);
   };
 
   const addBowler = (data: Omit<Bowler, 'id'>) => {
@@ -194,7 +213,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     };
     setBowlers(prev => {
       const newBowlers = [...prev, newBowler];
-      saveToLocalStorage(newBowlers, a3Cases, dashboardMarkdown);
+      saveToLocalCache(newBowlers, a3Cases, dashboardMarkdown);
       return newBowlers;
     });
   };
@@ -206,7 +225,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     setBowlers(prev => {
       const newBowlers = prev.map((b) => (b.id === updatedBowler.id ? updatedBowler : b));
-      saveToLocalStorage(newBowlers, a3Cases, dashboardMarkdown);
+      saveToLocalCache(newBowlers, a3Cases, dashboardMarkdown);
       return newBowlers;
     });
   };
@@ -218,7 +237,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     };
     setA3Cases(prev => {
       const newA3Cases = [...prev, newCase];
-      saveToLocalStorage(bowlers, newA3Cases, dashboardMarkdown);
+      saveToLocalCache(bowlers, newA3Cases, dashboardMarkdown);
       return newA3Cases;
     });
   };
@@ -226,7 +245,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const updateA3Case = (updatedCase: A3Case) => {
     setA3Cases(prev => {
       const newA3Cases = prev.map(c => c.id === updatedCase.id ? updatedCase : c);
-      saveToLocalStorage(bowlers, newA3Cases, dashboardMarkdown);
+      saveToLocalCache(bowlers, newA3Cases, dashboardMarkdown);
       return newA3Cases;
     });
   };
@@ -234,7 +253,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const deleteBowler = (id: string) => {
     setBowlers(prev => {
       const newBowlers = prev.filter((b) => b.id !== id);
-      saveToLocalStorage(newBowlers, a3Cases, dashboardMarkdown);
+      saveToLocalCache(newBowlers, a3Cases, dashboardMarkdown);
       return newBowlers;
     });
   };
@@ -242,19 +261,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const deleteA3Case = (id: string) => {
     setA3Cases(prev => {
       const newA3Cases = prev.filter((c) => c.id !== id);
-      saveToLocalStorage(bowlers, newA3Cases, dashboardMarkdown);
+      saveToLocalCache(bowlers, newA3Cases, dashboardMarkdown);
       return newA3Cases;
     });
   };
 
   const reorderBowlers = (newBowlers: Bowler[]) => {
     setBowlers(newBowlers);
-    saveToLocalStorage(newBowlers, a3Cases, dashboardMarkdown);
+    saveToLocalCache(newBowlers, a3Cases, dashboardMarkdown);
   };
 
   const reorderA3Cases = (newA3Cases: A3Case[]) => {
     setA3Cases(newA3Cases);
-    saveToLocalStorage(bowlers, newA3Cases, dashboardMarkdown);
+    saveToLocalCache(bowlers, newA3Cases, dashboardMarkdown);
   };
 
   return (
