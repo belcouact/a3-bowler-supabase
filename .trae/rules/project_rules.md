@@ -48,4 +48,6 @@ The application is designed to be fully responsive across all device sizes, prio
 - **React Imports:** Do not explicitly import `React` from 'react' just for JSX, as the project uses the new JSX transform (React 17+). Only import named exports like hooks (e.g., `useState`, `useEffect`) or types when necessary.
 - **Linting & Cleanup:** Always remove unused imports, variables, and function arguments before finalizing code. The build process enforces `noUnusedLocals` and `noUnusedParameters`, so these will cause build failures.
 
+## Auto resolve issues in the Problems section
+
 
