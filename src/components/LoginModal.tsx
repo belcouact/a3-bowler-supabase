@@ -14,6 +14,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
   const [password, setPassword] = useState('');
   
   // Signup specific states
+  const [signupUsername, setSignupUsername] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -53,11 +54,11 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
 
     try {
       const payload = {
-        username: signupEmail.split('@')[0],
+        username: signupUsername,
         password: signupPassword,
         role,
+        email: signupEmail || undefined,
         profile: {
-          email: signupEmail,
           country,
           plant,
           team,
@@ -190,7 +191,26 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                   
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
-                      Email Address
+                      User Account Name
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <User className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        value={signupUsername}
+                        onChange={(e) => setSignupUsername(e.target.value)}
+                        className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter account name"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      Email Address (optional)
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -202,7 +222,6 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                         onChange={(e) => setSignupEmail(e.target.value)}
                         className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="name@example.com"
-                        required
                       />
                     </div>
                   </div>
