@@ -988,13 +988,26 @@ const Layout = () => {
 
               {isMindmapPage && !isMetricBowler && !isA3Analysis && (
                 <div className="space-y-2">
-                  <div className="rounded-lg border border-indigo-100 bg-indigo-50/70 px-3 py-2">
-                    <div className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
-                      Current mindmap
-                    </div>
-                    <div className="mt-1 text-sm font-medium text-indigo-900 truncate">
-                      {dashboardTitle || 'No mindmap title yet'}
-                    </div>
+                  <div
+                    className={clsx(
+                      "rounded-lg border border-indigo-100 bg-indigo-50/70 px-3 py-2 cursor-pointer",
+                      !isSidebarOpen && "flex items-center justify-center"
+                    )}
+                    onDoubleClick={handleEditMindmap}
+                    title={!isSidebarOpen ? (dashboardTitle || 'No mindmap title yet') : undefined}
+                  >
+                    {isSidebarOpen ? (
+                      <>
+                        <div className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
+                          Current mindmap
+                        </div>
+                        <div className="mt-1 text-sm font-medium text-indigo-900 truncate">
+                          {dashboardTitle || 'No mindmap title yet'}
+                        </div>
+                      </>
+                    ) : (
+                      <BrainCircuit className="w-5 h-5 text-indigo-600" />
+                    )}
                   </div>
                 </div>
               )}
@@ -1211,6 +1224,7 @@ const Layout = () => {
       <MindmapModal
         isOpen={isMindmapModalOpen}
         onClose={() => setIsMindmapModalOpen(false)}
+        mode={mindmapModalMode}
       />
     </div>
   );
