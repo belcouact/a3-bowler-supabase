@@ -84,7 +84,7 @@ const Summary = () => {
             </div>
           </div>
 
-          {/* Why Analysis */}
+          {/* Root Cause */}
           <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
             <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">3. Root Cause Analysis (5 Whys)</h4>
             <div className="text-sm text-gray-600 space-y-4">

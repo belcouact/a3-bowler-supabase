@@ -22,7 +22,7 @@ const A3Analysis = () => {
   const tabs = [
     { path: 'problem-statement', label: 'Problem Statement', icon: AlertCircle },
     { path: 'data-analysis', label: 'Data Analysis', icon: BarChart2 },
-    { path: 'why-analysis', label: 'Why Analysis', icon: GitBranch },
+    { path: 'why-analysis', label: 'Root Cause', icon: GitBranch },
     { path: 'action-plan', label: 'Action Plan', icon: Calendar },
     { path: 'result', label: 'Result', icon: CheckCircle },
     { path: 'summary', label: 'Report', icon: FileText },
