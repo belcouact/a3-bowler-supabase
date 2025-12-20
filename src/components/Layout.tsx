@@ -71,7 +71,7 @@ const Layout = () => {
   const [isMindmapModalOpen, setIsMindmapModalOpen] = useState(false);
   const [mindmapModalMode, setMindmapModalMode] = useState<'create' | 'edit'>('edit');
   const [isBowlerFilterOpen, setIsBowlerFilterOpen] = useState(false);
-  const [bowlerFilterField, setBowlerFilterField] = useState<'team' | 'group' | 'tag' | ''>('');
+  const [bowlerFilterField, setBowlerFilterField] = useState<'commitment' | 'group' | 'tag' | ''>('');
   const [bowlerFilterValue, setBowlerFilterValue] = useState<string>('');
 
   const toggleGroup = (group: string) => {
@@ -801,13 +801,13 @@ const Layout = () => {
                     className="flex-1 rounded border border-gray-300 bg-white py-1 px-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                     value={bowlerFilterField}
                     onChange={(e) => {
-                      const value = e.target.value as 'team' | 'group' | 'tag' | '';
+                      const value = e.target.value as 'commitment' | 'group' | 'tag' | '';
                       setBowlerFilterField(value);
                       setBowlerFilterValue('');
                     }}
                   >
                     <option value="">None</option>
-                    <option value="team">Team</option>
+                    <option value="commitment">Commitment</option>
                     <option value="group">Group</option>
                     <option value="tag">Tag</option>
                   </select>
@@ -825,7 +825,7 @@ const Layout = () => {
                         new Set(
                           bowlers
                             .map((b) => {
-                              if (bowlerFilterField === 'team') return b.commitment;
+                              if (bowlerFilterField === 'commitment') return b.commitment;
                               if (bowlerFilterField === 'group') return b.group;
                               if (bowlerFilterField === 'tag') return b.tag;
                               return undefined;
@@ -851,7 +851,7 @@ const Layout = () => {
                       if (!bowlerFilterField || !bowlerFilterValue) {
                           return true;
                       }
-                      if (bowlerFilterField === 'team') {
+                      if (bowlerFilterField === 'commitment') {
                           return (bowler.commitment || '') === bowlerFilterValue;
                       }
                       if (bowlerFilterField === 'group') {

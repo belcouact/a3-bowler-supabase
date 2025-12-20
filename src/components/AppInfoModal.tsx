@@ -127,6 +127,18 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                     </p>
                   </div>
                 </div>
+
+                <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-sky-50/80">
+                  <div className="h-9 w-9 shrink-0 rounded-lg bg-sky-500 flex items-center justify-center">
+                    <LayoutDashboard className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">Optimized for Mobile</p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Use the same dashboards and A3 views seamlessly on phones and tablets, just like on desktop.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
