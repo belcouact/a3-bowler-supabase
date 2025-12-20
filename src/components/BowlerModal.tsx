@@ -199,35 +199,25 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
                         <div className="space-y-3 rounded-lg border border-gray-100 bg-white p-3">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Ownership & grouping</label>
+                                    <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Champion & team</label>
                                     <p className="mt-1 text-xs text-gray-500">
-                                        Define who champions this bowler and how it is grouped.
+                                        Clarify who champions this bowler and which team they belong to.
                                     </p>
                                 </div>
                                 <div className="hidden sm:flex flex-col items-end space-y-1">
-                                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
-                                        {generalData.group || 'Ungrouped'}
-                                    </span>
                                     {generalData.champion && (
                                         <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 border border-blue-100">
                                             {generalData.champion}
                                         </span>
                                     )}
+                                    {generalData.commitment && (
+                                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
+                                            {generalData.commitment}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 flex items-center" title="Group multiple bowlers under one group">
-                                        Group
-                                        <Info className="w-4 h-4 ml-1 text-gray-400 cursor-help" />
-                                    </label>
-                                    <input
-                                        type="text"
-                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                        value={generalData.group}
-                                        onChange={(e) => setGeneralData({ ...generalData, group: e.target.value })}
-                                    />
-                                </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Champion</label>
                                     <input
@@ -237,24 +227,6 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
                                         onChange={(e) => setGeneralData({ ...generalData, champion: e.target.value })}
                                     />
                                 </div>
-                            </div>
-                        </div>
-
-                        <div className="space-y-3 rounded-lg border border-gray-100 bg-white p-3">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Team & tag</label>
-                                    <p className="mt-1 text-xs text-gray-500">
-                                        Connect this bowler to a team and optional consolidation tag.
-                                    </p>
-                                </div>
-                                {generalData.tag && (
-                                    <span className="hidden sm:inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700 border border-indigo-100">
-                                        {generalData.tag}
-                                    </span>
-                                )}
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Team</label>
                                     <select
@@ -276,8 +248,43 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
                                         <option value="Sales & Marketing">Sales & Marketing</option>
                                     </select>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3 rounded-lg border border-gray-100 bg-white p-3">
+                            <div className="flex items-center justify-between">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 flex items-center" title="For consolidation purpose">
+                                    <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Group & tag</label>
+                                    <p className="mt-1 text-xs text-gray-500">
+                                        Group and tag are mainly used for consolidation across multiple bowlers and reports.
+                                    </p>
+                                </div>
+                                <div className="hidden sm:flex flex-col items-end space-y-1">
+                                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
+                                        {generalData.group || 'Ungrouped'}
+                                    </span>
+                                    {generalData.tag && (
+                                        <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700 border border-indigo-100">
+                                            {generalData.tag}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 flex items-center" title="Group multiple bowlers under one group">
+                                        Group
+                                        <Info className="w-4 h-4 ml-1 text-gray-400 cursor-help" />
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        value={generalData.group}
+                                        onChange={(e) => setGeneralData({ ...generalData, group: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 flex items-center" title="Mainly used for consolidation across reports">
                                         Tag
                                         <Info className="w-4 h-4 ml-1 text-gray-400 cursor-help" />
                                     </label>
