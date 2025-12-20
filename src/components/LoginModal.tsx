@@ -21,7 +21,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
   const [country, setCountry] = useState('');
   const [plant, setPlant] = useState('');
   const [team, setTeam] = useState('');
-  const [isPublicProfile, setIsPublicProfile] = useState(false);
+  const [isPublicProfile, setIsPublicProfile] = useState(true);
   const [successMessage, setSuccessMessage] = useState('');
   
   const [error, setError] = useState('');
@@ -340,7 +340,12 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                         className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                       />
                       <span className="text-gray-700 font-medium flex-1">Public Profile</span>
-                      <Info className="h-4 w-4 text-gray-400" />
+                      <span
+                        className="inline-flex items-center justify-center"
+                        title="If checked, administrators and privileged users can consolidate your metrics & A3 data."
+                      >
+                        <Info className="h-4 w-4 text-gray-400" />
+                      </span>
                     </label>
                   </div>
                 </div>
