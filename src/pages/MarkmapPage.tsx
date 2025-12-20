@@ -25,12 +25,6 @@ transformer.urlBuilder.getUrl = (url: string) => {
 // Also try to remove it from the built-in plugins if possible
 // but urlBuilder is the main interception point for assets
 
-// Do not strip HTML tags, preserve all characters
-// @ts-expect-error markmap assets typing
-if (transformer.assets && transformer.assets.styles) {
-    // Attempt to inject style to preserve whitespace if needed, but mainly we rely on markmap's rendering
-}
-
 const MarkmapPage = () => {
   const { dashboardMarkdown } = useApp();
   const [markdown, setMarkdown] = useState(dashboardMarkdown);
