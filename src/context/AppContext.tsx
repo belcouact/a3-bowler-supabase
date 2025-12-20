@@ -315,7 +315,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const updateDashboardMarkdown = (markdown: string, title?: string, options?: { createNew?: boolean }) => {
       const createNew = options?.createNew ?? false;
-      const baseTitle = title ?? extractTitleFromMarkdown(markdown) || 'Mindmap';
+      const baseTitle = title ?? (extractTitleFromMarkdown(markdown) || 'Mindmap');
 
       setDashboardMindmaps(prev => {
         const now = new Date().toISOString();
