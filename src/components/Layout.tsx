@@ -228,26 +228,32 @@ const Layout = () => {
       return `${year}/${monthName}`;
     });
 
-    const header = `"Bowler Name","Metric Name","Scope","Type",${monthLabels.map(l => `"${l}"`).join(',')}\n`;
+    const header = `"Bowler Name","Metric Name","Definition","Owner","Scope","Attribute","Target Meeting Rule","Type",${monthLabels
+      .map(l => `"${l}"`)
+      .join(',')}\n`;
 
-    const rows = bowlers.flatMap(bowler =>
-      (bowler.metrics || []).flatMap(metric => {
-        const basicInfo = `"${bowler.name}","${metric.name}","${metric.scope || ''}"`;
+    const rows = bowlers
+      .flatMap(bowler =>
+        (bowler.metrics || []).flatMap(metric => {
+          const basicInfo = `"${bowler.name}","${metric.name}","${metric.definition || ''}","${metric.owner || ''}","${metric.scope || ''}","${metric.attribute || ''}","${
+            metric.targetMeetingRule || ''
+          }"`;
 
-        const targetRowData = monthKeys
-          .map(key => `"${metric.monthlyData?.[key]?.target || ''}"`)
-          .join(',');
+          const targetRowData = monthKeys
+            .map(key => `"${metric.monthlyData?.[key]?.target || ''}"`)
+            .join(',');
 
-        const actualRowData = monthKeys
-          .map(key => `"${metric.monthlyData?.[key]?.actual || ''}"`)
-          .join(',');
+          const actualRowData = monthKeys
+            .map(key => `"${metric.monthlyData?.[key]?.actual || ''}"`)
+            .join(',');
 
-        return [
-          `${basicInfo},"Target",${targetRowData}`,
-          `${basicInfo},"Actual",${actualRowData}`
-        ];
-      })
-    ).join('\n');
+          return [
+            `${basicInfo},"Target",${targetRowData}`,
+            `${basicInfo},"Actual",${actualRowData}`
+          ];
+        })
+      )
+      .join('\n');
 
     if (!rows) {
       toast.info('No metric rows to download.');
