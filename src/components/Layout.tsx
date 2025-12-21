@@ -5,21 +5,35 @@ import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
 import { Bowler, Metric, AIModelKey } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { useState } from 'react';
-import A3CaseModal from './A3CaseModal';
-import { MindmapModal } from './MindmapModal';
-import BowlerModal from './BowlerModal';
-import LoginModal from './LoginModal';
-import { AccountSettingsModal } from './AccountSettingsModal';
-import { AIChatModal } from './AIChatModal';
-import { AppInfoModal } from './AppInfoModal';
+import { useState, lazy, Suspense } from 'react';
 import { dataService } from '../services/dataService';
 import { useToast } from '../context/ToastContext';
-import { ConsolidateModal } from './ConsolidateModal';
-import { ImportModal } from './ImportModal';
-import { SummaryModal } from './SummaryModal';
-import { generateComprehensiveSummary, generateAIContext } from '../services/aiService';
 import { getBowlerStatusColor } from '../utils/metricUtils';
+
+const A3CaseModal = lazy(() => import('./A3CaseModal'));
+const BowlerModal = lazy(() => import('./BowlerModal'));
+const LoginModal = lazy(() => import('./LoginModal'));
+const AccountSettingsModal = lazy(() =>
+  import('./AccountSettingsModal').then(module => ({ default: module.AccountSettingsModal })),
+);
+const AIChatModal = lazy(() =>
+  import('./AIChatModal').then(module => ({ default: module.AIChatModal })),
+);
+const AppInfoModal = lazy(() =>
+  import('./AppInfoModal').then(module => ({ default: module.AppInfoModal })),
+);
+const ConsolidateModal = lazy(() =>
+  import('./ConsolidateModal').then(module => ({ default: module.ConsolidateModal })),
+);
+const ImportModal = lazy(() =>
+  import('./ImportModal').then(module => ({ default: module.ImportModal })),
+);
+const SummaryModal = lazy(() =>
+  import('./SummaryModal').then(module => ({ default: module.SummaryModal })),
+);
+const MindmapModal = lazy(() =>
+  import('./MindmapModal').then(module => ({ default: module.MindmapModal })),
+);
 
 const modelOptions: { key: AIModelKey; label: string }[] = [
   { key: 'gemini', label: 'gemini-3-flash' },
@@ -319,6 +333,7 @@ const Layout = () => {
     setIsSummaryModalOpen(true);
     
     try {
+      const { generateAIContext, generateComprehensiveSummary } = await import('../services/aiService');
       const context = generateAIContext(bowlers, a3Cases);
       
       const prompt = `Provide a comprehensive performance summary.
@@ -1277,75 +1292,95 @@ const Layout = () => {
         </main>
       </div>
 
-      <A3CaseModal 
-        isOpen={isA3ModalOpen} 
-        onClose={() => {
-            setIsA3ModalOpen(false);
-            setEditingA3Case(null);
-        }}
-        onSave={handleSaveA3Case} 
-        onDelete={handleDeleteA3Case}
-        initialData={editingA3Case || undefined}
-      />
+      <Suspense fallback={null}>
+        <A3CaseModal 
+          isOpen={isA3ModalOpen} 
+          onClose={() => {
+              setIsA3ModalOpen(false);
+              setEditingA3Case(null);
+          }}
+          onSave={handleSaveA3Case} 
+          onDelete={handleDeleteA3Case}
+          initialData={editingA3Case || undefined}
+        />
+      </Suspense>
 
-      <BowlerModal 
-        isOpen={isBowlerModalOpen} 
-        onClose={() => {
-            setIsBowlerModalOpen(false);
-            setEditingBowler(null);
-        }}
-        onSave={handleSaveBowler} 
-        onDelete={handleDeleteBowler}
-        initialData={editingBowler || undefined}
-      />
+      <Suspense fallback={null}>
+        <BowlerModal 
+          isOpen={isBowlerModalOpen} 
+          onClose={() => {
+              setIsBowlerModalOpen(false);
+              setEditingBowler(null);
+          }}
+          onSave={handleSaveBowler} 
+          onDelete={handleDeleteBowler}
+          initialData={editingBowler || undefined}
+        />
+      </Suspense>
 
-      <LoginModal 
-        isOpen={isLoginModalOpen} 
-        onClose={() => setIsLoginModalOpen(false)} 
-      />
+      <Suspense fallback={null}>
+        <LoginModal 
+          isOpen={isLoginModalOpen} 
+          onClose={() => setIsLoginModalOpen(false)} 
+        />
+      </Suspense>
 
-      <ImportModal
-        isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
-        onImport={handleImport}
-      />
+      <Suspense fallback={null}>
+        <ImportModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          onImport={handleImport}
+        />
+      </Suspense>
 
-      <AccountSettingsModal 
-        isOpen={isAccountSettingsOpen} 
-        onClose={() => setIsAccountSettingsOpen(false)} 
-      />
+      <Suspense fallback={null}>
+        <AccountSettingsModal 
+          isOpen={isAccountSettingsOpen} 
+          onClose={() => setIsAccountSettingsOpen(false)} 
+        />
+      </Suspense>
 
-      <AIChatModal
-        isOpen={isAIChatOpen}
-        onClose={() => {
-            setIsAIChatOpen(false);
-            setInitialAIPrompt(undefined);
-        }}
-        initialPrompt={initialAIPrompt}
-      />
+      <Suspense fallback={null}>
+        <AIChatModal
+          isOpen={isAIChatOpen}
+          onClose={() => {
+              setIsAIChatOpen(false);
+              setInitialAIPrompt(undefined);
+          }}
+          initialPrompt={initialAIPrompt}
+        />
+      </Suspense>
 
-      <SummaryModal
-        isOpen={isSummaryModalOpen}
-        onClose={() => setIsSummaryModalOpen(false)}
-        content={summaryContent}
-        isLoading={isGeneratingSummary}
-      />
+      <Suspense fallback={null}>
+        <SummaryModal
+          isOpen={isSummaryModalOpen}
+          onClose={() => setIsSummaryModalOpen(false)}
+          content={summaryContent}
+          isLoading={isGeneratingSummary}
+        />
+      </Suspense>
 
-      <AppInfoModal
-        isOpen={isAppInfoOpen}
-        onClose={() => setIsAppInfoOpen(false)}
-      />
+      <Suspense fallback={null}>
+        <AppInfoModal
+          isOpen={isAppInfoOpen}
+          onClose={() => setIsAppInfoOpen(false)}
+        />
+      </Suspense>
 
-      <ConsolidateModal
-        isOpen={isConsolidateModalOpen}
-        onClose={() => setIsConsolidateModalOpen(false)}
-      />
+      <Suspense fallback={null}>
+        <ConsolidateModal
+          isOpen={isConsolidateModalOpen}
+          onClose={() => setIsConsolidateModalOpen(false)}
+        />
+      </Suspense>
 
-      <MindmapModal
-        isOpen={isMindmapModalOpen}
-        onClose={() => setIsMindmapModalOpen(false)}
-        mode={mindmapModalMode}
-      />
+      <Suspense fallback={null}>
+        <MindmapModal
+          isOpen={isMindmapModalOpen}
+          onClose={() => setIsMindmapModalOpen(false)}
+          mode={mindmapModalMode}
+        />
+      </Suspense>
     </div>
   );
 };

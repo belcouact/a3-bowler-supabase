@@ -1,8 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import { useState, useRef } from 'react';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import { Download, Loader2 } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 
@@ -19,6 +17,11 @@ const Summary = () => {
 
     try {
       setIsExporting(true);
+      const [{ default: html2canvas }, { default: JsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
+
       const canvas = await html2canvas(contentRef.current, {
         scale: 2,
         useCORS: true,
@@ -28,7 +31,7 @@ const Summary = () => {
       });
 
       const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
+      const pdf = new JsPDF({
         orientation: 'landscape',
         unit: 'mm',
         format: 'a4',
