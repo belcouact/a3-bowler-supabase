@@ -568,11 +568,10 @@ const Layout = () => {
             <div className="relative">
               <button
                 onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
-                className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-indigo-600 transition-colors flex items-center"
+                className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-indigo-600 transition-colors"
                 title={`AI Model: ${currentModelLabel}`}
               >
-                <Bot className="w-4 h-4 mr-1" />
-                <span className="hidden lg:inline text-xs font-medium">{currentModelLabel}</span>
+                <Bot className="w-4 h-4" />
               </button>
               {isModelMenuOpen && (
                 <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-[80]">
