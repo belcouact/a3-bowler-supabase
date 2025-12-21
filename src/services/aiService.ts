@@ -25,7 +25,12 @@ const parseTarget = (targetStr: string): { min?: number; max?: number; val?: num
     return isNaN(val) ? {} : { val };
 };
 
-export const analyzeMetric = async (metric: Metric): Promise<AnalysisResult> => {
+export type AIModelKey = 'gemini' | 'deepseek' | 'kimi' | 'glm';
+
+export const analyzeMetric = async (
+  metric: Metric,
+  model: AIModelKey = 'deepseek'
+): Promise<AnalysisResult> => {
   const months = Object.keys(metric.monthlyData || {}).sort();
   const dataPoints: { month: string; actual: string; target: string }[] = [];
   const numericActuals: number[] = [];
@@ -129,7 +134,7 @@ export const analyzeMetric = async (metric: Metric): Promise<AnalysisResult> => 
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'deepseek',
+        model,
         messages: [
           { role: 'system', content: 'You are a helpful data analysis assistant that outputs strictly JSON.' },
           { role: 'user', content: prompt }
@@ -168,7 +173,11 @@ export const analyzeMetric = async (metric: Metric): Promise<AnalysisResult> => 
   }
 };
 
-export const generateComprehensiveSummary = async (context: string, prompt: string): Promise<string> => {
+export const generateComprehensiveSummary = async (
+  context: string,
+  prompt: string,
+  model: AIModelKey = 'deepseek'
+): Promise<string> => {
   try {
     const response = await fetch('https://multi-model-worker.study-llm.me/api/chat', {
       method: 'POST',
@@ -176,7 +185,7 @@ export const generateComprehensiveSummary = async (context: string, prompt: stri
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'deepseek',
+        model,
         messages: [
           {
             role: 'system',

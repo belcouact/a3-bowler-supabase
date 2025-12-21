@@ -8,6 +8,7 @@ interface AIChatModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialPrompt?: string;
+  selectedModel: string;
 }
 
 interface Message {
@@ -15,12 +16,11 @@ interface Message {
   content: string;
 }
 
-export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initialPrompt }) => {
+export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initialPrompt, selectedModel }) => {
   const { bowlers, a3Cases } = useApp();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const selectedModel = 'deepseek';
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasProcessedPrompt = useRef(false);
 

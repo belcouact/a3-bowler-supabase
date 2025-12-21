@@ -18,8 +18,15 @@ import { useToast } from '../context/ToastContext';
 import { ConsolidateModal } from './ConsolidateModal';
 import { ImportModal } from './ImportModal';
 import { SummaryModal } from './SummaryModal';
-import { generateComprehensiveSummary, generateAIContext } from '../services/aiService';
+import { AIModelKey, generateComprehensiveSummary, generateAIContext } from '../services/aiService';
 import { getBowlerStatusColor } from '../utils/metricUtils';
+
+const AI_MODEL_OPTIONS: { key: AIModelKey; name: string; providerModel: string }[] = [
+  { key: 'gemini', name: 'Gemini', providerModel: 'gemini-3-flash-preview' },
+  { key: 'deepseek', name: 'Deepseek', providerModel: 'deepseek-chat' },
+  { key: 'kimi', name: 'Kimi', providerModel: 'moonshot-v1-8k' },
+  { key: 'glm', name: 'GLM', providerModel: 'glm-4.5' }
+];
 
 const Layout = () => {
   const location = useLocation();
@@ -40,7 +47,9 @@ const Layout = () => {
     dashboardTitle,
     dashboardMindmaps,
     activeMindmapId,
-    setActiveMindmap
+    setActiveMindmap,
+    aiModel,
+    setAIModel
   } = useApp();
   const { user, logout, isLoading } = useAuth();
   const toast = useToast();
@@ -73,6 +82,14 @@ const Layout = () => {
   const [isBowlerFilterOpen, setIsBowlerFilterOpen] = useState(false);
   const [bowlerFilterField, setBowlerFilterField] = useState<'commitment' | 'group' | 'tag' | ''>('');
   const [bowlerFilterValue, setBowlerFilterValue] = useState<string>('');
+  const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
+  const selectedModelLabel =
+    AI_MODEL_OPTIONS.find(option => option.key === aiModel)?.name || 'Deepseek';
+
+  const handleModelSelect = (model: AIModelKey) => {
+    setAIModel(model);
+    setIsModelMenuOpen(false);
+  };
 
   const toggleGroup = (group: string) => {
     setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
@@ -337,7 +354,7 @@ const Layout = () => {
       }
       Do not include any markdown formatting (like \`\`\`json). Just the raw JSON object.`;
       
-      const summary = await generateComprehensiveSummary(context, prompt);
+      const summary = await generateComprehensiveSummary(context, prompt, aiModel);
       setSummaryContent(summary);
     } catch (error) {
       console.error('Summary generation error:', error);
@@ -361,7 +378,8 @@ const Layout = () => {
           dashboardMarkdown,
           dashboardTitle,
           dashboardMindmaps,
-          activeMindmapId
+          activeMindmapId,
+          aiModel
         );
         toast.success('Data saved successfully!');
       } catch (error) {
@@ -551,6 +569,43 @@ const Layout = () => {
             >
               <Download className="w-4 h-4" />
             </button>
+
+            <div className="relative">
+              <button
+                onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
+                className="flex items-center p-2 rounded-md bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 hover:border-gray-300 transition-colors"
+                title={`AI Model: ${selectedModelLabel}`}
+              >
+                <Sparkles className="w-4 h-4 text-indigo-500" />
+                <span className="ml-1 hidden lg:inline text-xs font-medium">{selectedModelLabel}</span>
+                <ChevronDown className="w-3 h-3 ml-1 text-gray-500" />
+              </button>
+
+              {isModelMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-30"
+                    onClick={() => setIsModelMenuOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg py-1 z-[70] border border-gray-200">
+                    {AI_MODEL_OPTIONS.map(option => (
+                      <button
+                        key={option.key}
+                        onClick={() => handleModelSelect(option.key)}
+                        className={clsx(
+                          'flex w-full items-center px-3 py-1.5 text-xs text-left',
+                          option.key === aiModel
+                            ? 'bg-indigo-50 text-indigo-700'
+                            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                        )}
+                      >
+                        {option.name}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
 
             <div className={clsx("one-click-summary-glow", isGeneratingSummary && "one-click-summary-glow-active")}>
               <button
@@ -1245,6 +1300,7 @@ const Layout = () => {
             setInitialAIPrompt(undefined);
         }}
         initialPrompt={initialAIPrompt}
+        selectedModel={aiModel}
       />
 
       <SummaryModal

@@ -7,7 +7,7 @@ import { Sparkles, Loader2, AlertCircle, BarChart3 } from 'lucide-react';
 
 const DataAnalysis = () => {
   const { id } = useParams();
-  const { a3Cases, updateA3Case } = useApp();
+  const { a3Cases, updateA3Case, aiModel } = useApp();
   const currentCase = a3Cases.find(c => c.id === id);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -106,7 +106,7 @@ ${observations}`
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'deepseek',
+          model: aiModel,
           messages,
           stream: false
         }),
