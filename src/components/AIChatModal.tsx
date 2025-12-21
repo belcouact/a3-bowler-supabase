@@ -57,7 +57,7 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initi
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: selectedModel,
+          model: selectedModel === 'gemini' ? 'gemini-3-flash-preview' : selectedModel,
           messages: apiMessages,
           stream: false
         }),

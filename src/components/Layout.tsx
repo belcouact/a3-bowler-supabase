@@ -573,12 +573,10 @@ const Layout = () => {
             <div className="relative">
               <button
                 onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
-                className="flex items-center p-2 rounded-md bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 hover:border-gray-300 transition-colors"
+                className="p-2 rounded-md bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 hover:border-gray-300 transition-colors"
                 title={`AI Model: ${selectedModelLabel}`}
               >
                 <Sparkles className="w-4 h-4 text-indigo-500" />
-                <span className="ml-1 hidden lg:inline text-xs font-medium">{selectedModelLabel}</span>
-                <ChevronDown className="w-3 h-3 ml-1 text-gray-500" />
               </button>
 
               {isModelMenuOpen && (

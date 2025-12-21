@@ -106,7 +106,7 @@ ${observations}`
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: aiModel,
+          model: aiModel === 'gemini' ? 'gemini-3-flash-preview' : aiModel,
           messages,
           stream: false
         }),

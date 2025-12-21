@@ -134,7 +134,7 @@ export const analyzeMetric = async (
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model,
+        model: model === 'gemini' ? 'gemini-3-flash-preview' : model,
         messages: [
           { role: 'system', content: 'You are a helpful data analysis assistant that outputs strictly JSON.' },
           { role: 'user', content: prompt }
@@ -185,7 +185,7 @@ export const generateComprehensiveSummary = async (
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model,
+        model: model === 'gemini' ? 'gemini-3-flash-preview' : model,
         messages: [
           {
             role: 'system',
