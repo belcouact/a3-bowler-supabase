@@ -568,7 +568,7 @@ const Layout = () => {
             <div className="relative">
               <button
                 onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
-                className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-indigo-600 transition-colors"
+                className="p-2 rounded-md bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 transition-colors"
                 title={`AI Model: ${currentModelLabel}`}
               >
                 <Bot className="w-4 h-4" />
