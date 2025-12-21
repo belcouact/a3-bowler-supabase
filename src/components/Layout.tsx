@@ -822,10 +822,14 @@ const Layout = () => {
           "bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out relative",
           isSidebarOpen ? "w-64 absolute z-50 h-full md:relative" : "w-0 md:w-16"
         )}>
-          {/* Toggle Button */}
           <button
              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-             className="absolute -right-3 top-16 bg-white border border-gray-200 rounded-full p-1 shadow-sm hover:bg-gray-50 z-20 text-gray-500"
+             className={clsx(
+               "absolute -right-3 top-16 rounded-full p-1.5 shadow-sm border z-20 transition-colors",
+               isSidebarOpen
+                 ? "bg-blue-600 border-blue-700 text-white hover:bg-blue-700"
+                 : "bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100"
+             )}
           >
              {isSidebarOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
           </button>
@@ -1029,19 +1033,52 @@ const Layout = () => {
                                 <button
                                     onClick={() => toggleGroup(group)}
                                     className={clsx(
-                                        "flex items-center w-full text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 hover:text-gray-700 transition-colors",
-                                        isSidebarOpen ? "px-3" : "justify-center"
+                                        "flex items-center w-full text-xs font-semibold uppercase tracking-wider mb-1 transition-colors",
+                                        isSidebarOpen ? "px-3 justify-between" : "justify-center",
+                                        isGroupExpanded(group)
+                                          ? "text-blue-700"
+                                          : "text-gray-600 hover:text-gray-800"
                                     )}
                                     title={group}
                                 >
                                     {isSidebarOpen ? (
                                         <>
-                                            {isGroupExpanded(group) ? <ChevronDown className="w-3 h-3 mr-1" /> : <ChevronRight className="w-3 h-3 mr-1" />}
-                                            <span className="truncate">{group}</span>
+                                            <div className="flex items-center gap-2">
+                                                {isGroupExpanded(group) ? (
+                                                    <ChevronDown
+                                                        className={clsx(
+                                                          "w-3 h-3 rounded-full p-0.5",
+                                                          "bg-blue-100 text-blue-700"
+                                                        )}
+                                                    />
+                                                ) : (
+                                                    <ChevronRight
+                                                        className={clsx(
+                                                          "w-3 h-3 rounded-full p-0.5",
+                                                          "bg-gray-100 text-gray-700"
+                                                        )}
+                                                    />
+                                                )}
+                                                <span className="truncate">{group}</span>
+                                            </div>
                                         </>
                                     ) : (
                                         <div className="flex justify-center w-full">
-                                            {isGroupExpanded(group) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                                            {isGroupExpanded(group) ? (
+                                                <ChevronDown
+                                                    className={clsx(
+                                                      "w-3 h-3 rounded-full p-0.5",
+                                                      "bg-blue-100 text-blue-700"
+                                                    )}
+                                                />
+                                            ) : (
+                                                <ChevronRight
+                                                    className={clsx(
+                                                      "w-3 h-3 rounded-full p-0.5",
+                                                      "bg-gray-100 text-gray-700"
+                                                    )}
+                                                />
+                                            )}
                                         </div>
                                     )}
                                 </button>
@@ -1208,19 +1245,52 @@ const Layout = () => {
                                 <button
                                     onClick={() => toggleGroup(group)}
                                     className={clsx(
-                                        "flex items-center w-full text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 hover:text-gray-700 transition-colors",
-                                        isSidebarOpen ? "px-3" : "justify-center"
+                                        "flex items-center w-full text-xs font-semibold uppercase tracking-wider mb-1 transition-colors",
+                                        isSidebarOpen ? "px-3 justify-between" : "justify-center",
+                                        isGroupExpanded(group)
+                                          ? "text-blue-700"
+                                          : "text-gray-600 hover:text-gray-800"
                                     )}
                                     title={group}
                                 >
                                     {isSidebarOpen ? (
                                         <>
-                                            {isGroupExpanded(group) ? <ChevronDown className="w-3 h-3 mr-1" /> : <ChevronRight className="w-3 h-3 mr-1" />}
-                                            <span className="truncate">{group}</span>
+                                            <div className="flex items-center gap-2">
+                                                {isGroupExpanded(group) ? (
+                                                    <ChevronDown
+                                                        className={clsx(
+                                                          "w-3 h-3 rounded-full p-0.5",
+                                                          "bg-blue-100 text-blue-700"
+                                                        )}
+                                                    />
+                                                ) : (
+                                                    <ChevronRight
+                                                        className={clsx(
+                                                          "w-3 h-3 rounded-full p-0.5",
+                                                          "bg-gray-100 text-gray-700"
+                                                        )}
+                                                    />
+                                                )}
+                                                <span className="truncate">{group}</span>
+                                            </div>
                                         </>
                                     ) : (
                                         <div className="flex justify-center w-full">
-                                            {isGroupExpanded(group) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                                            {isGroupExpanded(group) ? (
+                                                <ChevronDown
+                                                    className={clsx(
+                                                      "w-3 h-3 rounded-full p-0.5",
+                                                      "bg-blue-100 text-blue-700"
+                                                    )}
+                                                />
+                                            ) : (
+                                                <ChevronRight
+                                                    className={clsx(
+                                                      "w-3 h-3 rounded-full p-0.5",
+                                                      "bg-gray-100 text-gray-700"
+                                                    )}
+                                                />
+                                            )}
                                         </div>
                                     )}
                                 </button>
