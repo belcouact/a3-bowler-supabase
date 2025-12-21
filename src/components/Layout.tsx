@@ -406,6 +406,14 @@ const Layout = () => {
     }
   };
 
+  const handleOpenConsolidateModal = () => {
+    if (user?.role !== 'admin') {
+      toast.error('Only administrators can perform this action.');
+      return;
+    }
+    setIsConsolidateModalOpen(true);
+  };
+
   const handlePlusClick = () => {
     if (isMetricBowler) {
       setEditingBowler(null);
@@ -603,7 +611,7 @@ const Layout = () => {
               <Sparkles className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setIsConsolidateModalOpen(true)}
+              onClick={handleOpenConsolidateModal}
               className="p-2 bg-purple-600 text-white rounded-md shadow-sm hover:bg-purple-700 transition-colors"
               title="Consolidate Bowlers & A3"
             >
@@ -696,7 +704,7 @@ const Layout = () => {
                   )}
                   <button
                     onClick={() => {
-                      setIsConsolidateModalOpen(true);
+                      handleOpenConsolidateModal();
                       setIsMobileMenuOpen(false);
                     }}
                     className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-purple-600"
