@@ -8,7 +8,6 @@ interface AIChatModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialPrompt?: string;
-  selectedModel: string;
 }
 
 interface Message {
@@ -16,8 +15,8 @@ interface Message {
   content: string;
 }
 
-export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initialPrompt, selectedModel }) => {
-  const { bowlers, a3Cases } = useApp();
+export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initialPrompt }) => {
+  const { bowlers, a3Cases, selectedModel } = useApp();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -57,7 +56,7 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initi
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: selectedModel === 'gemini' ? 'gemini-3-flash-preview' : selectedModel,
+          model: selectedModel,
           messages: apiMessages,
           stream: false
         }),

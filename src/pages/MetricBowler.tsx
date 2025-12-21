@@ -13,6 +13,7 @@ import { isViolation } from '../utils/metricUtils';
 
 const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+
 const CustomizedDot = (props: any) => {
   const { cx, cy, payload } = props;
   
@@ -41,7 +42,7 @@ const CustomizedDot = (props: any) => {
 
 const MetricBowler = () => {
   const { id } = useParams();
-  const { bowlers, updateBowler, aiModel } = useApp();
+  const { bowlers, updateBowler, selectedModel } = useApp();
   const toast = useToast();
   
   const [startDate, setStartDate] = useState(() => {
@@ -136,7 +137,7 @@ const MetricBowler = () => {
   const handleAIAnalysis = async (metric: Metric) => {
     setAnalyzingMetrics(prev => ({ ...prev, [metric.id]: true }));
     try {
-        const result = await analyzeMetric(metric, aiModel);
+        const result = await analyzeMetric(metric, selectedModel);
         setAnalysisResult(result);
         setAnalyzingMetricName(metric.name);
         setIsAnalysisModalOpen(true);

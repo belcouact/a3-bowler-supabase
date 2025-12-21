@@ -6,7 +6,7 @@ import { Sparkles, Loader2, AlertCircle, X, Lightbulb } from 'lucide-react';
 
 const WhyAnalysis = () => {
   const { id } = useParams();
-  const { a3Cases, updateA3Case, aiModel } = useApp();
+  const { a3Cases, updateA3Case } = useApp();
   const currentCase = a3Cases.find(c => c.id === id);
 
   // We use local state to avoid flickering but sync with context
@@ -142,7 +142,7 @@ ${root}`
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: aiModel === 'gemini' ? 'gemini-3-flash-preview' : aiModel,
+          model: 'deepseek',
           messages,
           stream: false
         }),

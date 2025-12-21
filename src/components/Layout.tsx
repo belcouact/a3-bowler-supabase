@@ -1,9 +1,9 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Plus, BarChart3, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, BrainCircuit, Filter } from 'lucide-react';
+import { Plus, BarChart3, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, BrainCircuit, Filter, Bot } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
-import { Bowler, Metric } from '../types';
+import { Bowler, Metric, AIModelKey } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
 import A3CaseModal from './A3CaseModal';
@@ -18,14 +18,14 @@ import { useToast } from '../context/ToastContext';
 import { ConsolidateModal } from './ConsolidateModal';
 import { ImportModal } from './ImportModal';
 import { SummaryModal } from './SummaryModal';
-import { AIModelKey, generateComprehensiveSummary, generateAIContext } from '../services/aiService';
+import { generateComprehensiveSummary, generateAIContext } from '../services/aiService';
 import { getBowlerStatusColor } from '../utils/metricUtils';
 
-const AI_MODEL_OPTIONS: { key: AIModelKey; name: string; providerModel: string }[] = [
-  { key: 'gemini', name: 'Gemini', providerModel: 'gemini-3-flash-preview' },
-  { key: 'deepseek', name: 'Deepseek', providerModel: 'deepseek-chat' },
-  { key: 'kimi', name: 'Kimi', providerModel: 'moonshot-v1-8k' },
-  { key: 'glm', name: 'GLM', providerModel: 'glm-4.5' }
+const modelOptions: { key: AIModelKey; label: string }[] = [
+  { key: 'gemini', label: 'Gemini' },
+  { key: 'deepseek', label: 'Deepseek' },
+  { key: 'kimi', label: 'Kimi' },
+  { key: 'glm', label: 'GLM' },
 ];
 
 const Layout = () => {
@@ -48,8 +48,8 @@ const Layout = () => {
     dashboardMindmaps,
     activeMindmapId,
     setActiveMindmap,
-    aiModel,
-    setAIModel
+    selectedModel,
+    setSelectedModel
   } = useApp();
   const { user, logout, isLoading } = useAuth();
   const toast = useToast();
@@ -83,13 +83,6 @@ const Layout = () => {
   const [bowlerFilterField, setBowlerFilterField] = useState<'commitment' | 'group' | 'tag' | ''>('');
   const [bowlerFilterValue, setBowlerFilterValue] = useState<string>('');
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
-  const selectedModelLabel =
-    AI_MODEL_OPTIONS.find(option => option.key === aiModel)?.name || 'Deepseek';
-
-  const handleModelSelect = (model: AIModelKey) => {
-    setAIModel(model);
-    setIsModelMenuOpen(false);
-  };
 
   const toggleGroup = (group: string) => {
     setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
@@ -354,7 +347,7 @@ const Layout = () => {
       }
       Do not include any markdown formatting (like \`\`\`json). Just the raw JSON object.`;
       
-      const summary = await generateComprehensiveSummary(context, prompt, aiModel);
+      const summary = await generateComprehensiveSummary(context, prompt, selectedModel);
       setSummaryContent(summary);
     } catch (error) {
       console.error('Summary generation error:', error);
@@ -378,8 +371,7 @@ const Layout = () => {
           dashboardMarkdown,
           dashboardTitle,
           dashboardMindmaps,
-          activeMindmapId,
-          aiModel
+          activeMindmapId
         );
         toast.success('Data saved successfully!');
       } catch (error) {
@@ -454,6 +446,8 @@ const Layout = () => {
       window.location.href = "https://study-llm.me";
     }
   };
+
+  const currentModelLabel = modelOptions.find(option => option.key === selectedModel)?.label || 'Gemini';
 
   const navItems = [
     { path: '/metric-bowler', label: 'Metric Bowler', icon: TrendingUp },
@@ -573,35 +567,30 @@ const Layout = () => {
             <div className="relative">
               <button
                 onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
-                className="p-2 rounded-md bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 hover:border-gray-300 transition-colors"
-                title={`AI Model: ${selectedModelLabel}`}
+                className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-indigo-600 transition-colors flex items-center"
+                title={`AI Model: ${currentModelLabel}`}
               >
-                <Sparkles className="w-4 h-4 text-indigo-500" />
+                <Bot className="w-4 h-4 mr-1" />
+                <span className="hidden lg:inline text-xs font-medium">{currentModelLabel}</span>
               </button>
-
               {isModelMenuOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-30"
-                    onClick={() => setIsModelMenuOpen(false)}
-                  />
-                  <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg py-1 z-[70] border border-gray-200">
-                    {AI_MODEL_OPTIONS.map(option => (
-                      <button
-                        key={option.key}
-                        onClick={() => handleModelSelect(option.key)}
-                        className={clsx(
-                          'flex w-full items-center px-3 py-1.5 text-xs text-left',
-                          option.key === aiModel
-                            ? 'bg-indigo-50 text-indigo-700'
-                            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                        )}
-                      >
-                        {option.name}
-                      </button>
-                    ))}
-                  </div>
-                </>
+                <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-[80]">
+                  {modelOptions.map(option => (
+                    <button
+                      key={option.key}
+                      onClick={() => {
+                        setSelectedModel(option.key);
+                        setIsModelMenuOpen(false);
+                      }}
+                      className={clsx(
+                        'w-full text-left px-3 py-2 text-sm hover:bg-gray-100',
+                        option.key === selectedModel ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-700'
+                      )}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
 
@@ -1298,7 +1287,6 @@ const Layout = () => {
             setInitialAIPrompt(undefined);
         }}
         initialPrompt={initialAIPrompt}
-        selectedModel={aiModel}
       />
 
       <SummaryModal

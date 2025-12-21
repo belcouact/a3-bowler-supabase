@@ -5,6 +5,8 @@ export interface MetricData {
   actualNote?: string;
 }
 
+export type AIModelKey = 'gemini' | 'deepseek' | 'kimi' | 'glm';
+
 export interface Metric {
   id: string;
   name: string;

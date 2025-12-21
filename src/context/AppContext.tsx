@@ -4,9 +4,8 @@ import { dataService } from '../services/dataService';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
 import { generateShortId } from '../utils/idUtils';
-import { Bowler, A3Case, Metric, MetricData, MindMapNodeData, ActionPlanTaskData, DataAnalysisImage, DashboardMindmap } from '../types';
+import { Bowler, A3Case, Metric, MetricData, MindMapNodeData, ActionPlanTaskData, DataAnalysisImage, DashboardMindmap, AIModelKey } from '../types';
 import { getBowlerStatusColor } from '../utils/metricUtils';
-import { AIModelKey } from '../services/aiService';
 
 export type { Bowler, A3Case, Metric, MetricData, MindMapNodeData, ActionPlanTaskData, DataAnalysisImage, DashboardMindmap };
 
@@ -22,6 +21,8 @@ interface AppContextType {
   reorderBowlers: (bowlers: Bowler[]) => void;
   reorderA3Cases: (a3Cases: A3Case[]) => void;
   isLoading: boolean;
+  selectedModel: AIModelKey;
+  setSelectedModel: (model: AIModelKey) => void;
   dashboardMarkdown: string;
   dashboardTitle: string;
   dashboardMindmaps: DashboardMindmap[];
@@ -32,8 +33,6 @@ interface AppContextType {
     title?: string,
     options?: { createNew?: boolean; description?: string }
   ) => void;
-  aiModel: AIModelKey;
-  setAIModel: (model: AIModelKey) => void;
 }
 
 // Context
@@ -77,7 +76,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [dashboardMindmaps, setDashboardMindmaps] = useState<DashboardMindmap[]>([]);
   const [activeMindmapId, setActiveMindmapId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [aiModel, setAiModelState] = useState<AIModelKey>('deepseek');
+  const [selectedModel, setSelectedModel] = useState<AIModelKey>('gemini');
   
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMountedRef = useRef(true);
@@ -96,13 +95,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       }
     }
     return '';
-  };
-
-  const normalizeAiModel = (value: unknown): AIModelKey => {
-    if (value === 'gemini' || value === 'deepseek' || value === 'kimi' || value === 'glm') {
-      return value;
-    }
-    return 'deepseek';
   };
 
   const loadUserData = useCallback(async (username: string) => {
@@ -155,11 +147,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             const title = data.dashboardTitle || extractTitleFromMarkdown(markdown);
             const mindmaps = (data.dashboardMindmaps || []) as DashboardMindmap[];
             const cachedActiveId = (data.activeMindmapId as string | undefined) || null;
-            const cachedAiModel = normalizeAiModel((data as any).aiModel);
 
             setBowlers(data.bowlers || []);
             setA3Cases(data.a3Cases || []);
-            setAiModelState(cachedAiModel);
 
             if (mindmaps.length > 0) {
                 const activeId = cachedActiveId && mindmaps.some(m => m.id === cachedActiveId)
@@ -200,11 +190,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             const title = data.dashboardTitle || extractTitleFromMarkdown(markdown);
             const mindmaps = (data.dashboardMindmaps || []) as DashboardMindmap[];
             const backendActiveId = (data.activeMindmapId as string | undefined) || null;
-            const backendAiModel = normalizeAiModel((data as any).aiModel);
 
             setBowlers(data.bowlers || []);
             setA3Cases(data.a3Cases || []);
-            setAiModelState(backendAiModel);
 
             if (mindmaps.length > 0) {
                 const activeId = backendActiveId && mindmaps.some(m => m.id === backendActiveId)
@@ -222,8 +210,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                         dashboardMarkdown: active.markdown,
                         dashboardTitle: active.title,
                         dashboardMindmaps: mindmaps,
-                        activeMindmapId: activeId,
-                        aiModel: backendAiModel
+                        activeMindmapId: activeId
                     });
                 } catch (e) {
                     console.warn("Failed to update local cache.", e);
@@ -247,8 +234,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                         dashboardMarkdown: markdown,
                         dashboardTitle: title,
                         dashboardMindmaps: [initialMindmap],
-                        activeMindmapId: id,
-                        aiModel: backendAiModel
+                        activeMindmapId: id
                     });
                 } catch (e) {
                     console.warn("Failed to update local cache.", e);
@@ -284,7 +270,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setActiveMindmapId(null);
         setDashboardMarkdown(DEFAULT_MARKDOWN);
         setDashboardTitle('');
-        setAiModelState('deepseek');
     }
     return () => {
         if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
@@ -297,8 +282,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     newMarkdown: string,
     newTitle: string,
     newMindmaps: DashboardMindmap[] = dashboardMindmaps,
-    newActiveMindmapId: string | null = activeMindmapId,
-    newAiModel: AIModelKey = aiModel
+    newActiveMindmapId: string | null = activeMindmapId
   ) => {
     if (user) {
       // 1. Save to IndexedDB immediately (Local Cache)
@@ -310,8 +294,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           dashboardMarkdown: newMarkdown,
           dashboardTitle: newTitle,
           dashboardMindmaps: newMindmaps,
-          activeMindmapId: newActiveMindmapId,
-          aiModel: newAiModel
+          activeMindmapId: newActiveMindmapId
       }).catch(e => {
         console.error("Local Cache save failed", e);
       });
@@ -378,17 +361,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         return newMindmaps;
       });
   };
-
-  const setAIModel = (model: AIModelKey) => {
-    setAiModelState(model);
-    saveToLocalCache(bowlers, a3Cases, dashboardMarkdown, dashboardTitle, dashboardMindmaps, activeMindmapId, model);
-  };
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('selectedAIModel', aiModel);
-    }
-  }, [aiModel]);
 
   const addBowler = (data: Omit<Bowler, 'id'>) => {
     const newBowler = {
@@ -474,14 +446,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         reorderBowlers,
         reorderA3Cases,
         isLoading,
+        selectedModel,
+        setSelectedModel,
         dashboardMarkdown,
         dashboardTitle,
         dashboardMindmaps,
         activeMindmapId,
         setActiveMindmap,
-        updateDashboardMarkdown,
-        aiModel,
-        setAIModel
+        updateDashboardMarkdown
       }}
     >
       {children}

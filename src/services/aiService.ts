@@ -1,4 +1,4 @@
-import { Metric, Bowler, A3Case } from '../types';
+import { Metric, Bowler, A3Case, AIModelKey } from '../types';
 
 export interface AnalysisResult {
   trend: 'stable' | 'capable' | 'unstable' | 'incapable' | 'improving' | 'degrading';
@@ -25,12 +25,7 @@ const parseTarget = (targetStr: string): { min?: number; max?: number; val?: num
     return isNaN(val) ? {} : { val };
 };
 
-export type AIModelKey = 'gemini' | 'deepseek' | 'kimi' | 'glm';
-
-export const analyzeMetric = async (
-  metric: Metric,
-  model: AIModelKey = 'deepseek'
-): Promise<AnalysisResult> => {
+export const analyzeMetric = async (metric: Metric, model: AIModelKey): Promise<AnalysisResult> => {
   const months = Object.keys(metric.monthlyData || {}).sort();
   const dataPoints: { month: string; actual: string; target: string }[] = [];
   const numericActuals: number[] = [];
@@ -134,7 +129,7 @@ export const analyzeMetric = async (
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: model === 'gemini' ? 'gemini-3-flash-preview' : model,
+        model,
         messages: [
           { role: 'system', content: 'You are a helpful data analysis assistant that outputs strictly JSON.' },
           { role: 'user', content: prompt }
@@ -173,11 +168,7 @@ export const analyzeMetric = async (
   }
 };
 
-export const generateComprehensiveSummary = async (
-  context: string,
-  prompt: string,
-  model: AIModelKey = 'deepseek'
-): Promise<string> => {
+export const generateComprehensiveSummary = async (context: string, prompt: string, model: AIModelKey): Promise<string> => {
   try {
     const response = await fetch('https://multi-model-worker.study-llm.me/api/chat', {
       method: 'POST',
@@ -185,7 +176,7 @@ export const generateComprehensiveSummary = async (
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: model === 'gemini' ? 'gemini-3-flash-preview' : model,
+        model,
         messages: [
           {
             role: 'system',
@@ -229,4 +220,3 @@ export const generateAIContext = (bowlers: Bowler[], a3Cases: A3Case[]): string 
     })
   });
 };
-

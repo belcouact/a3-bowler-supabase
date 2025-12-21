@@ -27,9 +27,8 @@ export default {
           dashboardTitle?: string;
           dashboardMindmaps?: any[];
           activeMindmapId?: string;
-          aiModel?: string;
         };
-        const { bowlers, a3Cases, userId, dashboardMarkdown, dashboardTitle, dashboardMindmaps, activeMindmapId, aiModel } = data;
+        const { bowlers, a3Cases, userId, dashboardMarkdown, dashboardTitle, dashboardMindmaps, activeMindmapId } = data;
 
         if (!userId) {
            return new Response(JSON.stringify({ success: false, error: 'User ID is required' }), {
@@ -64,7 +63,6 @@ export default {
         }
 
         if (activeMindmapId !== undefined) dashboardPayload.activeMindmapId = activeMindmapId;
-        if (aiModel !== undefined) dashboardPayload.aiModel = aiModel;
 
         if (Object.keys(dashboardPayload).length > 0) {
           await env.BOWLER_DATA.put(
@@ -251,7 +249,6 @@ export default {
         let dashboardTitle: string | undefined;
         let dashboardMindmaps: any[] | undefined;
         let activeMindmapId: string | undefined;
-        let aiModel: string | undefined;
 
         // Load dashboard markdown and title
         const dashboardRaw = await env.BOWLER_DATA.get(`user:${userId}:dashboard`);
@@ -268,9 +265,6 @@ export default {
               }
               if (typeof parsed.activeMindmapId === 'string') {
                 activeMindmapId = parsed.activeMindmapId;
-              }
-              if (typeof parsed.aiModel === 'string') {
-                aiModel = parsed.aiModel;
               }
             }
           } catch (e) {
@@ -324,8 +318,7 @@ export default {
           dashboardMarkdown,
           dashboardTitle,
           dashboardMindmaps,
-          activeMindmapId,
-          aiModel
+          activeMindmapId
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });

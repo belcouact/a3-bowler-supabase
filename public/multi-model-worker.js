@@ -22,7 +22,7 @@ var API_ENDPOINTS = {
     maxTokens: 8192
   },
   gemini: {
-    url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+    url: "https://generativelanguage.googleapis.com/v1beta/chat/completions",
     model: "gemini-3-flash-preview",
     keyEnv: "GEMINI_API_KEY",
     maxTokens: 8192

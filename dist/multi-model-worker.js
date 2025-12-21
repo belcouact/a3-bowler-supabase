@@ -20,6 +20,12 @@ var API_ENDPOINTS = {
     model: "glm-4.5",
     keyEnv: "GLM_API_KEY",
     maxTokens: 8192
+  },
+  gemini: {
+    url: "https://generativelanguage.googleapis.com/v1beta/chat/completions",
+    model: "gemini-3-flash-preview",
+    keyEnv: "GEMINI_API_KEY",
+    maxTokens: 8192
   }
 };
 var DEFAULT_TIMEOUT = 6e4;
@@ -247,7 +253,8 @@ var multi_model_worker_default = {
           models_configured: {
             deepseek: !!env.DEEPSEEK_API_KEY,
             kimi: !!env.KIMI_API_KEY,
-            glm: !!env.GLM_API_KEY
+            glm: !!env.GLM_API_KEY,
+            gemini: !!env.GEMINI_API_KEY
           }
         }), {
           headers: {
