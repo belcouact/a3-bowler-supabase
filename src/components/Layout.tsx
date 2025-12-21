@@ -552,13 +552,15 @@ const Layout = () => {
               <Download className="w-4 h-4" />
             </button>
 
-            <button
-              onClick={handleOneClickSummary}
-              className="p-2 bg-teal-600 text-white rounded-md shadow-sm hover:bg-teal-700 transition-colors"
-              title="One Click Summary"
-            >
-              <NotepadText className="w-4 h-4" />
-            </button>
+            <div className={clsx("one-click-summary-glow", isGeneratingSummary && "one-click-summary-glow-active")}>
+              <button
+                onClick={handleOneClickSummary}
+                className="one-click-summary-glow-inner p-2 bg-teal-600 text-white rounded-md shadow-sm hover:bg-teal-700 transition-colors"
+                title="One Click Summary"
+              >
+                {isGeneratingSummary ? <Loader2 className="w-4 h-4 animate-spin" /> : <NotepadText className="w-4 h-4" />}
+              </button>
+            </div>
             <button
               onClick={() => setIsAIChatOpen(true)}
               className="p-2 bg-indigo-600 text-white rounded-md shadow-sm hover:bg-indigo-700 transition-colors"
@@ -650,7 +652,11 @@ const Layout = () => {
                     }}
                     className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-teal-600"
                   >
-                    <NotepadText className="w-4 h-4 mr-3" />
+                    {isGeneratingSummary ? (
+                      <Loader2 className="w-4 h-4 mr-3 animate-spin" />
+                    ) : (
+                      <NotepadText className="w-4 h-4 mr-3" />
+                    )}
                     One Click Summary
                   </button>
 
