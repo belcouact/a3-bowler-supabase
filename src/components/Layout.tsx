@@ -549,10 +549,8 @@ const Layout = () => {
             <button
               onClick={() => navigate('/mindmap')}
               className={clsx(
-                'p-2 rounded-md border transition-colors',
-                isMindmapPage
-                  ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
-                  : 'bg-indigo-50 border-indigo-100 text-indigo-700 hover:bg-indigo-100 hover:border-indigo-200'
+                'p-2 rounded-md text-white shadow-sm transition-colors',
+                isMindmapPage ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-500 hover:bg-indigo-600'
               )}
               title="Mindmap ideas"
             >
@@ -740,7 +738,7 @@ const Layout = () => {
               <div className="hidden md:block relative">
                 <button
                   onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
-                  className="h-8 w-8 rounded-full bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 transition-colors flex items-center justify-center text-[10px] font-semibold"
+                  className="h-8 w-8 rounded-full bg-pink-500 text-white shadow-sm hover:bg-pink-600 transition-colors flex items-center justify-center text-[10px] font-semibold"
                   title={`AI Model: ${modelOptions.find(option => option.key === selectedModel)?.label || ''}`}
                 >
                   {modelShortLabels[selectedModel]}
