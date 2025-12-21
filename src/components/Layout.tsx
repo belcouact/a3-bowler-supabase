@@ -1055,7 +1055,7 @@ const Layout = () => {
                                                     <ChevronRight
                                                         className={clsx(
                                                           "w-3 h-3 rounded-full p-0.5",
-                                                          "bg-gray-100 text-gray-700"
+                                                          "bg-blue-100 text-blue-700"
                                                         )}
                                                     />
                                                 )}
@@ -1075,7 +1075,7 @@ const Layout = () => {
                                                 <ChevronRight
                                                     className={clsx(
                                                       "w-3 h-3 rounded-full p-0.5",
-                                                      "bg-gray-100 text-gray-700"
+                                                      "bg-blue-100 text-blue-700"
                                                     )}
                                                 />
                                             )}
@@ -1267,7 +1267,7 @@ const Layout = () => {
                                                     <ChevronRight
                                                         className={clsx(
                                                           "w-3 h-3 rounded-full p-0.5",
-                                                          "bg-gray-100 text-gray-700"
+                                                          "bg-blue-100 text-blue-700"
                                                         )}
                                                     />
                                                 )}
@@ -1287,7 +1287,7 @@ const Layout = () => {
                                                 <ChevronRight
                                                     className={clsx(
                                                       "w-3 h-3 rounded-full p-0.5",
-                                                      "bg-gray-100 text-gray-700"
+                                                      "bg-blue-100 text-blue-700"
                                                     )}
                                                 />
                                             )}
