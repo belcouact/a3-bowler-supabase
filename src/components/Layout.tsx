@@ -83,6 +83,7 @@ const Layout = () => {
   const [bowlerFilterField, setBowlerFilterField] = useState<'commitment' | 'group' | 'tag' | ''>('');
   const [bowlerFilterValue, setBowlerFilterValue] = useState<string>('');
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
+  const [isMobileModelMenuOpen, setIsMobileModelMenuOpen] = useState(false);
 
   const toggleGroup = (group: string) => {
     setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
@@ -676,6 +677,32 @@ const Layout = () => {
                     <Download className="w-4 h-4 mr-3" />
                     Download
                   </button>
+                  <button
+                    onClick={() => setIsMobileModelMenuOpen(!isMobileModelMenuOpen)}
+                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-indigo-600"
+                  >
+                    <Bot className="w-4 h-4 mr-3" />
+                    AI Model: {currentModelLabel}
+                  </button>
+                  {isMobileModelMenuOpen && (
+                    <div className="border-t border-gray-100">
+                      {modelOptions.map(option => (
+                        <button
+                          key={option.key}
+                          onClick={() => {
+                            setSelectedModel(option.key);
+                            setIsMobileModelMenuOpen(false);
+                          }}
+                          className={clsx(
+                            'flex w-full items-center px-4 py-2 text-sm hover:bg-gray-100',
+                            option.key === selectedModel ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-700'
+                          )}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   <button
                     onClick={() => {
                       setIsConsolidateModalOpen(true);
