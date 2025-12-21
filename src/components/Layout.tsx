@@ -22,11 +22,18 @@ import { generateComprehensiveSummary, generateAIContext } from '../services/aiS
 import { getBowlerStatusColor } from '../utils/metricUtils';
 
 const modelOptions: { key: AIModelKey; label: string }[] = [
-  { key: 'gemini', label: 'Gemini' },
+  { key: 'gemini', label: 'GEMINI' },
   { key: 'deepseek', label: 'Deepseek' },
-  { key: 'kimi', label: 'Kimi' },
+  { key: 'kimi', label: 'KIMI' },
   { key: 'glm', label: 'GLM' },
 ];
+
+const modelShortLabels: Record<AIModelKey, string> = {
+  gemini: 'GE',
+  deepseek: 'DS',
+  kimi: 'KI',
+  glm: 'GL',
+};
 
 const Layout = () => {
   const location = useLocation();
@@ -565,35 +572,6 @@ const Layout = () => {
               <Download className="w-4 h-4" />
             </button>
 
-            <div className="relative">
-              <button
-                onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
-                className="p-2 rounded-md bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 transition-colors"
-                title={`AI Model: ${currentModelLabel}`}
-              >
-                <Bot className="w-4 h-4" />
-              </button>
-              {isModelMenuOpen && (
-                <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-[80]">
-                  {modelOptions.map(option => (
-                    <button
-                      key={option.key}
-                      onClick={() => {
-                        setSelectedModel(option.key);
-                        setIsModelMenuOpen(false);
-                      }}
-                      className={clsx(
-                        'w-full text-left px-3 py-2 text-sm hover:bg-gray-100',
-                        option.key === selectedModel ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-700'
-                      )}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
             <div className={clsx("one-click-summary-glow", isGeneratingSummary && "one-click-summary-glow-active")}>
               <button
                 onClick={handleOneClickSummary}
@@ -755,6 +733,35 @@ const Layout = () => {
               <Save className="w-4 h-4" />
             )}
           </button>
+
+          <div className="hidden md:block relative">
+            <button
+              onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
+              className="h-9 w-9 rounded-full bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 transition-colors flex items-center justify-center text-xs font-semibold"
+              title={`AI Model: ${modelOptions.find(option => option.key === selectedModel)?.label || ''}`}
+            >
+              {modelShortLabels[selectedModel]}
+            </button>
+            {isModelMenuOpen && (
+              <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-[80]">
+                {modelOptions.map(option => (
+                  <button
+                    key={option.key}
+                    onClick={() => {
+                      setSelectedModel(option.key);
+                      setIsModelMenuOpen(false);
+                    }}
+                    className={clsx(
+                      'w-full text-left px-3 py-2 text-sm hover:bg-gray-100',
+                      option.key === selectedModel ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-700'
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {user ? (
             <div className="flex items-center space-x-3">
