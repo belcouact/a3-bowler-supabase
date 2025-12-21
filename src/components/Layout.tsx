@@ -734,39 +734,38 @@ const Layout = () => {
             )}
           </button>
 
-          <div className="hidden md:block relative">
-            <button
-              onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
-              className="h-9 w-9 rounded-full bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 transition-colors flex items-center justify-center text-xs font-semibold"
-              title={`AI Model: ${modelOptions.find(option => option.key === selectedModel)?.label || ''}`}
-            >
-              {modelShortLabels[selectedModel]}
-            </button>
-            {isModelMenuOpen && (
-              <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-[80]">
-                {modelOptions.map(option => (
-                  <button
-                    key={option.key}
-                    onClick={() => {
-                      setSelectedModel(option.key);
-                      setIsModelMenuOpen(false);
-                    }}
-                    className={clsx(
-                      'w-full text-left px-3 py-2 text-sm hover:bg-gray-100',
-                      option.key === selectedModel ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-700'
-                    )}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
           {user ? (
-            <div className="flex items-center space-x-3">
-              <div 
-                className="flex items-center space-x-2 text-sm cursor-pointer hover:opacity-80 transition-opacity" 
+            <div className="flex items-center space-x-2 md:space-x-3">
+              <div className="hidden md:block relative">
+                <button
+                  onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
+                  className="h-8 w-8 rounded-full bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 transition-colors flex items-center justify-center text-[10px] font-semibold"
+                  title={`AI Model: ${modelOptions.find(option => option.key === selectedModel)?.label || ''}`}
+                >
+                  {modelShortLabels[selectedModel]}
+                </button>
+                {isModelMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-[80]">
+                    {modelOptions.map(option => (
+                      <button
+                        key={option.key}
+                        onClick={() => {
+                          setSelectedModel(option.key);
+                          setIsModelMenuOpen(false);
+                        }}
+                        className={clsx(
+                          'w-full text-left px-3 py-2 text-sm hover:bg-gray-100',
+                          option.key === selectedModel ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-700'
+                        )}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center space-x-2 text-sm cursor-pointer hover:opacity-80 transition-opacity" 
                 title={user.username || 'User'}
                 onClick={() => setIsAccountSettingsOpen(true)}
               >
@@ -774,18 +773,22 @@ const Layout = () => {
                   {user.username ? user.username.substring(0, 2).toUpperCase() : <UserIcon className="w-4 h-4" />}
                 </div>
               </div>
-              <button 
-                onClick={() => {
-                  if (window.confirm("Are you sure you want to logout? Unsaved changes may be lost.")) {
-                    logout();
-                  }
-                }}
+              <div 
+                className="flex items-center"
+              >
+                <button 
+                  onClick={() => {
+                    if (window.confirm("Are you sure you want to logout? Unsaved changes may be lost.")) {
+                      logout();
+                    }
+                  }}
                 disabled={isLoading}
                 className="text-gray-500 hover:text-red-600 transition-colors p-1 rounded-full hover:bg-gray-100 disabled:opacity-50"
-                title="Logout"
-              >
-                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
-              </button>
+                  title="Logout"
+                >
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
           ) : (
             <button
