@@ -826,9 +826,7 @@ const Layout = () => {
              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
              className={clsx(
                "absolute -right-3 top-16 rounded-full p-1.5 shadow-sm border z-20 transition-colors",
-               isSidebarOpen
-                 ? "bg-blue-600 border-blue-700 text-white hover:bg-blue-700"
-                 : "bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100"
+               "bg-blue-600 border-blue-700 text-white hover:bg-blue-700"
              )}
           >
              {isSidebarOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
