@@ -27,8 +27,9 @@ export default {
           dashboardTitle?: string;
           dashboardMindmaps?: any[];
           activeMindmapId?: string;
+          dashboardSettings?: { aiModel?: string };
         };
-        const { bowlers, a3Cases, userId, dashboardMarkdown, dashboardTitle, dashboardMindmaps, activeMindmapId } = data;
+        const { bowlers, a3Cases, userId, dashboardMarkdown, dashboardTitle, dashboardMindmaps, activeMindmapId, dashboardSettings } = data;
 
         if (!userId) {
            return new Response(JSON.stringify({ success: false, error: 'User ID is required' }), {
@@ -60,6 +61,10 @@ export default {
             };
           });
           dashboardPayload.mindmaps = enrichedMindmaps;
+        }
+
+        if (dashboardSettings && typeof dashboardSettings === 'object') {
+          dashboardPayload.settings = dashboardSettings;
         }
 
         if (activeMindmapId !== undefined) dashboardPayload.activeMindmapId = activeMindmapId;
@@ -249,6 +254,7 @@ export default {
         let dashboardTitle: string | undefined;
         let dashboardMindmaps: any[] | undefined;
         let activeMindmapId: string | undefined;
+        let dashboardSettings: any | undefined;
 
         // Load dashboard markdown and title
         const dashboardRaw = await env.BOWLER_DATA.get(`user:${userId}:dashboard`);
@@ -265,6 +271,11 @@ export default {
               }
               if (typeof parsed.activeMindmapId === 'string') {
                 activeMindmapId = parsed.activeMindmapId;
+              }
+              if (parsed.settings && typeof parsed.settings === 'object') {
+                dashboardSettings = parsed.settings;
+              } else if (parsed.dashboardSettings && typeof parsed.dashboardSettings === 'object') {
+                dashboardSettings = parsed.dashboardSettings;
               }
             }
           } catch (e) {
@@ -318,7 +329,8 @@ export default {
           dashboardMarkdown,
           dashboardTitle,
           dashboardMindmaps,
-          activeMindmapId
+          activeMindmapId,
+          dashboardSettings
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });

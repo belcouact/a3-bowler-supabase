@@ -12,14 +12,15 @@ export const dataService = {
     dashboardMarkdown?: string,
     dashboardTitle?: string,
     dashboardMindmaps?: any[],
-    activeMindmapId?: string | null
+    activeMindmapId?: string | null,
+    dashboardSettings?: any
   ) {
     const payload: any = {
       bowlers,
       a3Cases,
       userId,
       dashboardMarkdown,
-      dashboardTitle,
+      dashboardTitle
     };
 
     if (dashboardMindmaps !== undefined) {
@@ -27,6 +28,10 @@ export const dataService = {
     }
     if (activeMindmapId !== undefined && activeMindmapId !== null) {
       payload.activeMindmapId = activeMindmapId;
+    }
+
+    if (dashboardSettings !== undefined) {
+      payload.dashboardSettings = dashboardSettings;
     }
 
     const response = await fetch(`${API_BASE_URL}/save`, {

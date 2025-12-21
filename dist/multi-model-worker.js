@@ -22,7 +22,7 @@ var API_ENDPOINTS = {
     maxTokens: 8192
   },
   gemini: {
-    url: "https://generativelanguage.googleapis.com/v1beta/chat/completions",
+    url: "https://generativelanguage.googleapis.com/v1beta//openai/chat/completions",
     model: "gemini-3-flash-preview",
     keyEnv: "GEMINI_API_KEY",
     maxTokens: 8192
@@ -60,7 +60,8 @@ async function callModelAPI(model, messages, env, stream = false) {
       model: modelConfig.model,
       messages,
       temperature: TEMPERATURE,
-      max_tokens: modelConfig.maxTokens || MAX_TOKENS
+      max_tokens: modelConfig.maxTokens || MAX_TOKENS,
+      max_completion_tokens: modelConfig.maxTokens || MAX_TOKENS // Add this line for better compatibility
     };
     if (stream) {
       requestBody.stream = true;

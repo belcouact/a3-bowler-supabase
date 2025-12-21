@@ -22,10 +22,10 @@ import { generateComprehensiveSummary, generateAIContext } from '../services/aiS
 import { getBowlerStatusColor } from '../utils/metricUtils';
 
 const modelOptions: { key: AIModelKey; label: string }[] = [
-  { key: 'gemini', label: 'GEMINI' },
-  { key: 'deepseek', label: 'Deepseek' },
-  { key: 'kimi', label: 'KIMI' },
-  { key: 'glm', label: 'GLM' },
+  { key: 'gemini', label: 'gemini-3-flash' },
+  { key: 'deepseek', label: 'deepseek-chat' },
+  { key: 'kimi', label: 'moonshot-v1' },
+  { key: 'glm', label: 'GLM-4.5' },
 ];
 
 const modelShortLabels: Record<AIModelKey, string> = {
@@ -379,7 +379,8 @@ const Layout = () => {
           dashboardMarkdown,
           dashboardTitle,
           dashboardMindmaps,
-          activeMindmapId
+          activeMindmapId,
+          { aiModel: selectedModel }
         );
         toast.success('Data saved successfully!');
       } catch (error) {

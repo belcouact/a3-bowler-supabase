@@ -65,6 +65,14 @@ const DEFAULT_MARKDOWN = `# A3 Bowler
   - When
 `;
 
+const getValidModel = (model?: string | null): AIModelKey => {
+  const fallback: AIModelKey = 'deepseek';
+  if (model === 'gemini' || model === 'deepseek' || model === 'kimi' || model === 'glm') {
+    return model;
+  }
+  return fallback;
+};
+
 // Provider
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
@@ -76,7 +84,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [dashboardMindmaps, setDashboardMindmaps] = useState<DashboardMindmap[]>([]);
   const [activeMindmapId, setActiveMindmapId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<AIModelKey>('gemini');
+  const [selectedModel, setSelectedModel] = useState<AIModelKey>('deepseek');
   
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMountedRef = useRef(true);
@@ -147,9 +155,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             const title = data.dashboardTitle || extractTitleFromMarkdown(markdown);
             const mindmaps = (data.dashboardMindmaps || []) as DashboardMindmap[];
             const cachedActiveId = (data.activeMindmapId as string | undefined) || null;
+            const dashboardSettings = (data.dashboardSettings || {}) as { aiModel?: AIModelKey };
+            const savedModel = dashboardSettings.aiModel as AIModelKey | undefined;
+            const effectiveModel = getValidModel(savedModel);
 
             setBowlers(data.bowlers || []);
             setA3Cases(data.a3Cases || []);
+            setSelectedModel(effectiveModel);
 
             if (mindmaps.length > 0) {
                 const activeId = cachedActiveId && mindmaps.some(m => m.id === cachedActiveId)
@@ -190,9 +202,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             const title = data.dashboardTitle || extractTitleFromMarkdown(markdown);
             const mindmaps = (data.dashboardMindmaps || []) as DashboardMindmap[];
             const backendActiveId = (data.activeMindmapId as string | undefined) || null;
+            const dashboardSettings = (data.dashboardSettings || {}) as { aiModel?: AIModelKey };
+            const savedModel = dashboardSettings.aiModel as AIModelKey | undefined;
+            const effectiveModel = getValidModel(savedModel);
 
             setBowlers(data.bowlers || []);
             setA3Cases(data.a3Cases || []);
+            setSelectedModel(effectiveModel);
 
             if (mindmaps.length > 0) {
                 const activeId = backendActiveId && mindmaps.some(m => m.id === backendActiveId)
@@ -210,7 +226,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                         dashboardMarkdown: active.markdown,
                         dashboardTitle: active.title,
                         dashboardMindmaps: mindmaps,
-                        activeMindmapId: activeId
+                        activeMindmapId: activeId,
+                        dashboardSettings: { aiModel: effectiveModel }
                     });
                 } catch (e) {
                     console.warn("Failed to update local cache.", e);
@@ -234,7 +251,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                         dashboardMarkdown: markdown,
                         dashboardTitle: title,
                         dashboardMindmaps: [initialMindmap],
-                        activeMindmapId: id
+                        activeMindmapId: id,
+                        dashboardSettings: { aiModel: effectiveModel }
                     });
                 } catch (e) {
                     console.warn("Failed to update local cache.", e);
@@ -270,6 +288,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setActiveMindmapId(null);
         setDashboardMarkdown(DEFAULT_MARKDOWN);
         setDashboardTitle('');
+        setSelectedModel('deepseek');
     }
     return () => {
         if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
@@ -294,7 +313,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           dashboardMarkdown: newMarkdown,
           dashboardTitle: newTitle,
           dashboardMindmaps: newMindmaps,
-          activeMindmapId: newActiveMindmapId
+          activeMindmapId: newActiveMindmapId,
+          dashboardSettings: { aiModel: selectedModel }
       }).catch(e => {
         console.error("Local Cache save failed", e);
       });
