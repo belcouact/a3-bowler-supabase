@@ -937,7 +937,7 @@ ${root}`
                                     onClick={() => toggleGroup(group)}
                                 >
                                     {expandedGroups[group] !== false ? <ChevronDown className="w-3 h-3 mr-2 text-gray-600" /> : <ChevronRight className="w-3 h-3 mr-2 text-gray-600" />}
-                                    <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">{group}</span>
+                                    <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">{group}</span>
                                 </div>
                                 
                                 {expandedGroups[group] !== false && (
