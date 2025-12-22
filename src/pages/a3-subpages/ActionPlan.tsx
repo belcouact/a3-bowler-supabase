@@ -22,7 +22,7 @@ const ActionPlan = () => {
 
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
     start: formatDate(new Date()),
-    end: formatDate(addDays(new Date(), 180)) // ~6 months
+    end: formatDate(addDays(new Date(), 90))
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<ActionTask | null>(null);
