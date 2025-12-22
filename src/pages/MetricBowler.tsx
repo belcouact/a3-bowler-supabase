@@ -367,8 +367,8 @@ const MetricBowler = () => {
                </div>
            ) : (
                <>
-                   <h3 className="text-xl font-semibold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors" title="Double-click to edit">{title}</h3>
-                   <p className="text-sm text-gray-500 mt-1 cursor-pointer hover:text-gray-700" title="Double-click to edit">
+                  <h3 className="text-xl font-semibold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors" title="Double-click to edit">{title}</h3>
+                   <p className="hidden md:block text-sm text-gray-500 mt-1 cursor-pointer hover:text-gray-700" title="Double-click to edit">
                      {selectedBowler?.description || 'Track key performance indicators and monthly targets.'}
                    </p>
                </>
