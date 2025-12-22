@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, ZoomIn, ZoomOut, ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
+import { Plus, ZoomIn, ZoomOut, ChevronDown, ChevronRight, GripVertical, Sparkles, Loader2 } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import clsx from 'clsx';
 import { addDays, formatDate, isWeekend } from '../../utils/dateUtils';
+import { generateShortId } from '../../utils/idUtils';
 import ActionModal, { ActionTask } from '../../components/ActionModal';
 import { useParams } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
@@ -13,7 +14,7 @@ const getDefaultTasks = (): ActionTask[] => [];
 
 const ActionPlan = () => {
   const { id } = useParams();
-  const { a3Cases, updateA3Case } = useApp();
+  const { a3Cases, updateA3Case, selectedModel } = useApp();
   const currentCase = a3Cases.find(c => c.id === id);
 
   // --- State ---
@@ -31,6 +32,8 @@ const ActionPlan = () => {
   // View Options
   const [zoomLevel, setZoomLevel] = useState(1);
   const [timeScale, setTimeScale] = useState<'day' | 'week' | 'month'>('week');
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
   
   // Dragging State
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -327,6 +330,160 @@ const ActionPlan = () => {
       setTimeScale(mode);
   };
 
+  const handleGenerateAIPlan = async () => {
+    if (!currentCase) return;
+
+    const problem = currentCase.problemStatement || '';
+    const observations = currentCase.dataAnalysisObservations || '';
+    const root = currentCase.rootCause || '';
+
+    if (!problem.trim() || !observations.trim() || !root.trim()) {
+      setAiError('To generate an action plan, fill in Problem Statement, Key Observations from Data, and Identified Root Cause.');
+      return;
+    }
+
+    setIsGeneratingAI(true);
+    setAiError(null);
+
+    try {
+      const today = formatDate(new Date());
+      const messages = [
+        {
+          role: 'system',
+          content: `You are an expert A3 Problem Solving coach.
+
+You will receive:
+- A3 Problem Statement
+- Key observations from data analysis
+- Identified root cause
+
+Your task is to propose a practical, time-phased action plan that addresses the root cause and improves the problem.
+
+Always respond in English, even if the user's inputs are in another language.
+
+Use ${today} as today's date when planning the timeline.
+
+Return JSON ONLY with this structure:
+{
+  "tasks": [
+    {
+      "name": "short action title",
+      "description": "detailed what/how so a team can execute",
+      "owner": "role or function (e.g. Production Supervisor)",
+      "group": "theme or workstream name",
+      "startDate": "YYYY-MM-DD",
+      "endDate": "YYYY-MM-DD",
+      "status": "Not Started" | "In Progress" | "Completed",
+      "progress": number
+    }
+  ]
+}`
+        },
+        {
+          role: 'user',
+          content: `Problem Statement:
+${problem}
+
+Key Observations from Data:
+${observations}
+
+Identified Root Cause:
+${root}`
+        }
+      ];
+
+      const response = await fetch('https://multi-model-worker.study-llm.me/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: selectedModel,
+          messages,
+          stream: false,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate action plan');
+      }
+
+      const data = await response.json();
+      let content = data.choices?.[0]?.message?.content || '';
+      content = content.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+      let parsed: any;
+      try {
+        parsed = JSON.parse(content);
+      } catch {
+        throw new Error('Invalid AI response format');
+      }
+
+      const rawTasks = Array.isArray(parsed?.tasks) ? parsed.tasks : Array.isArray(parsed) ? parsed : [];
+
+      if (!Array.isArray(rawTasks) || rawTasks.length === 0) {
+        throw new Error('AI did not return any tasks');
+      }
+
+      const newTasks: ActionTask[] = rawTasks.map((t: any, index: number) => {
+        const name = typeof t.name === 'string' && t.name.trim() ? t.name.trim() : `Action ${index + 1}`;
+        const description = typeof t.description === 'string' ? t.description.trim() : '';
+        const owner = typeof t.owner === 'string' ? t.owner.trim() : currentCase.owner || '';
+        const group = typeof t.group === 'string' && t.group.trim() ? t.group.trim() : undefined;
+
+        const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+        let startDateStr: string;
+        if (typeof t.startDate === 'string' && isoDateRegex.test(t.startDate.trim())) {
+          startDateStr = t.startDate.trim();
+        } else {
+          const d = addDays(new Date(), index * 7);
+          startDateStr = formatDate(d);
+        }
+
+        let endDateStr: string;
+        if (typeof t.endDate === 'string' && isoDateRegex.test(t.endDate.trim())) {
+          endDateStr = t.endDate.trim();
+        } else {
+          const d = addDays(new Date(startDateStr), 7);
+          endDateStr = formatDate(d);
+        }
+
+        let status: ActionTask['status'] = 'Not Started';
+        if (t.status === 'In Progress' || t.status === 'Completed') {
+          status = t.status;
+        }
+
+        let progress = 0;
+        if (typeof t.progress === 'number' && t.progress >= 0 && t.progress <= 100) {
+          progress = Math.round(t.progress);
+        } else if (status === 'Completed') {
+          progress = 100;
+        }
+
+        return {
+          id: generateShortId(),
+          name,
+          description,
+          owner,
+          group,
+          startDate: startDateStr,
+          endDate: endDateStr,
+          status,
+          progress,
+        };
+      });
+
+      const mergedTasks = [...tasks, ...newTasks];
+      setTasks(mergedTasks);
+      persistTasks(mergedTasks);
+    } catch (error: any) {
+      setAiError(error?.message || 'Failed to generate action plan. Please try again.');
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
   // --- Drag Logic ---
 
   const onDragEnd = (result: DropResult) => {
@@ -580,8 +737,39 @@ const ActionPlan = () => {
                 </button>
              </div>
 
+             <button
+               type="button"
+               onClick={handleGenerateAIPlan}
+               disabled={
+                 isGeneratingAI ||
+                 !currentCase ||
+                 !currentCase.problemStatement ||
+                 !currentCase.dataAnalysisObservations ||
+                 !currentCase.rootCause
+               }
+               className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+             >
+               {isGeneratingAI ? (
+                 <>
+                   <Loader2 className="animate-spin -ml-0.5 mr-2 h-3 w-3" />
+                   <span className="hidden sm:inline">AI planning...</span>
+                 </>
+               ) : (
+                 <>
+                   <Sparkles className="-ml-0.5 mr-0 sm:mr-2 h-3 w-3" />
+                   <span className="hidden sm:inline">AI Action Plan</span>
+                 </>
+               )}
+             </button>
+
         </div>
       </div>
+
+      {aiError && (
+        <div className="px-4 pt-2 text-xs text-red-600">
+          {aiError}
+        </div>
+      )}
 
       {/* Gantt Chart Container */}
       <div className="flex-1 relative select-none">
