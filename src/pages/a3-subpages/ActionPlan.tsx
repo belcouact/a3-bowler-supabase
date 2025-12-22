@@ -34,6 +34,10 @@ const ActionPlan = () => {
   const [timeScale, setTimeScale] = useState<'day' | 'week' | 'month'>('week');
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [sidebarWidth, setSidebarWidth] = useState(256);
+  const [isResizingSidebar, setIsResizingSidebar] = useState(false);
+  const [sidebarDragStartX, setSidebarDragStartX] = useState(0);
+  const [sidebarStartWidth, setSidebarStartWidth] = useState(256);
   
   // Dragging State
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -50,6 +54,71 @@ const ActionPlan = () => {
     }
   }, [currentCase]);
 
+  useEffect(() => {
+    if (!tasks.length) return;
+
+    let minStart: Date | null = null;
+    let maxEnd: Date | null = null;
+
+    tasks.forEach(task => {
+      const start = new Date(task.startDate);
+      const end = new Date(task.endDate);
+      if (!isNaN(start.getTime())) {
+        if (!minStart || start < minStart) minStart = start;
+      }
+      if (!isNaN(end.getTime())) {
+        if (!maxEnd || end > maxEnd) maxEnd = end;
+      }
+    });
+
+    if (!minStart || !maxEnd) return;
+
+    setDateRange(prev => {
+      const prevStart = new Date(prev.start);
+      const prevEnd = new Date(prev.end);
+
+      let nextStart = prev.start;
+      let nextEnd = prev.end;
+
+      if (isNaN(prevStart.getTime()) || minStart! < prevStart) {
+        nextStart = formatDate(minStart!);
+      }
+      if (isNaN(prevEnd.getTime()) || maxEnd! > prevEnd) {
+        nextEnd = formatDate(maxEnd!);
+      }
+
+      if (nextStart === prev.start && nextEnd === prev.end) {
+        return prev;
+      }
+
+      return { start: nextStart, end: nextEnd };
+    });
+  }, [tasks]);
+
+  useEffect(() => {
+    if (!isResizingSidebar) return;
+
+    const handleSidebarMouseMove = (e: MouseEvent) => {
+      const delta = e.clientX - sidebarDragStartX;
+      let nextWidth = sidebarStartWidth + delta;
+      if (nextWidth < 200) nextWidth = 200;
+      if (nextWidth > 480) nextWidth = 480;
+      setSidebarWidth(nextWidth);
+    };
+
+    const handleSidebarMouseUp = () => {
+      setIsResizingSidebar(false);
+    };
+
+    window.addEventListener('mousemove', handleSidebarMouseMove);
+    window.addEventListener('mouseup', handleSidebarMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleSidebarMouseMove);
+      window.removeEventListener('mouseup', handleSidebarMouseUp);
+    };
+  }, [isResizingSidebar, sidebarDragStartX, sidebarStartWidth]);
+
   const persistTasks = (updatedTasks: ActionTask[]) => {
     if (!currentCase) return;
     updateA3Case({ ...currentCase, actionPlanTasks: updatedTasks });
@@ -62,27 +131,25 @@ const ActionPlan = () => {
     const ungrouped: ActionTask[] = [];
 
     tasks.forEach(task => {
-        if (task.group) {
-            if (!groups[task.group]) groups[task.group] = [];
-            groups[task.group].push(task);
-        } else {
-            ungrouped.push(task);
-        }
+      if (task.group) {
+        if (!groups[task.group]) groups[task.group] = [];
+        groups[task.group].push(task);
+      } else {
+        ungrouped.push(task);
+      }
     });
 
-    const sortedGroupKeys = Object.keys(groups).sort();
-    
-    // Flatten for rendering
-    const rows: Array<{ type: 'group', name: string, id: string } | { type: 'task', task: ActionTask, id: string }> = [];
-    
-    // Add ungrouped first
+    const groupKeys = Object.keys(groups);
+
+    const rows: Array<{ type: 'group'; name: string; id: string } | { type: 'task'; task: ActionTask; id: string }> = [];
+
     ungrouped.forEach(task => rows.push({ type: 'task', task, id: task.id }));
 
-    sortedGroupKeys.forEach(groupName => {
-        rows.push({ type: 'group', name: groupName, id: `group-${groupName}` });
-        if (expandedGroups[groupName] !== false) { // Default to expanded
-             groups[groupName].forEach(task => rows.push({ type: 'task', task, id: task.id }));
-        }
+    groupKeys.forEach(groupName => {
+      rows.push({ type: 'group', name: groupName, id: `group-${groupName}` });
+      if (expandedGroups[groupName] !== false) {
+        groups[groupName].forEach(task => rows.push({ type: 'task', task, id: task.id }));
+      }
     });
 
     return rows;
@@ -494,13 +561,13 @@ ${root}`
 
     const buckets: Record<string, ActionTask[]> = { ungrouped: [] };
     const ungrouped = tasks.filter(t => !t.group);
-    buckets['ungrouped'] = [...ungrouped];
-    
+    buckets.ungrouped = [...ungrouped];
+
     const grouped = tasks.filter(t => !!t.group).reduce((acc, task) => {
-        const group = task.group!;
-        if (!acc[group]) acc[group] = [];
-        acc[group].push(task);
-        return acc;
+      const group = task.group!;
+      if (!acc[group]) acc[group] = [];
+      acc[group].push(task);
+      return acc;
     }, {} as Record<string, ActionTask[]>);
     Object.assign(buckets, grouped);
     
@@ -523,10 +590,10 @@ ${root}`
     
     destList.splice(destination.index, 0, movedItem);
     
-    const sortedGroupKeys = Object.keys(buckets).filter(k => k !== 'ungrouped').sort();
+    const groupKeys = Object.keys(buckets).filter(k => k !== 'ungrouped');
     let newTasks = [...buckets['ungrouped']];
-    sortedGroupKeys.forEach(key => {
-        newTasks = [...newTasks, ...buckets[key]];
+    groupKeys.forEach(key => {
+      newTasks = [...newTasks, ...buckets[key]];
     });
     
     setTasks(newTasks);
@@ -774,7 +841,10 @@ ${root}`
       {/* Gantt Chart Container */}
       <div className="flex-1 relative select-none">
         <div className="flex min-w-max">
-            <div className="sticky left-0 z-40 bg-white border-r border-gray-200 shadow-sm w-64 flex-shrink-0">
+            <div
+              className="sticky left-0 z-40 bg-white border-r border-gray-200 shadow-sm flex-shrink-0 relative"
+              style={{ width: sidebarWidth }}
+            >
                 <div className="h-[60px] border-b border-gray-200 bg-gray-50 flex items-center justify-between px-4 font-semibold text-xs text-gray-500 uppercase tracking-wider sticky top-0 z-30">
                     <span>Task Details</span>
                     <button
@@ -785,25 +855,34 @@ ${root}`
                       <Plus className="w-3 h-3" />
                     </button>
                 </div>
+                <div
+                  className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize bg-transparent hover:bg-gray-200"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    setIsResizingSidebar(true);
+                    setSidebarDragStartX(e.clientX);
+                    setSidebarStartWidth(sidebarWidth);
+                  }}
+                />
                 <DragDropContext onDragEnd={onDragEnd}>
                   {(() => {
                     const buckets: Record<string, ActionTask[]> = { ungrouped: [] };
                     const ungrouped = tasks.filter(t => !t.group);
-                    buckets['ungrouped'] = [...ungrouped];
+                    buckets.ungrouped = [...ungrouped];
                     const grouped = tasks.filter(t => !!t.group).reduce((acc, task) => {
-                        const group = task.group!;
-                        if (!acc[group]) acc[group] = [];
-                        acc[group].push(task);
-                        return acc;
+                      const group = task.group!;
+                      if (!acc[group]) acc[group] = [];
+                      acc[group].push(task);
+                      return acc;
                     }, {} as Record<string, ActionTask[]>);
-                    const sortedGroupKeys = Object.keys(grouped).sort();
+                    const groupKeys = Object.keys(grouped);
 
                     return (
                       <>
                         <Droppable droppableId="ungrouped">
                           {(provided) => (
                             <div ref={provided.innerRef} {...provided.droppableProps}>
-                              {buckets['ungrouped'].map((task, index) => (
+                              {buckets.ungrouped.map((task, index) => (
                                 <Draggable key={task.id} draggableId={task.id} index={index}>
                                   {(provided) => (
                                     <div
@@ -820,14 +899,28 @@ ${root}`
                                           <GripVertical className="w-4 h-4" />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="text-sm font-medium text-gray-900 truncate">{task.name || 'Untitled Task'}</div>
+                                            <div className="flex items-center justify-between gap-2">
+                                              <div className="text-sm font-medium text-gray-900 truncate">
+                                                {task.name || 'Untitled Task'}
+                                              </div>
+                                              <div className="flex items-center gap-1 flex-shrink-0">
+                                                <span className="text-[11px] text-gray-500">
+                                                  {Math.round(task.progress)}%
+                                                </span>
+                                                <div
+                                                  className={clsx(
+                                                    "w-2 h-2 rounded-full flex-shrink-0",
+                                                    task.status === 'Completed'
+                                                      ? "bg-green-500"
+                                                      : task.status === 'In Progress'
+                                                      ? "bg-blue-500"
+                                                      : "bg-gray-300"
+                                                  )}
+                                                />
+                                              </div>
+                                            </div>
                                             <div className="text-xs text-gray-500 truncate">{task.owner}</div>
                                         </div>
-                                        <div className={clsx(
-                                            "w-2 h-2 rounded-full flex-shrink-0 ml-2",
-                                            task.status === 'Completed' ? "bg-green-500" :
-                                            task.status === 'In Progress' ? "bg-blue-500" : "bg-gray-300"
-                                        )} />
                                     </div>
                                   )}
                                 </Draggable>
@@ -837,7 +930,7 @@ ${root}`
                           )}
                         </Droppable>
 
-                        {sortedGroupKeys.map(group => (
+                        {groupKeys.map(group => (
                             <div key={group}>
                                 <div 
                                     className="h-[32px] border-b border-gray-100 flex items-center px-4 bg-gray-100 hover:bg-gray-200 cursor-pointer"
@@ -868,14 +961,28 @@ ${root}`
                                                           <GripVertical className="w-4 h-4" />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <div className="text-sm font-medium text-gray-900 truncate">{task.name || 'Untitled Task'}</div>
+                                                            <div className="flex items-center justify-between gap-2">
+                                                              <div className="text-sm font-medium text-gray-900 truncate">
+                                                                {task.name || 'Untitled Task'}
+                                                              </div>
+                                                              <div className="flex items-center gap-1 flex-shrink-0">
+                                                                <span className="text-[11px] text-gray-500">
+                                                                  {Math.round(task.progress)}%
+                                                                </span>
+                                                                <div
+                                                                  className={clsx(
+                                                                    "w-2 h-2 rounded-full flex-shrink-0",
+                                                                    task.status === 'Completed'
+                                                                      ? "bg-green-500"
+                                                                      : task.status === 'In Progress'
+                                                                      ? "bg-blue-500"
+                                                                      : "bg-gray-300"
+                                                                  )}
+                                                                />
+                                                              </div>
+                                                            </div>
                                                             <div className="text-xs text-gray-500 truncate">{task.owner}</div>
                                                         </div>
-                                                        <div className={clsx(
-                                                            "w-2 h-2 rounded-full flex-shrink-0 ml-2",
-                                                            task.status === 'Completed' ? "bg-green-500" :
-                                                            task.status === 'In Progress' ? "bg-blue-500" : "bg-gray-300"
-                                                        )} />
                                                     </div>
                                                   )}
                                                 </Draggable>

@@ -39,7 +39,7 @@ const modelOptions: { key: AIModelKey; label: string }[] = [
   { key: 'gemini', label: 'gemini-3-flash' },
   { key: 'deepseek', label: 'deepseek-chat' },
   { key: 'kimi', label: 'moonshot-v1' },
-  { key: 'glm', label: 'GLM-4.5' },
+  { key: 'glm', label: 'glm-4.5' },
 ];
 
 const modelShortLabels: Record<AIModelKey, string> = {
