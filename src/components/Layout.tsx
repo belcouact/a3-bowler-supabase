@@ -1,11 +1,11 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Plus, BarChart3, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Bot } from 'lucide-react';
+import { Plus, BarChart3, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Bot, X } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
 import { Bowler, Metric, AIModelKey } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { dataService } from '../services/dataService';
 import { useToast } from '../context/ToastContext';
 import { getBowlerStatusColor } from '../utils/metricUtils';
@@ -106,6 +106,84 @@ const Layout = () => {
   const [bowlerFilterValue, setBowlerFilterValue] = useState<string>('');
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const [isMobileModelMenuOpen, setIsMobileModelMenuOpen] = useState(false);
+  const [isA3PortfolioOpen, setIsA3PortfolioOpen] = useState(false);
+
+  const a3PortfolioStats = useMemo(() => {
+    const total = a3Cases.length;
+
+    const statusCounts: Record<string, number> = {};
+    const priorityCounts: Record<string, number> = {};
+    const groupCounts: Record<string, number> = {};
+
+    let active = 0;
+    let completed = 0;
+    let overdue = 0;
+
+    let groupedCount = 0;
+    let ungroupedCount = 0;
+
+    const today = new Date();
+
+    a3Cases.forEach(c => {
+      const statusKey = (c.status || 'Not Started').trim();
+      statusCounts[statusKey] = (statusCounts[statusKey] || 0) + 1;
+
+      const priorityKey = (c.priority || 'Medium').trim();
+      priorityCounts[priorityKey] = (priorityCounts[priorityKey] || 0) + 1;
+
+      const groupKey = (c.group || '').trim();
+      if (groupKey) {
+        groupCounts[groupKey] = (groupCounts[groupKey] || 0) + 1;
+        groupedCount += 1;
+      } else {
+        ungroupedCount += 1;
+      }
+
+      if (statusKey === 'Completed') {
+        completed += 1;
+      } else {
+        active += 1;
+        if (c.endDate) {
+          const end = new Date(c.endDate);
+          if (!isNaN(end.getTime()) && end < today) {
+            overdue += 1;
+          }
+        }
+      }
+    });
+
+    const notStarted = statusCounts['Not Started'] || 0;
+    const inProgress = statusCounts['In Progress'] || 0;
+
+    const groupNames = Object.keys(groupCounts);
+    const groupCount = groupNames.length;
+
+    let largestGroupName: string | null = null;
+    let largestGroupSize = 0;
+
+    groupNames.forEach(name => {
+      const size = groupCounts[name];
+      if (size > largestGroupSize) {
+        largestGroupSize = size;
+        largestGroupName = name;
+      }
+    });
+
+    return {
+      total,
+      active,
+      completed,
+      overdue,
+      notStarted,
+      inProgress,
+      priorityCounts,
+      groupCount,
+      groupedCount,
+      ungroupedCount,
+      largestGroupName,
+      largestGroupSize
+    };
+  }, [a3Cases]);
 
   const toggleGroup = (group: string) => {
     setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
@@ -885,6 +963,15 @@ const Layout = () => {
                         <Filter className="w-4 h-4" />
                       </button>
                     )}
+                    {isA3Analysis && (
+                      <button
+                        onClick={() => setIsA3PortfolioOpen(true)}
+                        className="p-1 rounded-md hover:bg-emerald-50 text-emerald-700 transition-colors border border-emerald-100 bg-white"
+                        title="View A3 Portfolio Overview"
+                      >
+                        <Layers className="w-4 h-4" />
+                      </button>
+                    )}
                     <button 
                       onClick={handlePlusClick}
                       className="p-1 rounded-md hover:bg-blue-100 text-blue-600 transition-colors"
@@ -908,6 +995,15 @@ const Layout = () => {
                       title="Filter Bowler lists"
                     >
                       <Filter className="w-4 h-4" />
+                    </button>
+                  )}
+                  {isA3Analysis && (
+                    <button
+                      onClick={() => setIsA3PortfolioOpen(true)}
+                      className="p-1 rounded-md hover:bg-emerald-50 text-emerald-700 transition-colors border border-emerald-100 bg-white"
+                      title="View A3 Portfolio Overview"
+                    >
+                      <Layers className="w-4 h-4" />
                     </button>
                   )}
                   <button 
@@ -1463,6 +1559,81 @@ const Layout = () => {
           onClose={() => setIsAppInfoOpen(false)}
         />
       </Suspense>
+
+      {isA3PortfolioOpen && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">A3 Portfolio</p>
+                <h2 className="text-base md:text-lg font-semibold text-gray-900">
+                  Portfolio Overview
+                </h2>
+              </div>
+              <button
+                onClick={() => setIsA3PortfolioOpen(false)}
+                className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
+                aria-label="Close A3 portfolio overview"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-4 md:p-6 space-y-4">
+              {a3PortfolioStats.total === 0 ? (
+                <div className="py-8 text-center text-sm text-gray-500">
+                  No A3 cases in the portfolio yet. Use the + button to create your first case.
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                    <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-3">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total A3 Cases</p>
+                      <p className="mt-1 text-2xl font-semibold text-gray-900">{a3PortfolioStats.total}</p>
+                      <p className="mt-1 text-xs text-gray-500">
+                        {a3PortfolioStats.active} active, {a3PortfolioStats.completed} completed
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-blue-100 bg-blue-50/60 px-3 py-3">
+                      <p className="text-xs font-medium text-blue-700 uppercase tracking-wide">Status Mix</p>
+                      <p className="mt-1 text-sm text-blue-900">
+                        {a3PortfolioStats.inProgress} In Progress, {a3PortfolioStats.notStarted} Not Started
+                      </p>
+                      <p className="mt-1 text-xs text-blue-700">
+                        {a3PortfolioStats.overdue > 0 ? `${a3PortfolioStats.overdue} overdue` : 'No overdue cases'}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-amber-100 bg-amber-50/70 px-3 py-3">
+                      <p className="text-xs font-medium text-amber-700 uppercase tracking-wide">Priority</p>
+                      <p className="mt-1 text-sm text-amber-900">
+                        {(a3PortfolioStats.priorityCounts['High'] || 0)} High, {(a3PortfolioStats.priorityCounts['Medium'] || 0)} Medium
+                      </p>
+                      <p className="mt-1 text-xs text-amber-700">
+                        {(a3PortfolioStats.priorityCounts['Low'] || 0)} Low
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 px-3 py-3">
+                      <p className="text-xs font-medium text-emerald-700 uppercase tracking-wide">Groups</p>
+                      <p className="mt-1 text-sm text-emerald-900">
+                        {a3PortfolioStats.groupCount || 0} group{a3PortfolioStats.groupCount === 1 ? '' : 's'} in portfolio
+                      </p>
+                      <p className="mt-1 text-xs text-emerald-700">
+                        {a3PortfolioStats.ungroupedCount > 0
+                          ? `${a3PortfolioStats.ungroupedCount} case${a3PortfolioStats.ungroupedCount === 1 ? '' : 's'} ungrouped`
+                          : 'All cases assigned to a group'}
+                      </p>
+                      {a3PortfolioStats.largestGroupName && a3PortfolioStats.largestGroupSize > 0 && (
+                        <p className="mt-1 text-xs text-emerald-700">
+                          Largest: {a3PortfolioStats.largestGroupName} ({a3PortfolioStats.largestGroupSize})
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <Suspense fallback={null}>
         <ConsolidateModal
