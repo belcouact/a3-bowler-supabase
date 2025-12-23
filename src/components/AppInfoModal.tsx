@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { X, LayoutDashboard, FileText, Sparkles, Upload, Download, Layers, TrendingUp, NotepadText, Smartphone } from 'lucide-react';
+import { X, LayoutDashboard, FileText, Sparkles, Upload, Download, Layers, TrendingUp, NotepadText, Smartphone, Lightbulb } from 'lucide-react';
 
 interface AppInfoModalProps {
   isOpen: boolean;
@@ -140,6 +140,33 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className="border-t border-gray-100 pt-6 mt-6">
+              <div className="flex items-center mb-3">
+                <div className="h-8 w-8 rounded-lg bg-indigo-50 flex items-center justify-center mr-2">
+                  <Lightbulb className="w-4 h-4 text-indigo-600" />
+                </div>
+                <h4 className="text-sm font-semibold text-gray-900">AI Mindmap</h4>
+              </div>
+              <p className="text-sm text-gray-600 leading-relaxed mb-3">
+                Turn your A3 problem solving content into an interactive AI-generated mindmap to see
+                relationships between problems, causes, countermeasures, and follow-up plans at a glance.
+              </p>
+              <ul className="space-y-1 text-sm text-gray-700">
+                <li className="flex items-center">
+                  <div className="w-2 h-2 rounded-full bg-purple-500 mr-2"></div>
+                  <span>Generate a structured mindmap directly from A3 sections and notes.</span>
+                </li>
+                <li className="flex items-center">
+                  <div className="w-2 h-2 rounded-full bg-sky-500 mr-2"></div>
+                  <span>Quickly navigate complex causes and actions using an interactive visual layout.</span>
+                </li>
+                <li className="flex items-center">
+                  <div className="w-2 h-2 rounded-full bg-amber-500 mr-2"></div>
+                  <span>Share AI mindmaps with your team to align on understanding and next steps.</span>
+                </li>
+              </ul>
             </div>
 
             <div className="border-t border-gray-100 pt-6 mt-6">
