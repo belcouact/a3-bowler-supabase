@@ -500,21 +500,21 @@ const Layout = () => {
       {/* Top Bar */}
       <header className="bg-white border-b border-gray-200 z-[60] shadow-sm h-16 flex items-center px-6 justify-between relative">
         <div className="flex items-center space-x-8">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5">
             <div className="bg-blue-600 p-1.5 rounded-lg">
               <BarChart3 className="w-6 h-6 text-white" />
             </div>
             <h1 className="text-lg font-semibold text-gray-900 tracking-tight hidden md:block">Performance Tracker</h1>
             <button 
                 onClick={() => setIsAppInfoOpen(true)}
-                className="ml-2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="ml-1 text-gray-400 hover:text-gray-600 transition-colors"
                 title="About this app"
             >
                 <Info className="w-5 h-5" />
             </button>
           </div>
           
-          <nav className="flex space-x-0.5">
+          <nav className="flex space-x-0">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname.startsWith(item.path);
@@ -543,16 +543,16 @@ const Layout = () => {
                   key={item.path}
                   to={item.path}
                   className={clsx(
-                    'flex items-center px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-all duration-200',
+                    'flex items-center px-2 md:px-3 py-1.5 rounded text-xs md:text-sm font-medium transition-all duration-200',
                     isActive
-                      ? 'bg-blue-50 text-blue-800 shadow-sm'
+                      ? 'bg-blue-50 text-blue-800'
                       : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                   )}
                   title={item.label}
                 >
                   <span
                     className={clsx(
-                      'flex items-center justify-center w-8 h-8 rounded-md mr-0 md:mr-2 transition-colors',
+                      'flex items-center justify-center w-7 h-7 rounded-md mr-0 md:mr-1.5 transition-colors',
                       isActive ? activeIconClasses : inactiveIconClasses
                     )}
                   >
