@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, ZoomIn, ZoomOut, ChevronDown, ChevronRight, GripVertical, Sparkles, Loader2 } from 'lucide-react';
+import { Plus, ZoomIn, ZoomOut, ChevronDown, ChevronRight, GripVertical, Sparkles, Loader2, Calendar } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import clsx from 'clsx';
 import { addDays, formatDate, isWeekend } from '../../utils/dateUtils';
@@ -775,7 +775,7 @@ ${root}`
 
             {/* Date Range Picker with Navigation */}
             <div className="flex items-center space-x-2 bg-gray-100 rounded-md p-1">
-                <div className="flex items-center space-x-2 px-2">
+                <div className="hidden sm:flex items-center space-x-2 px-2">
                     <input 
                         type="date" 
                         value={dateRange.start}
@@ -789,6 +789,31 @@ ${root}`
                         onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
                         className="text-xs bg-transparent border-none focus:ring-0 p-0 w-24 text-center font-medium text-gray-700 cursor-pointer"
                     />
+                </div>
+                <div className="flex sm:hidden items-center space-x-1 px-1">
+                    <label className="relative inline-flex items-center">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-white text-gray-700 shadow-sm border border-gray-200">
+                            <Calendar className="w-4 h-4" />
+                        </span>
+                        <input 
+                            type="date" 
+                            value={dateRange.start}
+                            onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                    </label>
+                    <span className="text-gray-400">-</span>
+                    <label className="relative inline-flex items-center">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-white text-gray-700 shadow-sm border border-gray-200">
+                            <Calendar className="w-4 h-4" />
+                        </span>
+                        <input 
+                            type="date" 
+                            value={dateRange.end}
+                            onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                    </label>
                 </div>
             </div>
         </div>

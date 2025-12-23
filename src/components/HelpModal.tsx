@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, MousePointer, MessageSquare, Target, Edit, Sparkles } from 'lucide-react';
+import { X, MousePointer, Target, Edit, Sparkles } from 'lucide-react';
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -42,7 +42,19 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   <div className="ml-3">
                     <h4 className="text-sm font-medium text-gray-900">Editing Data</h4>
                     <p className="text-sm text-gray-500">
-                      Click on any Target or Actual cell to edit its value.
+                      Left click on any Target or Actual cell to edit its value. Right click to add a context note. Cells with notes are marked with a red triangle.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <Target className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div className="ml-3">
+                    <h4 className="text-sm font-medium text-gray-900">Target Rules</h4>
+                    <p className="text-sm text-gray-500">
+                      Set rules in the Edit Metric window: {'>='} Target (default), {'<='} Target, or Within Range (e.g. &#123;5,10&#125;). Actual values violating the rule will be highlighted in red.
                     </p>
                   </div>
                 </div>
@@ -73,30 +85,6 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                          <span><strong className="text-gray-700">Yellow:</strong> Any metric missed target in latest month or last 2 months.</span>
                        </li>
                      </ul>
-                  </div>
-                </div>
-
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    <MessageSquare className="h-5 w-5 text-blue-500" />
-                  </div>
-                  <div className="ml-3">
-                    <h4 className="text-sm font-medium text-gray-900">Adding Notes</h4>
-                    <p className="text-sm text-gray-500">
-                      Right-click on a cell to add a context note. Cells with notes are marked with a red triangle.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    <Target className="h-5 w-5 text-blue-500" />
-                  </div>
-                  <div className="ml-3">
-                    <h4 className="text-sm font-medium text-gray-900">Target Rules</h4>
-                    <p className="text-sm text-gray-500">
-                      Set rules in the Edit Metric window: {'>='} Target (default), {'<='} Target, or Within Range (e.g. &#123;5,10&#125;). Actual values violating the rule will be highlighted in red.
-                    </p>
                   </div>
                 </div>
 

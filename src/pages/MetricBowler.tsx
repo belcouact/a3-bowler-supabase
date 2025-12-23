@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, Navigate } from 'react-router-dom';
-import { Info, Settings, HelpCircle, Sparkles, Loader2 } from 'lucide-react';
+import { Info, Settings, HelpCircle, Sparkles, Loader2, Calendar } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Metric } from '../types';
 import { HelpModal } from '../components/HelpModal';
@@ -122,6 +122,20 @@ const MetricBowler = () => {
       }
     }
   }, [selectedBowler?.metricStartDate]);
+
+  const handleStartDateChange = (value: string) => {
+    setStartDate(value);
+    if (selectedBowler) {
+      updateBowler({
+        ...selectedBowler,
+        metricStartDate: value,
+      });
+    }
+  };
+
+  const handleStopDateChange = (value: string) => {
+    setStopDate(value);
+  };
 
   const handleBowlerSave = () => {
     if (selectedBowler) {
@@ -385,33 +399,53 @@ const MetricBowler = () => {
               >
                 <HelpCircle className="h-4 w-4" />
               </button>
-               <input 
-                 type="month" 
-                 id="startDate"
-                 value={startDate}
-                 onChange={(e) => {
-                   const value = e.target.value;
-                   setStartDate(value);
-                   if (selectedBowler) {
-                     updateBowler({
-                       ...selectedBowler,
-                       metricStartDate: value,
-                     });
-                   }
-                 }}
-                 className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-1 border"
-                 title="Start Date"
-               />
-               <span className="text-gray-400">-</span>
-               <input 
-                 type="month" 
-                 id="stopDate"
-                 value={stopDate}
-                 onChange={(e) => setStopDate(e.target.value)}
-                 className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-1 border"
-                 title="Stop Date"
-               />
-             </div>
+              <div className="hidden sm:flex items-center space-x-2">
+                <input 
+                  type="month" 
+                  id="startDate"
+                  value={startDate}
+                  onChange={(e) => handleStartDateChange(e.target.value)}
+                  className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-1 border"
+                  title="Start Date"
+                />
+                <span className="text-gray-400">-</span>
+                <input 
+                  type="month" 
+                  id="stopDate"
+                  value={stopDate}
+                  onChange={(e) => handleStopDateChange(e.target.value)}
+                  className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-1 border"
+                  title="Stop Date"
+                />
+              </div>
+              <div className="flex sm:hidden items-center space-x-1">
+                <label className="relative inline-flex items-center">
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 bg-white text-gray-700 shadow-sm">
+                    <Calendar className="w-4 h-4" />
+                  </span>
+                  <input
+                    type="month"
+                    value={startDate}
+                    onChange={(e) => handleStartDateChange(e.target.value)}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    title="Start Date"
+                  />
+                </label>
+                <span className="text-gray-400">-</span>
+                <label className="relative inline-flex items-center">
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 bg-white text-gray-700 shadow-sm">
+                    <Calendar className="w-4 h-4" />
+                  </span>
+                  <input
+                    type="month"
+                    value={stopDate}
+                    onChange={(e) => handleStopDateChange(e.target.value)}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    title="Stop Date"
+                  />
+                </label>
+              </div>
+            </div>
         </div>
       </div>
       <div className="overflow-x-auto overflow-y-hidden no-scrollbar">
