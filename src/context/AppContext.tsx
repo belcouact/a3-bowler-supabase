@@ -38,7 +38,6 @@ interface AppContextType {
 // Context
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Default Markdown
 const DEFAULT_MARKDOWN = `# A3 Bowler
 ## Metric Bowler
 - Track KPIs
@@ -63,6 +62,45 @@ const DEFAULT_MARKDOWN = `# A3 Bowler
   - What
   - Who
   - When
+`;
+
+const SAMPLE_MARKMAP_MARKDOWN = `# markmap
+## Links
+
+- \`https://markmap.js.org/\`
+- \`https://github.com/gera2ld/markmap\`
+
+## Related Projects
+
+- \`https://github.com/gera2ld/coc-markmap\`  for Neovim
+- \`https://marketplace.visualstudio.com/items?itemName=gera2ld.markmap-vscode\`  for VSCode
+- \`https://github.com/emacs-eaf/eaf-markmap\`  for Emacs
+
+## Features
+
+Note that if blocks and lists appear at the same level, the lists will be ignored.
+
+### Lists
+
+- **strong** ~~del~~ *italic* ==highlight==
+- \`inline code\`
+- [x] checkbox
+- Ordered list
+  1. item 1
+  2. item 2
+
+### Blocks
+
+\`\`\`js
+console.log('hello, JavaScript')
+\`\`\`
+
+| Products | Price |
+|-|-|
+| Apple | 4 |
+| Banana | 2 |
+
+![](https://markmap.js.org/favicon.png)
 `;
 
 const getValidModel = (model?: string | null): AIModelKey => {
@@ -173,15 +211,25 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                 setDashboardMarkdown(active.markdown);
                 setDashboardTitle(active.title);
             } else {
-                const id = generateShortId();
+                const now = new Date().toISOString();
+                const mainId = generateShortId();
+                const sampleId = generateShortId();
                 const initialMindmap: DashboardMindmap = {
-                  id,
+                  id: mainId,
                   title,
                   markdown,
-                  createdAt: new Date().toISOString()
+                  createdAt: now
                 };
-                setDashboardMindmaps([initialMindmap]);
-                setActiveMindmapId(id);
+                const sampleMindmap: DashboardMindmap = {
+                  id: sampleId,
+                  title: 'Sample',
+                  description: 'markmap syntax',
+                  markdown: SAMPLE_MARKMAP_MARKDOWN,
+                  createdAt: now
+                };
+                const defaultMindmaps = [initialMindmap, sampleMindmap];
+                setDashboardMindmaps(defaultMindmaps);
+                setActiveMindmapId(mainId);
                 setDashboardMarkdown(markdown);
                 setDashboardTitle(title);
             }
@@ -233,15 +281,25 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                     console.warn("Failed to update local cache.", e);
                 }
             } else {
-                const id = generateShortId();
+                const now = new Date().toISOString();
+                const mainId = generateShortId();
+                const sampleId = generateShortId();
                 const initialMindmap: DashboardMindmap = {
-                  id,
+                  id: mainId,
                   title,
                   markdown,
-                  createdAt: new Date().toISOString()
+                  createdAt: now
                 };
-                setDashboardMindmaps([initialMindmap]);
-                setActiveMindmapId(id);
+                const sampleMindmap: DashboardMindmap = {
+                  id: sampleId,
+                  title: 'Sample',
+                  description: 'markmap syntax',
+                  markdown: SAMPLE_MARKMAP_MARKDOWN,
+                  createdAt: now
+                };
+                const defaultMindmaps = [initialMindmap, sampleMindmap];
+                setDashboardMindmaps(defaultMindmaps);
+                setActiveMindmapId(mainId);
                 setDashboardMarkdown(markdown);
                 setDashboardTitle(title);
                 try {
@@ -250,8 +308,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                         a3Cases: data.a3Cases || [],
                         dashboardMarkdown: markdown,
                         dashboardTitle: title,
-                        dashboardMindmaps: [initialMindmap],
-                        activeMindmapId: id,
+                        dashboardMindmaps: defaultMindmaps,
+                        activeMindmapId: mainId,
                         dashboardSettings: { aiModel: effectiveModel }
                     });
                 } catch (e) {
