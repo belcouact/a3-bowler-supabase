@@ -255,31 +255,30 @@ const Layout = () => {
   );
 
   const groupPerformanceTableData = useMemo(() => {
-    const groupCounts = a3PortfolioStats.groupCounts || {};
-    const groupNames = Object.keys(groupCounts).sort();
+    const groupToMetrics: Record<string, Metric[]> = {};
 
-    if (groupNames.length === 0) return [];
+    bowlers.forEach(bowler => {
+      const groupName = (bowler.group || 'Ungrouped').trim() || 'Ungrouped';
+      const metrics = bowler.metrics || [];
 
-    const metricById: Record<string, Metric> = {};
-    bowlers.forEach(b => {
-      b.metrics?.forEach(m => {
-        metricById[m.id] = m;
+      metrics.forEach(metric => {
+        if (!metric || !metric.monthlyData || Object.keys(metric.monthlyData).length === 0) {
+          return;
+        }
+
+        if (!groupToMetrics[groupName]) {
+          groupToMetrics[groupName] = [];
+        }
+        groupToMetrics[groupName].push(metric);
       });
     });
 
+    const groupNames = Object.keys(groupToMetrics).sort();
+
+    if (groupNames.length === 0) return [];
+
     return groupNames.map(groupName => {
-      const casesInGroup = a3Cases.filter(c => (c.group || '').trim() === groupName);
-      const metricIds = new Set<string>();
-
-      casesInGroup.forEach(c => {
-        c.linkedMetricIds?.forEach(id => {
-          if (id) metricIds.add(id);
-        });
-      });
-
-      const metrics: Metric[] = Array.from(metricIds)
-        .map(id => metricById[id])
-        .filter((m): m is Metric => !!m && !!m.monthlyData && Object.keys(m.monthlyData).length > 0);
+      const metrics = groupToMetrics[groupName] || [];
 
       if (metrics.length === 0) {
         return {
@@ -392,7 +391,7 @@ const Layout = () => {
         achievementRate,
       };
     });
-  }, [a3PortfolioStats, a3Cases, bowlers]);
+  }, [bowlers]);
 
   const pieLabelRadian = Math.PI / 180;
 
