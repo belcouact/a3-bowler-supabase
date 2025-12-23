@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Info, BrainCircuit, Sparkles, FileText, Trash2 } from 'lucide-react';
+import { X, Info, Lightbulb, Sparkles, FileText, Trash2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 interface MindmapModalProps {
@@ -165,7 +165,7 @@ export const MindmapModal = ({ isOpen, onClose, mode }: MindmapModalProps) => {
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-start gap-3">
                 <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-md">
-                  <BrainCircuit className="w-5 h-5" />
+                  <Lightbulb className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="text-lg leading-6 font-semibold text-gray-900" id="mindmap-modal-title">

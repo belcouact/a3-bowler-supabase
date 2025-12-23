@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Plus, BarChart3, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, BrainCircuit, Filter, Bot } from 'lucide-react';
+import { Plus, BarChart3, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Bot } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
 import { Bowler, Metric, AIModelKey } from '../types';
@@ -484,7 +484,7 @@ const Layout = () => {
   const navItems = [
     { path: '/metric-bowler', label: 'Metric Bowler', icon: TrendingUp },
     { path: '/a3-analysis', label: 'A3 Analysis', icon: Zap },
-    { path: '/mindmap', label: 'Map Ideas', icon: BrainCircuit },
+    { path: '/mindmap', label: 'Map Ideas', icon: Lightbulb },
   ];
 
   return (
@@ -1183,7 +1183,7 @@ const Layout = () => {
                               isSidebarOpen ? "mr-3" : "mr-0"
                             )}
                           >
-                            {mindmap.title?.charAt(0) || <BrainCircuit className="w-3 h-3" />}
+                            {mindmap.title?.charAt(0) || <Lightbulb className="w-3 h-3" />}
                           </div>
                           {isSidebarOpen && <span className="truncate">{mindmap.title}</span>}
                         </div>
