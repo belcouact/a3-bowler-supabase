@@ -277,6 +277,21 @@ const Layout = () => {
     );
   };
 
+  const renderPieTooltip = (props: any) => {
+    const { active, payload } = props;
+    if (!active || !payload || payload.length === 0) return null;
+
+    const entry = payload[0];
+    const name = entry.name ?? entry.payload?.name;
+    const value = entry.value;
+
+    return (
+      <div className="rounded border border-gray-200 bg-white px-2 py-1 text-[10px] text-gray-700 shadow-sm">
+        {`${name} (${value})`}
+      </div>
+    );
+  };
+
   const a3KanbanColumns = useMemo(() => {
     if (a3Cases.length === 0) {
       return [];
@@ -1854,7 +1869,7 @@ const Layout = () => {
                                 <Cell key={`status-cell-${index}`} fill={entry.color} />
                               ))}
                             </Pie>
-                            <Tooltip formatter={(value, name) => [`${value}`, name as string]} />
+                            <Tooltip content={renderPieTooltip} />
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
@@ -1885,7 +1900,7 @@ const Layout = () => {
                                 <Cell key={`priority-cell-${index}`} fill={entry.color} />
                               ))}
                             </Pie>
-                            <Tooltip formatter={(value, name) => [`${value}`, name as string]} />
+                            <Tooltip content={renderPieTooltip} />
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
@@ -1914,7 +1929,7 @@ const Layout = () => {
                                 <Cell key={`group-cell-${index}`} fill={entry.color} />
                               ))}
                             </Pie>
-                            <Tooltip formatter={(value, name) => [`${value}`, name as string]} />
+                            <Tooltip content={renderPieTooltip} />
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
