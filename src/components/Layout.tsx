@@ -393,8 +393,9 @@ const Layout = () => {
     if (!isGeneratingSummary && summaryContent && isSummaryHiddenWhileLoading) {
       setIsSummaryModalOpen(true);
       setIsSummaryHiddenWhileLoading(false);
+      toast.success('AI summary is ready.');
     }
-  }, [isGeneratingSummary, summaryContent, isSummaryHiddenWhileLoading]);
+  }, [isGeneratingSummary, summaryContent, isSummaryHiddenWhileLoading, toast]);
 
   const handleSaveData = async () => {
     if (!user) {
