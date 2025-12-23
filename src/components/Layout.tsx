@@ -1829,9 +1829,8 @@ const Layout = () => {
           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4">
             <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">A3 Portfolio</p>
                 <h2 className="text-base md:text-lg font-semibold text-gray-900">
-                  Portfolio Overview
+                  A3 Portfolio Overview
                 </h2>
               </div>
               <button
