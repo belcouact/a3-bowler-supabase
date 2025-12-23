@@ -227,11 +227,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                   markdown: SAMPLE_MARKMAP_MARKDOWN,
                   createdAt: now
                 };
-                const defaultMindmaps = [initialMindmap, sampleMindmap];
+                const defaultMindmaps = [sampleMindmap, initialMindmap];
                 setDashboardMindmaps(defaultMindmaps);
-                setActiveMindmapId(mainId);
-                setDashboardMarkdown(markdown);
-                setDashboardTitle(title);
+                setActiveMindmapId(sampleId);
+                setDashboardMarkdown(SAMPLE_MARKMAP_MARKDOWN);
+                setDashboardTitle('Sample');
             }
         }
     } catch (e) {
@@ -297,19 +297,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                   markdown: SAMPLE_MARKMAP_MARKDOWN,
                   createdAt: now
                 };
-                const defaultMindmaps = [initialMindmap, sampleMindmap];
+                const defaultMindmaps = [sampleMindmap, initialMindmap];
                 setDashboardMindmaps(defaultMindmaps);
-                setActiveMindmapId(mainId);
-                setDashboardMarkdown(markdown);
-                setDashboardTitle(title);
+                setActiveMindmapId(sampleId);
+                setDashboardMarkdown(SAMPLE_MARKMAP_MARKDOWN);
+                setDashboardTitle('Sample');
                 try {
                     await set(localDataKey, { 
                         bowlers: data.bowlers || [], 
                         a3Cases: data.a3Cases || [],
-                        dashboardMarkdown: markdown,
-                        dashboardTitle: title,
+                        dashboardMarkdown: SAMPLE_MARKMAP_MARKDOWN,
+                        dashboardTitle: 'Sample',
                         dashboardMindmaps: defaultMindmaps,
-                        activeMindmapId: mainId,
+                        activeMindmapId: sampleId,
                         dashboardSettings: { aiModel: effectiveModel }
                     });
                 } catch (e) {
