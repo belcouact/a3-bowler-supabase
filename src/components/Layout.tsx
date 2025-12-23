@@ -114,6 +114,11 @@ const Layout = () => {
   const [fail2Filter, setFail2Filter] = useState<'all' | 'yes' | 'no'>('all');
   const [fail3Filter, setFail3Filter] = useState<'all' | 'yes' | 'no'>('all');
   const [achievementFilter, setAchievementFilter] = useState<'all' | 'lt50' | '50to80' | 'gte80'>('all');
+  const [a3LowPerfRule, setA3LowPerfRule] = useState({
+    latestFail: true,
+    fail2: true,
+    fail3: true,
+  });
 
   const a3PortfolioStats = useMemo(() => {
     const total = a3Cases.length;
@@ -366,7 +371,21 @@ const Layout = () => {
   const metricA3Coverage = useMemo(
     () => {
       const atRiskRows = groupPerformanceTableData.filter(row => {
-        return row.latestMet === false || row.fail2 || row.fail3;
+        let isAtRisk = false;
+
+        if (a3LowPerfRule.latestFail && row.latestMet === false) {
+          isAtRisk = true;
+        }
+
+        if (a3LowPerfRule.fail2 && row.fail2) {
+          isAtRisk = true;
+        }
+
+        if (a3LowPerfRule.fail3 && row.fail3) {
+          isAtRisk = true;
+        }
+
+        return isAtRisk;
       });
 
       if (atRiskRows.length === 0) {
@@ -415,7 +434,7 @@ const Layout = () => {
         pieData,
       };
     },
-    [groupPerformanceTableData, a3Cases],
+    [groupPerformanceTableData, a3Cases, a3LowPerfRule],
   );
 
   const groupFilterOptions = useMemo(
@@ -2263,6 +2282,50 @@ const Layout = () => {
                           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                             Metric A3 Coverage
                           </p>
+                          <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-gray-500">
+                            <label className="inline-flex items-center gap-1">
+                              <input
+                                type="checkbox"
+                                className="h-3 w-3 text-blue-600 border-gray-300 rounded"
+                                checked={a3LowPerfRule.latestFail}
+                                onChange={e =>
+                                  setA3LowPerfRule({
+                                    ...a3LowPerfRule,
+                                    latestFail: e.target.checked,
+                                  })
+                                }
+                              />
+                              <span>Latest fail</span>
+                            </label>
+                            <label className="inline-flex items-center gap-1">
+                              <input
+                                type="checkbox"
+                                className="h-3 w-3 text-blue-600 border-gray-300 rounded"
+                                checked={a3LowPerfRule.fail2}
+                                onChange={e =>
+                                  setA3LowPerfRule({
+                                    ...a3LowPerfRule,
+                                    fail2: e.target.checked,
+                                  })
+                                }
+                              />
+                              <span>Failing 2 months</span>
+                            </label>
+                            <label className="inline-flex items-center gap-1">
+                              <input
+                                type="checkbox"
+                                className="h-3 w-3 text-blue-600 border-gray-300 rounded"
+                                checked={a3LowPerfRule.fail3}
+                                onChange={e =>
+                                  setA3LowPerfRule({
+                                    ...a3LowPerfRule,
+                                    fail3: e.target.checked,
+                                  })
+                                }
+                              />
+                              <span>Failing 3 months</span>
+                            </label>
+                          </div>
                           <div className="mt-2 h-40">
                             <ResponsiveContainer width="100%" height="100%">
                               <PieChart>
