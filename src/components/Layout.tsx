@@ -305,6 +305,29 @@ const Layout = () => {
       });
     });
 
+    const labelColorPalette = [
+      'bg-blue-50 border-blue-100',
+      'bg-emerald-50 border-emerald-100',
+      'bg-amber-50 border-amber-100',
+      'bg-purple-50 border-purple-100',
+      'bg-pink-50 border-pink-100',
+      'bg-sky-50 border-sky-100',
+      'bg-lime-50 border-lime-100',
+      'bg-rose-50 border-rose-100',
+    ];
+
+    const labelColorMap = new Map<string, string>();
+
+    const getLabelColorClass = (label: string) => {
+      if (labelColorMap.has(label)) {
+        return labelColorMap.get(label)!;
+      }
+      const index = labelColorMap.size % labelColorPalette.length;
+      const colorClass = labelColorPalette[index];
+      labelColorMap.set(label, colorClass);
+      return colorClass;
+    };
+
     const getPriorityClass = (priority: string) => {
       if (priority === 'High') {
         return 'bg-red-50 text-red-700 border-red-200';
@@ -322,6 +345,7 @@ const Layout = () => {
         displayLabel: string;
         priority: string;
         priorityClass: string;
+        labelColorClass: string;
       }[],
     }));
 
@@ -336,6 +360,7 @@ const Layout = () => {
         displayLabel: string;
         priority: string;
         priorityClass: string;
+        labelColorClass: string;
       }[],
     };
 
@@ -366,12 +391,15 @@ const Layout = () => {
           ? groupLabel
           : metricLabel || 'No linked metric';
 
+      const labelColorClass = getLabelColorClass(displayLabel);
+
       const targetColumn = columnByStatus[statusKey] || otherColumn;
       targetColumn.items.push({
         a3,
         displayLabel,
         priority: priorityKey,
         priorityClass: getPriorityClass(priorityKey),
+        labelColorClass,
       });
     });
 
@@ -1797,6 +1825,8 @@ const Layout = () => {
                               innerRadius={30}
                               outerRadius={55}
                               paddingAngle={2}
+                              label={(entry) => `${entry.name} (${entry.value})`}
+                              labelLine={false}
                             >
                               {statusPieData.map((entry, index) => (
                                 <Cell key={`status-cell-${index}`} fill={entry.color} />
@@ -1826,6 +1856,8 @@ const Layout = () => {
                               innerRadius={30}
                               outerRadius={55}
                               paddingAngle={2}
+                              label={(entry) => `${entry.name} (${entry.value})`}
+                              labelLine={false}
                             >
                               {priorityPieData.map((entry, index) => (
                                 <Cell key={`priority-cell-${index}`} fill={entry.color} />
@@ -1853,6 +1885,8 @@ const Layout = () => {
                               innerRadius={30}
                               outerRadius={55}
                               paddingAngle={2}
+                              label={(entry) => `${entry.name} (${entry.value})`}
+                              labelLine={false}
                             >
                               {groupPieData.map((entry, index) => (
                                 <Cell key={`group-cell-${index}`} fill={entry.color} />
@@ -1951,11 +1985,14 @@ const Layout = () => {
                                   setIsA3PortfolioOpen(false);
                                   navigate(`/a3-analysis/${item.a3.id}/problem-statement`);
                                 }}
-                                className="w-full text-left rounded-md border border-gray-100 bg-white px-2.5 py-2 shadow-sm hover:border-blue-200 hover:bg-blue-50/60 transition-colors"
+                                className={clsx(
+                                  'w-full text-left rounded-md border px-2.5 py-2 shadow-sm hover:border-blue-200 hover:bg-blue-50/60 transition-colors',
+                                  item.labelColorClass,
+                                )}
                               >
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="min-w-0">
-                                    <p className="text-[11px] font-semibold text-gray-900 truncate">
+                                    <p className="text-[11px] font-semibold text-gray-900 leading-snug">
                                       {item.a3.title}
                                     </p>
                                     <p className="mt-0.5 text-[10px] text-gray-500 truncate">
