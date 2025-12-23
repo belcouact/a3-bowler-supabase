@@ -29,6 +29,10 @@ const RouteLoader = () => {
   return <div className="p-4 text-gray-500">{message}</div>;
 };
 
+const PortfolioPlaceholder = () => {
+  return null;
+};
+
 function App() {
   return (
     <Router basename={import.meta.env.BASE_URL}>
@@ -51,6 +55,7 @@ function App() {
                 <Route path="summary" element={<Summary />} />
               </Route>
             </Route>
+            <Route path="portfolio" element={<PortfolioPlaceholder />} />
           </Route>
         </Routes>
       </Suspense>
