@@ -700,6 +700,22 @@ const Layout = () => {
                   </button>
 
                   <button
+                    onClick={() => {
+                      handleSaveData();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    disabled={isSaving}
+                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-green-700 disabled:opacity-50"
+                  >
+                    {isSaving ? (
+                      <Loader2 className="w-4 h-4 mr-3 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4 mr-3" />
+                    )}
+                    Save Data
+                  </button>
+
+                  <button
                     onClick={() => setIsMobileModelMenuOpen(!isMobileModelMenuOpen)}
                     className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-indigo-600"
                   >
@@ -733,7 +749,7 @@ const Layout = () => {
           <button
             onClick={handleSaveData}
             disabled={isSaving}
-            className="p-2 bg-green-600 text-white rounded-md shadow-sm hover:bg-green-700 transition-colors disabled:opacity-50"
+            className="hidden md:inline-flex p-2 bg-green-600 text-white rounded-md shadow-sm hover:bg-green-700 transition-colors disabled:opacity-50"
             title={isSaving ? "Saving..." : "Save Data"}
           >
             {isSaving ? (
