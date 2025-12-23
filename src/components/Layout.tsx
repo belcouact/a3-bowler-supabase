@@ -484,6 +484,7 @@ const Layout = () => {
   const navItems = [
     { path: '/metric-bowler', label: 'Metric Bowler', icon: TrendingUp },
     { path: '/a3-analysis', label: 'A3 Analysis', icon: Zap },
+    { path: '/mindmap', label: 'Mindmap', icon: BrainCircuit },
   ];
 
   return (
@@ -519,17 +520,22 @@ const Layout = () => {
               const isActive = location.pathname.startsWith(item.path);
               const isMetric = item.path === '/metric-bowler';
               const isA3 = item.path === '/a3-analysis';
+              const isMindmap = item.path === '/mindmap';
 
               const activeIconClasses = isMetric
                 ? 'bg-blue-600 text-white'
                 : isA3
                 ? 'bg-purple-600 text-white'
+                : isMindmap
+                ? 'bg-indigo-600 text-white'
                 : 'bg-blue-600 text-white';
 
               const inactiveIconClasses = isMetric
                 ? 'bg-blue-50 text-blue-700'
                 : isA3
                 ? 'bg-purple-50 text-purple-700'
+                : isMindmap
+                ? 'bg-indigo-50 text-indigo-700'
                 : 'bg-gray-100 text-gray-600';
 
               return (
@@ -568,16 +574,6 @@ const Layout = () => {
               title="Exit to Main App"
             >
               <ExternalLink className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => navigate('/mindmap')}
-              className={clsx(
-                'p-2 rounded-md text-white shadow-sm transition-colors',
-                isMindmapPage ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-500 hover:bg-indigo-600'
-              )}
-              title="Mindmap ideas"
-            >
-              <BrainCircuit className="w-4 h-4" />
             </button>
             <button
               onClick={() => setIsImportModalOpen(true)}
@@ -646,16 +642,6 @@ const Layout = () => {
                     Exit App
                   </button>
                   
-                  <button
-                    onClick={() => {
-                      navigate('/mindmap');
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600"
-                  >
-                    <BrainCircuit className="w-4 h-4 mr-3" />
-                    Mindmap ideas
-                  </button>
                   <button
                     onClick={() => {
                       setIsImportModalOpen(true);
