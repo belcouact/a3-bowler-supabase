@@ -484,7 +484,7 @@ const Layout = () => {
   const navItems = [
     { path: '/metric-bowler', label: 'Metric Bowler', icon: TrendingUp },
     { path: '/a3-analysis', label: 'A3 Analysis', icon: Zap },
-    { path: '/mindmap', label: 'Mindmap', icon: BrainCircuit },
+    { path: '/mindmap', label: 'Map Ideas', icon: BrainCircuit },
   ];
 
   return (
@@ -504,7 +504,7 @@ const Layout = () => {
             <div className="bg-blue-600 p-1.5 rounded-lg">
               <BarChart3 className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight hidden md:block">Performance Tracker</h1>
+            <h1 className="text-lg font-semibold text-gray-900 tracking-tight hidden md:block">Performance Tracker</h1>
             <button 
                 onClick={() => setIsAppInfoOpen(true)}
                 className="ml-2 text-gray-400 hover:text-gray-600 transition-colors"
@@ -514,7 +514,7 @@ const Layout = () => {
             </button>
           </div>
           
-          <nav className="flex space-x-1">
+          <nav className="flex space-x-0.5">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname.startsWith(item.path);
@@ -543,7 +543,7 @@ const Layout = () => {
                   key={item.path}
                   to={item.path}
                   className={clsx(
-                    'flex items-center px-3 md:px-4 py-2 rounded-md text-sm font-medium transition-all duration-200',
+                    'flex items-center px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-all duration-200',
                     isActive
                       ? 'bg-blue-50 text-blue-800 shadow-sm'
                       : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
