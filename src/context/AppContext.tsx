@@ -39,53 +39,6 @@ interface AppContextType {
 // Context
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const DEFAULT_MARKDOWN = `# **A3 Bowler – Performance Tracker**
-
-## **Metric Bowler – KPIs & Trends**
-- Track KPIs by bowler / team
-  - Safety · Quality · Delivery · Cost
-  - Leading vs lagging indicators
-- Monthly targets
-  - Plan vs Actual on the same chart
-  - Spot trends over time
-- Gap analysis
-  - Deviation from target
-  - Capture reason and countermeasures
-- Productivity tips
-  - Group lists by *Team*, *Group*, or *Tag*
-  - Use CSV Import / Download for quick setup
-  - Hit the ==One Click Summary== button for AI insights
-
-## **A3 Problem Solving – Guided Flow**
-- Problem Statement
-  - Clarify what/where/when
-  - Quantify impact with metrics
-- Data Analysis
-  - Visualize trends from Metric Bowler
-  - Attach screenshots or charts
-- Why Analysis
-  - 5 Whys and cause–effect chains
-  - Highlight key causes with ==highlighted notes==
-- Action Plan
-  - What · Who · When · Status
-  - Track completion with checkboxes
-- Result & Summary
-  - Confirm effect on KPIs
-  - Capture lessons learned for reuse
-
-## **Map Ideas – Mindmaps & AI**
-- Map Ideas page
-  - Capture strategy, roadmaps, and learning notes as mindmaps
-  - Keep multiple maps in the left sidebar
-- AI-generated maps
-  - Use the AI tab to describe your idea in plain text
-  - Let AI design the structure and formatting
-- Link to A3 & metrics
-  - Use the same terms / tags as in Metric Bowler
-  - Keep your A3, KPIs, and ideas aligned
-
-`;
-
 const getValidModel = (model?: string | null): AIModelKey => {
   const fallback: AIModelKey = 'deepseek';
   if (model === 'gemini' || model === 'deepseek' || model === 'kimi' || model === 'glm') {
@@ -100,7 +53,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const { error } = useToast();
   const [bowlers, setBowlers] = useState<Bowler[]>([]);
   const [a3Cases, setA3Cases] = useState<A3Case[]>([]);
-  const [dashboardMarkdown, setDashboardMarkdown] = useState<string>(DEFAULT_MARKDOWN);
+  const [dashboardMarkdown, setDashboardMarkdown] = useState<string>('');
   const [dashboardTitle, setDashboardTitle] = useState<string>('');
   const [dashboardMindmaps, setDashboardMindmaps] = useState<DashboardMindmap[]>([]);
   const [activeMindmapId, setActiveMindmapId] = useState<string | null>(null);
@@ -192,21 +145,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                 setDashboardMarkdown(active.markdown);
                 setDashboardTitle(active.title);
             } else {
-                const now = new Date().toISOString();
-                const mainId = generateShortId();
-                const defaultMarkdown = DEFAULT_MARKDOWN;
-                const defaultTitle = extractTitleFromMarkdown(defaultMarkdown) || 'A3 Bowler';
-                const initialMindmap: DashboardMindmap = {
-                  id: mainId,
-                  title: defaultTitle,
-                  markdown: defaultMarkdown,
-                  createdAt: now
-                };
-                const defaultMindmaps = [initialMindmap];
-                setDashboardMindmaps(defaultMindmaps);
-                setActiveMindmapId(mainId);
-                setDashboardMarkdown(defaultMarkdown);
-                setDashboardTitle(defaultTitle);
+                setDashboardMindmaps([]);
+                setActiveMindmapId(null);
+                setDashboardMarkdown('');
+                setDashboardTitle('');
             }
         }
     } catch (e) {
@@ -254,29 +196,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                     console.warn("Failed to update local cache.", e);
                 }
             } else {
-                const now = new Date().toISOString();
-                const mainId = generateShortId();
-                const defaultMarkdown = DEFAULT_MARKDOWN;
-                const defaultTitle = extractTitleFromMarkdown(defaultMarkdown) || 'A3 Bowler';
-                const initialMindmap: DashboardMindmap = {
-                  id: mainId,
-                  title: defaultTitle,
-                  markdown: defaultMarkdown,
-                  createdAt: now
-                };
-                const defaultMindmaps = [initialMindmap];
-                setDashboardMindmaps(defaultMindmaps);
-                setActiveMindmapId(mainId);
-                setDashboardMarkdown(defaultMarkdown);
-                setDashboardTitle(defaultTitle);
+                setDashboardMindmaps([]);
+                setActiveMindmapId(null);
+                setDashboardMarkdown('');
+                setDashboardTitle('');
                 try {
                     await set(localDataKey, { 
                         bowlers: data.bowlers || [], 
                         a3Cases: data.a3Cases || [],
-                        dashboardMarkdown: defaultMarkdown,
-                        dashboardTitle: defaultTitle,
-                        dashboardMindmaps: defaultMindmaps,
-                        activeMindmapId: mainId,
+                        dashboardMarkdown: '',
+                        dashboardTitle: '',
+                        dashboardMindmaps: [],
+                        activeMindmapId: null,
                         dashboardSettings: { aiModel: effectiveModel }
                     });
                 } catch (e) {
@@ -311,7 +242,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setA3Cases([]);
         setDashboardMindmaps([]);
         setActiveMindmapId(null);
-        setDashboardMarkdown(DEFAULT_MARKDOWN);
+        setDashboardMarkdown('');
         setDashboardTitle('');
         setSelectedModel('deepseek');
     }
@@ -350,18 +281,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const setActiveMindmap = (id: string) => {
     setDashboardMindmaps(prev => {
-      const mindmaps = prev.length > 0 ? prev : [{
-        id,
-        title: dashboardTitle || extractTitleFromMarkdown(dashboardMarkdown) || 'Mindmap',
-        markdown: dashboardMarkdown || DEFAULT_MARKDOWN,
-        createdAt: new Date().toISOString()
-      }];
-      const target = mindmaps.find(m => m.id === id) || mindmaps[0];
+      if (prev.length === 0) {
+        setActiveMindmapId(null);
+        setDashboardMarkdown('');
+        setDashboardTitle('');
+        saveToLocalCache(bowlers, a3Cases, '', '', [], null);
+        return prev;
+      }
+      const target = prev.find(m => m.id === id) || prev[0];
       setActiveMindmapId(target.id);
       setDashboardMarkdown(target.markdown);
       setDashboardTitle(target.title);
-      saveToLocalCache(bowlers, a3Cases, target.markdown, target.title, mindmaps, target.id);
-      return mindmaps;
+      saveToLocalCache(bowlers, a3Cases, target.markdown, target.title, prev, target.id);
+      return prev;
     });
   };
 
@@ -422,8 +354,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           newTitle = fallback.title;
         } else {
           newActiveId = null;
-          newMarkdown = DEFAULT_MARKDOWN;
-          newTitle = extractTitleFromMarkdown(DEFAULT_MARKDOWN) || '';
+          newMarkdown = '';
+          newTitle = '';
         }
       }
 
