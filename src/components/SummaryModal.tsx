@@ -111,10 +111,9 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
         .map((group) => {
           const metricsHtml = group.metrics
             .map((metric) => {
-              const trend = metric.trendAnalysis && metric.trendAnalysis.trim() !== '' ? ` | <span class="metric-trend">${escapeHtml(metric.trendAnalysis)}</span>` : '';
               return `<div class="metric-row">
   <span class="metric-name">${escapeHtml(metric.name)}</span>
-  <span class="metric-value">${escapeHtml(metric.latestPerformance)}${trend}</span>
+  <span class="metric-value">${escapeHtml(metric.latestPerformance)}</span>
 </div>`;
             })
             .join('');
