@@ -1991,22 +1991,22 @@ const Layout = () => {
                             <table className="min-w-full text-xs md:text-sm">
                               <thead className="bg-gray-50">
                                 <tr>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-normal md:whitespace-nowrap">
                                     Group
                                   </th>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-normal md:whitespace-nowrap">
                                     Metric
                                   </th>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-normal md:whitespace-nowrap">
                                     Latest month performance
                                   </th>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-normal md:whitespace-nowrap">
                                     Failing last 2 months
                                   </th>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-normal md:whitespace-nowrap">
                                     Failing last 3 months
                                   </th>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600">
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-normal md:whitespace-nowrap">
                                     Overall target achieving %
                                   </th>
                                 </tr>

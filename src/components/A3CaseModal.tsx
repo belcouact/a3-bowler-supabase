@@ -215,11 +215,11 @@ const A3CaseModal = ({ isOpen, onClose, onSave, onDelete, initialData }: A3CaseM
                   <div>
                     <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Linked metrics</label>
                     <p className="mt-1 text-xs text-gray-500">
-                      Select metrics this A3 is intended to improve so you can track impact.
+                      Select a metric this A3 is intended to improve so you can track impact.
                     </p>
                   </div>
                   <span className="text-xs text-gray-400">
-                    {(formData.linkedMetricIds || []).length} selected
+                    {(formData.linkedMetricIds || []).length > 0 ? '1 selected' : 'None selected'}
                   </span>
                 </div>
                 {metricOptions.length === 0 ? (
@@ -228,21 +228,30 @@ const A3CaseModal = ({ isOpen, onClose, onSave, onDelete, initialData }: A3CaseM
                   </p>
                 ) : (
                   <div className="max-h-40 overflow-y-auto space-y-1">
+                    <label className="flex items-center gap-2 text-sm text-gray-700">
+                      <input
+                        type="radio"
+                        name="linkedMetric"
+                        className="h-4 w-4 text-blue-600 border-gray-300"
+                        checked={!formData.linkedMetricIds || formData.linkedMetricIds.length === 0}
+                        onChange={() => setFormData({ ...formData, linkedMetricIds: [] })}
+                      />
+                      <span>None</span>
+                    </label>
                     {metricOptions.map(option => {
-                      const checked = (formData.linkedMetricIds || []).includes(option.id);
+                      const selectedId =
+                        (formData.linkedMetricIds && formData.linkedMetricIds[0]) || '';
+                      const checked = selectedId === option.id;
                       return (
                         <label key={option.id} className="flex items-center gap-2 text-sm text-gray-700">
                           <input
-                            type="checkbox"
-                            className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                            type="radio"
+                            name="linkedMetric"
+                            className="h-4 w-4 text-blue-600 border-gray-300"
                             checked={checked}
-                            onChange={() => {
-                              const current = formData.linkedMetricIds || [];
-                              const next = checked
-                                ? current.filter(id => id !== option.id)
-                                : [...current, option.id];
-                              setFormData({ ...formData, linkedMetricIds: next });
-                            }}
+                            onChange={() =>
+                              setFormData({ ...formData, linkedMetricIds: [option.id] })
+                            }
                           />
                           <span>{option.label}</span>
                         </label>
