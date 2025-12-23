@@ -9,6 +9,7 @@ import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { dataService } from '../services/dataService';
 import { useToast } from '../context/ToastContext';
 import { getBowlerStatusColor } from '../utils/metricUtils';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
 const A3CaseModal = lazy(() => import('./A3CaseModal'));
 const BowlerModal = lazy(() => import('./BowlerModal'));
@@ -182,9 +183,77 @@ const Layout = () => {
       groupedCount,
       ungroupedCount,
       largestGroupName,
-      largestGroupSize
+      largestGroupSize,
+      statusCounts,
+      groupCounts
     };
   }, [a3Cases]);
+
+  const statusPieData = useMemo(
+    () => {
+      const counts = a3PortfolioStats.statusCounts || {};
+      const data: { name: string; value: number; color: string }[] = [];
+
+      const pushIf = (key: string, label: string, color: string) => {
+        const value = counts[key] || 0;
+        if (value > 0) {
+          data.push({ name: label, value, color });
+        }
+      };
+
+      pushIf('Not Started', 'Not Started', '#9ca3af');
+      pushIf('In Progress', 'In Progress', '#3b82f6');
+      pushIf('Completed', 'Completed', '#10b981');
+      pushIf('On Hold', 'On Hold', '#f59e0b');
+      pushIf('Cancelled', 'Cancelled', '#ef4444');
+
+      return data;
+    },
+    [a3PortfolioStats],
+  );
+
+  const priorityPieData = useMemo(
+    () => {
+      const counts = a3PortfolioStats.priorityCounts || {};
+      const data: { name: string; value: number; color: string }[] = [];
+
+      const high = counts['High'] || 0;
+      const medium = counts['Medium'] || 0;
+      const low = counts['Low'] || 0;
+
+      if (high > 0) data.push({ name: 'High', value: high, color: '#ef4444' });
+      if (medium > 0) data.push({ name: 'Medium', value: medium, color: '#f97316' });
+      if (low > 0) data.push({ name: 'Low', value: low, color: '#10b981' });
+
+      return data;
+    },
+    [a3PortfolioStats],
+  );
+
+  const groupPieData = useMemo(
+    () => {
+      const groupCounts = a3PortfolioStats.groupCounts || {};
+      const entries = Object.entries(groupCounts);
+      const palette = ['#3b82f6', '#10b981', '#f97316', '#6366f1', '#ec4899', '#22c55e', '#eab308', '#0ea5e9'];
+
+      const data: { name: string; value: number; color: string }[] = entries.map(([name, value], index) => ({
+        name,
+        value,
+        color: palette[index % palette.length],
+      }));
+
+      if (a3PortfolioStats.ungroupedCount > 0) {
+        data.push({
+          name: 'Ungrouped',
+          value: a3PortfolioStats.ungroupedCount,
+          color: '#9ca3af',
+        });
+      }
+
+      return data;
+    },
+    [a3PortfolioStats],
+  );
 
   const a3KanbanColumns = useMemo(() => {
     if (a3Cases.length === 0) {
@@ -1715,47 +1784,91 @@ const Layout = () => {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-                    <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-3">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total A3 Cases</p>
-                      <p className="mt-1 text-2xl font-semibold text-gray-900">{a3PortfolioStats.total}</p>
-                      <p className="mt-1 text-xs text-gray-500">
-                        {a3PortfolioStats.active} active, {a3PortfolioStats.completed} completed
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                    <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</p>
+                      <div className="mt-2 h-40">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={statusPieData}
+                              dataKey="value"
+                              nameKey="name"
+                              innerRadius={30}
+                              outerRadius={55}
+                              paddingAngle={2}
+                            >
+                              {statusPieData.map((entry, index) => (
+                                <Cell key={`status-cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip formatter={(value, name) => [`${value}`, name as string]} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <p className="mt-2 text-[11px] text-gray-500">
+                        Total:{' '}
+                        <span className="font-semibold text-gray-900">
+                          {a3PortfolioStats.total}
+                        </span>{' '}
+                        · Active {a3PortfolioStats.active}, Completed {a3PortfolioStats.completed}
                       </p>
                     </div>
-                    <div className="rounded-lg border border-blue-100 bg-blue-50/60 px-3 py-3">
-                      <p className="text-xs font-medium text-blue-700 uppercase tracking-wide">Status Mix</p>
-                      <p className="mt-1 text-sm text-blue-900">
-                        {a3PortfolioStats.inProgress} In Progress, {a3PortfolioStats.notStarted} Not Started
-                      </p>
-                      <p className="mt-1 text-xs text-blue-700">
-                        {a3PortfolioStats.overdue > 0 ? `${a3PortfolioStats.overdue} overdue` : 'No overdue cases'}
+                    <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Priority</p>
+                      <div className="mt-2 h-40">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={priorityPieData}
+                              dataKey="value"
+                              nameKey="name"
+                              innerRadius={30}
+                              outerRadius={55}
+                              paddingAngle={2}
+                            >
+                              {priorityPieData.map((entry, index) => (
+                                <Cell key={`priority-cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip formatter={(value, name) => [`${value}`, name as string]} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <p className="mt-2 text-[11px] text-gray-500">
+                        High {a3PortfolioStats.priorityCounts['High'] || 0}, Medium{' '}
+                        {a3PortfolioStats.priorityCounts['Medium'] || 0}, Low{' '}
+                        {a3PortfolioStats.priorityCounts['Low'] || 0}
                       </p>
                     </div>
-                    <div className="rounded-lg border border-amber-100 bg-amber-50/70 px-3 py-3">
-                      <p className="text-xs font-medium text-amber-700 uppercase tracking-wide">Priority</p>
-                      <p className="mt-1 text-sm text-amber-900">
-                        {(a3PortfolioStats.priorityCounts['High'] || 0)} High, {(a3PortfolioStats.priorityCounts['Medium'] || 0)} Medium
-                      </p>
-                      <p className="mt-1 text-xs text-amber-700">
-                        {(a3PortfolioStats.priorityCounts['Low'] || 0)} Low
-                      </p>
-                    </div>
-                    <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 px-3 py-3">
-                      <p className="text-xs font-medium text-emerald-700 uppercase tracking-wide">Groups</p>
-                      <p className="mt-1 text-sm text-emerald-900">
-                        {a3PortfolioStats.groupCount || 0} group{a3PortfolioStats.groupCount === 1 ? '' : 's'} in portfolio
-                      </p>
-                      <p className="mt-1 text-xs text-emerald-700">
+                    <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Groups</p>
+                      <div className="mt-2 h-40">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={groupPieData}
+                              dataKey="value"
+                              nameKey="name"
+                              innerRadius={30}
+                              outerRadius={55}
+                              paddingAngle={2}
+                            >
+                              {groupPieData.map((entry, index) => (
+                                <Cell key={`group-cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip formatter={(value, name) => [`${value}`, name as string]} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <p className="mt-2 text-[11px] text-gray-500">
+                        {a3PortfolioStats.groupCount || 0} group
+                        {a3PortfolioStats.groupCount === 1 ? '' : 's'} ·{' '}
                         {a3PortfolioStats.ungroupedCount > 0
-                          ? `${a3PortfolioStats.ungroupedCount} case${a3PortfolioStats.ungroupedCount === 1 ? '' : 's'} ungrouped`
-                          : 'All cases assigned to a group'}
+                          ? `${a3PortfolioStats.ungroupedCount} ungrouped`
+                          : 'All grouped'}
                       </p>
-                      {a3PortfolioStats.largestGroupName && a3PortfolioStats.largestGroupSize > 0 && (
-                        <p className="mt-1 text-xs text-emerald-700">
-                          Largest: {a3PortfolioStats.largestGroupName} ({a3PortfolioStats.largestGroupSize})
-                        </p>
-                      )}
                     </div>
                   </div>
                   <div className="mt-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
