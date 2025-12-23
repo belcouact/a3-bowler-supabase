@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, Navigate } from 'react-router-dom';
-import { Info, Settings, HelpCircle, Sparkles, Loader2, Calendar } from 'lucide-react';
+import { Info, Settings, HelpCircle, Sparkles, Loader2, Calendar, AlertTriangle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Metric } from '../types';
 import { HelpModal } from '../components/HelpModal';
@@ -78,6 +78,7 @@ const MetricBowler = () => {
     y: number;
     content: React.ReactNode;
   } | null>(null);
+  const [showAlerts, setShowAlerts] = useState(false);
 
   const displayMonths = useMemo(() => {
     const [startYearStr, startMonthStr] = startDate.split('-');
@@ -122,6 +123,40 @@ const MetricBowler = () => {
       }
     }
   }, [selectedBowler?.metricStartDate]);
+
+  const metricAlerts = useMemo(() => {
+    if (!selectedBowler) return [];
+    const result: { metricId: string; metricName: string; consecutiveFails: number }[] = [];
+
+    metrics.forEach(metric => {
+      if (!metric.monthlyData) return;
+      let streak = 0;
+
+      displayMonths.forEach(month => {
+        const monthData = metric.monthlyData?.[month.key];
+        const violation = isViolation(
+          metric.targetMeetingRule,
+          monthData?.target,
+          monthData?.actual
+        );
+        if (violation) {
+          streak += 1;
+        } else {
+          streak = 0;
+        }
+      });
+
+      if (streak >= 2) {
+        result.push({
+          metricId: metric.id,
+          metricName: metric.name,
+          consecutiveFails: streak
+        });
+      }
+    });
+
+    return result;
+  }, [selectedBowler, metrics, displayMonths]);
 
   const handleStartDateChange = (value: string) => {
     setStartDate(value);
@@ -448,6 +483,37 @@ const MetricBowler = () => {
             </div>
         </div>
       </div>
+      {metricAlerts.length > 0 && (
+        <div className="px-6 py-3 border-b border-gray-200 bg-amber-50 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <AlertTriangle className="w-4 h-4 text-amber-600" />
+            <span className="text-sm font-medium text-amber-800">
+              {metricAlerts.length} metric{metricAlerts.length > 1 ? 's' : ''} with consecutive target misses
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowAlerts(!showAlerts)}
+            className="text-xs font-medium text-amber-800 hover:text-amber-900 underline"
+          >
+            {showAlerts ? 'Hide details' : 'View details'}
+          </button>
+        </div>
+      )}
+      {showAlerts && metricAlerts.length > 0 && (
+        <div className="px-6 py-3 border-b border-gray-200 bg-amber-50/60">
+          <ul className="space-y-1 text-sm text-amber-900">
+            {metricAlerts.map(alert => (
+              <li key={alert.metricId} className="flex items-center justify-between">
+                <span>{alert.metricName}</span>
+                <span className="text-xs text-amber-700">
+                  {alert.consecutiveFails} consecutive months not meeting target
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="overflow-x-auto overflow-y-hidden no-scrollbar">
         <table className="min-w-full divide-y divide-gray-200 table-auto">
           <thead className="bg-gray-50">
