@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Info, BrainCircuit, Sparkles, FileText } from 'lucide-react';
+import { X, Info, BrainCircuit, Sparkles, FileText, Trash2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 interface MindmapModalProps {
@@ -9,7 +9,15 @@ interface MindmapModalProps {
 }
 
 export const MindmapModal = ({ isOpen, onClose, mode }: MindmapModalProps) => {
-  const { dashboardMarkdown, dashboardTitle, updateDashboardMarkdown, dashboardMindmaps, activeMindmapId, selectedModel } = useApp();
+  const {
+    dashboardMarkdown,
+    dashboardTitle,
+    updateDashboardMarkdown,
+    dashboardMindmaps,
+    activeMindmapId,
+    selectedModel,
+    deleteMindmap
+  } = useApp();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [text, setText] = useState('');
@@ -46,6 +54,13 @@ export const MindmapModal = ({ isOpen, onClose, mode }: MindmapModalProps) => {
       createNew: mode === 'create',
       description
     });
+    onClose();
+  };
+
+  const handleDelete = () => {
+    if (!activeMindmapId) return;
+    if (!window.confirm('Are you sure you want to delete this mindmap?')) return;
+    deleteMindmap(activeMindmapId);
     onClose();
   };
 
@@ -291,21 +306,35 @@ export const MindmapModal = ({ isOpen, onClose, mode }: MindmapModalProps) => {
             )}
           </div>
 
-          <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button
-              type="submit"
-              onClick={handleSubmit}
-              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
-            >
-              {mode === 'edit' ? 'Save Changes' : 'Create Mindmap'}
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
-            >
-              Cancel
-            </button>
+          <div className="bg-gray-50 px-4 py-3 sm:px-6 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
+            <div className="order-2 sm:order-1 w-full sm:w-auto">
+              {mode === 'edit' && activeMindmapId && dashboardMindmaps.length > 0 && (
+                <button
+                  type="button"
+                  className="w-full sm:w-auto inline-flex justify-center items-center rounded-md border border-transparent px-4 py-2 text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm font-medium"
+                  onClick={handleDelete}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </button>
+              )}
+            </div>
+            <div className="order-1 sm:order-2 flex flex-col sm:flex-row-reverse w-full sm:w-auto">
+              <button
+                type="submit"
+                onClick={handleSubmit}
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
+              >
+                {mode === 'edit' ? 'Save Changes' : 'Create Mindmap'}
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="mt-3 sm:mt-0 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:w-auto sm:text-sm"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       </div>

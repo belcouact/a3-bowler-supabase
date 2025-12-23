@@ -28,6 +28,7 @@ interface AppContextType {
   dashboardMindmaps: DashboardMindmap[];
   activeMindmapId: string | null;
   setActiveMindmap: (id: string) => void;
+  deleteMindmap: (id: string) => void;
   updateDashboardMarkdown: (
     markdown: string,
     title?: string,
@@ -41,7 +42,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 const DEFAULT_MARKDOWN = `# **A3 Bowler – Performance Tracker**
 
 ## **Metric Bowler – KPIs & Trends**
-- Track KPIs** by bowler / team
+- Track KPIs by bowler / team
   - Safety · Quality · Delivery · Cost
   - Leading vs lagging indicators
 - Monthly targets
@@ -83,29 +84,6 @@ const DEFAULT_MARKDOWN = `# **A3 Bowler – Performance Tracker**
   - Use the same terms / tags as in Metric Bowler
   - Keep your A3, KPIs, and ideas aligned
 
-## **Markmap Tips & Tricks**
-- Text styles
-  - **Bold** for key concepts
-  - *Italic* for examples
-  - ==Highlight== to draw attention
-- Tasks
-  - [ ] Open task
-  - [x] Completed task
-- Links & code
-  - [Website](https://study-llm.me)
-  - \`inline code\` for commands and shortcuts
-- Blocks
-  - Code-style trees:
-    - \`\`\`text
-      - Goal
-        - Metric
-        - Action
-    - \`\`\`
-  - Simple tables:
-    | Feature | Where |
-    | Metrics | Metric Bowler |
-    | A3 flow | A3 Analysis |
-    | Mindmaps | Map Ideas |
 `;
 
 const getValidModel = (model?: string | null): AIModelKey => {
@@ -429,6 +407,34 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       });
   };
 
+  const deleteMindmap = (id: string) => {
+    setDashboardMindmaps(prev => {
+      const newMindmaps = prev.filter(m => m.id !== id);
+      let newActiveId: string | null = activeMindmapId;
+      let newMarkdown = dashboardMarkdown;
+      let newTitle = dashboardTitle;
+
+      if (activeMindmapId === id) {
+        if (newMindmaps.length > 0) {
+          const fallback = newMindmaps[0];
+          newActiveId = fallback.id;
+          newMarkdown = fallback.markdown;
+          newTitle = fallback.title;
+        } else {
+          newActiveId = null;
+          newMarkdown = DEFAULT_MARKDOWN;
+          newTitle = extractTitleFromMarkdown(DEFAULT_MARKDOWN) || '';
+        }
+      }
+
+      setActiveMindmapId(newActiveId);
+      setDashboardMarkdown(newMarkdown);
+      setDashboardTitle(newTitle);
+      saveToLocalCache(bowlers, a3Cases, newMarkdown, newTitle, newMindmaps, newActiveId);
+      return newMindmaps;
+    });
+  };
+
   const addBowler = (data: Omit<Bowler, 'id'>) => {
     const newBowler = {
       id: generateShortId(),
@@ -520,6 +526,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         dashboardMindmaps,
         activeMindmapId,
         setActiveMindmap,
+        deleteMindmap,
         updateDashboardMarkdown
       }}
     >
