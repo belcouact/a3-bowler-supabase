@@ -59,7 +59,14 @@ const Summary = () => {
   };
 
   if (!currentCase) {
-    return <div className="text-gray-500">Loading application data...</div>;
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="flex flex-col items-center">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <p className="mt-3 text-base font-medium text-gray-700">Loading application data...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

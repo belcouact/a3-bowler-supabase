@@ -846,14 +846,6 @@ const Layout = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      {(isLoading || isDataLoading) && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-white/80 backdrop-blur-sm transition-opacity duration-300">
-          <div className="flex flex-col items-center">
-            <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
-            <p className="mt-4 text-base font-medium text-gray-700">Loading application data...</p>
-          </div>
-        </div>
-      )}
       {/* Top Bar */}
       <header className="bg-white border-b border-gray-200 z-[60] shadow-sm h-16 flex items-center px-6 justify-between relative">
         <div className="flex items-center space-x-8">
@@ -1202,11 +1194,23 @@ const Layout = () => {
         </div>
       </header>
 
+      {(isLoading || isDataLoading) && (
+        <div className="bg-blue-50 border-b border-blue-100">
+          <div className="max-w-6xl mx-auto px-4 py-2 flex items-center justify-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+            <p className="text-xs md:text-sm font-medium text-blue-700">
+              Loading application data...
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-1">
         {/* Dynamic Sidebar */}
         <aside className={clsx(
           "bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out relative",
-          isSidebarOpen ? "w-64 absolute z-50 h-full md:relative" : "w-0 md:w-16"
+          isSidebarOpen ? "w-64 absolute z-50 h-full md:relative" : "w-0 md:w-16",
+          location.pathname.startsWith('/portfolio') ? "hidden md:hidden" : ""
         )}>
           <button
              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -1749,11 +1753,8 @@ const Layout = () => {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
-                      A3 Portfolio
-                    </p>
                     <h2 className="text-base md:text-lg font-semibold text-gray-900">
-                      Portfolio Overview
+                      A3 Portfolio Overview
                     </h2>
                   </div>
                 </div>

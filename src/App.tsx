@@ -14,6 +14,15 @@ const Summary = lazy(() => import('./pages/a3-subpages/Summary'));
 const A3Redirect = lazy(() => import('./components/A3Redirect'));
 const MarkmapPage = lazy(() => import('./pages/MarkmapPage'));
 
+const LoadingView = ({ message }: { message: string }) => (
+  <div className="flex items-center justify-center py-16">
+    <div className="flex flex-col items-center">
+      <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      <p className="mt-3 text-base font-medium text-gray-700">{message}</p>
+    </div>
+  </div>
+);
+
 const RouteLoader = () => {
   const location = useLocation();
 
@@ -27,18 +36,11 @@ const RouteLoader = () => {
     message = 'Loading A3 Analysis...';
   }
 
-  return <div className="p-4 text-gray-500">{message}</div>;
+  return <LoadingView message={message} />;
 };
 
 const MarkmapLoader = () => {
-  return (
-    <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-      <div className="flex flex-col items-center">
-        <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
-        <p className="mt-4 text-base font-medium text-gray-700">Loading markmap.js...</p>
-      </div>
-    </div>
-  );
+  return <LoadingView message="Loading markmap.js..." />;
 };
 
 const PortfolioPlaceholder = () => {
