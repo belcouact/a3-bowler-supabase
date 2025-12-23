@@ -8,6 +8,7 @@ interface SummaryModalProps {
   onClose: () => void;
   content: string;
   isLoading: boolean;
+  onHideWhileLoading: () => void;
 }
 
 interface MetricPerformance {
@@ -35,7 +36,7 @@ interface SummaryData {
   areasOfConcern: AreaOfConcern[];
 }
 
-export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, content, isLoading }) => {
+export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, content, isLoading, onHideWhileLoading }) => {
   const toast = useToast();
 
   if (!isOpen) return null;
@@ -454,13 +455,23 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
                     </div>
                 </div>
             </div>
-            <button
-                onClick={onClose}
-                className="bg-white rounded-md p-1 text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none transition-all"
-            >
-                <span className="sr-only">Close</span>
-                <X className="h-5 w-5" />
-            </button>
+            <div className="flex items-center space-x-2">
+              {isLoading && (
+                <button
+                  onClick={onHideWhileLoading}
+                  className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full border border-indigo-100 text-indigo-600 bg-white hover:bg-indigo-50 transition-colors"
+                >
+                  Continue working
+                </button>
+              )}
+              <button
+                  onClick={onClose}
+                  className="bg-white rounded-md p-1 text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none transition-all"
+              >
+                  <span className="sr-only">Close</span>
+                  <X className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
           {/* Content */}

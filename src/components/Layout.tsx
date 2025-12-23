@@ -5,7 +5,7 @@ import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
 import { Bowler, Metric, AIModelKey } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { useState, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { dataService } from '../services/dataService';
 import { useToast } from '../context/ToastContext';
 import { getBowlerStatusColor } from '../utils/metricUtils';
@@ -92,6 +92,7 @@ const Layout = () => {
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   const [summaryContent, setSummaryContent] = useState('');
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [isSummaryHiddenWhileLoading, setIsSummaryHiddenWhileLoading] = useState(false);
   const [isConsolidateModalOpen, setIsConsolidateModalOpen] = useState(false);
   const [isAppInfoOpen, setIsAppInfoOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -330,6 +331,7 @@ const Layout = () => {
   const handleOneClickSummary = async () => {
     setIsGeneratingSummary(true);
     setSummaryContent('');
+    setIsSummaryHiddenWhileLoading(false);
     setIsSummaryModalOpen(true);
     
     try {
@@ -339,9 +341,11 @@ const Layout = () => {
       const prompt = `Provide a comprehensive performance summary.
       
       Analyze the data based on each metric's 'targetMeetingRule' (e.g., gte, lte, within_range) and 'attribute'.
-      Identify metrics that have missed their target for 2 or more consecutive months (current month + previous 1 or 2).
+      Identify all metrics that have missed their target for 2 or more consecutive months (current month + previous 1 or 2). Every such metric must appear in the 'areasOfConcern' array.
       Group the metrics by their 'group' field.
       Also analyze the A3 problem-solving data and produce an overall A3 summary that highlights the main problems, root causes, current status, and overall progress across A3 cases.
+      
+      For each metric included in 'areasOfConcern', provide a specific, tailored improvement suggestion based on the type of metric and its trend (avoid generic or repeated suggestions).
       
       Return the response in STRICT JSON format with the following structure:
       {
@@ -360,13 +364,13 @@ const Layout = () => {
         ],
         "a3Summary": "Narrative summary of A3 cases, grouped logically where relevant. Cover open vs closed status, key problem themes, dominant root causes, and overall progress in the A3 portfolio.",
         "areasOfConcern": [
-          {
-            "metricName": "Metric Name",
-            "groupName": "Group Name",
-            "issue": "Brief description of the issue (e.g., 'Consistently missing target')",
-            "suggestion": "Detailed, actionable improvement suggestion based on industry best practices"
-          }
-        ]
+        {
+          "metricName": "Metric Name",
+          "groupName": "Group Name",
+          "issue": "Brief description of why the metric is a concern (e.g., 'Failed to meet target for 3 consecutive months, worsening trend')",
+          "suggestion": "Detailed, actionable, metric-specific improvement suggestion based on industry best practices and the observed pattern"
+        }
+      ]
       }
       Do not include any markdown formatting (like \`\`\`json). Just the raw JSON object.`;
       
@@ -379,6 +383,18 @@ const Layout = () => {
       setIsGeneratingSummary(false);
     }
   };
+
+  const handleHideSummaryWhileLoading = () => {
+    setIsSummaryModalOpen(false);
+    setIsSummaryHiddenWhileLoading(true);
+  };
+
+  useEffect(() => {
+    if (!isGeneratingSummary && summaryContent && isSummaryHiddenWhileLoading) {
+      setIsSummaryModalOpen(true);
+      setIsSummaryHiddenWhileLoading(false);
+    }
+  }, [isGeneratingSummary, summaryContent, isSummaryHiddenWhileLoading]);
 
   const handleSaveData = async () => {
     if (!user) {
@@ -1436,6 +1452,7 @@ const Layout = () => {
           onClose={() => setIsSummaryModalOpen(false)}
           content={summaryContent}
           isLoading={isGeneratingSummary}
+          onHideWhileLoading={handleHideSummaryWhileLoading}
         />
       </Suspense>
 
