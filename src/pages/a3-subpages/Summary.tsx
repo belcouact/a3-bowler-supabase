@@ -59,7 +59,7 @@ const Summary = () => {
   };
 
   if (!currentCase) {
-    return <div className="text-gray-500">Loading case data...</div>;
+    return <div className="text-gray-500">Loading application data...</div>;
   }
 
   return (

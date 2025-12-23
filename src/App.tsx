@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import Layout from './components/Layout';
 
@@ -13,10 +13,26 @@ const Summary = lazy(() => import('./pages/a3-subpages/Summary'));
 const A3Redirect = lazy(() => import('./components/A3Redirect'));
 const MarkmapPage = lazy(() => import('./pages/MarkmapPage'));
 
+const RouteLoader = () => {
+  const location = useLocation();
+
+  let message = 'Loading application data...';
+
+  if (location.pathname.includes('mindmap')) {
+    message = 'Loading markmap.js...';
+  } else if (location.pathname.includes('metric-bowler')) {
+    message = 'Loading Metric Bowler...';
+  } else if (location.pathname.includes('a3-analysis')) {
+    message = 'Loading A3 Analysis...';
+  }
+
+  return <div className="p-4 text-gray-500">{message}</div>;
+};
+
 function App() {
   return (
     <Router basename={import.meta.env.BASE_URL}>
-      <Suspense fallback={<div className="p-4 text-gray-500">Loading...</div>}>
+      <Suspense fallback={<RouteLoader />}>
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Navigate to="/metric-bowler" replace />} />
