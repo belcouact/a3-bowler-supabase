@@ -38,63 +38,63 @@ interface AppContextType {
 // Context
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const DEFAULT_MARKDOWN = `# A3 Bowler – Performance Tracker
+const DEFAULT_MARKDOWN = `# **A3 Bowler – Performance Tracker**
 
-## Metric Bowler – KPIs & Trends
-- **Track KPIs** by bowler / team
+## **Metric Bowler – KPIs & Trends**
+- Track KPIs** by bowler / team
   - Safety · Quality · Delivery · Cost
   - Leading vs lagging indicators
-- **Monthly targets**
+- Monthly targets
   - Plan vs Actual on the same chart
   - Spot trends over time
-- **Gap analysis**
+- Gap analysis
   - Deviation from target
   - Capture reason and countermeasures
-- **Productivity tips**
-  - Group lists by *Team*, *Group*, or \`Tag\`
+- Productivity tips
+  - Group lists by *Team*, *Group*, or *Tag*
   - Use CSV Import / Download for quick setup
   - Hit the ==One Click Summary== button for AI insights
 
-## A3 Problem Solving – Guided Flow
-- **Problem Statement**
+## **A3 Problem Solving – Guided Flow**
+- Problem Statement
   - Clarify what/where/when
   - Quantify impact with metrics
-- **Data Analysis**
+- Data Analysis
   - Visualize trends from Metric Bowler
   - Attach screenshots or charts
-- **Why Analysis**
+- Why Analysis
   - 5 Whys and cause–effect chains
   - Highlight key causes with ==highlighted notes==
-- **Action Plan**
+- Action Plan
   - What · Who · When · Status
   - Track completion with checkboxes
-- **Result & Summary**
+- Result & Summary
   - Confirm effect on KPIs
   - Capture lessons learned for reuse
 
-## Map Ideas – Mindmaps & AI
-- **Map Ideas page**
+## **Map Ideas – Mindmaps & AI**
+- Map Ideas page
   - Capture strategy, roadmaps, and learning notes as mindmaps
   - Keep multiple maps in the left sidebar
-- **AI-generated maps**
+- AI-generated maps
   - Use the AI tab to describe your idea in plain text
   - Let AI design the structure and formatting
-- **Link to A3 & metrics**
+- Link to A3 & metrics
   - Use the same terms / tags as in Metric Bowler
   - Keep your A3, KPIs, and ideas aligned
 
-## Markmap Tips & Tricks
-- **Text styles**
+## **Markmap Tips & Tricks**
+- Text styles
   - **Bold** for key concepts
   - *Italic* for examples
   - ==Highlight== to draw attention
-- **Tasks**
-  - [ ] \`- [ ]\` Open task
-  - [x] \`- [x]\` Completed task
-- **Links & code**
-  - \`https://study-llm.me\`
+- Tasks
+  - [ ] Open task
+  - [x] Completed task
+- Links & code
+  - [Website](https://study-llm.me)
   - \`inline code\` for commands and shortcuts
-- **Blocks**
+- Blocks
   - Code-style trees:
     - \`\`\`text
       - Goal
@@ -102,10 +102,10 @@ const DEFAULT_MARKDOWN = `# A3 Bowler – Performance Tracker
         - Action
     - \`\`\`
   - Simple tables:
-    - \`| Feature | Where |\`
-    - \`| Metrics | Metric Bowler |\`
-    - \`| A3 flow | A3 Analysis |\`
-    - \`| Mindmaps | Map Ideas |\`
+    | Feature | Where |
+    | Metrics | Metric Bowler |
+    | A3 flow | A3 Analysis |
+    | Mindmaps | Map Ideas |
 `;
 
 const getValidModel = (model?: string | null): AIModelKey => {
