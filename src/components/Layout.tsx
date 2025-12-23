@@ -108,6 +108,12 @@ const Layout = () => {
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const [isMobileModelMenuOpen, setIsMobileModelMenuOpen] = useState(false);
   const [a3PortfolioViewMode, setA3PortfolioViewMode] = useState<'group' | 'metric'>('group');
+  const [groupFilter, setGroupFilter] = useState<string>('');
+  const [metricFilter, setMetricFilter] = useState<string>('');
+  const [latestFilter, setLatestFilter] = useState<'all' | 'ok' | 'fail' | 'no-data'>('all');
+  const [fail2Filter, setFail2Filter] = useState<'all' | 'yes' | 'no'>('all');
+  const [fail3Filter, setFail3Filter] = useState<'all' | 'yes' | 'no'>('all');
+  const [achievementFilter, setAchievementFilter] = useState<'all' | 'lt50' | '50to80' | 'gte80'>('all');
 
   const a3PortfolioStats = useMemo(() => {
     const total = a3Cases.length;
@@ -381,6 +387,90 @@ const Layout = () => {
 
     return rows;
   }, [bowlers]);
+
+  const groupFilterOptions = useMemo(
+    () => {
+      const names = Array.from(new Set(groupPerformanceTableData.map(row => row.groupName)));
+      names.sort();
+      return names;
+    },
+    [groupPerformanceTableData],
+  );
+
+  const metricFilterOptions = useMemo(
+    () => {
+      const names = Array.from(new Set(groupPerformanceTableData.map(row => row.metricName)));
+      names.sort();
+      return names;
+    },
+    [groupPerformanceTableData],
+  );
+
+  const filteredGroupPerformanceTableData = useMemo(
+    () => {
+      return groupPerformanceTableData.filter(row => {
+        if (groupFilter && row.groupName !== groupFilter) {
+          return false;
+        }
+
+        if (metricFilter && row.metricName !== metricFilter) {
+          return false;
+        }
+
+        if (latestFilter !== 'all') {
+          if (latestFilter === 'no-data' && row.latestMet !== null) {
+            return false;
+          }
+          if (latestFilter === 'ok' && row.latestMet !== true) {
+            return false;
+          }
+          if (latestFilter === 'fail' && row.latestMet !== false) {
+            return false;
+          }
+        }
+
+        if (fail2Filter !== 'all') {
+          if (fail2Filter === 'yes' && !row.fail2) {
+            return false;
+          }
+          if (fail2Filter === 'no' && row.fail2) {
+            return false;
+          }
+        }
+
+        if (fail3Filter !== 'all') {
+          if (fail3Filter === 'yes' && !row.fail3) {
+            return false;
+          }
+          if (fail3Filter === 'no' && row.fail3) {
+            return false;
+          }
+        }
+
+        if (achievementFilter !== 'all') {
+          const rate = row.achievementRate;
+          if (rate == null) {
+            return false;
+          }
+
+          if (achievementFilter === 'lt50' && !(rate < 50)) {
+            return false;
+          }
+
+          if (achievementFilter === '50to80' && !(rate >= 50 && rate < 80)) {
+            return false;
+          }
+
+          if (achievementFilter === 'gte80' && !(rate >= 80)) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+    },
+    [groupPerformanceTableData, groupFilter, metricFilter, latestFilter, fail2Filter, fail3Filter, achievementFilter],
+  );
 
   const pieLabelRadian = Math.PI / 180;
 
@@ -1920,9 +2010,89 @@ const Layout = () => {
                                     Overall target achieving %
                                   </th>
                                 </tr>
+                                <tr>
+                                  <th className="px-3 pb-2">
+                                    <select
+                                      className="w-full rounded border border-gray-200 bg-white px-2 py-1 text-[11px] md:text-xs text-gray-700"
+                                      value={groupFilter}
+                                      onChange={e => setGroupFilter(e.target.value)}
+                                    >
+                                      <option value="">All</option>
+                                      {groupFilterOptions.map(name => (
+                                        <option key={name} value={name}>
+                                          {name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </th>
+                                  <th className="px-3 pb-2">
+                                    <select
+                                      className="w-full rounded border border-gray-200 bg-white px-2 py-1 text-[11px] md:text-xs text-gray-700"
+                                      value={metricFilter}
+                                      onChange={e => setMetricFilter(e.target.value)}
+                                    >
+                                      <option value="">All</option>
+                                      {metricFilterOptions.map(name => (
+                                        <option key={name} value={name}>
+                                          {name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </th>
+                                  <th className="px-3 pb-2">
+                                    <select
+                                      className="w-full rounded border border-gray-200 bg-white px-2 py-1 text-[11px] md:text-xs text-gray-700"
+                                      value={latestFilter}
+                                      onChange={e => setLatestFilter(e.target.value as 'all' | 'ok' | 'fail' | 'no-data')}
+                                    >
+                                      <option value="all">All</option>
+                                      <option value="ok">Ok</option>
+                                      <option value="fail">Fail</option>
+                                      <option value="no-data">No data</option>
+                                    </select>
+                                  </th>
+                                  <th className="px-3 pb-2">
+                                    <select
+                                      className="w-full rounded border border-gray-200 bg-white px-2 py-1 text-[11px] md:text-xs text-gray-700"
+                                      value={fail2Filter}
+                                      onChange={e => setFail2Filter(e.target.value as 'all' | 'yes' | 'no')}
+                                    >
+                                      <option value="all">All</option>
+                                      <option value="yes">Failing</option>
+                                      <option value="no">Not failing</option>
+                                    </select>
+                                  </th>
+                                  <th className="px-3 pb-2">
+                                    <select
+                                      className="w-full rounded border border-gray-200 bg-white px-2 py-1 text-[11px] md:text-xs text-gray-700"
+                                      value={fail3Filter}
+                                      onChange={e => setFail3Filter(e.target.value as 'all' | 'yes' | 'no')}
+                                    >
+                                      <option value="all">All</option>
+                                      <option value="yes">Failing</option>
+                                      <option value="no">Not failing</option>
+                                    </select>
+                                  </th>
+                                  <th className="px-3 pb-2">
+                                    <select
+                                      className="w-full rounded border border-gray-200 bg-white px-2 py-1 text-[11px] md:text-xs text-gray-700"
+                                      value={achievementFilter}
+                                      onChange={e =>
+                                        setAchievementFilter(
+                                          e.target.value as 'all' | 'lt50' | '50to80' | 'gte80',
+                                        )
+                                      }
+                                    >
+                                      <option value="all">All</option>
+                                      <option value="lt50">&lt; 50%</option>
+                                      <option value="50to80">50–79%</option>
+                                      <option value="gte80">≥ 80%</option>
+                                    </select>
+                                  </th>
+                                </tr>
                               </thead>
                               <tbody className="divide-y divide-gray-100">
-                                {groupPerformanceTableData.map(row => (
+                                {filteredGroupPerformanceTableData.map(row => (
                                   <tr key={`${row.groupName}-${row.metricId}`}>
                                     <td className="px-3 py-2 font-medium text-gray-900">
                                       {row.groupName}
@@ -1987,7 +2157,7 @@ const Layout = () => {
                           </div>
                         </div>
                       )}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                      <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
                         <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
                           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                             Status
