@@ -235,31 +235,6 @@ const Layout = () => {
     [a3PortfolioStats],
   );
 
-  const groupPieData = useMemo(
-    () => {
-      const groupCounts = a3PortfolioStats.groupCounts || {};
-      const entries = Object.entries(groupCounts);
-      const palette = ['#3b82f6', '#10b981', '#f97316', '#6366f1', '#ec4899', '#22c55e', '#eab308', '#0ea5e9'];
-
-      const data: { name: string; value: number; color: string }[] = entries.map(([name, value], index) => ({
-        name,
-        value,
-        color: palette[index % palette.length],
-      }));
-
-      if (a3PortfolioStats.ungroupedCount > 0) {
-        data.push({
-          name: 'Ungrouped',
-          value: a3PortfolioStats.ungroupedCount,
-          color: '#9ca3af',
-        });
-      }
-
-      return data;
-    },
-    [a3PortfolioStats],
-  );
-
   const groupPerformanceTableData = useMemo(() => {
     const groupToMetrics: Record<string, Metric[]> = {};
     const metricOwnerById: Record<string, string> = {};
@@ -387,6 +362,61 @@ const Layout = () => {
 
     return rows;
   }, [bowlers]);
+
+  const metricA3Coverage = useMemo(
+    () => {
+      const atRiskRows = groupPerformanceTableData.filter(row => {
+        return row.latestMet === false || row.fail2 || row.fail3;
+      });
+
+      if (atRiskRows.length === 0) {
+        return {
+          totalAtRisk: 0,
+          withA3: 0,
+          withoutA3: 0,
+          pieData: [] as { name: string; value: number; color: string }[],
+        };
+      }
+
+      const atRiskMetricIds = Array.from(new Set(atRiskRows.map(row => row.metricId)));
+
+      const linkedMetricIdSet = new Set<string>();
+      a3Cases.forEach(c => {
+        (c.linkedMetricIds || []).forEach(id => {
+          if (id) {
+            linkedMetricIdSet.add(id);
+          }
+        });
+      });
+
+      let withA3 = 0;
+      let withoutA3 = 0;
+
+      atRiskMetricIds.forEach(id => {
+        if (linkedMetricIdSet.has(id)) {
+          withA3 += 1;
+        } else {
+          withoutA3 += 1;
+        }
+      });
+
+      const pieData: { name: string; value: number; color: string }[] = [];
+      if (withA3 > 0) {
+        pieData.push({ name: 'With A3 linked', value: withA3, color: '#10b981' });
+      }
+      if (withoutA3 > 0) {
+        pieData.push({ name: 'No A3 linked', value: withoutA3, color: '#ef4444' });
+      }
+
+      return {
+        totalAtRisk: atRiskMetricIds.length,
+        withA3,
+        withoutA3,
+        pieData,
+      };
+    },
+    [groupPerformanceTableData, a3Cases],
+  );
 
   const groupFilterOptions = useMemo(
     () => {
@@ -2231,13 +2261,13 @@ const Layout = () => {
                         </div>
                         <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
                           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                            Groups
+                            Metric A3 Coverage
                           </p>
                           <div className="mt-2 h-40">
                             <ResponsiveContainer width="100%" height="100%">
                               <PieChart>
                                 <Pie
-                                  data={groupPieData}
+                                  data={metricA3Coverage.pieData}
                                   dataKey="value"
                                   nameKey="name"
                                   innerRadius={30}
@@ -2246,9 +2276,9 @@ const Layout = () => {
                                   label={renderPieLabel}
                                   labelLine={false}
                                 >
-                                  {groupPieData.map((entry, index) => (
+                                  {metricA3Coverage.pieData.map((entry, index) => (
                                     <Cell
-                                      key={`group-cell-${index}`}
+                                      key={`metric-coverage-cell-${index}`}
                                       fill={entry.color}
                                     />
                                   ))}
@@ -2258,11 +2288,8 @@ const Layout = () => {
                             </ResponsiveContainer>
                           </div>
                           <p className="mt-2 text-[11px] text-gray-500">
-                            {a3PortfolioStats.groupCount || 0} group
-                            {a3PortfolioStats.groupCount === 1 ? '' : 's'} ·{' '}
-                            {a3PortfolioStats.ungroupedCount > 0
-                              ? `${a3PortfolioStats.ungroupedCount} ungrouped`
-                              : 'All grouped'}
+                            At-risk metrics: {metricA3Coverage.totalAtRisk} · With A3:{' '}
+                            {metricA3Coverage.withA3}, Without A3: {metricA3Coverage.withoutA3}
                           </p>
                         </div>
                       </div>
