@@ -107,6 +107,7 @@ const Layout = () => {
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const [isMobileModelMenuOpen, setIsMobileModelMenuOpen] = useState(false);
   const [isA3PortfolioOpen, setIsA3PortfolioOpen] = useState(false);
+  const [a3PortfolioViewMode, setA3PortfolioViewMode] = useState<'group' | 'metric'>('group');
 
   const a3PortfolioStats = useMemo(() => {
     const total = a3Cases.length;
@@ -184,6 +185,134 @@ const Layout = () => {
       largestGroupSize
     };
   }, [a3Cases]);
+
+  const a3KanbanColumns = useMemo(() => {
+    if (a3Cases.length === 0) {
+      return [];
+    }
+
+    const statusConfig = [
+      {
+        key: 'Not Started',
+        label: 'Not Started',
+        headerClass: 'border-gray-200 bg-gray-50',
+        badgeClass: 'bg-gray-100 text-gray-700',
+        dotClass: 'bg-gray-400',
+      },
+      {
+        key: 'In Progress',
+        label: 'In Progress',
+        headerClass: 'border-blue-200 bg-blue-50',
+        badgeClass: 'bg-blue-100 text-blue-700',
+        dotClass: 'bg-blue-500',
+      },
+      {
+        key: 'Completed',
+        label: 'Completed',
+        headerClass: 'border-emerald-200 bg-emerald-50',
+        badgeClass: 'bg-emerald-100 text-emerald-700',
+        dotClass: 'bg-emerald-500',
+      },
+      {
+        key: 'On Hold',
+        label: 'On Hold',
+        headerClass: 'border-amber-200 bg-amber-50',
+        badgeClass: 'bg-amber-100 text-amber-700',
+        dotClass: 'bg-amber-500',
+      },
+      {
+        key: 'Cancelled',
+        label: 'Cancelled',
+        headerClass: 'border-red-200 bg-red-50',
+        badgeClass: 'bg-red-100 text-red-700',
+        dotClass: 'bg-red-500',
+      },
+    ];
+
+    const metricLabelById = new Map<string, string>();
+    bowlers.forEach(bowler => {
+      (bowler.metrics || []).forEach(metric => {
+        metricLabelById.set(metric.id, `${bowler.name} – ${metric.name}`);
+      });
+    });
+
+    const getPriorityClass = (priority: string) => {
+      if (priority === 'High') {
+        return 'bg-red-50 text-red-700 border-red-200';
+      }
+      if (priority === 'Low') {
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      }
+      return 'bg-amber-50 text-amber-700 border-amber-200';
+    };
+
+    const columns = statusConfig.map(config => ({
+      ...config,
+      items: [] as {
+        a3: A3Case;
+        displayLabel: string;
+        priority: string;
+        priorityClass: string;
+      }[],
+    }));
+
+    const otherColumn = {
+      key: 'Other',
+      label: 'Other',
+      headerClass: 'border-gray-200 bg-white',
+      badgeClass: 'bg-gray-100 text-gray-600',
+      dotClass: 'bg-gray-400',
+      items: [] as {
+        a3: A3Case;
+        displayLabel: string;
+        priority: string;
+        priorityClass: string;
+      }[],
+    };
+
+    const columnByStatus: Record<string, typeof columns[number]> = {};
+    columns.forEach(col => {
+      columnByStatus[col.key] = col;
+    });
+
+    a3Cases.forEach(a3 => {
+      const statusKey = (a3.status || 'Not Started').trim();
+      const priorityKey = (a3.priority || 'Medium').trim();
+
+      const groupLabel = (a3.group || 'Ungrouped').trim() || 'Ungrouped';
+
+      let metricLabel: string | null = null;
+      if (a3.linkedMetricIds && a3.linkedMetricIds.length > 0) {
+        for (const id of a3.linkedMetricIds) {
+          const label = metricLabelById.get(id);
+          if (label) {
+            metricLabel = label;
+            break;
+          }
+        }
+      }
+
+      const displayLabel =
+        a3PortfolioViewMode === 'group'
+          ? groupLabel
+          : metricLabel || 'No linked metric';
+
+      const targetColumn = columnByStatus[statusKey] || otherColumn;
+      targetColumn.items.push({
+        a3,
+        displayLabel,
+        priority: priorityKey,
+        priorityClass: getPriorityClass(priorityKey),
+      });
+    });
+
+    const filledColumns = columns.filter(col => col.items.length > 0);
+    if (otherColumn.items.length > 0) {
+      filledColumns.push(otherColumn);
+    }
+
+    return filledColumns;
+  }, [a3Cases, bowlers, a3PortfolioViewMode]);
 
   const toggleGroup = (group: string) => {
     setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
@@ -1628,6 +1757,123 @@ const Layout = () => {
                         </p>
                       )}
                     </div>
+                  </div>
+                  <div className="mt-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                        A3 Kanban
+                      </p>
+                      <p className="mt-0.5 text-xs text-gray-500">
+                        Track cases by status and quickly scan groups or metric links.
+                      </p>
+                    </div>
+                    <div className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 p-0.5 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setA3PortfolioViewMode('group')}
+                        className={clsx(
+                          'px-3 py-1.5 rounded-full font-medium transition-colors',
+                          a3PortfolioViewMode === 'group'
+                            ? 'bg-white text-gray-900 shadow-sm'
+                            : 'text-gray-500 hover:text-gray-800',
+                        )}
+                      >
+                        View by Group
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setA3PortfolioViewMode('metric')}
+                        className={clsx(
+                          'px-3 py-1.5 rounded-full font-medium transition-colors',
+                          a3PortfolioViewMode === 'metric'
+                            ? 'bg-white text-gray-900 shadow-sm'
+                            : 'text-gray-500 hover:text-gray-800',
+                        )}
+                      >
+                        View by Linked Metric
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mt-3 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                    {a3KanbanColumns.map(column => (
+                      <div
+                        key={column.key}
+                        className={clsx(
+                          'flex flex-col rounded-lg border text-xs',
+                          column.headerClass,
+                        )}
+                      >
+                        <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={clsx(
+                                'h-2 w-2 rounded-full',
+                                column.dotClass,
+                              )}
+                            />
+                            <span className="font-semibold text-gray-800">
+                              {column.label}
+                            </span>
+                          </div>
+                          <span
+                            className={clsx(
+                              'px-2 py-0.5 rounded-full text-[10px] font-medium border',
+                              column.badgeClass,
+                            )}
+                          >
+                            {column.items.length}
+                          </span>
+                        </div>
+                        <div className="flex-1 px-3 py-2 space-y-2 max-h-80 overflow-y-auto">
+                          {column.items.length === 0 ? (
+                            <p className="text-[11px] text-gray-400 italic">
+                              No cases in this column.
+                            </p>
+                          ) : (
+                            column.items.map(item => (
+                              <button
+                                key={item.a3.id}
+                                type="button"
+                                onClick={() => {
+                                  setIsA3PortfolioOpen(false);
+                                  navigate(`/a3-analysis/${item.a3.id}/problem-statement`);
+                                }}
+                                className="w-full text-left rounded-md border border-gray-100 bg-white px-2.5 py-2 shadow-sm hover:border-blue-200 hover:bg-blue-50/60 transition-colors"
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="min-w-0">
+                                    <p className="text-[11px] font-semibold text-gray-900 truncate">
+                                      {item.a3.title}
+                                    </p>
+                                    <p className="mt-0.5 text-[10px] text-gray-500 truncate">
+                                      {a3PortfolioViewMode === 'group' ? 'Group' : 'Metric'}:{' '}
+                                      <span className="font-medium text-gray-700">
+                                        {item.displayLabel}
+                                      </span>
+                                    </p>
+                                  </div>
+                                  <span
+                                    className={clsx(
+                                      'ml-1 inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium',
+                                      item.priorityClass,
+                                    )}
+                                  >
+                                    {item.priority}
+                                  </span>
+                                </div>
+                                {item.a3.startDate && (
+                                  <p className="mt-1 text-[10px] text-gray-400">
+                                    {item.a3.endDate
+                                      ? `${item.a3.startDate} → ${item.a3.endDate}`
+                                      : `Start: ${item.a3.startDate}`}
+                                  </p>
+                                )}
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </>
               )}
