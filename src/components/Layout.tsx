@@ -284,11 +284,9 @@ const Layout = () => {
       if (metrics.length === 0) {
         return {
           groupName,
-          latestMonthPerformance: null as number | null,
-          consecutiveFail2Count: null as number | null,
-          consecutiveFail3Count: null as number | null,
-          stability: 'N/A',
-          capability: 'N/A',
+          latestMonthMetrics: [],
+          fail2Metrics: [],
+          fail3Metrics: [],
           achievementRate: null as number | null,
         };
       }
@@ -308,11 +306,9 @@ const Layout = () => {
       if (sortedMonths.length === 0) {
         return {
           groupName,
-          latestMonthPerformance: null,
-          consecutiveFail2Count: null,
-          consecutiveFail3Count: null,
-          stability: 'N/A',
-          capability: 'N/A',
+          latestMonthMetrics: [],
+          fail2Metrics: [],
+          fail3Metrics: [],
           achievementRate: null,
         };
       }
@@ -388,34 +384,11 @@ const Layout = () => {
       const achievementRate =
         totalPoints > 0 ? (metPoints / totalPoints) * 100 : null;
 
-      let stability = 'N/A';
-      let capability = 'N/A';
-
-      if (achievementRate !== null) {
-        if (fail3Metrics.length > 0 || achievementRate < 70) {
-          stability = 'Unstable';
-        } else if (fail2Metrics.length > 0 || achievementRate < 90) {
-          stability = 'Watch';
-        } else {
-          stability = 'Stable';
-        }
-
-        if (achievementRate >= 95) {
-          capability = 'Capable';
-        } else if (achievementRate >= 80) {
-          capability = 'Borderline';
-        } else {
-          capability = 'Incapable';
-        }
-      }
-
       return {
         groupName,
         latestMonthMetrics,
         fail2Metrics,
         fail3Metrics,
-        stability,
-        capability,
         achievementRate,
       };
     });
@@ -1951,12 +1924,6 @@ const Layout = () => {
                                     Failing last 3 months
                                   </th>
                                   <th className="px-3 py-2 text-left font-semibold text-gray-600">
-                                    Overall stability
-                                  </th>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600">
-                                    Overall capability
-                                  </th>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600">
                                     Overall target achieving %
                                   </th>
                                 </tr>
@@ -1980,13 +1947,13 @@ const Layout = () => {
                                               }
                                             >
                                               <span
-                                                className={
-                                                  metric.met
-                                                    ? 'mr-1 h-1.5 w-1.5 rounded-full bg-green-500'
-                                                    : 'mr-1 h-1.5 w-1.5 rounded-full bg-red-500'
-                                                }
-                                              />
-                                              {metric.name}
+                                              className={
+                                                metric.met
+                                                  ? 'mr-1 h-1.5 w-1.5 rounded-full bg-green-500'
+                                                  : 'mr-1 h-1.5 w-1.5 rounded-full bg-red-500'
+                                              }
+                                            />
+                                              {`${metric.name}: ${metric.met ? 'ok' : 'fail'}`}
                                             </span>
                                           ))}
                                         </div>
@@ -2027,12 +1994,6 @@ const Layout = () => {
                                       ) : (
                                         <span>—</span>
                                       )}
-                                    </td>
-                                    <td className="px-3 py-2 text-gray-700">
-                                      {row.stability}
-                                    </td>
-                                    <td className="px-3 py-2 text-gray-700">
-                                      {row.capability}
                                     </td>
                                     <td className="px-3 py-2 text-gray-700">
                                       {row.achievementRate != null
