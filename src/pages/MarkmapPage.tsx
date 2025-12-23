@@ -26,7 +26,7 @@ transformer.urlBuilder.getUrl = (url: string) => {
 // but urlBuilder is the main interception point for assets
 
 const MarkmapPage = () => {
-  const { dashboardMarkdown } = useApp();
+  const { dashboardMarkdown, dashboardMindmaps } = useApp();
   const [markdown, setMarkdown] = useState(dashboardMarkdown);
   const [svgRef, setSvgRef] = useState<SVGSVGElement | null>(null);
   const [mm, setMm] = useState<Markmap | null>(null);
@@ -92,6 +92,13 @@ const MarkmapPage = () => {
           className="h-full w-full relative bg-gray-50"
           ref={wrapperRef}
         >
+          {dashboardMindmaps.length === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="bg-white/80 border border-dashed border-gray-300 rounded-lg px-4 py-3 text-center text-sm text-gray-500 max-w-xs mx-4">
+                No mindmaps yet. Click the “+” button in the Map Ideas panel to create one.
+              </div>
+            </div>
+          )}
           <svg className="w-full h-full" ref={setSvgRef} />
         </div>
       </div>
