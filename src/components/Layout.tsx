@@ -280,75 +280,52 @@ const Layout = () => {
 
     if (groupNames.length === 0) return [];
 
-    return groupNames.map(groupName => {
+    const rows: {
+      groupName: string;
+      metricId: string;
+      metricName: string;
+      bowlerId?: string;
+      latestMet: boolean | null;
+      fail2: boolean;
+      fail3: boolean;
+      achievementRate: number | null;
+    }[] = [];
+
+    groupNames.forEach(groupName => {
       const metrics = groupToMetrics[groupName] || [];
-
-      if (metrics.length === 0) {
-        return {
-          groupName,
-          latestMonthMetrics: [],
-          fail2Metrics: [],
-          fail3Metrics: [],
-          achievementRate: null as number | null,
-        };
-      }
-
-      const allMonthsSet = new Set<string>();
-      metrics.forEach(metric => {
-        Object.keys(metric.monthlyData || {}).forEach(month => {
-          const data = metric.monthlyData?.[month];
-          if (data?.actual && data?.target) {
-            allMonthsSet.add(month);
-          }
-        });
-      });
-
-      const sortedMonths = Array.from(allMonthsSet).sort();
-
-      if (sortedMonths.length === 0) {
-        return {
-          groupName,
-          latestMonthMetrics: [],
-          fail2Metrics: [],
-          fail3Metrics: [],
-          achievementRate: null,
-        };
-      }
-
-      const latestMonth = sortedMonths[sortedMonths.length - 1];
-      const latest2Months = sortedMonths.slice(-2);
-      const latest3Months = sortedMonths.slice(-3);
-
-      const latestMonthMetrics: { id: string; name: string; met: boolean; bowlerId?: string }[] = [];
-      const fail2Metrics: { id: string; name: string; bowlerId?: string }[] = [];
-      const fail3Metrics: { id: string; name: string; bowlerId?: string }[] = [];
-      let totalPoints = 0;
-      let metPoints = 0;
 
       metrics.forEach(metric => {
         const monthly = metric.monthlyData || {};
+        const months = Object.keys(monthly).filter(month => {
+          const data = monthly[month];
+          return data?.actual && data?.target;
+        }).sort();
 
-        Object.values(monthly).forEach(data => {
-          if (data.actual && data.target) {
-            totalPoints += 1;
-            const violation = isViolation(metric.targetMeetingRule, data.target, data.actual);
-            if (!violation) {
-              metPoints += 1;
-            }
-          }
-        });
-
-        const latestData = monthly[latestMonth];
-        if (latestData?.actual && latestData?.target) {
-          const met = !isViolation(metric.targetMeetingRule, latestData.target, latestData.actual);
-          latestMonthMetrics.push({
-            id: metric.id,
-            name: metric.name,
-            met,
+        if (months.length === 0) {
+          rows.push({
+            groupName,
+            metricId: metric.id,
+            metricName: metric.name,
             bowlerId: metricOwnerById[metric.id],
+            latestMet: null,
+            fail2: false,
+            fail3: false,
+            achievementRate: null,
           });
+          return;
         }
 
+        const latestMonth = months[months.length - 1];
+        const latest2Months = months.slice(-2);
+        const latest3Months = months.slice(-3);
+
+        let latestMet: boolean | null = null;
+        const latestData = monthly[latestMonth];
+        if (latestData?.actual && latestData?.target) {
+          latestMet = !isViolation(metric.targetMeetingRule, latestData.target, latestData.actual);
+        }
+
+        let fail2 = false;
         if (latest2Months.length === 2) {
           let allFail2 = true;
           for (const month of latest2Months) {
@@ -358,15 +335,10 @@ const Layout = () => {
               break;
             }
           }
-          if (allFail2) {
-            fail2Metrics.push({
-              id: metric.id,
-              name: metric.name,
-              bowlerId: metricOwnerById[metric.id],
-            });
-          }
+          fail2 = allFail2;
         }
 
+        let fail3 = false;
         if (latest3Months.length === 3) {
           let allFail3 = true;
           for (const month of latest3Months) {
@@ -376,27 +348,38 @@ const Layout = () => {
               break;
             }
           }
-          if (allFail3) {
-            fail3Metrics.push({
-              id: metric.id,
-              name: metric.name,
-              bowlerId: metricOwnerById[metric.id],
-            });
-          }
+          fail3 = allFail3;
         }
+
+        let totalPoints = 0;
+        let metPoints = 0;
+        months.forEach(month => {
+          const data = monthly[month];
+          if (data?.actual && data?.target) {
+            totalPoints += 1;
+            const violation = isViolation(metric.targetMeetingRule, data.target, data.actual);
+            if (!violation) {
+              metPoints += 1;
+            }
+          }
+        });
+
+        const achievementRate = totalPoints > 0 ? (metPoints / totalPoints) * 100 : null;
+
+        rows.push({
+          groupName,
+          metricId: metric.id,
+          metricName: metric.name,
+          bowlerId: metricOwnerById[metric.id],
+          latestMet,
+          fail2,
+          fail3,
+          achievementRate,
+        });
       });
-
-      const achievementRate =
-        totalPoints > 0 ? (metPoints / totalPoints) * 100 : null;
-
-      return {
-        groupName,
-        latestMonthMetrics,
-        fail2Metrics,
-        fail3Metrics,
-        achievementRate,
-      };
     });
+
+    return rows;
   }, [bowlers]);
 
   const pieLabelRadian = Math.PI / 180;
@@ -1901,7 +1884,7 @@ const Layout = () => {
                 <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                   <div>
                     <h2 className="text-base md:text-lg font-semibold text-gray-900">
-                      A3 Portfolio Overview
+                      Bowler & A3 Portfolio Overview
                     </h2>
                   </div>
                 </div>
@@ -1922,6 +1905,9 @@ const Layout = () => {
                                     Group
                                   </th>
                                   <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
+                                    Metric
+                                  </th>
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
                                     Latest month performance
                                   </th>
                                   <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
@@ -1937,85 +1923,54 @@ const Layout = () => {
                               </thead>
                               <tbody className="divide-y divide-gray-100">
                                 {groupPerformanceTableData.map(row => (
-                                  <tr key={row.groupName}>
+                                  <tr key={`${row.groupName}-${row.metricId}`}>
                                     <td className="px-3 py-2 font-medium text-gray-900">
                                       {row.groupName}
                                     </td>
                                     <td className="px-3 py-2 text-gray-700">
-                                      {row.latestMonthMetrics && row.latestMonthMetrics.length > 0 ? (
-                                        <div className="flex flex-wrap gap-1">
-                                          {row.latestMonthMetrics.map(metric => (
-                                            <button
-                                              key={metric.id}
-                                              className={
-                                                metric.met
-                                                  ? 'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-50 text-green-700 border border-green-100 cursor-pointer hover:bg-green-100'
-                                                  : 'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100 cursor-pointer hover:bg-red-100'
-                                              }
-                                              type="button"
-                                              onClick={() => {
-                                                if (metric.bowlerId) {
-                                                  navigate(`/metric-bowler/${metric.bowlerId}`);
-                                                }
-                                              }}
-                                            >
-                                              <span
-                                              className={
-                                                metric.met
-                                                  ? 'mr-1 h-1.5 w-1.5 rounded-full bg-green-500'
-                                                  : 'mr-1 h-1.5 w-1.5 rounded-full bg-red-500'
-                                              }
-                                            />
-                                              {`${metric.name}: ${metric.met ? 'ok' : 'fail'}`}
-                                            </button>
-                                          ))}
-                                        </div>
+                                      <button
+                                        type="button"
+                                        className="text-[11px] md:text-xs font-medium text-blue-700 hover:text-blue-900 hover:underline"
+                                        onClick={() => {
+                                          if (row.bowlerId) {
+                                            navigate(`/metric-bowler/${row.bowlerId}`);
+                                          }
+                                        }}
+                                      >
+                                        {row.metricName}
+                                      </button>
+                                    </td>
+                                    <td className="px-3 py-2 text-gray-700">
+                                      {row.latestMet === null ? (
+                                        <span>—</span>
+                                      ) : row.latestMet ? (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-50 text-green-700 border border-green-100">
+                                          <span className="mr-1 h-1.5 w-1.5 rounded-full bg-green-500" />
+                                          ok
+                                        </span>
+                                      ) : (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100">
+                                          <span className="mr-1 h-1.5 w-1.5 rounded-full bg-red-500" />
+                                          fail
+                                        </span>
+                                      )}
+                                    </td>
+                                    <td className="px-3 py-2 text-gray-700">
+                                      {row.fail2 ? (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                                          <span className="mr-1 h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                          Failing
+                                        </span>
                                       ) : (
                                         <span>—</span>
                                       )}
                                     </td>
                                     <td className="px-3 py-2 text-gray-700">
-                                      {row.fail2Metrics && row.fail2Metrics.length > 0 ? (
-                                        <div className="flex flex-wrap gap-1">
-                                          {row.fail2Metrics.map(metric => (
-                                            <button
-                                              key={metric.id}
-                                              className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100 cursor-pointer hover:bg-amber-100"
-                                              type="button"
-                                              onClick={() => {
-                                                if (metric.bowlerId) {
-                                                  navigate(`/metric-bowler/${metric.bowlerId}`);
-                                                }
-                                              }}
-                                            >
-                                              <span className="mr-1 h-1.5 w-1.5 rounded-full bg-amber-500" />
-                                              {metric.name}
-                                            </button>
-                                          ))}
-                                        </div>
-                                      ) : (
-                                        <span>—</span>
-                                      )}
-                                    </td>
-                                    <td className="px-3 py-2 text-gray-700">
-                                      {row.fail3Metrics && row.fail3Metrics.length > 0 ? (
-                                        <div className="flex flex-wrap gap-1">
-                                          {row.fail3Metrics.map(metric => (
-                                            <button
-                                              key={metric.id}
-                                              className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100 cursor-pointer hover:bg-red-100"
-                                              type="button"
-                                              onClick={() => {
-                                                if (metric.bowlerId) {
-                                                  navigate(`/metric-bowler/${metric.bowlerId}`);
-                                                }
-                                              }}
-                                            >
-                                              <span className="mr-1 h-1.5 w-1.5 rounded-full bg-red-500" />
-                                              {metric.name}
-                                            </button>
-                                          ))}
-                                        </div>
+                                      {row.fail3 ? (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100">
+                                          <span className="mr-1 h-1.5 w-1.5 rounded-full bg-red-500" />
+                                          Failing
+                                        </span>
                                       ) : (
                                         <span>—</span>
                                       )}
