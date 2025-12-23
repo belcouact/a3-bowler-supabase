@@ -111,7 +111,7 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                   <div className="ml-3">
                     <p className="text-sm font-medium text-gray-900">AI Mindmap</p>
                     <p className="text-xs text-gray-600 mt-1">
-                      Turn A3 content into an AI-generated mindmap to visualize relationships and ideas.
+                      Use AI to turn any idea into an interactive mindmap for exploration and planning.
                     </p>
                   </div>
                 </div>
