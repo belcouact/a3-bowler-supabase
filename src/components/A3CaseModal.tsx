@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { X, Trash2, Info } from 'lucide-react';
 import { A3Case } from '../context/AppContext';
+import { useApp } from '../context/AppContext';
 
 interface A3CaseModalProps {
   isOpen: boolean;
@@ -11,17 +12,30 @@ interface A3CaseModalProps {
 }
 
 const A3CaseModal = ({ isOpen, onClose, onSave, onDelete, initialData }: A3CaseModalProps) => {
+  const { bowlers } = useApp();
   const [formData, setFormData] = useState<Omit<A3Case, 'id'>>({
     title: '',
     description: '',
     owner: '',
     group: '',
     tag: '',
+    linkedMetricIds: [],
     priority: 'Medium',
     startDate: '',
     endDate: '',
     status: 'In Progress',
   });
+
+  const metricOptions = useMemo(
+    () =>
+      bowlers.flatMap(bowler =>
+        (bowler.metrics || []).map(metric => ({
+          id: metric.id,
+          label: `${bowler.name} – ${metric.name}`,
+        })),
+      ),
+    [bowlers],
+  );
 
   useEffect(() => {
     if (isOpen) {
@@ -32,6 +46,7 @@ const A3CaseModal = ({ isOpen, onClose, onSave, onDelete, initialData }: A3CaseM
           owner: initialData.owner || '',
           group: initialData.group || '',
           tag: initialData.tag || '',
+          linkedMetricIds: initialData.linkedMetricIds || [],
           priority: initialData.priority || 'Medium',
           startDate: initialData.startDate || '',
           endDate: initialData.endDate || '',
@@ -45,6 +60,7 @@ const A3CaseModal = ({ isOpen, onClose, onSave, onDelete, initialData }: A3CaseM
           owner: '',
           group: '',
           tag: '',
+          linkedMetricIds: [],
           priority: 'Medium',
           startDate: new Date().toISOString().split('T')[0],
           endDate: '',
@@ -192,6 +208,48 @@ const A3CaseModal = ({ isOpen, onClose, onSave, onDelete, initialData }: A3CaseM
                     />
                   </div>
                 </div>
+              </div>
+
+              <div className="space-y-3 rounded-lg border border-gray-100 bg-white p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Linked metrics</label>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Select metrics this A3 is intended to improve so you can track impact.
+                    </p>
+                  </div>
+                  <span className="text-xs text-gray-400">
+                    {(formData.linkedMetricIds || []).length} selected
+                  </span>
+                </div>
+                {metricOptions.length === 0 ? (
+                  <p className="text-xs text-gray-500 italic">
+                    No metrics available yet. Create metrics in the Metric Bowler view first.
+                  </p>
+                ) : (
+                  <div className="max-h-40 overflow-y-auto space-y-1">
+                    {metricOptions.map(option => {
+                      const checked = (formData.linkedMetricIds || []).includes(option.id);
+                      return (
+                        <label key={option.id} className="flex items-center gap-2 text-sm text-gray-700">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                            checked={checked}
+                            onChange={() => {
+                              const current = formData.linkedMetricIds || [];
+                              const next = checked
+                                ? current.filter(id => id !== option.id)
+                                : [...current, option.id];
+                              setFormData({ ...formData, linkedMetricIds: next });
+                            }}
+                          />
+                          <span>{option.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-3 rounded-lg border border-gray-100 bg-white p-3">

@@ -966,10 +966,11 @@ const Layout = () => {
                     {isA3Analysis && (
                       <button
                         onClick={() => setIsA3PortfolioOpen(true)}
-                        className="p-1 rounded-md hover:bg-emerald-50 text-emerald-700 transition-colors border border-emerald-100 bg-white"
+                        className="inline-flex items-center px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-medium hover:bg-emerald-100 hover:text-emerald-800 transition-colors"
                         title="View A3 Portfolio Overview"
                       >
-                        <Layers className="w-4 h-4" />
+                        <BarChart3 className="w-3 h-3 mr-1" />
+                        <span>Portfolio</span>
                       </button>
                     )}
                     <button 
@@ -1000,10 +1001,10 @@ const Layout = () => {
                   {isA3Analysis && (
                     <button
                       onClick={() => setIsA3PortfolioOpen(true)}
-                      className="p-1 rounded-md hover:bg-emerald-50 text-emerald-700 transition-colors border border-emerald-100 bg-white"
+                      className="p-1.5 rounded-full bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
                       title="View A3 Portfolio Overview"
                     >
-                      <Layers className="w-4 h-4" />
+                      <BarChart3 className="w-3 h-3" />
                     </button>
                   )}
                   <button 

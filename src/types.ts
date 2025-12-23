@@ -82,6 +82,7 @@ export interface A3Case {
   owner?: string;
   group?: string;
   tag?: string;
+  linkedMetricIds?: string[];
   priority?: 'Low' | 'Medium' | 'High';
   startDate?: string;
   endDate?: string;
