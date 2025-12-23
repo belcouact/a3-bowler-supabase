@@ -38,69 +38,74 @@ interface AppContextType {
 // Context
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const DEFAULT_MARKDOWN = `# A3 Bowler
-## Metric Bowler
-- Track KPIs
-  - Safety
-  - Quality
-  - Delivery
-  - Cost
-- Monthly Targets
-  - Plan
-  - Actual
-- Gap Analysis
-  - Deviation
-  - Reason
-## A3 Problem Solving
-- Problem Statement
-  - Description
-  - Impact
-- Root Cause Analysis
-  - 5 Whys
-  - Fishbone
-- Action Plan
-  - What
-  - Who
-  - When
-`;
+const DEFAULT_MARKDOWN = `# A3 Bowler – Performance Tracker
 
-const SAMPLE_MARKMAP_MARKDOWN = `# markmap
-## Links
+## Metric Bowler – KPIs & Trends
+- **Track KPIs** by bowler / team
+  - Safety · Quality · Delivery · Cost
+  - Leading vs lagging indicators
+- **Monthly targets**
+  - Plan vs Actual on the same chart
+  - Spot trends over time
+- **Gap analysis**
+  - Deviation from target
+  - Capture reason and countermeasures
+- **Productivity tips**
+  - Group lists by *Team*, *Group*, or \`Tag\`
+  - Use CSV Import / Download for quick setup
+  - Hit the ==One Click Summary== button for AI insights
 
-- \`https://markmap.js.org/\`
-- \`https://github.com/gera2ld/markmap\`
+## A3 Problem Solving – Guided Flow
+- **Problem Statement**
+  - Clarify what/where/when
+  - Quantify impact with metrics
+- **Data Analysis**
+  - Visualize trends from Metric Bowler
+  - Attach screenshots or charts
+- **Why Analysis**
+  - 5 Whys and cause–effect chains
+  - Highlight key causes with ==highlighted notes==
+- **Action Plan**
+  - What · Who · When · Status
+  - Track completion with checkboxes
+- **Result & Summary**
+  - Confirm effect on KPIs
+  - Capture lessons learned for reuse
 
-## Related Projects
+## Map Ideas – Mindmaps & AI
+- **Map Ideas page**
+  - Capture strategy, roadmaps, and learning notes as mindmaps
+  - Keep multiple maps in the left sidebar
+- **AI-generated maps**
+  - Use the AI tab to describe your idea in plain text
+  - Let AI design the structure and formatting
+- **Link to A3 & metrics**
+  - Use the same terms / tags as in Metric Bowler
+  - Keep your A3, KPIs, and ideas aligned
 
-- \`https://github.com/gera2ld/coc-markmap\`  for Neovim
-- \`https://marketplace.visualstudio.com/items?itemName=gera2ld.markmap-vscode\`  for VSCode
-- \`https://github.com/emacs-eaf/eaf-markmap\`  for Emacs
-
-## Features
-
-Note that if blocks and lists appear at the same level, the lists will be ignored.
-
-### Lists
-
-- **strong** ~~del~~ *italic* ==highlight==
-- \`inline code\`
-- [x] checkbox
-- Ordered list
-  1. item 1
-  2. item 2
-
-### Blocks
-
-\`\`\`js
-console.log('hello, JavaScript')
-\`\`\`
-
-| Products | Price |
-|-|-|
-| Apple | 4 |
-| Banana | 2 |
-
-![](https://markmap.js.org/favicon.png)
+## Markmap Tips & Tricks
+- **Text styles**
+  - **Bold** for key concepts
+  - *Italic* for examples
+  - ==Highlight== to draw attention
+- **Tasks**
+  - [ ] \`- [ ]\` Open task
+  - [x] \`- [x]\` Completed task
+- **Links & code**
+  - \`https://study-llm.me\`
+  - \`inline code\` for commands and shortcuts
+- **Blocks**
+  - Code-style trees:
+    - \`\`\`text
+      - Goal
+        - Metric
+        - Action
+    - \`\`\`
+  - Simple tables:
+    - \`| Feature | Where |\`
+    - \`| Metrics | Metric Bowler |\`
+    - \`| A3 flow | A3 Analysis |\`
+    - \`| Mindmaps | Map Ideas |\`
 `;
 
 const getValidModel = (model?: string | null): AIModelKey => {
@@ -189,8 +194,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
         if (localData && isMountedRef.current) {
             const data = (typeof localData === 'string') ? JSON.parse(localData) : localData;
-            const markdown = data.dashboardMarkdown || DEFAULT_MARKDOWN;
-            const title = data.dashboardTitle || extractTitleFromMarkdown(markdown);
             const mindmaps = (data.dashboardMindmaps || []) as DashboardMindmap[];
             const cachedActiveId = (data.activeMindmapId as string | undefined) || null;
             const dashboardSettings = (data.dashboardSettings || {}) as { aiModel?: AIModelKey };
@@ -213,25 +216,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             } else {
                 const now = new Date().toISOString();
                 const mainId = generateShortId();
-                const sampleId = generateShortId();
+                const defaultMarkdown = DEFAULT_MARKDOWN;
+                const defaultTitle = extractTitleFromMarkdown(defaultMarkdown) || 'A3 Bowler';
                 const initialMindmap: DashboardMindmap = {
                   id: mainId,
-                  title,
-                  markdown,
+                  title: defaultTitle,
+                  markdown: defaultMarkdown,
                   createdAt: now
                 };
-                const sampleMindmap: DashboardMindmap = {
-                  id: sampleId,
-                  title: 'Sample',
-                  description: 'markmap syntax',
-                  markdown: SAMPLE_MARKMAP_MARKDOWN,
-                  createdAt: now
-                };
-                const defaultMindmaps = [sampleMindmap, initialMindmap];
+                const defaultMindmaps = [initialMindmap];
                 setDashboardMindmaps(defaultMindmaps);
-                setActiveMindmapId(sampleId);
-                setDashboardMarkdown(SAMPLE_MARKMAP_MARKDOWN);
-                setDashboardTitle('Sample');
+                setActiveMindmapId(mainId);
+                setDashboardMarkdown(defaultMarkdown);
+                setDashboardTitle(defaultTitle);
             }
         }
     } catch (e) {
@@ -246,8 +243,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
         
         if (isMountedRef.current && data.success) {
-            const markdown = data.dashboardMarkdown || DEFAULT_MARKDOWN;
-            const title = data.dashboardTitle || extractTitleFromMarkdown(markdown);
             const mindmaps = (data.dashboardMindmaps || []) as DashboardMindmap[];
             const backendActiveId = (data.activeMindmapId as string | undefined) || null;
             const dashboardSettings = (data.dashboardSettings || {}) as { aiModel?: AIModelKey };
@@ -283,33 +278,27 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             } else {
                 const now = new Date().toISOString();
                 const mainId = generateShortId();
-                const sampleId = generateShortId();
+                const defaultMarkdown = DEFAULT_MARKDOWN;
+                const defaultTitle = extractTitleFromMarkdown(defaultMarkdown) || 'A3 Bowler';
                 const initialMindmap: DashboardMindmap = {
                   id: mainId,
-                  title,
-                  markdown,
+                  title: defaultTitle,
+                  markdown: defaultMarkdown,
                   createdAt: now
                 };
-                const sampleMindmap: DashboardMindmap = {
-                  id: sampleId,
-                  title: 'Sample',
-                  description: 'markmap syntax',
-                  markdown: SAMPLE_MARKMAP_MARKDOWN,
-                  createdAt: now
-                };
-                const defaultMindmaps = [sampleMindmap, initialMindmap];
+                const defaultMindmaps = [initialMindmap];
                 setDashboardMindmaps(defaultMindmaps);
-                setActiveMindmapId(sampleId);
-                setDashboardMarkdown(SAMPLE_MARKMAP_MARKDOWN);
-                setDashboardTitle('Sample');
+                setActiveMindmapId(mainId);
+                setDashboardMarkdown(defaultMarkdown);
+                setDashboardTitle(defaultTitle);
                 try {
                     await set(localDataKey, { 
                         bowlers: data.bowlers || [], 
                         a3Cases: data.a3Cases || [],
-                        dashboardMarkdown: SAMPLE_MARKMAP_MARKDOWN,
-                        dashboardTitle: 'Sample',
+                        dashboardMarkdown: defaultMarkdown,
+                        dashboardTitle: defaultTitle,
                         dashboardMindmaps: defaultMindmaps,
-                        activeMindmapId: sampleId,
+                        activeMindmapId: mainId,
                         dashboardSettings: { aiModel: effectiveModel }
                     });
                 } catch (e) {
