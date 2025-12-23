@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, Navigate } from 'react-router-dom';
 import { Info, Settings, HelpCircle, Sparkles, Loader2, Calendar, AlertTriangle } from 'lucide-react';
@@ -79,6 +79,7 @@ const MetricBowler = () => {
     content: React.ReactNode;
   } | null>(null);
   const [showAlerts, setShowAlerts] = useState(false);
+  const metricRowRefs = useRef<Record<string, HTMLTableRowElement | null>>({});
 
   const displayMonths = useMemo(() => {
     const [startYearStr, startMonthStr] = startDate.split('-');
@@ -157,6 +158,17 @@ const MetricBowler = () => {
 
     return result;
   }, [selectedBowler, metrics, displayMonths]);
+
+  const handleAlertClick = (metricId: string) => {
+    const row = metricRowRefs.current[metricId];
+    if (row) {
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      row.classList.add('ring-2', 'ring-amber-400', 'ring-offset-2');
+      setTimeout(() => {
+        row.classList.remove('ring-2', 'ring-amber-400', 'ring-offset-2');
+      }, 1600);
+    }
+  };
 
   const handleStartDateChange = (value: string) => {
     setStartDate(value);
@@ -504,8 +516,15 @@ const MetricBowler = () => {
         <div className="px-6 py-3 border-b border-gray-200 bg-amber-50/60">
           <ul className="space-y-1 text-sm text-amber-900">
             {metricAlerts.map(alert => (
-              <li key={alert.metricId} className="flex items-center justify-between">
-                <span>{alert.metricName}</span>
+              <li
+                key={alert.metricId}
+                className="flex items-center justify-between cursor-pointer hover:text-amber-950"
+                onClick={() => handleAlertClick(alert.metricId)}
+              >
+                <span className="flex items-center space-x-1">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                  <span className="underline">{alert.metricName}</span>
+                </span>
                 <span className="text-xs text-amber-700">
                   {alert.consecutiveFails} consecutive months not meeting target
                 </span>
@@ -548,13 +567,25 @@ const MetricBowler = () => {
             ) : (
                 metrics.map((metric, metricIndex) => (
                   <>
-                  {/* Row 1: Metadata + Target Data */}
-                  <tr key={`${metric.id}-row1`} className="hover:bg-gray-50 transition-colors border-b-0">
+                  <tr
+                    key={`${metric.id}-row1`}
+                    ref={el => {
+                      metricRowRefs.current[metric.id] = el;
+                    }}
+                    className="hover:bg-gray-50 transition-colors border-b-0"
+                  >
                     <td rowSpan={2} className="px-4 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 hover:z-[60] border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] group-hover:bg-gray-50 align-top break-words">
                       <div className="flex items-start justify-between">
                         <div className="flex flex-col">
                             <div className="flex items-center flex-wrap">
-                                <span className="mr-2">{metric.name}</span>
+                                <span className="mr-2 flex items-center space-x-1">
+                                  <span>{metric.name}</span>
+                                  {metricAlerts.find(a => a.metricId === metric.id) && (
+                                    <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-amber-100 text-amber-700 text-[10px] font-semibold" title="Consecutive target misses">
+                                      !
+                                    </span>
+                                  )}
+                                </span>
                                 <div 
                                     className="inline-block"
                                     onMouseEnter={(e) => {

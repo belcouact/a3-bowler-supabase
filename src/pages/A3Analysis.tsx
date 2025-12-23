@@ -17,10 +17,14 @@ const A3Analysis = () => {
 
     const statusCounts: Record<string, number> = {};
     const priorityCounts: Record<string, number> = {};
+    const groupCounts: Record<string, number> = {};
 
     let active = 0;
     let completed = 0;
     let overdue = 0;
+
+    let groupedCount = 0;
+    let ungroupedCount = 0;
 
     const today = new Date();
 
@@ -30,6 +34,14 @@ const A3Analysis = () => {
 
       const priorityKey = (c.priority || 'Medium').trim();
       priorityCounts[priorityKey] = (priorityCounts[priorityKey] || 0) + 1;
+
+      const groupKey = (c.group || '').trim();
+      if (groupKey) {
+        groupCounts[groupKey] = (groupCounts[groupKey] || 0) + 1;
+        groupedCount += 1;
+      } else {
+        ungroupedCount += 1;
+      }
 
       if (statusKey === 'Completed') {
         completed += 1;
@@ -47,6 +59,20 @@ const A3Analysis = () => {
     const notStarted = statusCounts['Not Started'] || 0;
     const inProgress = statusCounts['In Progress'] || 0;
 
+    const groupNames = Object.keys(groupCounts);
+    const groupCount = groupNames.length;
+
+    let largestGroupName: string | null = null;
+    let largestGroupSize = 0;
+
+    groupNames.forEach(name => {
+      const size = groupCounts[name];
+      if (size > largestGroupSize) {
+        largestGroupSize = size;
+        largestGroupName = name;
+      }
+    });
+
     return {
       total,
       active,
@@ -54,7 +80,12 @@ const A3Analysis = () => {
       overdue,
       notStarted,
       inProgress,
-      priorityCounts
+      priorityCounts,
+      groupCount,
+      groupedCount,
+      ungroupedCount,
+      largestGroupName,
+      largestGroupSize
     };
   }, [a3Cases]);
 
@@ -88,7 +119,13 @@ const A3Analysis = () => {
       <div className="bg-white p-3 md:p-6 shadow-sm border border-gray-200 border-b-0">
         <div className="mb-4 md:mb-6 space-y-4">
           <div className="flex justify-between items-start">
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900">{title}</h2>
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900">{title}</h2>
+              <div className="mt-1 text-xs text-gray-500 space-x-3">
+                <span>Owner: <span className="font-medium text-gray-700">{selectedCase.owner || 'Unassigned'}</span></span>
+                <span>Group: <span className="font-medium text-gray-700">{selectedCase.group || 'Ungrouped'}</span></span>
+              </div>
+            </div>
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
               {selectedCase.status || 'In Progress'}
             </span>
@@ -122,13 +159,20 @@ const A3Analysis = () => {
                 </p>
               </div>
               <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 px-3 py-3">
-                <p className="text-xs font-medium text-emerald-700 uppercase tracking-wide">This Case</p>
+                <p className="text-xs font-medium text-emerald-700 uppercase tracking-wide">Groups</p>
                 <p className="mt-1 text-sm text-emerald-900">
-                  Owner: {selectedCase.owner || 'Unassigned'}
+                  {portfolioStats.groupCount || 0} group{portfolioStats.groupCount === 1 ? '' : 's'} in portfolio
                 </p>
                 <p className="mt-1 text-xs text-emerald-700">
-                  Group: {selectedCase.group || 'Ungrouped'}
+                  {portfolioStats.ungroupedCount > 0
+                    ? `${portfolioStats.ungroupedCount} case${portfolioStats.ungroupedCount === 1 ? '' : 's'} ungrouped`
+                    : 'All cases assigned to a group'}
                 </p>
+                {portfolioStats.largestGroupName && portfolioStats.largestGroupSize > 0 && (
+                  <p className="mt-1 text-xs text-emerald-700">
+                    Largest: {portfolioStats.largestGroupName} ({portfolioStats.largestGroupSize})
+                  </p>
+                )}
               </div>
             </div>
           )}
