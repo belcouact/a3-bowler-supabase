@@ -256,6 +256,7 @@ const Layout = () => {
 
   const groupPerformanceTableData = useMemo(() => {
     const groupToMetrics: Record<string, Metric[]> = {};
+    const metricOwnerById: Record<string, string> = {};
 
     bowlers.forEach(bowler => {
       const groupName = (bowler.group || 'Ungrouped').trim() || 'Ungrouped';
@@ -265,6 +266,8 @@ const Layout = () => {
         if (!metric || !metric.monthlyData || Object.keys(metric.monthlyData).length === 0) {
           return;
         }
+
+        metricOwnerById[metric.id] = bowler.id;
 
         if (!groupToMetrics[groupName]) {
           groupToMetrics[groupName] = [];
@@ -316,9 +319,9 @@ const Layout = () => {
       const latest2Months = sortedMonths.slice(-2);
       const latest3Months = sortedMonths.slice(-3);
 
-      const latestMonthMetrics: { id: string; name: string; met: boolean }[] = [];
-      const fail2Metrics: { id: string; name: string }[] = [];
-      const fail3Metrics: { id: string; name: string }[] = [];
+      const latestMonthMetrics: { id: string; name: string; met: boolean; bowlerId?: string }[] = [];
+      const fail2Metrics: { id: string; name: string; bowlerId?: string }[] = [];
+      const fail3Metrics: { id: string; name: string; bowlerId?: string }[] = [];
       let totalPoints = 0;
       let metPoints = 0;
 
@@ -342,6 +345,7 @@ const Layout = () => {
             id: metric.id,
             name: metric.name,
             met,
+            bowlerId: metricOwnerById[metric.id],
           });
         }
 
@@ -358,6 +362,7 @@ const Layout = () => {
             fail2Metrics.push({
               id: metric.id,
               name: metric.name,
+              bowlerId: metricOwnerById[metric.id],
             });
           }
         }
@@ -375,6 +380,7 @@ const Layout = () => {
             fail3Metrics.push({
               id: metric.id,
               name: metric.name,
+              bowlerId: metricOwnerById[metric.id],
             });
           }
         }
@@ -987,19 +993,21 @@ const Layout = () => {
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Top Bar */}
       <header className="bg-white border-b border-gray-200 z-[60] shadow-sm h-16 flex items-center px-6 justify-between relative">
-        <div className="flex items-center space-x-8">
-          <div className="flex items-center space-x-1.5">
+        <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-2">
             <div className="bg-blue-600 p-1.5 rounded-lg">
               <BarChart3 className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-lg font-semibold text-gray-900 tracking-tight hidden md:block">Performance Tracker</h1>
-            <button 
-                onClick={() => setIsAppInfoOpen(true)}
-                className="ml-1 text-gray-400 hover:text-gray-600 transition-colors"
-                title="About this app"
-            >
-                <Info className="w-5 h-5" />
-            </button>
+            <div className="flex items-center space-x-1">
+              <h1 className="text-lg font-semibold text-gray-900 tracking-tight hidden md:block">Performance Tracker</h1>
+              <button 
+                  onClick={() => setIsAppInfoOpen(true)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  title="About this app"
+              >
+                  <Info className="w-4 h-4" />
+              </button>
+            </div>
           </div>
           
           <nav className="flex space-x-0">
@@ -1031,7 +1039,7 @@ const Layout = () => {
                   key={item.path}
                   to={item.path}
                   className={clsx(
-                    'flex items-center px-2 md:px-3 py-1.5 rounded text-xs md:text-sm font-medium transition-all duration-200',
+                    'flex items-center px-1.5 md:px-2 py-1.5 rounded text-xs md:text-sm font-medium transition-all duration-200',
                     isActive
                       ? 'bg-blue-50 text-blue-800'
                       : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
@@ -1040,7 +1048,7 @@ const Layout = () => {
                 >
                   <span
                     className={clsx(
-                      'flex items-center justify-center w-7 h-7 rounded-md mr-0 md:mr-1.5 transition-colors',
+                      'flex items-center justify-center w-6 h-6 rounded-md mr-0 md:mr-1 transition-colors',
                       isActive ? activeIconClasses : inactiveIconClasses
                     )}
                   >
@@ -1937,13 +1945,19 @@ const Layout = () => {
                                       {row.latestMonthMetrics && row.latestMonthMetrics.length > 0 ? (
                                         <div className="flex flex-wrap gap-1">
                                           {row.latestMonthMetrics.map(metric => (
-                                            <span
+                                            <button
                                               key={metric.id}
                                               className={
                                                 metric.met
-                                                  ? 'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-50 text-green-700 border border-green-100'
-                                                  : 'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100'
+                                                  ? 'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-50 text-green-700 border border-green-100 cursor-pointer hover:bg-green-100'
+                                                  : 'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100 cursor-pointer hover:bg-red-100'
                                               }
+                                              type="button"
+                                              onClick={() => {
+                                                if (metric.bowlerId) {
+                                                  navigate(`/metric-bowler/${metric.bowlerId}`);
+                                                }
+                                              }}
                                             >
                                               <span
                                               className={
@@ -1953,7 +1967,7 @@ const Layout = () => {
                                               }
                                             />
                                               {`${metric.name}: ${metric.met ? 'ok' : 'fail'}`}
-                                            </span>
+                                            </button>
                                           ))}
                                         </div>
                                       ) : (
@@ -1964,13 +1978,19 @@ const Layout = () => {
                                       {row.fail2Metrics && row.fail2Metrics.length > 0 ? (
                                         <div className="flex flex-wrap gap-1">
                                           {row.fail2Metrics.map(metric => (
-                                            <span
+                                            <button
                                               key={metric.id}
-                                              className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100"
+                                              className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100 cursor-pointer hover:bg-amber-100"
+                                              type="button"
+                                              onClick={() => {
+                                                if (metric.bowlerId) {
+                                                  navigate(`/metric-bowler/${metric.bowlerId}`);
+                                                }
+                                              }}
                                             >
                                               <span className="mr-1 h-1.5 w-1.5 rounded-full bg-amber-500" />
                                               {metric.name}
-                                            </span>
+                                            </button>
                                           ))}
                                         </div>
                                       ) : (
@@ -1981,13 +2001,19 @@ const Layout = () => {
                                       {row.fail3Metrics && row.fail3Metrics.length > 0 ? (
                                         <div className="flex flex-wrap gap-1">
                                           {row.fail3Metrics.map(metric => (
-                                            <span
+                                            <button
                                               key={metric.id}
-                                              className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100"
+                                              className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100 cursor-pointer hover:bg-red-100"
+                                              type="button"
+                                              onClick={() => {
+                                                if (metric.bowlerId) {
+                                                  navigate(`/metric-bowler/${metric.bowlerId}`);
+                                                }
+                                              }}
                                             >
                                               <span className="mr-1 h-1.5 w-1.5 rounded-full bg-red-500" />
                                               {metric.name}
-                                            </span>
+                                            </button>
                                           ))}
                                         </div>
                                       ) : (
