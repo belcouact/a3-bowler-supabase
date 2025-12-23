@@ -255,6 +255,28 @@ const Layout = () => {
     [a3PortfolioStats],
   );
 
+  const pieLabelRadian = Math.PI / 180;
+
+  const renderPieLabel = (props: any) => {
+    const { cx, cy, midAngle, outerRadius, name, value } = props;
+    const radius = outerRadius + 10;
+    const x = cx + radius * Math.cos(-midAngle * pieLabelRadian);
+    const y = cy + radius * Math.sin(-midAngle * pieLabelRadian);
+
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="#374151"
+        textAnchor={x > cx ? 'start' : 'end'}
+        dominantBaseline="central"
+        fontSize={10}
+      >
+        {`${name} (${value})`}
+      </text>
+    );
+  };
+
   const a3KanbanColumns = useMemo(() => {
     if (a3Cases.length === 0) {
       return [];
@@ -1825,7 +1847,7 @@ const Layout = () => {
                               innerRadius={30}
                               outerRadius={55}
                               paddingAngle={2}
-                              label={(entry) => `${entry.name} (${entry.value})`}
+                              label={renderPieLabel}
                               labelLine={false}
                             >
                               {statusPieData.map((entry, index) => (
@@ -1856,7 +1878,7 @@ const Layout = () => {
                               innerRadius={30}
                               outerRadius={55}
                               paddingAngle={2}
-                              label={(entry) => `${entry.name} (${entry.value})`}
+                              label={renderPieLabel}
                               labelLine={false}
                             >
                               {priorityPieData.map((entry, index) => (
@@ -1885,7 +1907,7 @@ const Layout = () => {
                               innerRadius={30}
                               outerRadius={55}
                               paddingAngle={2}
-                              label={(entry) => `${entry.name} (${entry.value})`}
+                              label={renderPieLabel}
                               labelLine={false}
                             >
                               {groupPieData.map((entry, index) => (
