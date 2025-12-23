@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
+import { Loader2 } from 'lucide-react';
 import Layout from './components/Layout';
 
 const MetricBowler = lazy(() => import('./pages/MetricBowler'));
@@ -29,6 +30,17 @@ const RouteLoader = () => {
   return <div className="p-4 text-gray-500">{message}</div>;
 };
 
+const MarkmapLoader = () => {
+  return (
+    <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+      <div className="flex flex-col items-center">
+        <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+        <p className="mt-4 text-base font-medium text-gray-700">Loading markmap.js...</p>
+      </div>
+    </div>
+  );
+};
+
 const PortfolioPlaceholder = () => {
   return null;
 };
@@ -40,7 +52,14 @@ function App() {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Navigate to="/metric-bowler" replace />} />
-            <Route path="mindmap" element={<MarkmapPage />} />
+            <Route
+              path="mindmap"
+              element={
+                <Suspense fallback={<MarkmapLoader />}>
+                  <MarkmapPage />
+                </Suspense>
+              }
+            />
             <Route path="metric-bowler" element={<MetricBowler />} />
             <Route path="metric-bowler/:id" element={<MetricBowler />} />
             <Route path="a3-analysis" element={<Outlet />}>
