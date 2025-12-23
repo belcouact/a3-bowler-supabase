@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { dataService } from '../services/dataService';
 import { useToast } from '../context/ToastContext';
-import { getBowlerStatusColor } from '../utils/metricUtils';
+import { getBowlerStatusColor, isViolation } from '../utils/metricUtils';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
 const A3CaseModal = lazy(() => import('./A3CaseModal'));
@@ -253,6 +253,173 @@ const Layout = () => {
     },
     [a3PortfolioStats],
   );
+
+  const groupPerformanceTableData = useMemo(() => {
+    const groupCounts = a3PortfolioStats.groupCounts || {};
+    const groupNames = Object.keys(groupCounts).sort();
+
+    if (groupNames.length === 0) return [];
+
+    const metricById: Record<string, Metric> = {};
+    bowlers.forEach(b => {
+      b.metrics?.forEach(m => {
+        metricById[m.id] = m;
+      });
+    });
+
+    return groupNames.map(groupName => {
+      const casesInGroup = a3Cases.filter(c => (c.group || '').trim() === groupName);
+      const metricIds = new Set<string>();
+
+      casesInGroup.forEach(c => {
+        c.linkedMetricIds?.forEach(id => {
+          if (id) metricIds.add(id);
+        });
+      });
+
+      const metrics: Metric[] = Array.from(metricIds)
+        .map(id => metricById[id])
+        .filter((m): m is Metric => !!m && !!m.monthlyData && Object.keys(m.monthlyData).length > 0);
+
+      if (metrics.length === 0) {
+        return {
+          groupName,
+          latestMonthPerformance: null as number | null,
+          consecutiveFail2Count: null as number | null,
+          consecutiveFail3Count: null as number | null,
+          stability: 'N/A',
+          capability: 'N/A',
+          achievementRate: null as number | null,
+        };
+      }
+
+      const allMonthsSet = new Set<string>();
+      metrics.forEach(metric => {
+        Object.keys(metric.monthlyData || {}).forEach(month => {
+          const data = metric.monthlyData?.[month];
+          if (data?.actual && data?.target) {
+            allMonthsSet.add(month);
+          }
+        });
+      });
+
+      const sortedMonths = Array.from(allMonthsSet).sort();
+
+      if (sortedMonths.length === 0) {
+        return {
+          groupName,
+          latestMonthPerformance: null,
+          consecutiveFail2Count: null,
+          consecutiveFail3Count: null,
+          stability: 'N/A',
+          capability: 'N/A',
+          achievementRate: null,
+        };
+      }
+
+      const latestMonth = sortedMonths[sortedMonths.length - 1];
+      const latest2Months = sortedMonths.slice(-2);
+      const latest3Months = sortedMonths.slice(-3);
+
+      const latestMonthMetrics: { id: string; name: string; met: boolean }[] = [];
+      const fail2Metrics: { id: string; name: string }[] = [];
+      const fail3Metrics: { id: string; name: string }[] = [];
+      let totalPoints = 0;
+      let metPoints = 0;
+
+      metrics.forEach(metric => {
+        const monthly = metric.monthlyData || {};
+
+        Object.values(monthly).forEach(data => {
+          if (data.actual && data.target) {
+            totalPoints += 1;
+            const violation = isViolation(metric.targetMeetingRule, data.target, data.actual);
+            if (!violation) {
+              metPoints += 1;
+            }
+          }
+        });
+
+        const latestData = monthly[latestMonth];
+        if (latestData?.actual && latestData?.target) {
+          const met = !isViolation(metric.targetMeetingRule, latestData.target, latestData.actual);
+          latestMonthMetrics.push({
+            id: metric.id,
+            name: metric.name,
+            met,
+          });
+        }
+
+        if (latest2Months.length === 2) {
+          let allFail2 = true;
+          for (const month of latest2Months) {
+            const data = monthly[month];
+            if (!data?.actual || !data?.target || !isViolation(metric.targetMeetingRule, data.target, data.actual)) {
+              allFail2 = false;
+              break;
+            }
+          }
+          if (allFail2) {
+            fail2Metrics.push({
+              id: metric.id,
+              name: metric.name,
+            });
+          }
+        }
+
+        if (latest3Months.length === 3) {
+          let allFail3 = true;
+          for (const month of latest3Months) {
+            const data = monthly[month];
+            if (!data?.actual || !data?.target || !isViolation(metric.targetMeetingRule, data.target, data.actual)) {
+              allFail3 = false;
+              break;
+            }
+          }
+          if (allFail3) {
+            fail3Metrics.push({
+              id: metric.id,
+              name: metric.name,
+            });
+          }
+        }
+      });
+
+      const achievementRate =
+        totalPoints > 0 ? (metPoints / totalPoints) * 100 : null;
+
+      let stability = 'N/A';
+      let capability = 'N/A';
+
+      if (achievementRate !== null) {
+        if (fail3Metrics.length > 0 || achievementRate < 70) {
+          stability = 'Unstable';
+        } else if (fail2Metrics.length > 0 || achievementRate < 90) {
+          stability = 'Watch';
+        } else {
+          stability = 'Stable';
+        }
+
+        if (achievementRate >= 95) {
+          capability = 'Capable';
+        } else if (achievementRate >= 80) {
+          capability = 'Borderline';
+        } else {
+          capability = 'Incapable';
+        }
+      }
+
+      return {
+        groupName,
+        latestMonthMetrics,
+        fail2Metrics,
+        fail3Metrics,
+        stability,
+        capability,
+        achievementRate,
+      };
+    });
+  }, [a3PortfolioStats, a3Cases, bowlers]);
 
   const pieLabelRadian = Math.PI / 180;
 
@@ -1765,6 +1932,120 @@ const Layout = () => {
                     </div>
                   ) : (
                     <>
+                      {groupPerformanceTableData.length > 0 && (
+                        <div className="mb-2">
+                          <div className="overflow-x-auto">
+                            <table className="min-w-full text-xs md:text-sm">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
+                                    Group
+                                  </th>
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
+                                    Latest month performance
+                                  </th>
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
+                                    Failing last 2 months
+                                  </th>
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
+                                    Failing last 3 months
+                                  </th>
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600">
+                                    Overall stability
+                                  </th>
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600">
+                                    Overall capability
+                                  </th>
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600">
+                                    Overall target achieving %
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-100">
+                                {groupPerformanceTableData.map(row => (
+                                  <tr key={row.groupName}>
+                                    <td className="px-3 py-2 font-medium text-gray-900">
+                                      {row.groupName}
+                                    </td>
+                                    <td className="px-3 py-2 text-gray-700">
+                                      {row.latestMonthMetrics && row.latestMonthMetrics.length > 0 ? (
+                                        <div className="flex flex-wrap gap-1">
+                                          {row.latestMonthMetrics.map(metric => (
+                                            <span
+                                              key={metric.id}
+                                              className={
+                                                metric.met
+                                                  ? 'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-50 text-green-700 border border-green-100'
+                                                  : 'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100'
+                                              }
+                                            >
+                                              <span
+                                                className={
+                                                  metric.met
+                                                    ? 'mr-1 h-1.5 w-1.5 rounded-full bg-green-500'
+                                                    : 'mr-1 h-1.5 w-1.5 rounded-full bg-red-500'
+                                                }
+                                              />
+                                              {metric.name}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <span>—</span>
+                                      )}
+                                    </td>
+                                    <td className="px-3 py-2 text-gray-700">
+                                      {row.fail2Metrics && row.fail2Metrics.length > 0 ? (
+                                        <div className="flex flex-wrap gap-1">
+                                          {row.fail2Metrics.map(metric => (
+                                            <span
+                                              key={metric.id}
+                                              className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100"
+                                            >
+                                              <span className="mr-1 h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                              {metric.name}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <span>—</span>
+                                      )}
+                                    </td>
+                                    <td className="px-3 py-2 text-gray-700">
+                                      {row.fail3Metrics && row.fail3Metrics.length > 0 ? (
+                                        <div className="flex flex-wrap gap-1">
+                                          {row.fail3Metrics.map(metric => (
+                                            <span
+                                              key={metric.id}
+                                              className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100"
+                                            >
+                                              <span className="mr-1 h-1.5 w-1.5 rounded-full bg-red-500" />
+                                              {metric.name}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <span>—</span>
+                                      )}
+                                    </td>
+                                    <td className="px-3 py-2 text-gray-700">
+                                      {row.stability}
+                                    </td>
+                                    <td className="px-3 py-2 text-gray-700">
+                                      {row.capability}
+                                    </td>
+                                    <td className="px-3 py-2 text-gray-700">
+                                      {row.achievementRate != null
+                                        ? `${row.achievementRate.toFixed(0)}%`
+                                        : '—'}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
                         <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
                           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
