@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { X, LayoutDashboard, FileText, Sparkles, Upload, Download, Layers, TrendingUp, NotepadText, Smartphone, Lightbulb } from 'lucide-react';
+import { X, LayoutDashboard, FileText, Sparkles, Upload, Download, TrendingUp, Smartphone, Lightbulb, Inbox, Layers } from 'lucide-react';
 
 interface AppInfoModalProps {
   isOpen: boolean;
@@ -53,29 +53,6 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
             <div className="border-t border-gray-100 pt-6 mt-6">
               <h4 className="text-sm font-semibold text-gray-900 mb-4">Key Features</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-green-50/80">
-                  <div className="h-9 w-9 shrink-0 rounded-lg bg-green-500 flex items-center justify-center">
-                    <Sparkles className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">AI Assistant</p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Ask AI to analyze metric trends or refine A3 problem statements and root cause analysis.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-teal-50/80">
-                  <div className="h-9 w-9 shrink-0 rounded-lg bg-teal-500 flex items-center justify-center">
-                    <NotepadText className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">One Click Summary</p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Instantly generate a comprehensive AI report covering performance, trends, concerns, and improvement ideas.
-                    </p>
-                  </div>
-                </div>
 
                 <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-blue-50/80">
                   <div className="h-9 w-9 shrink-0 rounded-lg bg-blue-500 flex items-center justify-center">
@@ -104,30 +81,6 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                   </div>
                 </div>
 
-                <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-indigo-50/80">
-                  <div className="h-9 w-9 shrink-0 rounded-lg bg-indigo-500 flex items-center justify-center">
-                    <Lightbulb className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">AI Mindmap</p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Use AI to turn any idea into an interactive mindmap for exploration and planning.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-purple-50/80">
-                  <div className="h-9 w-9 shrink-0 rounded-lg bg-purple-500 flex items-center justify-center">
-                    <Layers className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">Consolidate Bowlers</p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Allow adminstrator to consolidate all public accounts' bowler & A3 data to one view with one click.
-                    </p>
-                  </div>
-                </div>
-
                 <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-orange-50/80">
                   <div className="h-9 w-9 shrink-0 rounded-lg bg-orange-500 flex items-center justify-center">
                     <FileText className="h-5 w-5 text-white" />
@@ -136,6 +89,54 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                     <p className="text-sm font-medium text-gray-900">Structured A3 Problem Solving</p>
                     <p className="text-xs text-gray-600 mt-1">
                       Capture problem statements, root causes, countermeasures, and follow-up on a single A3.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-purple-50/80">
+                  <div className="h-9 w-9 shrink-0 rounded-lg bg-purple-500 flex items-center justify-center">
+                    <Inbox className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">Consolidate Bowlers & A3</p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Allow adminstrator to consolidate all public accounts' bowler & A3 data to one view with one click.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-emerald-50/80">
+                  <div className="h-9 w-9 shrink-0 rounded-lg bg-emerald-500 flex items-center justify-center">
+                    <Layers className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">Integrated View</p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      See a combined portfolio of key bowlers and A3s for a single, aligned overview.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-green-50/80">
+                  <div className="h-9 w-9 shrink-0 rounded-lg bg-green-500 flex items-center justify-center">
+                    <Sparkles className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">AI Assistant</p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Ask AI to analyze metric trends or refine A3 problem statements and root cause analysis.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-indigo-50/80">
+                  <div className="h-9 w-9 shrink-0 rounded-lg bg-indigo-500 flex items-center justify-center">
+                    <Lightbulb className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">AI Mindmap</p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Use AI to turn any idea into an interactive mindmap for exploration and planning.
                     </p>
                   </div>
                 </div>
