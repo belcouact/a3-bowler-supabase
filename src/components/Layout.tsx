@@ -115,6 +115,7 @@ const Layout = () => {
   const [latestFilter, setLatestFilter] = useState<'all' | 'ok' | 'fail' | 'no-data'>('all');
   const [fail2Filter, setFail2Filter] = useState<'all' | 'yes' | 'no'>('all');
   const [fail3Filter, setFail3Filter] = useState<'all' | 'yes' | 'no'>('all');
+  const [a3LinkFilter, setA3LinkFilter] = useState<'all' | 'missing' | 'present' | 'not-needed'>('all');
   const [achievementFilter, setAchievementFilter] = useState<'all' | 'lt50' | '50to80' | 'gte80'>('all');
   const [a3LowPerfRule, setA3LowPerfRule] = useState({
     latestFail: false,
@@ -606,6 +607,23 @@ const groupFilterOptions = useMemo(
           }
         }
 
+        const isAtRisk = row.fail2 || row.fail3;
+        const linkedA3Count = isAtRisk
+          ? a3Cases.filter(c => (c.linkedMetricIds || []).includes(row.metricId)).length
+          : 0;
+
+        if (a3LinkFilter !== 'all') {
+          if (a3LinkFilter === 'missing' && !(isAtRisk && linkedA3Count === 0)) {
+            return false;
+          }
+          if (a3LinkFilter === 'present' && !(isAtRisk && linkedA3Count > 0)) {
+            return false;
+          }
+          if (a3LinkFilter === 'not-needed' && isAtRisk) {
+            return false;
+          }
+        }
+
         if (achievementFilter !== 'all') {
           const rate = row.achievementRate;
           if (rate == null) {
@@ -628,7 +646,17 @@ const groupFilterOptions = useMemo(
         return true;
       });
     },
-    [groupPerformanceTableData, groupFilter, metricFilter, latestFilter, fail2Filter, fail3Filter, achievementFilter],
+    [
+      groupPerformanceTableData,
+      groupFilter,
+      metricFilter,
+      latestFilter,
+      fail2Filter,
+      fail3Filter,
+      a3LinkFilter,
+      achievementFilter,
+      a3Cases,
+    ],
   );
 
   const pieLabelRadian = Math.PI / 180;
@@ -2479,6 +2507,22 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                   <th className="px-3 pb-2">
                                     <select
                                       className="w-full rounded border border-gray-200 bg-white px-2 py-1 text-[11px] md:text-xs text-gray-700"
+                                      value={a3LinkFilter}
+                                      onChange={e =>
+                                        setA3LinkFilter(
+                                          e.target.value as 'all' | 'missing' | 'present' | 'not-needed',
+                                        )
+                                      }
+                                    >
+                                      <option value="all">All</option>
+                                      <option value="missing">A3 needed, none</option>
+                                      <option value="present">A3 needed, with A3</option>
+                                      <option value="not-needed">A3 not needed</option>
+                                    </select>
+                                  </th>
+                                  <th className="px-3 pb-2">
+                                    <select
+                                      className="w-full rounded border border-gray-200 bg-white px-2 py-1 text-[11px] md:text-xs text-gray-700"
                                       value={achievementFilter}
                                       onChange={e =>
                                         setAchievementFilter(
@@ -2968,42 +3012,56 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                               row.items.map(item => (
                                                 <div
                                                   key={item.id}
-                                                  className="relative px-3 py-2 text-[11px]"
+                                                  className="relative px-3 py-2 text-[11px] flex items-center gap-2"
                                                 >
-                                                  <div className="absolute inset-y-2 left-3 right-3 pointer-events-none">
-                                                    <div className="flex h-full gap-px">
-                                                      {a3Timeline.periods.map(period => (
-                                                        <div
-                                                          key={period.key}
-                                                          className="flex-1 border-l border-dashed border-gray-200 last:border-r"
-                                                        />
-                                                      ))}
+                                                  <div className="w-40 shrink-0">
+                                                    <div className="truncate text-gray-800">
+                                                      {item.title}
+                                                    </div>
+                                                    <div className="mt-0.5 text-[10px] text-gray-400">
+                                                      {item.startDate && item.endDate
+                                                        ? `${item.startDate} → ${item.endDate}`
+                                                        : item.startDate || item.endDate || ''}
                                                     </div>
                                                   </div>
-                                                  <div className="relative">
-                                                    <button
-                                                      type="button"
-                                                      className={clsx(
-                                                        'relative inline-flex items-start justify-start rounded-sm px-2 py-1 text-[10px] font-medium shadow-sm border border-opacity-20 text-white overflow-hidden text-left',
-                                                        item.status === 'Completed'
-                                                          ? 'bg-green-500 border-green-700'
-                                                          : item.status === 'In Progress'
-                                                          ? 'bg-blue-500 border-blue-700'
-                                                          : 'bg-gray-400 border-gray-600',
-                                                      )}
-                                                      style={{
-                                                        left: `${item.left}%`,
-                                                        width: `${Math.max(item.width, 2)}%`,
-                                                        maxWidth: '100%',
-                                                      }}
-                                                      onClick={() => {
-                                                        navigate(
-                                                          `/a3-analysis/${item.id}/problem-statement`,
-                                                        );
-                                                      }}
-                                                    >
-                                                      <span className="truncate text-left">{item.title}</span>
-                                                    </button>
+                                                  <div className="relative flex-1">
+                                                    <div className="absolute inset-y-2 left-0 right-0 pointer-events-none">
+                                                      <div className="flex h-full gap-px">
+                                                        {a3Timeline.periods.map(period => (
+                                                          <div
+                                                            key={period.key}
+                                                            className="flex-1 border-l border-dashed border-gray-200 last:border-r"
+                                                          />
+                                                        ))}
+                                                      </div>
+                                                    </div>
+                                                    <div className="relative">
+                                                      <button
+                                                        type="button"
+                                                        className={clsx(
+                                                          'relative inline-flex items-center justify-center rounded-sm px-2 py-1 text-[10px] font-medium shadow-sm border border-opacity-20 text-white overflow-hidden text-center',
+                                                          item.status === 'Completed'
+                                                            ? 'bg-green-500 border-green-700'
+                                                            : item.status === 'In Progress'
+                                                            ? 'bg-blue-500 border-blue-700'
+                                                            : 'bg-gray-400 border-gray-600',
+                                                        )}
+                                                        style={{
+                                                          left: `${item.left}%`,
+                                                          width: `${Math.max(item.width, 2)}%`,
+                                                          maxWidth: '100%',
+                                                        }}
+                                                        onClick={() => {
+                                                          navigate(
+                                                            `/a3-analysis/${item.id}/problem-statement`,
+                                                          );
+                                                        }}
+                                                      >
+                                                        <span className="truncate">
+                                                          {item.status || 'Not Started'}
+                                                        </span>
+                                                      </button>
+                                                    </div>
                                                   </div>
                                                 </div>
                                               ))}
