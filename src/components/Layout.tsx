@@ -2573,7 +2573,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                         ) : (
                                           <span
                                             className={clsx(
-                                              'inline-flex items-center justify-center w-8 h-8 rounded-full text-[10px] font-semibold border',
+                                              'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border',
                                               row.latestMet === false
                                                 ? 'bg-red-50 text-red-700 border-red-200'
                                                 : 'bg-green-50 text-green-700 border-green-200',

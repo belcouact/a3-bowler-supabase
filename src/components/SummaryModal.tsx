@@ -122,8 +122,8 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
           <td>${
             row.latestMet === null || !row.latestActual
               ? '—'
-              : `<span class="circle-badge ${
-                  row.latestMet === false ? 'circle-badge-fail' : 'circle-badge-ok'
+              : `<span class="status-pill ${
+                  row.latestMet === false ? 'status-fail' : 'status-ok'
                 }">${escapeHtml(row.latestActual)}</span>`
           }</td>
           <td>${
@@ -656,22 +656,22 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
                                       <td className="px-3 py-2 text-gray-700">
                                         {row.metricName}
                                       </td>
-                                      <td className="px-3 py-2 text-gray-700">
-                                        {row.latestMet === null || !row.latestActual ? (
-                                          <span>—</span>
-                                        ) : (
-                                          <span
-                                            className={
-                                              'inline-flex items-center justify-center w-8 h-8 rounded-full text-[10px] font-semibold border ' +
-                                              (row.latestMet === false
-                                                ? 'bg-red-50 text-red-700 border-red-200'
-                                                : 'bg-green-50 text-green-700 border-green-200')
-                                            }
-                                          >
-                                            {row.latestActual}
-                                          </span>
-                                        )}
-                                      </td>
+                                    <td className="px-3 py-2 text-gray-700">
+                                      {row.latestMet === null || !row.latestActual ? (
+                                        <span>—</span>
+                                      ) : (
+                                        <span
+                                          className={
+                                            'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ' +
+                                            (row.latestMet === false
+                                              ? 'bg-red-50 text-red-700 border-red-200'
+                                              : 'bg-green-50 text-green-700 border-green-200')
+                                          }
+                                        >
+                                          {row.latestActual}
+                                        </span>
+                                      )}
+                                    </td>
                                       <td className="px-3 py-2 text-gray-700">
                                         {row.fail2 ? (
                                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">
