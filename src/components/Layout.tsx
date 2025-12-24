@@ -2398,6 +2398,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                     Last 3 months
                                   </th>
                                   <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-normal md:whitespace-nowrap">
+                                    Linked A3s
+                                  </th>
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-normal md:whitespace-nowrap">
                                     <span className="inline-flex items-center gap-1">
                                       <span>Overall target achieving %</span>
                                       <button
@@ -2492,75 +2495,85 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-gray-100">
-                                {filteredGroupPerformanceTableData.map(row => (
-                                  <tr key={`${row.groupName}-${row.metricId}`}>
-                                    <td className="px-3 py-2 font-medium text-gray-900">
-                                      {row.groupName}
-                                    </td>
-                                    <td className="px-3 py-2 text-gray-700">
-                                      <button
-                                        type="button"
-                                        className="text-[11px] md:text-xs font-medium text-blue-700 hover:text-blue-900 hover:underline"
-                                        onClick={() => {
-                                          if (row.bowlerId) {
-                                            navigate(`/metric-bowler/${row.bowlerId}`);
-                                          }
-                                        }}
-                                      >
-                                        {row.metricName}
-                                      </button>
-                                    </td>
-                                    <td className="px-3 py-2 text-gray-700">
-                                      {row.latestMet === null ? (
-                                        <span>—</span>
-                                      ) : row.latestMet ? (
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-50 text-green-700 border border-green-100">
-                                          <span className="mr-1 h-1.5 w-1.5 rounded-full bg-green-500" />
-                                          ok
-                                        </span>
-                                      ) : (
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100">
-                                          <span className="mr-1 h-1.5 w-1.5 rounded-full bg-red-500" />
-                                          fail
-                                        </span>
-                                      )}
-                                    </td>
-                                    <td className="px-3 py-2 text-gray-700">
-                                      {row.fail2 ? (
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">
-                                          <span className="mr-1 h-1.5 w-1.5 rounded-full bg-amber-500" />
-                                          Failing
-                                        </span>
-                                      ) : (
-                                        <span>—</span>
-                                      )}
-                                    </td>
-                                    <td className="px-3 py-2 text-gray-700">
-                                      {row.fail3 ? (
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100">
-                                          <span className="mr-1 h-1.5 w-1.5 rounded-full bg-red-500" />
-                                          Failing
-                                        </span>
-                                      ) : (
-                                        <span>—</span>
-                                      )}
-                                    </td>
-                                    <td className="px-3 py-2 text-gray-700">
-                                      {row.achievementRate != null ? (
-                                        <span
-                                          className={clsx(
-                                            row.achievementRate <= (2 / 3) * 100 &&
-                                              'px-1 rounded bg-amber-50 text-amber-800 font-semibold',
-                                          )}
+                                {filteredGroupPerformanceTableData.map(row => {
+                                  const isAtRisk = row.fail2 || row.fail3;
+                                  const linkedA3Count = isAtRisk
+                                    ? a3Cases.filter(c => (c.linkedMetricIds || []).includes(row.metricId)).length
+                                    : 0;
+
+                                  return (
+                                    <tr key={`${row.groupName}-${row.metricId}`}>
+                                      <td className="px-3 py-2 font-medium text-gray-900">
+                                        {row.groupName}
+                                      </td>
+                                      <td className="px-3 py-2 text-gray-700">
+                                        <button
+                                          type="button"
+                                          className="text-[11px] md:text-xs font-medium text-blue-700 hover:text-blue-900 hover:underline"
+                                          onClick={() => {
+                                            if (row.bowlerId) {
+                                              navigate(`/metric-bowler/${row.bowlerId}`);
+                                            }
+                                          }}
                                         >
-                                          {row.achievementRate.toFixed(0)}%
-                                        </span>
-                                      ) : (
-                                        '—'
-                                      )}
-                                    </td>
-                                  </tr>
-                                ))}
+                                          {row.metricName}
+                                        </button>
+                                      </td>
+                                      <td className="px-3 py-2 text-gray-700">
+                                        {row.latestMet === null ? (
+                                          <span>—</span>
+                                        ) : row.latestMet ? (
+                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-50 text-green-700 border border-green-100">
+                                            <span className="mr-1 h-1.5 w-1.5 rounded-full bg-green-500" />
+                                            ok
+                                          </span>
+                                        ) : (
+                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100">
+                                            <span className="mr-1 h-1.5 w-1.5 rounded-full bg-red-500" />
+                                            fail
+                                          </span>
+                                        )}
+                                      </td>
+                                      <td className="px-3 py-2 text-gray-700">
+                                        {row.fail2 ? (
+                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                                            <span className="mr-1 h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                            Failing
+                                          </span>
+                                        ) : (
+                                          <span>—</span>
+                                        )}
+                                      </td>
+                                      <td className="px-3 py-2 text-gray-700">
+                                        {row.fail3 ? (
+                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100">
+                                            <span className="mr-1 h-1.5 w-1.5 rounded-full bg-red-500" />
+                                            Failing
+                                          </span>
+                                        ) : (
+                                          <span>—</span>
+                                        )}
+                                      </td>
+                                      <td className="px-3 py-2 text-gray-700">
+                                        {isAtRisk ? linkedA3Count : '—'}
+                                      </td>
+                                      <td className="px-3 py-2 text-gray-700">
+                                        {row.achievementRate != null ? (
+                                          <span
+                                            className={clsx(
+                                              row.achievementRate <= (2 / 3) * 100 &&
+                                                'px-1 rounded bg-amber-50 text-amber-800 font-semibold',
+                                            )}
+                                          >
+                                            {row.achievementRate.toFixed(0)}%
+                                          </span>
+                                        ) : (
+                                          '—'
+                                        )}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
                               </tbody>
                             </table>
                           </div>

@@ -459,9 +459,6 @@ const MetricBowler = () => {
               <th scope="col" className="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-24 border-r border-gray-200">
                 Scope
               </th>
-              <th scope="col" className="px-2 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-20 border-r border-gray-200">
-                A3s
-              </th>
               <th scope="col" className="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-20 border-r border-gray-200">
                 Type
               </th>
@@ -479,29 +476,12 @@ const MetricBowler = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {metrics.length === 0 ? (
                 <tr>
-                    <td colSpan={4 + displayMonths.length} className="px-6 py-10 text-center text-gray-500 italic">
+                    <td colSpan={3 + displayMonths.length} className="px-6 py-10 text-center text-gray-500 italic">
                         No metrics added yet. Use the + button to add metrics.
                     </td>
                 </tr>
             ) : (
-                metrics.map((metric, metricIndex) => {
-                  const recentMonths = displayMonths.slice(-3);
-                  const recentStatuses = recentMonths.map(month => {
-                    const data = metric.monthlyData?.[month.key];
-                    if (!data || data.actual == null || data.actual === '') {
-                      return null;
-                    }
-                    return isViolation(
-                      metric.targetMeetingRule,
-                      data.target,
-                      data.actual
-                    );
-                  });
-                  const violationCount = recentStatuses.filter(v => v).length;
-                  const hasRecentFailures = violationCount >= 2;
-                  const linkedA3Count = (a3Cases || []).filter(a3 => (a3.linkedMetricIds || []).includes(metric.id)).length;
-
-                  return (
+                metrics.map((metric, metricIndex) => (
                   <>
                   <tr
                     key={`${metric.id}-row1`}
@@ -544,10 +524,6 @@ const MetricBowler = () => {
                     
                     <td rowSpan={2} className="px-2 py-4 whitespace-nowrap text-xs text-gray-700 bg-white border-r border-gray-200 border-b-0 align-top">
                         {metric.scope || '-'}
-                    </td>
-
-                    <td rowSpan={2} className="px-2 py-4 whitespace-nowrap text-xs text-center text-gray-700 bg-white border-r border-gray-200 border-b-0 align-top">
-                      {hasRecentFailures ? linkedA3Count : '-'}
                     </td>
 
                     <td className="px-2 py-2 whitespace-nowrap text-xs font-medium text-gray-500 bg-gray-50/30 border-b border-gray-100 h-8">
@@ -615,8 +591,7 @@ const MetricBowler = () => {
                      })}
                   </tr>
                   </>
-                  );
-                })
+                ))
             )}
           </tbody>
         </table>
