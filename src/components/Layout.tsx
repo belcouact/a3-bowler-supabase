@@ -117,7 +117,7 @@ const Layout = () => {
   const [fail3Filter, setFail3Filter] = useState<'all' | 'yes' | 'no'>('all');
   const [achievementFilter, setAchievementFilter] = useState<'all' | 'lt50' | '50to80' | 'gte80'>('all');
   const [a3LowPerfRule, setA3LowPerfRule] = useState({
-    latestFail: true,
+    latestFail: false,
     fail2: true,
     fail3: true,
   });
@@ -2980,7 +2980,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                                     <button
                                                       type="button"
                                                       className={clsx(
-                                                        'relative inline-flex items-center rounded-sm px-2 py-1 text-[10px] font-medium shadow-sm border border-opacity-20 text-white overflow-hidden',
+                                                        'relative inline-flex items-center justify-start rounded-sm px-2 py-1 text-[10px] font-medium shadow-sm border border-opacity-20 text-white overflow-hidden text-left',
                                                         item.status === 'Completed'
                                                           ? 'bg-green-500 border-green-700'
                                                           : item.status === 'In Progress'
