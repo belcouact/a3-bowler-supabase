@@ -2097,7 +2097,7 @@ const groupFilterOptions = useMemo(
                     >
                       <button
                         onClick={handleOneClickSummary}
-                        className="one-click-summary-glow-inner p-2 bg-teal-600 text-white rounded-md shadow-sm hover:bg-teal-700 transition-colors"
+                        className="one-click-summary-glow-inner inline-flex items-center gap-2 px-2.5 py-2 bg-teal-600 text-white rounded-md shadow-sm hover:bg-teal-700 transition-colors"
                         title="One Click Summary"
                       >
                         {isGeneratingSummary ? (
@@ -2105,6 +2105,9 @@ const groupFilterOptions = useMemo(
                         ) : (
                           <NotepadText className="w-4 h-4" />
                         )}
+                        <span className="hidden md:inline text-xs font-medium">
+                          One Click Summary
+                        </span>
                       </button>
                     </div>
                   </div>
@@ -2138,7 +2141,7 @@ const groupFilterOptions = useMemo(
                       </button>
                     </nav>
                   </div>
-                  {a3PortfolioStats.total === 0 ? (
+                  {a3PortfolioStats.total === 0 && portfolioTab === 'a3' ? (
                     <div className="py-8 text-center text-sm text-gray-500">
                       No A3 cases in the portfolio yet. Use the + button to create your first case.
                     </div>
