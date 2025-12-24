@@ -7,7 +7,7 @@ import { Metric } from '../types';
 import { HelpModal } from '../components/HelpModal';
 import { AIAnalysisModal } from '../components/AIAnalysisModal';
 import { analyzeMetric, AnalysisResult } from '../services/aiService';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { useToast } from '../context/ToastContext';
 import { isViolation } from '../utils/metricUtils';
 
@@ -42,7 +42,7 @@ const CustomizedDot = (props: any) => {
 
 const MetricBowler = () => {
   const { id } = useParams();
-  const { bowlers, updateBowler, selectedModel } = useApp();
+  const { bowlers, updateBowler, selectedModel, a3Cases } = useApp();
   const toast = useToast();
   
   const [startDate, setStartDate] = useState(() => {
@@ -602,46 +602,75 @@ const MetricBowler = () => {
         <div className="p-6 bg-gray-50 border-t border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-6">Metric Trends</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {metrics.map((metric) => {
-              const chartData = displayMonths.map((month) => {
+            {metrics.map(metric => {
+              const chartData = displayMonths.map(month => {
                 const rawTarget = metric.monthlyData?.[month.key]?.target;
                 const rawActual = metric.monthlyData?.[month.key]?.actual;
-                
+
                 let target: number | null = null;
                 let minTarget: number | null = null;
                 let maxTarget: number | null = null;
 
                 if (rawTarget) {
-                     // Try to parse as range first
-                     const match = rawTarget.match(/^(?:\{|\[)?\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*(?:\}|\])?$/);
-                     if (match) {
-                         const min = parseFloat(match[1]);
-                         const max = parseFloat(match[2]);
-                         if (!isNaN(min) && !isNaN(max)) {
-                             minTarget = min;
-                             maxTarget = max;
-                         }
-                     }
-                     
-                     // Also try to parse as single number (fallback)
-                     const val = parseFloat(rawTarget);
-                     if (!isNaN(val)) target = val;
+                  const match = rawTarget.match(/^(?:\{|\[)?\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*(?:\}|\])?$/);
+                  if (match) {
+                    const min = parseFloat(match[1]);
+                    const max = parseFloat(match[2]);
+                    if (!isNaN(min) && !isNaN(max)) {
+                      minTarget = min;
+                      maxTarget = max;
+                    }
+                  }
+
+                  const val = parseFloat(rawTarget);
+                  if (!isNaN(val)) target = val;
                 }
 
                 const actualVal = rawActual ? parseFloat(rawActual) : NaN;
                 const actual = !isNaN(actualVal) ? actualVal : null;
 
                 return {
-                    name: month.label.split('/')[1], // Just show month name
-                    fullLabel: month.label,
-                    target,
-                    minTarget,
-                    maxTarget,
-                    actual,
-                    rule: metric.targetMeetingRule,
-                    rawTarget,
-                    rawActual
+                  name: month.label.split('/')[1],
+                  fullLabel: month.label,
+                  target,
+                  minTarget,
+                  maxTarget,
+                  actual,
+                  rule: metric.targetMeetingRule,
+                  rawTarget,
+                  rawActual,
                 };
+              });
+
+              const metricA3Markers: { x: string; title: string; endDate?: string }[] = (a3Cases || [])
+                .filter(a3 => (a3.linkedMetricIds || []).includes(metric.id) && a3.endDate)
+                .map(a3 => {
+                  const [yearStr, monthStr] = (a3.endDate || '').split('-');
+                  const year = parseInt(yearStr, 10);
+                  const month = parseInt(monthStr || '', 10);
+                  if (isNaN(year) || isNaN(month)) {
+                    return null;
+                  }
+                  const key = `${year}-${String(month).padStart(2, '0')}`;
+                  const monthEntry = displayMonths.find(m => m.key === key);
+                  if (!monthEntry) {
+                    return null;
+                  }
+                  const monthName = monthEntry.label.split('/')[1];
+                  return {
+                    x: monthName,
+                    title: a3.title || 'Untitled A3',
+                    endDate: a3.endDate,
+                  };
+                })
+                .filter(m => !!m) as { x: string; title: string; endDate?: string }[];
+
+              const a3MarkersByMonth: Record<string, { title: string; endDate?: string }[]> = {};
+              metricA3Markers.forEach(marker => {
+                if (!a3MarkersByMonth[marker.x]) {
+                  a3MarkersByMonth[marker.x] = [];
+                }
+                a3MarkersByMonth[marker.x].push({ title: marker.title, endDate: marker.endDate });
               });
 
               const scale = chartScales[metric.id] || { min: '', max: '' };
@@ -713,21 +742,79 @@ const MetricBowler = () => {
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                        <XAxis 
-                          dataKey="name" 
-                          tick={{ fontSize: 10, fill: '#6b7280' }} 
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fontSize: 10, fill: '#6b7280' }}
                           axisLine={false}
                           tickLine={false}
                         />
-                        <YAxis 
-                          tick={{ fontSize: 10, fill: '#6b7280' }} 
+                        <YAxis
+                          tick={{ fontSize: 10, fill: '#6b7280' }}
                           axisLine={false}
                           tickLine={false}
                           domain={yDomain}
                         />
-                        <Tooltip 
-                          contentStyle={{ borderRadius: '4px', border: 'none', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}
-                          labelStyle={{ color: '#374151', fontWeight: 600 }}
+                        {metricA3Markers.map((marker, index) => (
+                          <ReferenceLine
+                            key={`a3-marker-${metric.id}-${index}`}
+                            x={marker.x}
+                            stroke="#10b981"
+                            strokeWidth={1}
+                            strokeDasharray="3 3"
+                          />
+                        ))}
+                        <Tooltip
+                          content={(tooltipProps: any) => {
+                            const { active, label, payload } = tooltipProps;
+                            if (!active || !label) return null;
+                            const rows = payload || [];
+                            const a3ForMonth = a3MarkersByMonth[label as string] || [];
+
+                            return (
+                              <div className="bg-white border border-gray-200 rounded-md shadow-md p-2 text-xs text-gray-700">
+                                <div className="font-semibold text-gray-900 mb-1">{label}</div>
+                                {rows.map((entry: any) => {
+                                  if (!entry || entry.value == null || Number.isNaN(entry.value)) {
+                                    return null;
+                                  }
+                                  return (
+                                    <div
+                                      key={entry.dataKey}
+                                      className="flex items-center justify-between gap-2"
+                                    >
+                                      <span className="text-gray-500">
+                                        {entry.name || entry.dataKey}
+                                      </span>
+                                      <span className="font-medium text-gray-900">
+                                        {entry.value}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                                {a3ForMonth.length > 0 && (
+                                  <div className="mt-2 border-t border-gray-100 pt-1">
+                                    <div className="text-[10px] font-semibold text-emerald-700 mb-1">
+                                      A3s ending this month
+                                    </div>
+                                    {a3ForMonth.map((a3, index) => (
+                                      <div
+                                        key={index}
+                                        className="text-[10px] text-emerald-800 leading-snug"
+                                      >
+                                        {a3.title}
+                                        {a3.endDate && (
+                                          <span className="text-[10px] text-gray-500">
+                                            {' '}
+                                            ({a3.endDate})
+                                          </span>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }}
                         />
                         <Legend wrapperStyle={{ fontSize: '12px' }} />
                         <Line 
