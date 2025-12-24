@@ -122,6 +122,7 @@ const Layout = () => {
     fail3: true,
   });
   const [a3TimelineView, setA3TimelineView] = useState<'week' | 'month'>('month');
+  const [a3TimelineExpandedGroups, setA3TimelineExpandedGroups] = useState<Record<string, boolean>>({});
 
   const a3PortfolioStats = useMemo(() => {
     const filteredCases = a3PortfolioGroupFilter
@@ -2791,57 +2792,85 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                   </div>
                                 </div>
                                 <div className="divide-y divide-gray-100">
-                                  {a3Timeline.rows.map(row => (
-                                    <div
-                                      key={row.groupName}
-                                      className="grid grid-cols-[120px,1fr] text-[11px]"
-                                    >
-                                      <div className="px-3 py-2 border-r border-gray-100 bg-gray-50 text-gray-700 font-medium">
-                                        {row.groupName}
-                                      </div>
-                                      <div className="relative px-3 py-2">
-                                        <div className="absolute inset-y-2 left-3 right-3 pointer-events-none">
-                                          <div className="flex h-full gap-px">
-                                            {a3Timeline.periods.map(period => (
-                                              <div
-                                                key={period.key}
-                                                className="flex-1 border-l border-dashed border-gray-200 last:border-r"
-                                              />
-                                            ))}
+                                  {a3Timeline.rows.map(row => {
+                                    const isExpanded = a3TimelineExpandedGroups[row.groupName] !== false;
+
+                                    return (
+                                      <div
+                                        key={row.groupName}
+                                        className="grid grid-cols-[120px,1fr] text-[11px]"
+                                      >
+                                        <div className="px-3 py-2 border-r border-gray-100 bg-gray-50 text-gray-700 font-medium">
+                                          <button
+                                            type="button"
+                                            className="flex items-center gap-1 text-xs text-gray-700 hover:text-gray-900"
+                                            onClick={() => {
+                                              setA3TimelineExpandedGroups(prev => ({
+                                                ...prev,
+                                                [row.groupName]: !(prev[row.groupName] !== false),
+                                              }));
+                                            }}
+                                          >
+                                            {isExpanded ? (
+                                              <ChevronDown className="w-3 h-3 text-gray-500" />
+                                            ) : (
+                                              <ChevronRight className="w-3 h-3 text-gray-500" />
+                                            )}
+                                            <span className="truncate">{row.groupName}</span>
+                                            <span className="ml-1 text-[10px] text-gray-400">
+                                              {row.items.length}
+                                            </span>
+                                          </button>
+                                        </div>
+                                        <div className="relative px-3 py-2">
+                                          <div className="absolute inset-y-2 left-3 right-3 pointer-events-none">
+                                            <div className="flex h-full gap-px">
+                                              {a3Timeline.periods.map(period => (
+                                                <div
+                                                  key={period.key}
+                                                  className="flex-1 border-l border-dashed border-gray-200 last:border-r"
+                                                />
+                                              ))}
+                                            </div>
+                                          </div>
+                                          <div className="relative space-y-1">
+                                            {isExpanded &&
+                                              row.items.map(item => (
+                                                <button
+                                                  key={item.id}
+                                                  type="button"
+                                                  className={clsx(
+                                                    'relative inline-flex items-center rounded-sm px-2 py-1 text-[10px] font-medium shadow-sm border border-opacity-20 text-white overflow-hidden',
+                                                    item.status === 'Completed'
+                                                      ? 'bg-green-500 border-green-700'
+                                                      : item.status === 'In Progress'
+                                                      ? 'bg-blue-500 border-blue-700'
+                                                      : 'bg-gray-400 border-gray-600',
+                                                  )}
+                                                  style={{
+                                                    left: `${item.left}%`,
+                                                    width: `${Math.max(item.width, 2)}%`,
+                                                    maxWidth: '100%',
+                                                  }}
+                                                  onClick={() => {
+                                                    navigate(
+                                                      `/a3-analysis/${item.id}/problem-statement`,
+                                                    );
+                                                  }}
+                                                >
+                                                  <span className="truncate">{item.title}</span>
+                                                </button>
+                                              ))}
+                                            {isExpanded && row.items.length === 0 && (
+                                              <p className="text-[10px] text-gray-400 italic">
+                                                No dated cases in this group.
+                                              </p>
+                                            )}
                                           </div>
                                         </div>
-                                        <div className="relative space-y-1">
-                                          {row.items.map(item => (
-                                            <button
-                                              key={item.id}
-                                              type="button"
-                                              className={clsx(
-                                                'relative inline-flex items-center rounded-sm px-2 py-1 text-[10px] font-medium shadow-sm border',
-                                                'bg-blue-50 border-blue-100 text-blue-700 hover:bg-blue-100',
-                                              )}
-                                              style={{
-                                                left: `${item.left}%`,
-                                                width: `${Math.max(item.width, 2)}%`,
-                                                maxWidth: '100%',
-                                              }}
-                                              onClick={() => {
-                                                navigate(
-                                                  `/a3-analysis/${item.id}/problem-statement`,
-                                                );
-                                              }}
-                                            >
-                                              <span className="truncate">{item.title}</span>
-                                            </button>
-                                          ))}
-                                          {row.items.length === 0 && (
-                                            <p className="text-[10px] text-gray-400 italic">
-                                              No dated cases in this group.
-                                            </p>
-                                          )}
-                                        </div>
                                       </div>
-                                    </div>
-                                  ))}
+                                    );
+                                  })}
                                 </div>
                               </div>
                             </div>
