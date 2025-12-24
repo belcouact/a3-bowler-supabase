@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Plus, BarChart3, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Bot } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Bot } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
 import { Bowler, Metric, AIModelKey } from '../types';
@@ -108,6 +108,8 @@ const Layout = () => {
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const [isMobileModelMenuOpen, setIsMobileModelMenuOpen] = useState(false);
   const [a3PortfolioViewMode, setA3PortfolioViewMode] = useState<'group' | 'metric'>('group');
+  const [portfolioTab, setPortfolioTab] = useState<'bowler' | 'a3'>('bowler');
+  const [a3PortfolioGroupFilter, setA3PortfolioGroupFilter] = useState<string>('');
   const [groupFilter, setGroupFilter] = useState<string>('');
   const [metricFilter, setMetricFilter] = useState<string>('');
   const [latestFilter, setLatestFilter] = useState<'all' | 'ok' | 'fail' | 'no-data'>('all');
@@ -121,7 +123,14 @@ const Layout = () => {
   });
 
   const a3PortfolioStats = useMemo(() => {
-    const total = a3Cases.length;
+    const filteredCases = a3PortfolioGroupFilter
+      ? a3Cases.filter(c => {
+          const groupKey = (c.group || 'Ungrouped').trim() || 'Ungrouped';
+          return groupKey === a3PortfolioGroupFilter;
+        })
+      : a3Cases;
+
+    const total = filteredCases.length;
 
     const statusCounts: Record<string, number> = {};
     const priorityCounts: Record<string, number> = {};
@@ -136,7 +145,7 @@ const Layout = () => {
 
     const today = new Date();
 
-    a3Cases.forEach(c => {
+    filteredCases.forEach(c => {
       const statusKey = (c.status || 'Not Started').trim();
       statusCounts[statusKey] = (statusCounts[statusKey] || 0) + 1;
 
@@ -197,7 +206,7 @@ const Layout = () => {
       statusCounts,
       groupCounts
     };
-  }, [a3Cases]);
+  }, [a3Cases, a3PortfolioGroupFilter]);
 
   const statusPieData = useMemo(
     () => {
@@ -238,6 +247,75 @@ const Layout = () => {
       return data;
     },
     [a3PortfolioStats],
+  );
+
+  const durationPieData = useMemo(
+    () => {
+      const data: { name: string; value: number; color: string }[] = [];
+
+      let lt3 = 0;
+      let m3to6 = 0;
+      let m6to12 = 0;
+      let gt12 = 0;
+
+      const today = new Date();
+
+      const filteredCases = a3PortfolioGroupFilter
+        ? a3Cases.filter(c => {
+            const groupKey = (c.group || 'Ungrouped').trim() || 'Ungrouped';
+            return groupKey === a3PortfolioGroupFilter;
+          })
+        : a3Cases;
+
+      filteredCases.forEach(c => {
+        if (!c.startDate) {
+          return;
+        }
+
+        const start = new Date(c.startDate);
+        if (isNaN(start.getTime())) {
+          return;
+        }
+
+        const end = c.endDate ? new Date(c.endDate) : today;
+        if (isNaN(end.getTime())) {
+          return;
+        }
+
+        const diffMs = end.getTime() - start.getTime();
+        if (diffMs <= 0) {
+          return;
+        }
+
+        const diffMonths = diffMs / (1000 * 60 * 60 * 24 * 30);
+
+        if (diffMonths < 3) {
+          lt3 += 1;
+        } else if (diffMonths < 6) {
+          m3to6 += 1;
+        } else if (diffMonths < 12) {
+          m6to12 += 1;
+        } else {
+          gt12 += 1;
+        }
+      });
+
+      if (lt3 > 0) {
+        data.push({ name: '< 3 months', value: lt3, color: '#bfdbfe' });
+      }
+      if (m3to6 > 0) {
+        data.push({ name: '3–6 months', value: m3to6, color: '#60a5fa' });
+      }
+      if (m6to12 > 0) {
+        data.push({ name: '6–12 months', value: m6to12, color: '#2563eb' });
+      }
+      if (gt12 > 0) {
+        data.push({ name: '> 12 months', value: gt12, color: '#1d4ed8' });
+      }
+
+      return data;
+    },
+    [a3Cases, a3PortfolioGroupFilter],
   );
 
   const groupPerformanceTableData = useMemo(() => {
@@ -401,6 +479,12 @@ const Layout = () => {
 
       const linkedMetricIdSet = new Set<string>();
       a3Cases.forEach(c => {
+        if (a3PortfolioGroupFilter) {
+          const groupKey = (c.group || 'Ungrouped').trim() || 'Ungrouped';
+          if (groupKey !== a3PortfolioGroupFilter) {
+            return;
+          }
+        }
         (c.linkedMetricIds || []).forEach(id => {
           if (id) {
             linkedMetricIdSet.add(id);
@@ -434,10 +518,10 @@ const Layout = () => {
         pieData,
       };
     },
-    [groupPerformanceTableData, a3Cases, a3LowPerfRule],
+    [groupPerformanceTableData, a3Cases, a3LowPerfRule, a3PortfolioGroupFilter],
   );
 
-  const groupFilterOptions = useMemo(
+const groupFilterOptions = useMemo(
     () => {
       const names = Array.from(new Set(groupPerformanceTableData.map(row => row.groupName)));
       names.sort();
@@ -453,6 +537,16 @@ const Layout = () => {
       return names;
     },
     [groupPerformanceTableData],
+  );
+
+  const a3PortfolioGroupOptions = useMemo(
+    () => {
+      const groupCounts = a3PortfolioStats.groupCounts || {};
+      const names = Object.keys(groupCounts);
+      names.sort();
+      return names;
+    },
+    [a3PortfolioStats],
   );
 
   const filteredGroupPerformanceTableData = useMemo(
@@ -673,6 +767,12 @@ const Layout = () => {
     });
 
     a3Cases.forEach(a3 => {
+      if (a3PortfolioGroupFilter) {
+        const groupKey = (a3.group || 'Ungrouped').trim() || 'Ungrouped';
+        if (groupKey !== a3PortfolioGroupFilter) {
+          return;
+        }
+      }
       const statusKey = (a3.status || 'Not Started').trim();
       const priorityKey = (a3.priority || 'Medium').trim();
 
@@ -712,7 +812,7 @@ const Layout = () => {
     }
 
     return filledColumns;
-  }, [a3Cases, bowlers, a3PortfolioViewMode]);
+  }, [a3Cases, bowlers, a3PortfolioViewMode, a3PortfolioGroupFilter]);
 
   const toggleGroup = (group: string) => {
     setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
@@ -1108,7 +1208,7 @@ const Layout = () => {
   const navItems = [
     { path: '/metric-bowler', label: 'Metric Bowler', icon: TrendingUp },
     { path: '/a3-analysis', label: 'A3 Analysis', icon: Zap },
-    { path: '/portfolio', label: 'Portfolio Mgt', icon: BarChart3 },
+    { path: '/portfolio', label: 'Integrated View', icon: Layers },
   ];
 
   return (
@@ -1118,7 +1218,7 @@ const Layout = () => {
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-2">
             <div className="bg-blue-600 p-1.5 rounded-lg">
-              <BarChart3 className="w-6 h-6 text-white" />
+              <Layers className="w-6 h-6 text-white" />
             </div>
             <div className="flex items-center space-x-1">
               <h1 className="text-lg font-semibold text-gray-900 tracking-tight hidden md:block">Performance Tracker</h1>
@@ -2023,18 +2123,49 @@ const Layout = () => {
                 <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                   <div>
                     <h2 className="text-base md:text-lg font-semibold text-gray-900">
-                      Bowler & A3 Portfolio Overview
+                      Integrated View
                     </h2>
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      Switch between Bowler metrics and A3 portfolio dashboard.
+                    </p>
                   </div>
                 </div>
                 <div className="p-4 md:p-6 space-y-4">
+                  <div className="border-b border-gray-200 mb-3">
+                    <nav className="-mb-px flex space-x-4">
+                      <button
+                        type="button"
+                        onClick={() => setPortfolioTab('bowler')}
+                        className={clsx(
+                          'whitespace-nowrap py-2 px-1 border-b-2 text-xs md:text-sm font-medium',
+                          portfolioTab === 'bowler'
+                            ? 'border-blue-500 text-blue-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                        )}
+                      >
+                        Bowler Overview
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPortfolioTab('a3')}
+                        className={clsx(
+                          'whitespace-nowrap py-2 px-1 border-b-2 text-xs md:text-sm font-medium',
+                          portfolioTab === 'a3'
+                            ? 'border-blue-500 text-blue-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                        )}
+                      >
+                        A3 Portfolio
+                      </button>
+                    </nav>
+                  </div>
                   {a3PortfolioStats.total === 0 ? (
                     <div className="py-8 text-center text-sm text-gray-500">
                       No A3 cases in the portfolio yet. Use the + button to create your first case.
                     </div>
                   ) : (
                     <>
-                      {groupPerformanceTableData.length > 0 && (
+                      {portfolioTab === 'bowler' && groupPerformanceTableData.length > 0 && (
                         <div className="mb-2">
                           <div className="overflow-x-auto">
                             <table className="min-w-full text-xs md:text-sm">
@@ -2056,7 +2187,16 @@ const Layout = () => {
                                     Failing last 3 months
                                   </th>
                                   <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-normal md:whitespace-nowrap">
-                                    Overall target achieving %
+                                    <span className="inline-flex items-center gap-1">
+                                      <span>Overall target achieving %</span>
+                                      <button
+                                        type="button"
+                                        className="text-gray-400 hover:text-gray-600"
+                                        title="Cells are highlighted when achievement is 66% or lower."
+                                      >
+                                        <Info className="w-3 h-3" />
+                                      </button>
+                                    </span>
                                   </th>
                                 </tr>
                                 <tr>
@@ -2194,7 +2334,14 @@ const Layout = () => {
                                         <span>—</span>
                                       )}
                                     </td>
-                                    <td className="px-3 py-2 text-gray-700">
+                                    <td
+                                      className={clsx(
+                                        'px-3 py-2 text-gray-700',
+                                        row.achievementRate != null &&
+                                          row.achievementRate <= (2 / 3) * 100 &&
+                                          'bg-amber-50 text-amber-800 font-semibold',
+                                      )}
+                                    >
                                       {row.achievementRate != null
                                         ? `${row.achievementRate.toFixed(0)}%`
                                         : '—'}
@@ -2206,280 +2353,336 @@ const Layout = () => {
                           </div>
                         </div>
                       )}
-                      <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-                        <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
-                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                            Status
-                          </p>
-                          <div className="mt-2 h-40">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <PieChart>
-                                <Pie
-                                  data={statusPieData}
-                                  dataKey="value"
-                                  nameKey="name"
-                                  innerRadius={30}
-                                  outerRadius={55}
-                                  paddingAngle={2}
-                                  label={renderPieLabel}
-                                  labelLine={false}
-                                >
-                                  {statusPieData.map((entry, index) => (
-                                    <Cell
-                                      key={`status-cell-${index}`}
-                                      fill={entry.color}
-                                    />
-                                  ))}
-                                </Pie>
-                                <Tooltip content={renderPieTooltip} />
-                              </PieChart>
-                            </ResponsiveContainer>
+
+                      {portfolioTab === 'a3' && (
+                        <>
+                          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                            <div className="text-xs text-gray-500">
+                              Filter the A3 dashboard by portfolio group.
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[11px] text-gray-500">Group</span>
+                              <select
+                                className="rounded border border-gray-200 bg-white px-2 py-1 text-[11px] md:text-xs text-gray-700"
+                                value={a3PortfolioGroupFilter}
+                                onChange={e => setA3PortfolioGroupFilter(e.target.value)}
+                              >
+                                <option value="">All groups</option>
+                                {a3PortfolioGroupOptions.map(name => (
+                                  <option key={name} value={name}>
+                                    {name}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
                           </div>
-                          <p className="mt-2 text-[11px] text-gray-500">
-                            Total:{' '}
-                            <span className="font-semibold text-gray-900">
-                              {a3PortfolioStats.total}
-                            </span>{' '}
-                            · Active {a3PortfolioStats.active}, Completed{' '}
-                            {a3PortfolioStats.completed}
-                          </p>
-                        </div>
-                        <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
-                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                            Priority
-                          </p>
-                          <div className="mt-2 h-40">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <PieChart>
-                                <Pie
-                                  data={priorityPieData}
-                                  dataKey="value"
-                                  nameKey="name"
-                                  innerRadius={30}
-                                  outerRadius={55}
-                                  paddingAngle={2}
-                                  label={renderPieLabel}
-                                  labelLine={false}
-                                >
-                                  {priorityPieData.map((entry, index) => (
-                                    <Cell
-                                      key={`priority-cell-${index}`}
-                                      fill={entry.color}
-                                    />
-                                  ))}
-                                </Pie>
-                                <Tooltip content={renderPieTooltip} />
-                              </PieChart>
-                            </ResponsiveContainer>
-                          </div>
-                          <p className="mt-2 text-[11px] text-gray-500">
-                            High {a3PortfolioStats.priorityCounts['High'] || 0}, Medium{' '}
-                            {a3PortfolioStats.priorityCounts['Medium'] || 0}, Low{' '}
-                            {a3PortfolioStats.priorityCounts['Low'] || 0}
-                          </p>
-                        </div>
-                        <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
-                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                            Metric A3 Coverage
-                          </p>
-                          <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-gray-500">
-                            <label className="inline-flex items-center gap-1">
-                              <input
-                                type="checkbox"
-                                className="h-3 w-3 text-blue-600 border-gray-300 rounded"
-                                checked={a3LowPerfRule.latestFail}
-                                onChange={e =>
-                                  setA3LowPerfRule({
-                                    ...a3LowPerfRule,
-                                    latestFail: e.target.checked,
-                                  })
-                                }
-                              />
-                              <span>Latest fail</span>
-                            </label>
-                            <label className="inline-flex items-center gap-1">
-                              <input
-                                type="checkbox"
-                                className="h-3 w-3 text-blue-600 border-gray-300 rounded"
-                                checked={a3LowPerfRule.fail2}
-                                onChange={e =>
-                                  setA3LowPerfRule({
-                                    ...a3LowPerfRule,
-                                    fail2: e.target.checked,
-                                  })
-                                }
-                              />
-                              <span>Failing 2 months</span>
-                            </label>
-                            <label className="inline-flex items-center gap-1">
-                              <input
-                                type="checkbox"
-                                className="h-3 w-3 text-blue-600 border-gray-300 rounded"
-                                checked={a3LowPerfRule.fail3}
-                                onChange={e =>
-                                  setA3LowPerfRule({
-                                    ...a3LowPerfRule,
-                                    fail3: e.target.checked,
-                                  })
-                                }
-                              />
-                              <span>Failing 3 months</span>
-                            </label>
-                          </div>
-                          <div className="mt-2 h-40">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <PieChart>
-                                <Pie
-                                  data={metricA3Coverage.pieData}
-                                  dataKey="value"
-                                  nameKey="name"
-                                  innerRadius={30}
-                                  outerRadius={55}
-                                  paddingAngle={2}
-                                  label={renderPieLabel}
-                                  labelLine={false}
-                                >
-                                  {metricA3Coverage.pieData.map((entry, index) => (
-                                    <Cell
-                                      key={`metric-coverage-cell-${index}`}
-                                      fill={entry.color}
-                                    />
-                                  ))}
-                                </Pie>
-                                <Tooltip content={renderPieTooltip} />
-                              </PieChart>
-                            </ResponsiveContainer>
-                          </div>
-                          <p className="mt-2 text-[11px] text-gray-500">
-                            At-risk metrics: {metricA3Coverage.totalAtRisk} · With A3:{' '}
-                            {metricA3Coverage.withA3}, Without A3: {metricA3Coverage.withoutA3}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                        <div>
-                          <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
-                            A3 Kanban
-                          </p>
-                          <p className="mt-0.5 text-xs text-gray-500">
-                            Track cases by status and quickly scan groups or metric links.
-                          </p>
-                        </div>
-                        <div className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 p-0.5 text-xs">
-                          <button
-                            type="button"
-                            onClick={() => setA3PortfolioViewMode('group')}
-                            className={clsx(
-                              'px-3 py-1.5 rounded-full font-medium transition-colors',
-                              a3PortfolioViewMode === 'group'
-                                ? 'bg-white text-gray-900 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-800',
-                            )}
-                          >
-                            View by Group
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setA3PortfolioViewMode('metric')}
-                            className={clsx(
-                              'px-3 py-1.5 rounded-full font-medium transition-colors',
-                              a3PortfolioViewMode === 'metric'
-                                ? 'bg-white text-gray-900 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-800',
-                            )}
-                          >
-                            View by Linked Metric
-                          </button>
-                        </div>
-                      </div>
-                      <div className="mt-3 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-                        {a3KanbanColumns.map(column => (
-                          <div
-                            key={column.key}
-                            className={clsx(
-                              'flex flex-col rounded-lg border text-xs',
-                              column.headerClass,
-                            )}
-                          >
-                            <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100">
-                              <div className="flex items-center gap-2">
-                                <span
-                                  className={clsx(
-                                    'h-2 w-2 rounded-full',
-                                    column.dotClass,
-                                  )}
-                                />
-                                <span className="font-semibold text-gray-800">
-                                  {column.label}
-                                </span>
+
+                          <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                            <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
+                              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                Metric A3 Coverage
+                              </p>
+                              <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-gray-500">
+                                <label className="inline-flex items-center gap-1">
+                                  <input
+                                    type="checkbox"
+                                    className="h-3 w-3 text-blue-600 border-gray-300 rounded"
+                                    checked={a3LowPerfRule.latestFail}
+                                    onChange={e =>
+                                      setA3LowPerfRule({
+                                        ...a3LowPerfRule,
+                                        latestFail: e.target.checked,
+                                      })
+                                    }
+                                  />
+                                  <span>Latest fail</span>
+                                </label>
+                                <label className="inline-flex items-center gap-1">
+                                  <input
+                                    type="checkbox"
+                                    className="h-3 w-3 text-blue-600 border-gray-300 rounded"
+                                    checked={a3LowPerfRule.fail2}
+                                    onChange={e =>
+                                      setA3LowPerfRule({
+                                        ...a3LowPerfRule,
+                                        fail2: e.target.checked,
+                                      })
+                                    }
+                                  />
+                                  <span>Failing 2 months</span>
+                                </label>
+                                <label className="inline-flex items-center gap-1">
+                                  <input
+                                    type="checkbox"
+                                    className="h-3 w-3 text-blue-600 border-gray-300 rounded"
+                                    checked={a3LowPerfRule.fail3}
+                                    onChange={e =>
+                                      setA3LowPerfRule({
+                                        ...a3LowPerfRule,
+                                        fail3: e.target.checked,
+                                      })
+                                    }
+                                  />
+                                  <span>Failing 3 months</span>
+                                </label>
                               </div>
-                              <span
+                              <div className="mt-2 h-40">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <PieChart>
+                                    <Pie
+                                      data={metricA3Coverage.pieData}
+                                      dataKey="value"
+                                      nameKey="name"
+                                      innerRadius={30}
+                                      outerRadius={55}
+                                      paddingAngle={2}
+                                      label={renderPieLabel}
+                                      labelLine={false}
+                                    >
+                                      {metricA3Coverage.pieData.map((entry, index) => (
+                                        <Cell
+                                          key={`metric-coverage-cell-${index}`}
+                                          fill={entry.color}
+                                        />
+                                      ))}
+                                    </Pie>
+                                    <Tooltip content={renderPieTooltip} />
+                                  </PieChart>
+                                </ResponsiveContainer>
+                              </div>
+                              <p className="mt-2 text-[11px] text-gray-500">
+                                At-risk metrics: {metricA3Coverage.totalAtRisk} · With A3:{' '}
+                                {metricA3Coverage.withA3}, Without A3: {metricA3Coverage.withoutA3}
+                              </p>
+                            </div>
+                            <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
+                              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                A3 Duration
+                              </p>
+                              <div className="mt-2 h-40">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <PieChart>
+                                    <Pie
+                                      data={durationPieData}
+                                      dataKey="value"
+                                      nameKey="name"
+                                      innerRadius={30}
+                                      outerRadius={55}
+                                      paddingAngle={2}
+                                      label={renderPieLabel}
+                                      labelLine={false}
+                                    >
+                                      {durationPieData.map((entry, index) => (
+                                        <Cell
+                                          key={`duration-cell-${index}`}
+                                          fill={entry.color}
+                                        />
+                                      ))}
+                                    </Pie>
+                                    <Tooltip content={renderPieTooltip} />
+                                  </PieChart>
+                                </ResponsiveContainer>
+                              </div>
+                            </div>
+                            <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
+                              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                Status
+                              </p>
+                              <div className="mt-2 h-40">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <PieChart>
+                                    <Pie
+                                      data={statusPieData}
+                                      dataKey="value"
+                                      nameKey="name"
+                                      innerRadius={30}
+                                      outerRadius={55}
+                                      paddingAngle={2}
+                                      label={renderPieLabel}
+                                      labelLine={false}
+                                    >
+                                      {statusPieData.map((entry, index) => (
+                                        <Cell
+                                          key={`status-cell-${index}`}
+                                          fill={entry.color}
+                                        />
+                                      ))}
+                                    </Pie>
+                                    <Tooltip content={renderPieTooltip} />
+                                  </PieChart>
+                                </ResponsiveContainer>
+                              </div>
+                              <p className="mt-2 text-[11px] text-gray-500">
+                                Total:{' '}
+                                <span className="font-semibold text-gray-900">
+                                  {a3PortfolioStats.total}
+                                </span>{' '}
+                                · Active {a3PortfolioStats.active}, Completed{' '}
+                                {a3PortfolioStats.completed}
+                              </p>
+                            </div>
+                            <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
+                              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                Priority
+                              </p>
+                              <div className="mt-2 h-40">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <PieChart>
+                                    <Pie
+                                      data={priorityPieData}
+                                      dataKey="value"
+                                      nameKey="name"
+                                      innerRadius={30}
+                                      outerRadius={55}
+                                      paddingAngle={2}
+                                      label={renderPieLabel}
+                                      labelLine={false}
+                                    >
+                                      {priorityPieData.map((entry, index) => (
+                                        <Cell
+                                          key={`priority-cell-${index}`}
+                                          fill={entry.color}
+                                        />
+                                      ))}
+                                    </Pie>
+                                    <Tooltip content={renderPieTooltip} />
+                                  </PieChart>
+                                </ResponsiveContainer>
+                              </div>
+                              <p className="mt-2 text-[11px] text-gray-500">
+                                High {a3PortfolioStats.priorityCounts['High'] || 0}, Medium{' '}
+                                {a3PortfolioStats.priorityCounts['Medium'] || 0}, Low{' '}
+                                {a3PortfolioStats.priorityCounts['Low'] || 0}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="mt-6 pt-4 border-t border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                            <div>
+                              <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                                A3 Kanban
+                              </p>
+                              <p className="mt-0.5 text-xs text-gray-500">
+                                Track cases by status and quickly scan groups or metric links.
+                              </p>
+                            </div>
+                            <div className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 p-0.5 text-xs">
+                              <button
+                                type="button"
+                                onClick={() => setA3PortfolioViewMode('group')}
                                 className={clsx(
-                                  'px-2 py-0.5 rounded-full text-[10px] font-medium border',
-                                  column.badgeClass,
+                                  'px-3 py-1.5 rounded-full font-medium transition-colors',
+                                  a3PortfolioViewMode === 'group'
+                                    ? 'bg-white text-gray-900 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-800',
                                 )}
                               >
-                                {column.items.length}
-                              </span>
-                            </div>
-                            <div className="flex-1 px-3 py-2 space-y-2 max-h-80 overflow-y-auto">
-                              {column.items.length === 0 ? (
-                                <p className="text-[11px] text-gray-400 italic">
-                                  No cases in this column.
-                                </p>
-                              ) : (
-                                column.items.map(item => (
-                                  <button
-                                    key={item.a3.id}
-                                    type="button"
-                                    onClick={() => {
-                                      navigate(
-                                        `/a3-analysis/${item.a3.id}/problem-statement`,
-                                      );
-                                    }}
-                                    className={clsx(
-                                      'w-full text-left rounded-md border px-2.5 py-2 shadow-sm hover:border-blue-200 hover:bg-blue-50/60 transition-colors',
-                                      item.labelColorClass,
-                                    )}
-                                  >
-                                    <div className="flex items-start justify-between gap-2">
-                                      <div className="min-w-0">
-                                        <p className="text-[11px] font-semibold text-gray-900 leading-snug">
-                                          {item.a3.title}
-                                        </p>
-                                        <p className="mt-0.5 text-[10px] text-gray-500 truncate">
-                                          {a3PortfolioViewMode === 'group'
-                                            ? 'Group'
-                                            : 'Metric'}
-                                          :{' '}
-                                          <span className="font-medium text-gray-700">
-                                            {item.displayLabel}
-                                          </span>
-                                        </p>
-                                      </div>
-                                      <span
-                                        className={clsx(
-                                          'ml-1 inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium',
-                                          item.priorityClass,
-                                        )}
-                                      >
-                                        {item.priority}
-                                      </span>
-                                    </div>
-                                    {item.a3.startDate && (
-                                      <p className="mt-1 text-[10px] text-gray-400">
-                                        {item.a3.endDate
-                                          ? `${item.a3.startDate} → ${item.a3.endDate}`
-                                          : `Start: ${item.a3.startDate}`}
-                                      </p>
-                                    )}
-                                  </button>
-                                ))
-                              )}
+                                View by Group
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setA3PortfolioViewMode('metric')}
+                                className={clsx(
+                                  'px-3 py-1.5 rounded-full font-medium transition-colors',
+                                  a3PortfolioViewMode === 'metric'
+                                    ? 'bg-white text-gray-900 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-800',
+                                )}
+                              >
+                                View by Linked Metric
+                              </button>
                             </div>
                           </div>
-                        ))}
-                      </div>
+                          <div className="mt-3 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                            {a3KanbanColumns.map(column => (
+                              <div
+                                key={column.key}
+                                className={clsx(
+                                  'flex flex-col rounded-lg border text-xs',
+                                  column.headerClass,
+                                )}
+                              >
+                                <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100">
+                                  <div className="flex items-center gap-2">
+                                    <span
+                                      className={clsx(
+                                        'h-2 w-2 rounded-full',
+                                        column.dotClass,
+                                      )}
+                                    />
+                                    <span className="font-semibold text-gray-800">
+                                      {column.label}
+                                    </span>
+                                  </div>
+                                  <span
+                                    className={clsx(
+                                      'px-2 py-0.5 rounded-full text-[10px] font-medium border',
+                                      column.badgeClass,
+                                    )}
+                                  >
+                                    {column.items.length}
+                                  </span>
+                                </div>
+                                <div className="flex-1 px-3 py-2 space-y-2 max-h-80 overflow-y-auto">
+                                  {column.items.length === 0 ? (
+                                    <p className="text-[11px] text-gray-400 italic">
+                                      No cases in this column.
+                                    </p>
+                                  ) : (
+                                    column.items.map(item => (
+                                      <button
+                                        key={item.a3.id}
+                                        type="button"
+                                        onClick={() => {
+                                          navigate(
+                                            `/a3-analysis/${item.a3.id}/problem-statement`,
+                                          );
+                                        }}
+                                        className={clsx(
+                                          'w-full text-left rounded-md border px-2.5 py-2 shadow-sm hover:border-blue-200 hover:bg-blue-50/60 transition-colors',
+                                          item.labelColorClass,
+                                        )}
+                                      >
+                                        <div className="flex items-start justify-between gap-2">
+                                          <div className="min-w-0">
+                                            <p className="text-[11px] font-semibold text-gray-900 leading-snug">
+                                              {item.a3.title}
+                                            </p>
+                                            <p className="mt-0.5 text-[10px] text-gray-500 truncate">
+                                              {a3PortfolioViewMode === 'group'
+                                                ? 'Group'
+                                                : 'Metric'}
+                                              :{' '}
+                                              <span className="font-medium text-gray-700">
+                                                {item.displayLabel}
+                                              </span>
+                                            </p>
+                                          </div>
+                                          <span
+                                            className={clsx(
+                                              'ml-1 inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium',
+                                              item.priorityClass,
+                                            )}
+                                          >
+                                            {item.priority}
+                                          </span>
+                                        </div>
+                                        {item.a3.startDate && (
+                                          <p className="mt-1 text-[10px] text-gray-400">
+                                            {item.a3.endDate
+                                              ? `${item.a3.startDate} → ${item.a3.endDate}`
+                                              : `Start: ${item.a3.startDate}`}
+                                          </p>
+                                        )}
+                                      </button>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </>
                   )}
                 </div>
