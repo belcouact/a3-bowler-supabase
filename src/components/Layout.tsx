@@ -107,7 +107,6 @@ const Layout = () => {
   const [bowlerFilterValue, setBowlerFilterValue] = useState<string>('');
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const [isMobileModelMenuOpen, setIsMobileModelMenuOpen] = useState(false);
-  const [a3PortfolioViewMode, setA3PortfolioViewMode] = useState<'group' | 'metric'>('group');
   const [portfolioTab, setPortfolioTab] = useState<'bowler' | 'a3'>('bowler');
   const [a3PortfolioGroupFilter, setA3PortfolioGroupFilter] = useState<string>('');
   const [groupFilter, setGroupFilter] = useState<string>('');
@@ -778,21 +777,7 @@ const groupFilterOptions = useMemo(
 
       const groupLabel = (a3.group || 'Ungrouped').trim() || 'Ungrouped';
 
-      let metricLabel: string | null = null;
-      if (a3.linkedMetricIds && a3.linkedMetricIds.length > 0) {
-        for (const id of a3.linkedMetricIds) {
-          const label = metricLabelById.get(id);
-          if (label) {
-            metricLabel = label;
-            break;
-          }
-        }
-      }
-
-      const displayLabel =
-        a3PortfolioViewMode === 'group'
-          ? groupLabel
-          : metricLabel || 'No linked metric';
+      const displayLabel = groupLabel;
 
       const labelColorClass = getLabelColorClass(displayLabel);
 
@@ -812,7 +797,7 @@ const groupFilterOptions = useMemo(
     }
 
     return filledColumns;
-  }, [a3Cases, bowlers, a3PortfolioViewMode, a3PortfolioGroupFilter]);
+  }, [a3Cases, bowlers, a3PortfolioGroupFilter]);
 
   const toggleGroup = (group: string) => {
     setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
@@ -1385,21 +1370,6 @@ const groupFilterOptions = useMemo(
                   >
                     <Inbox className="w-4 h-4 mr-3" />
                     Consolidate
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      handleOneClickSummary();
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-teal-600"
-                  >
-                    {isGeneratingSummary ? (
-                      <Loader2 className="w-4 h-4 mr-3 animate-spin" />
-                    ) : (
-                      <NotepadText className="w-4 h-4 mr-3" />
-                    )}
-                    One Click Summary
                   </button>
 
                   <button
@@ -2568,41 +2538,13 @@ const groupFilterOptions = useMemo(
                             </div>
                           </div>
 
-                          <div className="mt-6 pt-4 border-t border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                            <div>
-                              <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
-                                A3 Kanban
-                              </p>
-                              <p className="mt-0.5 text-xs text-gray-500">
-                                Track cases by status and quickly scan groups or metric links.
-                              </p>
-                            </div>
-                            <div className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 p-0.5 text-xs">
-                              <button
-                                type="button"
-                                onClick={() => setA3PortfolioViewMode('group')}
-                                className={clsx(
-                                  'px-3 py-1.5 rounded-full font-medium transition-colors',
-                                  a3PortfolioViewMode === 'group'
-                                    ? 'bg-white text-gray-900 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-800',
-                                )}
-                              >
-                                View by Group
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setA3PortfolioViewMode('metric')}
-                                className={clsx(
-                                  'px-3 py-1.5 rounded-full font-medium transition-colors',
-                                  a3PortfolioViewMode === 'metric'
-                                    ? 'bg-white text-gray-900 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-800',
-                                )}
-                              >
-                                View by Linked Metric
-                              </button>
-                            </div>
+                          <div className="mt-6 pt-4 border-t border-gray-200">
+                            <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                              A3 Kanban
+                            </p>
+                            <p className="mt-0.5 text-xs text-gray-500">
+                              Track cases by status and quickly scan portfolio groups.
+                            </p>
                           </div>
                           <div className="mt-3 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
                             {a3KanbanColumns.map(column => (
@@ -2660,10 +2602,7 @@ const groupFilterOptions = useMemo(
                                               {item.a3.title}
                                             </p>
                                             <p className="mt-0.5 text-[10px] text-gray-500 truncate">
-                                              {a3PortfolioViewMode === 'group'
-                                                ? 'Group'
-                                                : 'Metric'}
-                                              :{' '}
+                                              Group:{' '}
                                               <span className="font-medium text-gray-700">
                                                 {item.displayLabel}
                                               </span>
