@@ -106,9 +106,9 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
         <tr>
           <th>Group</th>
           <th>Metric</th>
-          <th>Latest month performance</th>
-          <th>Failing last 2 months</th>
-          <th>Failing last 3 months</th>
+          <th>Latest month</th>
+          <th>Last 2 months</th>
+          <th>Last 3 months</th>
           <th>Overall target achieving %</th>
         </tr>
       </thead>
@@ -595,13 +595,13 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
                                     Metric
                                   </th>
                                   <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
-                                    Latest month performance
+                                    Latest month
                                   </th>
                                   <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
-                                    Failing last 2 months
+                                    Last 2 months
                                   </th>
                                   <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
-                                    Failing last 3 months
+                                    Last 3 months
                                   </th>
                                   <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
                                     Overall target achieving %

@@ -2389,13 +2389,13 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                     Metric
                                   </th>
                                   <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-normal md:whitespace-nowrap">
-                                    Latest month performance
+                                    Latest month
                                   </th>
                                   <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-normal md:whitespace-nowrap">
-                                    Failing last 2 months
+                                    Last 2 months
                                   </th>
                                   <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-normal md:whitespace-nowrap">
-                                    Failing last 3 months
+                                    Last 3 months
                                   </th>
                                   <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-normal md:whitespace-nowrap">
                                     <span className="inline-flex items-center gap-1">
