@@ -354,15 +354,26 @@ const Layout = () => {
       achievementRate: number | null;
     }[] = [];
 
+    const isValuePresent = (value: unknown) => {
+      if (value === null || value === undefined) return false;
+      if (typeof value === 'string') return value.trim() !== '';
+      return true;
+    };
+
+    const hasDataAndTarget = (data: { actual?: unknown; target?: unknown } | undefined) =>
+      !!data && isValuePresent(data.actual) && isValuePresent(data.target);
+
     groupNames.forEach(groupName => {
       const metrics = groupToMetrics[groupName] || [];
 
       metrics.forEach(metric => {
         const monthly = metric.monthlyData || {};
-        const months = Object.keys(monthly).filter(month => {
-          const data = monthly[month];
-          return data?.actual && data?.target;
-        }).sort();
+        const months = Object.keys(monthly)
+          .filter(month => {
+            const data = monthly[month];
+            return hasDataAndTarget(data);
+          })
+          .sort();
 
         if (months.length === 0) {
           rows.push({
@@ -384,7 +395,7 @@ const Layout = () => {
 
         let latestMet: boolean | null = null;
         const latestData = monthly[latestMonth];
-        if (latestData?.actual && latestData?.target) {
+        if (hasDataAndTarget(latestData)) {
           latestMet = !isViolation(metric.targetMeetingRule, latestData.target, latestData.actual);
         }
 
@@ -393,7 +404,7 @@ const Layout = () => {
           let allFail2 = true;
           for (const month of latest2Months) {
             const data = monthly[month];
-            if (!data?.actual || !data?.target || !isViolation(metric.targetMeetingRule, data.target, data.actual)) {
+            if (!hasDataAndTarget(data) || !isViolation(metric.targetMeetingRule, data.target, data.actual)) {
               allFail2 = false;
               break;
             }
@@ -406,7 +417,7 @@ const Layout = () => {
           let allFail3 = true;
           for (const month of latest3Months) {
             const data = monthly[month];
-            if (!data?.actual || !data?.target || !isViolation(metric.targetMeetingRule, data.target, data.actual)) {
+            if (!hasDataAndTarget(data) || !isViolation(metric.targetMeetingRule, data.target, data.actual)) {
               allFail3 = false;
               break;
             }
@@ -418,12 +429,11 @@ const Layout = () => {
         let metPoints = 0;
         months.forEach(month => {
           const data = monthly[month];
-          if (data?.actual && data?.target) {
-            totalPoints += 1;
-            const violation = isViolation(metric.targetMeetingRule, data.target, data.actual);
-            if (!violation) {
-              metPoints += 1;
-            }
+          if (!hasDataAndTarget(data)) return;
+          totalPoints += 1;
+          const violation = isViolation(metric.targetMeetingRule, data.target, data.actual);
+          if (!violation) {
+            metPoints += 1;
           }
         });
 
