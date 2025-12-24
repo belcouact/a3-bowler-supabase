@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { X, LayoutDashboard, FileText, Sparkles, Upload, Download, TrendingUp, Smartphone, Lightbulb, Inbox, Layers } from 'lucide-react';
+import { X, LayoutDashboard, FileText, Sparkles, Upload, Download, Smartphone, Lightbulb, Inbox, Layers } from 'lucide-react';
 
 interface AppInfoModalProps {
   isOpen: boolean;
@@ -19,11 +19,11 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
         <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 sm:px-6 flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="h-7 w-7 rounded-full bg-blue-100 flex items-center justify-center">
-                <TrendingUp className="w-4 h-4 text-blue-600" />
+              <div className="h-7 w-7 rounded-md bg-blue-600 flex items-center justify-center">
+                <span className="text-[10px] font-bold tracking-tight text-white">B&amp;A</span>
               </div>
               <h3 className="text-sm font-medium text-gray-900" id="modal-title">
-                About A3 Bowler
+                About Bowler &amp; A3
               </h3>
             </div>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-500 transition-colors">
@@ -34,16 +34,18 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
           <div className="bg-white px-4 pt-5 pb-6 sm:px-8 sm:pt-8 sm:pb-8">
             <div className="mb-6 text-center flex flex-col items-center">
               <div className="p-3 bg-blue-100 rounded-full mb-3">
-                 <TrendingUp className="w-10 h-10 text-blue-600" />
+                <div className="bg-blue-600 h-12 w-12 rounded-md flex items-center justify-center">
+                  <span className="text-sm font-bold tracking-tight text-white">B&amp;A</span>
+                </div>
               </div>
-              <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">A3 Bowler</h2>
-              <p className="mt-1 text-sm text-gray-500">AI-Assisted Performance Tracker & A3 Problem Solving</p>
+              <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">Bowler &amp; A3</h2>
+              <p className="mt-1 text-sm text-gray-500">AI-Assisted Bowler &amp; A3 Performance Tracker</p>
             </div>
 
             <div className="border-t border-gray-100 pt-6">
               <h4 className="text-sm font-semibold text-gray-900 mb-2">Overview</h4>
               <p className="text-sm text-gray-600 leading-relaxed">
-                A3 Bowler is a lightweight performance management tool designed to help teams track metrics,
+                Bowler &amp; A3 is a lightweight performance management tool designed to help teams track metrics,
                 visualize trends, and drive problem solving using the A3 methodology. It combines a monthly
                 bowler chart with A3 analysis, enhanced by AI to summarize patterns and support root cause
                 thinking.

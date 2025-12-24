@@ -2917,7 +2917,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                           <div key={row.groupName} className="border-b border-gray-100">
                                             <button
                                               type="button"
-                                              className="w-full flex items-center justify-between px-3 py-2 text-[11px] text-gray-700 hover:bg-gray-100"
+                                              className="h-[32px] w-full flex items-center justify-between px-4 bg-gray-100 hover:bg-gray-200 text-[11px] text-gray-700"
                                               onClick={() => {
                                                 setA3TimelineExpandedGroups(prev => ({
                                                   ...prev,
@@ -2927,13 +2927,15 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                             >
                                               <div className="flex items-center gap-1 min-w-0">
                                                 {isExpanded ? (
-                                                  <ChevronDown className="w-3 h-3 text-gray-500" />
+                                                  <ChevronDown className="w-3 h-3 text-gray-600" />
                                                 ) : (
-                                                  <ChevronRight className="w-3 h-3 text-gray-500" />
+                                                  <ChevronRight className="w-3 h-3 text-gray-600" />
                                                 )}
-                                                <span className="truncate">{row.groupName}</span>
+                                                <span className="truncate font-semibold text-blue-700 uppercase tracking-wider">
+                                                  {row.groupName}
+                                                </span>
                                               </div>
-                                              <span className="ml-2 text-[10px] text-gray-400">
+                                              <span className="ml-2 text-[10px] text-gray-500">
                                                 {row.items.length}
                                               </span>
                                             </button>
@@ -2942,7 +2944,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                                 <button
                                                   key={item.id}
                                                   type="button"
-                                                  className="w-full flex items-center justify-between px-4 py-1.5 text-[11px] hover:bg-white"
+                                                  className="h-[48px] w-full flex items-center justify-between px-4 text-[11px] bg-white hover:bg-gray-50"
                                                   onClick={() => {
                                                     navigate(
                                                       `/a3-analysis/${item.id}/problem-statement`,
@@ -2950,10 +2952,10 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                                   }}
                                                 >
                                                   <div className="flex flex-col items-start min-w-0">
-                                                    <span className="text-gray-800 text-[11px] leading-snug break-words">
+                                                    <span className="text-gray-900 text-[11px] leading-snug truncate w-full">
                                                       {item.title}
                                                     </span>
-                                                    <span className="mt-0.5 text-[10px] text-gray-400">
+                                                    <span className="mt-0.5 text-[10px] text-gray-500 truncate w-full">
                                                       {item.startDate && item.endDate
                                                         ? `${item.startDate} → ${item.endDate}`
                                                         : item.startDate || item.endDate || ''}
@@ -3008,9 +3010,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
 
                                         return (
                                           <div key={row.groupName}>
-                                            <div className="px-3 py-2 bg-gray-50" />
+                                            <div className="h-[32px] border-b border-gray-100 bg-gray-50/50" />
                                             {isExpanded && row.items.length === 0 && (
-                                              <div className="px-3 py-2 text-[10px] text-gray-400 italic">
+                                              <div className="h-[48px] border-b border-gray-100 flex items-center px-3 text-[10px] text-gray-400 italic">
                                                 No dated cases in this group.
                                               </div>
                                             )}
@@ -3018,7 +3020,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                               row.items.map(item => (
                                                 <div
                                                   key={item.id}
-                                                  className="relative px-3 py-2 text-[11px]"
+                                                  className="h-[48px] border-b border-gray-100 relative group"
                                                 >
                                                   <div className="absolute inset-y-2 left-0 right-0 pointer-events-none">
                                                     <div className="flex h-full gap-px">
@@ -3030,11 +3032,11 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                                       ))}
                                                     </div>
                                                   </div>
-                                                  <div className="relative">
+                                                  <div className="relative h-full">
                                                     <button
                                                       type="button"
                                                       className={clsx(
-                                                        'relative inline-flex items-center justify-start rounded-sm px-2 py-1 text-[10px] font-medium shadow-sm border border-opacity-20 text-white overflow-hidden text-left',
+                                                        'absolute top-2.5 h-7 rounded-md shadow-sm border border-opacity-20 flex items-start justify-start px-2 text-xs text-white overflow-hidden cursor-pointer z-10 transition-colors text-left',
                                                         item.status === 'Completed'
                                                           ? 'bg-green-500 border-green-700'
                                                           : item.status === 'In Progress'
