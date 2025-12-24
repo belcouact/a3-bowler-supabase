@@ -110,32 +110,6 @@ const MetricBowler = () => {
   const title = selectedBowler ? selectedBowler.name : 'Metric Bowler';
   const metrics = selectedBowler?.metrics || [];
 
-  const metricStatus = useMemo(() => {
-    const status: Record<string, { linkedA3Count: number; hasRecentFailures: boolean }> = {};
-    metrics.forEach(metric => {
-      const linkedA3Count = (a3Cases || []).filter(a3 => (a3.linkedMetricIds || []).includes(metric.id)).length;
-      const monthsToCheck = displayMonths.slice(-3);
-      let violationCount = 0;
-      monthsToCheck.forEach(month => {
-        const monthData = metric.monthlyData?.[month.key];
-        if (!monthData?.actual) {
-          return;
-        }
-        const violation = isViolation(
-          metric.targetMeetingRule,
-          monthData.target,
-          monthData.actual
-        );
-        if (violation) {
-          violationCount += 1;
-        }
-      });
-      const hasRecentFailures = violationCount >= 2;
-      status[metric.id] = { linkedA3Count, hasRecentFailures };
-    });
-    return status;
-  }, [metrics, a3Cases, displayMonths]);
-
   useEffect(() => {
     if (selectedBowler?.metricStartDate) {
       setStartDate(selectedBowler.metricStartDate);
@@ -486,9 +460,6 @@ const MetricBowler = () => {
                 Scope
               </th>
               <th scope="col" className="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-20 border-r border-gray-200">
-                Linked A3s
-              </th>
-              <th scope="col" className="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-20 border-r border-gray-200">
                 Type
               </th>
               {displayMonths.map((month) => (
@@ -505,131 +476,122 @@ const MetricBowler = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {metrics.length === 0 ? (
                 <tr>
-                    <td colSpan={4 + displayMonths.length} className="px-6 py-10 text-center text-gray-500 italic">
+                    <td colSpan={3 + displayMonths.length} className="px-6 py-10 text-center text-gray-500 italic">
                         No metrics added yet. Use the + button to add metrics.
                     </td>
                 </tr>
             ) : (
-                metrics.map((metric, metricIndex) => {
-                  const status = metricStatus[metric.id];
-                  const showA3Count = status?.hasRecentFailures;
-                  const a3Display = showA3Count ? String(status.linkedA3Count) : '-';
-                  return (
-                    <>
-                    <tr
-                      key={`${metric.id}-row1`}
-                      className="hover:bg-gray-50 transition-colors border-b-0"
-                    >
-                      <td rowSpan={2} className="px-4 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 hover:z-[60] border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] group-hover:bg-gray-50 align-top break-words">
-                        <div className="flex items-start justify-between">
-                          <div className="flex flex-col">
-                              <div className="flex items-center flex-wrap">
-                                  <span className="mr-2">{metric.name}</span>
-                                  <div 
-                                      className="inline-block"
-                                      onMouseEnter={(e) => {
-                                          const rect = e.currentTarget.getBoundingClientRect();
-                                          setTooltip({
-                                              x: rect.right + 8,
-                                              y: rect.top,
-                                              content: (
-                                                  <>
-                                                      <p className="font-semibold mb-1">Definition:</p>
-                                                      <p className="mb-2">{metric.definition || 'N/A'}</p>
-                                                      
-                                                      <p className="font-semibold mb-1">Owner:</p>
-                                                      <p className="mb-2">{metric.owner || 'N/A'}</p>
-                                                      
-                                                      <p className="font-semibold mb-1">Attribute:</p>
-                                                      <p>{metric.attribute || 'N/A'}</p>
-                                                  </>
-                                              )
-                                          });
-                                      }}
-                                      onMouseLeave={() => setTooltip(null)}
-                                  >
-                                      <Info className="w-3.5 h-3.5 text-gray-400 hover:text-blue-500 cursor-help" />
-                                  </div>
-                              </div>
-                          </div>
+                metrics.map((metric, metricIndex) => (
+                  <>
+                  <tr
+                    key={`${metric.id}-row1`}
+                    className="hover:bg-gray-50 transition-colors border-b-0"
+                  >
+                    <td rowSpan={2} className="px-4 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 hover:z-[60] border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] group-hover:bg-gray-50 align-top break-words">
+                      <div className="flex items-start justify-between">
+                        <div className="flex flex-col">
+                            <div className="flex items-center flex-wrap">
+                                <span className="mr-2">{metric.name}</span>
+                                <div 
+                                    className="inline-block"
+                                    onMouseEnter={(e) => {
+                                        const rect = e.currentTarget.getBoundingClientRect();
+                                        setTooltip({
+                                            x: rect.right + 8,
+                                            y: rect.top,
+                                            content: (
+                                                <>
+                                                    <p className="font-semibold mb-1">Definition:</p>
+                                                    <p className="mb-2">{metric.definition || 'N/A'}</p>
+                                                    
+                                                    <p className="font-semibold mb-1">Owner:</p>
+                                                    <p className="mb-2">{metric.owner || 'N/A'}</p>
+                                                    
+                                                    <p className="font-semibold mb-1">Attribute:</p>
+                                                    <p>{metric.attribute || 'N/A'}</p>
+                                                </>
+                                            )
+                                        });
+                                    }}
+                                    onMouseLeave={() => setTooltip(null)}
+                                >
+                                    <Info className="w-3.5 h-3.5 text-gray-400 hover:text-blue-500 cursor-help" />
+                                </div>
+                            </div>
                         </div>
-                      </td>
-                      
-                      <td rowSpan={2} className="px-2 py-4 whitespace-nowrap text-xs text-gray-700 bg-white border-r border-gray-200 border-b-0 align-top">
-                          {metric.scope || '-'}
-                      </td>
+                      </div>
+                    </td>
+                    
+                    <td rowSpan={2} className="px-2 py-4 whitespace-nowrap text-xs text-gray-700 bg-white border-r border-gray-200 border-b-0 align-top">
+                        {metric.scope || '-'}
+                    </td>
 
-                      <td rowSpan={2} className="px-2 py-4 whitespace-nowrap text-xs text-gray-700 bg-white border-r border-gray-200 border-b-0 align-top text-center">
-                          {a3Display}
+                    <td className="px-2 py-2 whitespace-nowrap text-xs font-medium text-gray-500 bg-gray-50/30 border-b border-gray-100 h-8">
+                      Target
+                    </td>
+
+                    {displayMonths.map((month, monthIndex) => (
+                      <td
+                        key={`${month.key}-target`}
+                        className="px-0 py-0 whitespace-nowrap text-xs text-gray-500 bg-gray-50/30 border-b border-r border-gray-100 h-8 p-0 relative group/cell"
+                        onContextMenu={(e) => handleRightClick(e, metric.id, month.key, 'target', metric.monthlyData?.[month.key]?.targetNote || '')}
+                      >
+                        <input
+                            id={`cell-${metric.id}-${month.key}-target`}
+                            type="text"
+                            className="w-full h-full bg-transparent text-center focus:outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-500 px-1 min-w-[3rem]"
+                            defaultValue={metric.monthlyData?.[month.key]?.target || ''}
+                            onBlur={(e) => handleCellUpdate(metric.id, month.key, 'target', e.target.value)}
+                            onKeyDown={(e) => handleKeyDown(e, 'target', metricIndex, monthIndex)}
+                            title={metric.monthlyData?.[month.key]?.targetNote || ''}
+                        />
+                        {metric.monthlyData?.[month.key]?.targetNote && (
+                          <div className="absolute top-0 right-0 w-0 h-0 border-t-[6px] border-l-[6px] border-t-red-500 border-l-transparent pointer-events-none" />
+                        )}
                       </td>
+                    ))}
+                  </tr>
 
-                      <td className="px-2 py-2 whitespace-nowrap text-xs font-medium text-gray-500 bg-gray-50/30 border-b border-gray-100 h-8">
-                        Target
-                      </td>
-
-                      {displayMonths.map((month, monthIndex) => (
-                        <td
-                          key={`${month.key}-target`}
-                          className="px-0 py-0 whitespace-nowrap text-xs text-gray-500 bg-gray-50/30 border-b border-r border-gray-100 h-8 p-0 relative group/cell"
-                          onContextMenu={(e) => handleRightClick(e, metric.id, month.key, 'target', metric.monthlyData?.[month.key]?.targetNote || '')}
-                        >
-                          <input
-                              id={`cell-${metric.id}-${month.key}-target`}
-                              type="text"
-                              className="w-full h-full bg-transparent text-center focus:outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-500 px-1 min-w-[3rem]"
-                              defaultValue={metric.monthlyData?.[month.key]?.target || ''}
-                              onBlur={(e) => handleCellUpdate(metric.id, month.key, 'target', e.target.value)}
-                              onKeyDown={(e) => handleKeyDown(e, 'target', metricIndex, monthIndex)}
-                              title={metric.monthlyData?.[month.key]?.targetNote || ''}
-                          />
-                          {metric.monthlyData?.[month.key]?.targetNote && (
-                            <div className="absolute top-0 right-0 w-0 h-0 border-t-[6px] border-l-[6px] border-t-red-500 border-l-transparent pointer-events-none" />
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-
-                    <tr key={`${metric.id}-row2`} className="hover:bg-gray-50 transition-colors">
-                       <td className="px-2 py-2 whitespace-nowrap text-xs font-medium text-gray-500 h-8 border-b border-r border-gray-100">
-                          Actual
+                  <tr key={`${metric.id}-row2`} className="hover:bg-gray-50 transition-colors">
+                     <td className="px-2 py-2 whitespace-nowrap text-xs font-medium text-gray-500 h-8 border-b border-r border-gray-100">
+                        Actual
+                     </td>
+                     {displayMonths.map((month, monthIndex) => {
+                       const violation = isViolation(
+                         metric.targetMeetingRule,
+                         metric.monthlyData?.[month.key]?.target,
+                         metric.monthlyData?.[month.key]?.actual
+                       );
+                       return (
+                       <td
+                         key={`${month.key}-actual`}
+                         className="px-0 py-0 whitespace-nowrap text-xs text-gray-500 h-8 p-0 relative group/cell border-b border-r border-gray-100"
+                         onContextMenu={(e) => handleRightClick(e, metric.id, month.key, 'actual', metric.monthlyData?.[month.key]?.actualNote || '')}
+                       >
+                         <input
+                             id={`cell-${metric.id}-${month.key}-actual`}
+                             type="text"
+                             className={`w-full h-full bg-transparent text-center focus:outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-500 px-1 min-w-[3rem] ${
+                               !metric.monthlyData?.[month.key]?.actual 
+                                 ? 'text-gray-400' 
+                                 : violation 
+                                   ? 'text-red-600 font-bold bg-red-50' 
+                                   : 'text-gray-900 font-semibold'
+                             }`}
+                             defaultValue={metric.monthlyData?.[month.key]?.actual || ''}
+                             onBlur={(e) => handleCellUpdate(metric.id, month.key, 'actual', e.target.value)}
+                             onKeyDown={(e) => handleKeyDown(e, 'actual', metricIndex, monthIndex)}
+                             title={metric.monthlyData?.[month.key]?.actualNote || ''}
+                         />
+                         {metric.monthlyData?.[month.key]?.actualNote && (
+                           <div className="absolute top-0 right-0 w-0 h-0 border-t-[6px] border-l-[6px] border-t-red-500 border-l-transparent pointer-events-none" />
+                         )}
                        </td>
-                       {displayMonths.map((month, monthIndex) => {
-                         const violation = isViolation(
-                           metric.targetMeetingRule,
-                           metric.monthlyData?.[month.key]?.target,
-                           metric.monthlyData?.[month.key]?.actual
-                         );
-                         return (
-                         <td
-                           key={`${month.key}-actual`}
-                           className="px-0 py-0 whitespace-nowrap text-xs text-gray-500 h-8 p-0 relative group/cell border-b border-r border-gray-100"
-                           onContextMenu={(e) => handleRightClick(e, metric.id, month.key, 'actual', metric.monthlyData?.[month.key]?.actualNote || '')}
-                         >
-                           <input
-                               id={`cell-${metric.id}-${month.key}-actual`}
-                               type="text"
-                               className={`w-full h-full bg-transparent text-center focus:outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-500 px-1 min-w-[3rem] ${
-                                 !metric.monthlyData?.[month.key]?.actual 
-                                   ? 'text-gray-400' 
-                                   : violation 
-                                     ? 'text-red-600 font-bold bg-red-50' 
-                                     : 'text-gray-900 font-semibold'
-                               }`}
-                               defaultValue={metric.monthlyData?.[month.key]?.actual || ''}
-                               onBlur={(e) => handleCellUpdate(metric.id, month.key, 'actual', e.target.value)}
-                               onKeyDown={(e) => handleKeyDown(e, 'actual', metricIndex, monthIndex)}
-                               title={metric.monthlyData?.[month.key]?.actualNote || ''}
-                           />
-                           {metric.monthlyData?.[month.key]?.actualNote && (
-                             <div className="absolute top-0 right-0 w-0 h-0 border-t-[6px] border-l-[6px] border-t-red-500 border-l-transparent pointer-events-none" />
-                           )}
-                         </td>
-                         );
-                       })}
-                    </tr>
-                    </>
-                  );
-                })
+                       );
+                     })}
+                  </tr>
+                  </>
+                ))
             )}
           </tbody>
         </table>

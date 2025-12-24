@@ -109,6 +109,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
           <th>Latest month</th>
           <th>Last 2 months</th>
           <th>Last 3 months</th>
+          <th>A3 linked (#)</th>
           <th>Overall target achieving %</th>
         </tr>
       </thead>
@@ -133,6 +134,11 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
           <td>${
             row.fail3
               ? '<span class="status-pill status-fail"><span class="status-dot"></span>Failing</span>'
+              : '—'
+          }</td>
+          <td>${
+            row.fail2 || row.fail3
+              ? String(row.linkedA3Count ?? 0)
               : '—'
           }</td>
           <td>${
@@ -604,6 +610,9 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
                                     Last 3 months
                                   </th>
                                   <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
+                                    A3 linked (#)
+                                  </th>
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
                                     Overall target achieving %
                                   </th>
                                 </tr>
@@ -651,6 +660,9 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
                                       ) : (
                                         <span>—</span>
                                       )}
+                                    </td>
+                                    <td className="px-3 py-2 text-gray-700">
+                                      {row.fail2 || row.fail3 ? (row.linkedA3Count ?? 0) : '—'}
                                     </td>
                                     <td className="px-3 py-2 text-gray-700">
                                       {row.achievementRate != null ? (
