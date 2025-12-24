@@ -1125,7 +1125,7 @@ ${root}`
                                 {/* The Bar */}
                                 <div
                                     className={clsx(
-                                        "absolute top-2.5 h-7 rounded-md shadow-sm border border-opacity-20 flex items-center px-2 text-xs text-white overflow-hidden cursor-move z-10 transition-colors",
+                                        "absolute top-2.5 h-7 rounded-md shadow-sm border border-opacity-20 flex items-start justify-start px-2 text-xs text-white overflow-hidden cursor-move z-10 transition-colors text-left",
                                         task.status === 'Completed' ? "bg-green-500 border-green-700" :
                                         task.status === 'In Progress' ? "bg-blue-500 border-blue-700" : "bg-gray-400 border-gray-600",
                                         draggingId === task.id ? "ring-2 ring-offset-1 ring-blue-400 opacity-90" : "hover:brightness-110"
@@ -1140,7 +1140,7 @@ ${root}`
                                         onMouseDown={(e) => handleMouseDown(e, task, 'resize-left')}
                                     ></div>
 
-                                    <span className="truncate drop-shadow-md font-medium pl-1">{task.name}</span>
+                                    <span className="drop-shadow-md font-medium pl-1 break-words text-left">{task.name}</span>
 
                                     {/* Right Resize Handle */}
                                     <div 

@@ -2959,7 +2959,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                                     <button
                                                       type="button"
                                                       className={clsx(
-                                                        'relative inline-flex items-center justify-start rounded-sm px-2 py-1 text-[10px] font-medium shadow-sm border border-opacity-20 text-white overflow-hidden text-left',
+                                                        'relative inline-flex items-start justify-start rounded-sm px-2 py-1 text-[10px] font-medium shadow-sm border border-opacity-20 text-white overflow-hidden text-left',
                                                         item.status === 'Completed'
                                                           ? 'bg-green-500 border-green-700'
                                                           : item.status === 'In Progress'
@@ -2977,7 +2977,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                                         );
                                                       }}
                                                     >
-                                                      <span className="truncate">{item.title}</span>
+                                                      <span className="truncate text-left">{item.title}</span>
                                                     </button>
                                                   </div>
                                                 </div>
