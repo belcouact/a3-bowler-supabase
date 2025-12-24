@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { Loader2 } from 'lucide-react';
 import Layout from './components/Layout';
@@ -23,22 +23,6 @@ const LoadingView = ({ message }: { message: string }) => (
   </div>
 );
 
-const RouteLoader = () => {
-  const location = useLocation();
-
-  let message = 'Loading application data...';
-
-  if (location.pathname.includes('mindmap')) {
-    message = 'Loading markmap.js...';
-  } else if (location.pathname.includes('metric-bowler')) {
-    message = 'Loading Metric Bowler...';
-  } else if (location.pathname.includes('a3-analysis')) {
-    message = 'Loading A3 Analysis...';
-  }
-
-  return <LoadingView message={message} />;
-};
-
 const MarkmapLoader = () => {
   return <LoadingView message="Loading markmap.js..." />;
 };
@@ -50,36 +34,55 @@ const PortfolioPlaceholder = () => {
 function App() {
   return (
     <Router basename={import.meta.env.BASE_URL}>
-      <Suspense fallback={<RouteLoader />}>
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Navigate to="/metric-bowler" replace />} />
-            <Route
-              path="mindmap"
-              element={
-                <Suspense fallback={<MarkmapLoader />}>
-                  <MarkmapPage />
-                </Suspense>
-              }
-            />
-            <Route path="metric-bowler" element={<MetricBowler />} />
-            <Route path="metric-bowler/:id" element={<MetricBowler />} />
-            <Route path="a3-analysis" element={<Outlet />}>
-              <Route index element={<A3Redirect />} />
-              <Route path=":id" element={<A3Analysis />}>
-                <Route index element={<Navigate to="problem-statement" replace />} />
-                <Route path="problem-statement" element={<ProblemStatement />} />
-                <Route path="data-analysis" element={<DataAnalysis />} />
-                <Route path="why-analysis" element={<WhyAnalysis />} />
-                <Route path="action-plan" element={<ActionPlan />} />
-                <Route path="result" element={<Result />} />
-                <Route path="summary" element={<Summary />} />
-              </Route>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Navigate to="/metric-bowler" replace />} />
+          <Route
+            path="mindmap"
+            element={
+              <Suspense fallback={<MarkmapLoader />}>
+                <MarkmapPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="metric-bowler"
+            element={
+              <Suspense fallback={<LoadingView message="Loading Metric Bowler..." />}>
+                <MetricBowler />
+              </Suspense>
+            }
+          />
+          <Route
+            path="metric-bowler/:id"
+            element={
+              <Suspense fallback={<LoadingView message="Loading Metric Bowler..." />}>
+                <MetricBowler />
+              </Suspense>
+            }
+          />
+          <Route
+            path="a3-analysis"
+            element={
+              <Suspense fallback={<LoadingView message="Loading A3 Analysis..." />}>
+                <Outlet />
+              </Suspense>
+            }
+          >
+            <Route index element={<A3Redirect />} />
+            <Route path=":id" element={<A3Analysis />}>
+              <Route index element={<Navigate to="problem-statement" replace />} />
+              <Route path="problem-statement" element={<ProblemStatement />} />
+              <Route path="data-analysis" element={<DataAnalysis />} />
+              <Route path="why-analysis" element={<WhyAnalysis />} />
+              <Route path="action-plan" element={<ActionPlan />} />
+              <Route path="result" element={<Result />} />
+              <Route path="summary" element={<Summary />} />
             </Route>
-            <Route path="portfolio" element={<PortfolioPlaceholder />} />
           </Route>
-        </Routes>
-      </Suspense>
+          <Route path="portfolio" element={<PortfolioPlaceholder />} />
+        </Route>
+      </Routes>
     </Router>
   );
 }

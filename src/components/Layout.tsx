@@ -619,7 +619,7 @@ const groupFilterOptions = useMemo(
 
   const renderPieLabel = (props: any) => {
     const { cx, cy, midAngle, outerRadius, name, value } = props;
-    const radius = outerRadius + 10;
+    const radius = outerRadius + 18;
     const x = cx + radius * Math.cos(-midAngle * pieLabelRadian);
     const y = cy + radius * Math.sin(-midAngle * pieLabelRadian);
 
@@ -2395,7 +2395,7 @@ const groupFilterOptions = useMemo(
                                       outerRadius={55}
                                       paddingAngle={2}
                                       label={renderPieLabel}
-                                      labelLine={false}
+                                      labelLine
                                     >
                                       {metricA3Coverage.pieData.map((entry, index) => (
                                         <Cell
@@ -2472,7 +2472,7 @@ const groupFilterOptions = useMemo(
                                       outerRadius={55}
                                       paddingAngle={2}
                                       label={renderPieLabel}
-                                      labelLine={false}
+                                      labelLine
                                     >
                                       {durationPieData.map((entry, index) => (
                                         <Cell
@@ -2501,7 +2501,7 @@ const groupFilterOptions = useMemo(
                                       outerRadius={55}
                                       paddingAngle={2}
                                       label={renderPieLabel}
-                                      labelLine={false}
+                                      labelLine
                                     >
                                       {statusPieData.map((entry, index) => (
                                         <Cell
@@ -2538,7 +2538,7 @@ const groupFilterOptions = useMemo(
                                       outerRadius={55}
                                       paddingAngle={2}
                                       label={renderPieLabel}
-                                      labelLine={false}
+                                      labelLine
                                     >
                                       {priorityPieData.map((entry, index) => (
                                         <Cell
