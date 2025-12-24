@@ -1284,7 +1284,6 @@ const groupFilterOptions = useMemo(
         </div>
         
         <div className="flex items-center space-x-2 md:space-x-4">
-          {/* Desktop Toolbar */}
           <div className="hidden md:flex items-center space-x-4">
             <button
               onClick={handleExit}
@@ -1314,16 +1313,6 @@ const groupFilterOptions = useMemo(
             >
               <Lightbulb className="w-4 h-4" />
             </button>
-
-            <div className={clsx("one-click-summary-glow", isGeneratingSummary && "one-click-summary-glow-active")}>
-              <button
-                onClick={handleOneClickSummary}
-                className="one-click-summary-glow-inner p-2 bg-teal-600 text-white rounded-md shadow-sm hover:bg-teal-700 transition-colors"
-                title="One Click Summary"
-              >
-                {isGeneratingSummary ? <Loader2 className="w-4 h-4 animate-spin" /> : <NotepadText className="w-4 h-4" />}
-              </button>
-            </div>
             <button
               onClick={() => setIsAIChatOpen(true)}
               className="p-2 bg-indigo-600 text-white rounded-md shadow-sm hover:bg-indigo-700 transition-colors"
@@ -2128,6 +2117,26 @@ const groupFilterOptions = useMemo(
                     <p className="mt-0.5 text-xs text-gray-500">
                       Switch between Bowler metrics and A3 portfolio dashboard.
                     </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div
+                      className={clsx(
+                        'one-click-summary-glow',
+                        isGeneratingSummary && 'one-click-summary-glow-active',
+                      )}
+                    >
+                      <button
+                        onClick={handleOneClickSummary}
+                        className="one-click-summary-glow-inner p-2 bg-teal-600 text-white rounded-md shadow-sm hover:bg-teal-700 transition-colors"
+                        title="One Click Summary"
+                      >
+                        {isGeneratingSummary ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <NotepadText className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <div className="p-4 md:p-6 space-y-4">
