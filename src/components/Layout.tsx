@@ -1463,11 +1463,11 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
       <header className="bg-white border-b border-gray-200 z-[60] shadow-sm h-16 flex items-center px-6 justify-between relative">
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-2">
-            <div className="bg-blue-600 p-1.5 rounded-lg">
-              <Layers className="w-6 h-6 text-white" />
+            <div className="bg-blue-600 h-9 w-9 rounded-md flex items-center justify-center">
+              <span className="text-xs font-bold tracking-tight text-white">B&A</span>
             </div>
             <div className="flex items-center space-x-1">
-              <h1 className="text-lg font-semibold text-gray-900 tracking-tight hidden md:block">Performance Tracker</h1>
+              <h1 className="text-lg font-semibold text-gray-900 tracking-tight hidden md:block">Bowler &amp; A3</h1>
               <button 
                   onClick={() => setIsAppInfoOpen(true)}
                   className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -2988,19 +2988,18 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                     />
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <div className="border-b border-gray-100 bg-gray-50">
-                                      <div className="px-3 py-2">
-                                        <div className="flex items-stretch gap-px">
-                                          {a3Timeline.periods.map(period => (
-                                            <div
-                                              key={period.key}
-                                              className="flex-1 text-center text-[10px] text-gray-500"
-                                            >
-                                              {period.label}
-                                            </div>
-                                          ))}
+                                    <div className="flex h-[60px] border-b border-gray-200 bg-gray-50">
+                                      {a3Timeline.periods.map(period => (
+                                        <div
+                                          key={period.key}
+                                          className="flex-1 flex-shrink-0 border-r border-gray-200 flex flex-col items-center justify-center overflow-hidden px-0.5"
+                                          title={period.label}
+                                        >
+                                          <span className="font-semibold text-gray-700 whitespace-nowrap text-[10px]">
+                                            {period.label}
+                                          </span>
                                         </div>
-                                      </div>
+                                      ))}
                                     </div>
                                     <div className="divide-y divide-gray-100">
                                       {a3Timeline.rows.map(row => {
