@@ -327,14 +327,6 @@ const Layout = () => {
   const groupPerformanceTableData = useMemo<GroupPerformanceRow[]>(() => {
     const groupToMetrics: Record<string, Metric[]> = {};
     const metricOwnerById: Record<string, string> = {};
-    const linkedA3Counts: Record<string, number> = {};
-
-    a3Cases.forEach(a3 => {
-      (a3.linkedMetricIds || []).forEach(id => {
-        if (!id) return;
-        linkedA3Counts[id] = (linkedA3Counts[id] || 0) + 1;
-      });
-    });
 
     bowlers.forEach(bowler => {
       const groupName = (bowler.group || 'Ungrouped').trim() || 'Ungrouped';
@@ -358,7 +350,16 @@ const Layout = () => {
 
     if (groupNames.length === 0) return [];
 
-    const rows: GroupPerformanceRow[] = [];
+    const rows: {
+      groupName: string;
+      metricId: string;
+      metricName: string;
+      bowlerId?: string;
+      latestMet: boolean | null;
+      fail2: boolean;
+      fail3: boolean;
+      achievementRate: number | null;
+    }[] = [];
 
     const isValuePresent = (value: unknown) => {
       if (value === null || value === undefined) return false;
@@ -381,8 +382,6 @@ const Layout = () => {
           })
           .sort();
 
-        const linkedA3Count = linkedA3Counts[metric.id] || 0;
-
         if (months.length === 0) {
           rows.push({
             groupName,
@@ -393,7 +392,6 @@ const Layout = () => {
             fail2: false,
             fail3: false,
             achievementRate: null,
-            linkedA3Count,
           });
           return;
         }
@@ -457,13 +455,12 @@ const Layout = () => {
           fail2,
           fail3,
           achievementRate,
-          linkedA3Count,
         });
       });
     });
 
     return rows;
-  }, [bowlers, a3Cases]);
+  }, [bowlers]);
 
   const metricA3Coverage = useMemo(
     () => {
@@ -2813,7 +2810,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 </div>
                               </div>
                               <div className="mt-3 border border-gray-100 rounded-lg bg-white overflow-hidden">
-                                <div className="flex flex-col lg:flex-row max-h-64 lg:max-h-[280px] overflow-y-auto">
+                                <div className="flex flex-col lg:flex-row">
                                   <div
                                     className="relative w-full lg:flex-shrink-0 border-b lg:border-b-0 lg:border-r border-gray-100 bg-gray-50/80"
                                     style={{ width: a3TimelineSidebarWidth }}
@@ -2830,7 +2827,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                         items
                                       </span>
                                     </div>
-                                    <div>
+                                    <div className="max-h-64 lg:max-h-[280px] overflow-y-auto">
                                       {a3Timeline.rows.length === 0 && (
                                         <p className="px-3 py-3 text-[11px] text-gray-400 italic">
                                           No dated cases available.

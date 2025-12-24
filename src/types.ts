@@ -109,5 +109,4 @@ export interface GroupPerformanceRow {
   fail2: boolean;
   fail3: boolean;
   achievementRate: number | null;
-  linkedA3Count: number;
 }
