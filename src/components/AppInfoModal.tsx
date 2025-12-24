@@ -76,7 +76,7 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                   <div className="ml-3">
                     <p className="text-sm font-medium text-gray-900">Bowler & A3 Views</p>
                     <p className="text-xs text-gray-600 mt-1">
-                      Switch between metric bowler charts, A3 analysis, and mind map views to align objectives and actions.
+                      Switch between metric bowler charts, A3 analysis, and inetgrated views to align objectives and actions.
                     </p>
                   </div>
                 </div>
@@ -128,7 +128,7 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-indigo-50/80">
                   <div className="h-9 w-9 shrink-0 rounded-lg bg-indigo-500 flex items-center justify-center">
                     <Lightbulb className="h-5 w-5 text-white" />
