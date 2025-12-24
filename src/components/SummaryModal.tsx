@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React from 'react';
 import { X, Download, Copy, Sparkles, TrendingUp, AlertTriangle, Target, Activity, ArrowRight } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { MarkdownRenderer } from './MarkdownRenderer';
@@ -34,8 +34,6 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
   groupPerformanceTableData,
 }) => {
   const toast = useToast();
-  const contentRef = useRef<HTMLDivElement | null>(null);
-  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   if (!isOpen) return null;
 
@@ -478,70 +476,15 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
     toast.success('HTML downloaded!');
   };
 
-  const handleDownloadPdf = async () => {
-    if (!contentRef.current) {
-      toast.error('Nothing to export.');
-      return;
-    }
-
-    try {
-      setIsExportingPdf(true);
-      const [{ default: html2canvas }, { default: JsPDF }] = await Promise.all([
-        import('html2canvas'),
-        import('jspdf'),
-      ]);
-
-      const canvas = await html2canvas(contentRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        ignoreElements: element => element.classList.contains('export-ignore'),
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new JsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgProps = pdf.getImageProperties(imgData);
-
-      const ratio = Math.min(
-        (pdfWidth - 20) / imgProps.width,
-        (pdfHeight - 20) / imgProps.height,
-      );
-      const imgWidth = imgProps.width * ratio;
-      const imgHeight = imgProps.height * ratio;
-      const x = (pdfWidth - imgWidth) / 2;
-      const y = (pdfHeight - imgHeight) / 2;
-
-      pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
-      pdf.save(
-        `metric_bowler_summary_${new Date().toISOString().split('T')[0]}.pdf`,
-      );
-      toast.success('PDF downloaded!');
-    } catch (error) {
-      console.error('PDF export failed:', error);
-      toast.error('Failed to download PDF.');
-    } finally {
-      setIsExportingPdf(false);
-    }
-  };
-
   return (
     <div className="fixed inset-0 z-[70] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      <div className="flex items-center justify-center min-h-screen px-4 py-6 text-center sm:block sm:p-0">
+      <div className="flex items-stretch min-h-screen text-center">
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={onClose}></div>
 
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
         <div
-          ref={contentRef}
-          className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-[75vw] sm:w-full"
+          className="inline-block align-bottom bg-white text-left overflow-hidden shadow-xl transform transition-all w-full h-screen sm:align-middle sm:max-w-full sm:w-full flex flex-col"
         >
           
           {/* Header */}
@@ -581,7 +524,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
           </div>
 
           {/* Content */}
-          <div className="px-4 py-5 sm:p-6 bg-white overflow-y-auto custom-scrollbar max-h-[75vh]">
+          <div className="px-4 py-5 sm:p-6 bg-white overflow-y-auto custom-scrollbar flex-1">
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center h-full py-16 space-y-8">
                     <div className="relative w-32 h-32">
@@ -785,15 +728,6 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
             >
               <Download className="w-4 h-4 mr-2" />
               Download HTML
-            </button>
-            <button
-              type="button"
-              className="mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors export-ignore"
-              onClick={handleDownloadPdf}
-              disabled={isLoading || !content || isExportingPdf}
-            >
-              <Download className="w-4 h-4 mr-2" />
-              {isExportingPdf ? 'Downloading PDF...' : 'Download PDF'}
             </button>
             <button
               type="button"
