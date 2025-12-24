@@ -109,6 +109,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
           <th>Latest month</th>
           <th>Last 2 months</th>
           <th>Last 3 months</th>
+          <th>Linked A3s</th>
           <th>Overall target achieving %</th>
         </tr>
       </thead>
@@ -119,11 +120,11 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
           <td>${escapeHtml(row.groupName)}</td>
           <td>${escapeHtml(row.metricName)}</td>
           <td>${
-            row.latestMet === null
+            row.latestMet === null || !row.latestActual
               ? '—'
-              : row.latestMet
-              ? '<span class="status-pill status-ok"><span class="status-dot"></span>ok</span>'
-              : '<span class="status-pill status-fail"><span class="status-dot"></span>fail</span>'
+              : `<span class="circle-badge ${
+                  row.latestMet === false ? 'circle-badge-fail' : 'circle-badge-ok'
+                }">${escapeHtml(row.latestActual)}</span>`
           }</td>
           <td>${
             row.fail2
@@ -136,8 +137,19 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
               : '—'
           }</td>
           <td>${
+            row.fail2 || row.fail3
+              ? row.linkedA3Count === 0
+                ? '<span class="circle-badge circle-badge-fail">0</span>'
+                : `<span class="circle-badge circle-badge-ok">${row.linkedA3Count}</span>`
+              : '—'
+          }</td>
+          <td>${
             row.achievementRate != null
-              ? `${row.achievementRate.toFixed(0)}%`
+              ? `<span class="circle-badge ${
+                  row.achievementRate < (2 / 3) * 100
+                    ? 'circle-badge-fail'
+                    : 'circle-badge-ok'
+                }">${row.achievementRate.toFixed(0)}%</span>`
               : '—'
           }</td>
         </tr>`,
@@ -393,6 +405,27 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
       color: #92400e;
       border-color: #fed7aa;
     }
+    .circle-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid transparent;
+    }
+    .circle-badge-ok {
+      background: #ecfdf3;
+      color: #166534;
+      border-color: #bbf7d0;
+    }
+    .circle-badge-fail {
+      background: #fef2f2;
+      color: #b91c1c;
+      border-color: #fecaca;
+    }
     @media (max-width: 640px) {
       body { padding: 16px; }
       .summary-header { flex-direction: column; align-items: flex-start; }
@@ -604,66 +637,95 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
                                     Last 3 months
                                   </th>
                                   <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
+                                    Linked A3s
+                                  </th>
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
                                     Overall target achieving %
                                   </th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {groupPerformanceTableData.map(row => (
-                                  <tr key={row.metricId} className="border-b border-gray-100 last:border-0">
-                                    <td className="px-3 py-2 text-gray-700">
-                                      {row.groupName}
-                                    </td>
-                                    <td className="px-3 py-2 text-gray-700">
-                                      {row.metricName}
-                                    </td>
-                                    <td className="px-3 py-2 text-gray-700">
-                                      {row.latestMet === null || !row.latestActual ? (
-                                        <span>—</span>
-                                      ) : (
-                                        <span
-                                          className={
-                                            'inline-flex items-center justify-center w-8 h-8 rounded-full text-[10px] font-semibold border ' +
-                                            (row.latestMet === false
-                                              ? 'bg-red-50 text-red-700 border-red-200'
-                                              : 'bg-green-50 text-green-700 border-green-200')
-                                          }
-                                        >
-                                          {row.latestActual}
-                                        </span>
-                                      )}
-                                    </td>
-                                    <td className="px-3 py-2 text-gray-700">
-                                      {row.fail2 ? (
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">
-                                          <span className="mr-1 h-1.5 w-1.5 rounded-full bg-amber-500" />
-                                          Failing
-                                        </span>
-                                      ) : (
-                                        <span>—</span>
-                                      )}
-                                    </td>
-                                    <td className="px-3 py-2 text-gray-700">
-                                      {row.fail3 ? (
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100">
-                                          <span className="mr-1 h-1.5 w-1.5 rounded-full bg-red-500" />
-                                          Failing
-                                        </span>
-                                      ) : (
-                                        <span>—</span>
-                                      )}
-                                    </td>
-                                    <td className="px-3 py-2 text-gray-700">
-                                      {row.achievementRate != null ? (
-                                        <span className={row.achievementRate <= (2 / 3) * 100 ? 'px-1 rounded bg-amber-50 text-amber-800 font-semibold' : undefined}>
-                                          {row.achievementRate.toFixed(0)}%
-                                        </span>
-                                      ) : (
-                                        '—'
-                                      )}
-                                    </td>
-                                  </tr>
-                                ))}
+                                {groupPerformanceTableData.map(row => {
+                                  const isAtRisk = row.fail2 || row.fail3;
+
+                                  return (
+                                    <tr key={row.metricId} className="border-b border-gray-100 last:border-0">
+                                      <td className="px-3 py-2 text-gray-700">
+                                        {row.groupName}
+                                      </td>
+                                      <td className="px-3 py-2 text-gray-700">
+                                        {row.metricName}
+                                      </td>
+                                      <td className="px-3 py-2 text-gray-700">
+                                        {row.latestMet === null || !row.latestActual ? (
+                                          <span>—</span>
+                                        ) : (
+                                          <span
+                                            className={
+                                              'inline-flex items-center justify-center w-8 h-8 rounded-full text-[10px] font-semibold border ' +
+                                              (row.latestMet === false
+                                                ? 'bg-red-50 text-red-700 border-red-200'
+                                                : 'bg-green-50 text-green-700 border-green-200')
+                                            }
+                                          >
+                                            {row.latestActual}
+                                          </span>
+                                        )}
+                                      </td>
+                                      <td className="px-3 py-2 text-gray-700">
+                                        {row.fail2 ? (
+                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                                            <span className="mr-1 h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                            Failing
+                                          </span>
+                                        ) : (
+                                          <span>—</span>
+                                        )}
+                                      </td>
+                                      <td className="px-3 py-2 text-gray-700">
+                                        {row.fail3 ? (
+                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100">
+                                            <span className="mr-1 h-1.5 w-1.5 rounded-full bg-red-500" />
+                                            Failing
+                                          </span>
+                                        ) : (
+                                          <span>—</span>
+                                        )}
+                                      </td>
+                                      <td className="px-3 py-2 text-gray-700">
+                                        {isAtRisk ? (
+                                          row.linkedA3Count === 0 ? (
+                                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-semibold bg-red-50 text-red-700 border border-red-200">
+                                              0
+                                            </span>
+                                          ) : (
+                                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-semibold bg-green-50 text-green-700 border border-green-200">
+                                              {row.linkedA3Count}
+                                            </span>
+                                          )
+                                        ) : (
+                                          <span>—</span>
+                                        )}
+                                      </td>
+                                      <td className="px-3 py-2 text-gray-700">
+                                        {row.achievementRate != null ? (
+                                          <span
+                                            className={
+                                              'inline-flex items-center justify-center w-8 h-8 rounded-full text-[10px] font-semibold border ' +
+                                              (row.achievementRate < (2 / 3) * 100
+                                                ? 'bg-red-50 text-red-700 border-red-200'
+                                                : 'bg-green-50 text-green-700 border-green-200')
+                                            }
+                                          >
+                                            {row.achievementRate.toFixed(0)}%
+                                          </span>
+                                        ) : (
+                                          '—'
+                                        )}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
                               </tbody>
                             </table>
                           </div>
