@@ -3,7 +3,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Bot, Inbox } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
-import { Bowler, Metric, AIModelKey } from '../types';
+import { Bowler, Metric, AIModelKey, GroupPerformanceRow } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { dataService } from '../services/dataService';
@@ -317,7 +317,7 @@ const Layout = () => {
     [a3Cases, a3PortfolioGroupFilter],
   );
 
-  const groupPerformanceTableData = useMemo(() => {
+  const groupPerformanceTableData = useMemo<GroupPerformanceRow[]>(() => {
     const groupToMetrics: Record<string, Metric[]> = {};
     const metricOwnerById: Record<string, string> = {};
 
@@ -1039,43 +1039,63 @@ const groupFilterOptions = useMemo(
     try {
       const { generateAIContext, generateComprehensiveSummary } = await import('../services/aiService');
       const context = generateAIContext(bowlers, a3Cases);
-      
-      const prompt = `Provide a comprehensive performance summary.
-      
-      Analyze the data based on each metric's 'targetMeetingRule' (e.g., gte, lte, within_range) and 'attribute'.
-      Identify all metrics that have missed their target for 2 or more consecutive months (current month + previous 1 or 2). Every such metric must appear in the 'areasOfConcern' array.
-      Group the metrics by their 'group' field.
-      Also analyze the A3 problem-solving data and produce an overall A3 summary that highlights the main problems, root causes, current status, and overall progress across A3 cases.
-      
-      For each metric included in 'areasOfConcern', provide a specific, tailored improvement suggestion based on the type of metric and its trend (avoid generic or repeated suggestions).
-      
-      Return the response in STRICT JSON format with the following structure:
-      {
-        "executiveSummary": "A concise high-level performance snapshot.",
-        "performanceGroups": [
-          {
-            "groupName": "Group Name",
-            "metrics": [
-              {
-                "name": "Metric Name",
-                "latestPerformance": "Value vs Target (e.g., '0.5 vs <1.0') and status emoji (✅/❌)",
-                "trendAnalysis": "If the metric has missed its target for 3 consecutive months, provide a brief trend description (e.g., '3-mo Fail ↘️'). Otherwise, return null."
-              }
-            ]
-          }
-        ],
-        "a3Summary": "Narrative summary of A3 cases, grouped logically where relevant. Cover open vs closed status, key problem themes, dominant root causes, and overall progress in the A3 portfolio.",
-        "areasOfConcern": [
-        {
-          "metricName": "Metric Name",
-          "groupName": "Group Name",
-          "issue": "Brief description of why the metric is a concern (e.g., 'Failed to meet target for 3 consecutive months, worsening trend')",
-          "suggestion": "Detailed, actionable, metric-specific improvement suggestion based on industry best practices and the observed pattern"
-        }
-      ]
-      }
-      Do not include any markdown formatting (like \`\`\`json). Just the raw JSON object.`;
-      
+
+      const failingMetricsForAI = groupPerformanceTableData.filter(row => row.fail2 || row.fail3);
+
+      const statsForPrompt = JSON.stringify(
+        failingMetricsForAI.map(row => ({
+          groupName: row.groupName,
+          metricName: row.metricName,
+          latestMet: row.latestMet,
+          fail2: row.fail2,
+          fail3: row.fail3,
+          achievementRate: row.achievementRate != null ? Number(row.achievementRate.toFixed(1)) : null,
+        })),
+        null,
+        2,
+      );
+
+      const prompt = `You are generating a one-click portfolio summary focused on improvement opportunities.
+
+Use the pre-computed statistical snapshot below. Do not redo statistical calculations from raw data. Rely on this snapshot instead.
+
+Consecutive failing metrics (derived from the integrated portfolio table):
+${statsForPrompt}
+
+Definitions:
+- latestMet: null = no data, true = met latest target, false = missed latest target.
+- fail2: true if the metric missed its target for the latest 2 consecutive months.
+- fail3: true if the metric missed its target for the latest 3 consecutive months.
+- achievementRate: percentage of historical data points that met target.
+
+Tasks:
+1) Write "executiveSummary": a concise high-level snapshot of overall portfolio performance across metrics and A3 activity.
+2) Write "a3Summary": an overview of the A3 problem-solving portfolio (key themes, progress, and coverage).
+3) Build "areasOfConcern": each entry must correspond to one metric from the snapshot where fail2 or fail3 is true.
+
+Guidance for areasOfConcern:
+- Prioritize metrics with fail3 = true, then fail2 = true.
+- Use latestMet and achievementRate to describe severity and risk.
+- Focus on actionable, metric-specific improvement suggestions (avoid generic advice).
+- Suggestions should reflect typical quality, process-improvement, and problem-solving practices.
+- Do not output your own statistical tables or detailed numerical calculations in text; focus on narrative and actions.
+
+Return the response in STRICT JSON format with the following structure:
+{
+  "executiveSummary": "A concise high-level performance snapshot.",
+  "a3Summary": "Narrative summary of A3 cases and portfolio status.",
+  "areasOfConcern": [
+    {
+      "metricName": "Metric Name",
+      "groupName": "Group Name",
+      "issue": "Why this metric is a concern (e.g., 'Missed target for 3 consecutive months with low overall achievement rate').",
+      "suggestion": "Detailed, actionable, metric-specific improvement suggestion based on the pattern and context."
+    }
+  ]
+}
+
+Do not include any markdown formatting (like \`\`\`json). Just the raw JSON object.`;
+
       const summary = await generateComprehensiveSummary(context, prompt, selectedModel);
       setSummaryContent(summary);
     } catch (error) {
@@ -2723,6 +2743,7 @@ const groupFilterOptions = useMemo(
           content={summaryContent}
           isLoading={isGeneratingSummary}
           onHideWhileLoading={handleHideSummaryWhileLoading}
+          groupPerformanceTableData={groupPerformanceTableData}
         />
       </Suspense>
 

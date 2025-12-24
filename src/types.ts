@@ -99,3 +99,14 @@ export interface A3Case {
   resultImages?: DataAnalysisImage[];
   resultCanvasHeight?: number;
 }
+
+export interface GroupPerformanceRow {
+  groupName: string;
+  metricId: string;
+  metricName: string;
+  bowlerId?: string;
+  latestMet: boolean | null;
+  fail2: boolean;
+  fail3: boolean;
+  achievementRate: number | null;
+}

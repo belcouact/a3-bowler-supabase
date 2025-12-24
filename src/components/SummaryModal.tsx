@@ -2,6 +2,7 @@ import React from 'react';
 import { X, Download, Copy, Sparkles, TrendingUp, AlertTriangle, Target, Activity, ArrowRight } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { MarkdownRenderer } from './MarkdownRenderer';
+import { GroupPerformanceRow } from '../types';
 
 interface SummaryModalProps {
   isOpen: boolean;
@@ -9,19 +10,8 @@ interface SummaryModalProps {
   content: string;
   isLoading: boolean;
   onHideWhileLoading: () => void;
+  groupPerformanceTableData: GroupPerformanceRow[];
 }
-
-interface MetricPerformance {
-  name: string;
-  latestPerformance: string;
-  trendAnalysis: string | null;
-}
-
-interface PerformanceGroup {
-  groupName: string;
-  metrics: MetricPerformance[];
-}
-
 interface AreaOfConcern {
   metricName: string;
   groupName: string;
@@ -31,12 +21,18 @@ interface AreaOfConcern {
 
 interface SummaryData {
   executiveSummary: string;
-  performanceGroups: PerformanceGroup[];
   a3Summary?: string;
   areasOfConcern: AreaOfConcern[];
 }
 
-export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, content, isLoading, onHideWhileLoading }) => {
+export const SummaryModal: React.FC<SummaryModalProps> = ({
+  isOpen,
+  onClose,
+  content,
+  isLoading,
+  onHideWhileLoading,
+  groupPerformanceTableData,
+}) => {
   const toast = useToast();
 
   if (!isOpen) return null;
@@ -47,8 +43,8 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
   try {
     if (content && !isLoading) {
       const cleanContent = content.replace(/```json/g, '').replace(/```/g, '').trim();
-      parsedData = JSON.parse(cleanContent);
-      if (parsedData && parsedData.executiveSummary && Array.isArray(parsedData.performanceGroups)) {
+      parsedData = JSON.parse(cleanContent) as SummaryData;
+      if (parsedData && parsedData.executiveSummary && Array.isArray(parsedData.areasOfConcern)) {
           isJson = true;
       }
     }
@@ -57,22 +53,28 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
     isJson = false;
   }
 
+  const hasStats = groupPerformanceTableData.length > 0;
+
+  const latestByGroup: Record<string, GroupPerformanceRow[]> = {};
+  if (hasStats) {
+    groupPerformanceTableData.forEach(row => {
+      const key = row.groupName || 'Ungrouped';
+      if (!latestByGroup[key]) {
+        latestByGroup[key] = [];
+      }
+      latestByGroup[key].push(row);
+    });
+  }
+
+  const latestGroupNames = Object.keys(latestByGroup).sort();
+
   const handleCopy = () => {
     if (isJson && parsedData) {
-        let textToCopy = `Executive Summary:\n${parsedData.executiveSummary}\n\n`;
+        let textToCopy = `Executive Overview:\n${parsedData.executiveSummary}\n\n`;
         
         if (parsedData.a3Summary && parsedData.a3Summary.trim() !== '') {
           textToCopy += `A3 Problem Solving Summary:\n${parsedData.a3Summary}\n\n`;
         }
-
-        textToCopy += `Performance Analysis:\n`;
-        parsedData.performanceGroups.forEach(group => {
-            textToCopy += `\nGroup: ${group.groupName}\n`;
-            group.metrics.forEach(m => {
-                const trendText = m.trendAnalysis && m.trendAnalysis.trim() !== '' ? ` | Trend: ${m.trendAnalysis}` : '';
-                textToCopy += `- ${m.name}: ${m.latestPerformance}${trendText}\n`;
-            });
-        });
 
         textToCopy += `\nAreas of Concern & Recommendations:\n`;
         parsedData.areasOfConcern.forEach(area => {
@@ -107,45 +109,58 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
 </section>`
           : '';
 
-      const performanceGroupsHtml = parsedData.performanceGroups
-        .map((group) => {
-          const metricsHtml = group.metrics
-            .map((metric) => {
-              return `<div class="metric-row">
-  <span class="metric-name">${escapeHtml(metric.name)}</span>
-  <span class="metric-value">${escapeHtml(metric.latestPerformance)}</span>
-</div>`;
-            })
-            .join('');
-
-          const failingMetrics = group.metrics.filter(
-            (m) => m.trendAnalysis && m.trendAnalysis.trim() !== ''
-          );
-
-          const failingHtml =
-            failingMetrics.length > 0
-              ? failingMetrics
-                  .map(
-                    (metric) => `<div class="metric-row">
-  <span class="metric-name">${escapeHtml(metric.name)}</span>
-  <span class="metric-value">${escapeHtml(metric.trendAnalysis || '')}</span>
-</div>`
-                  )
-                  .join('')
-              : '';
-
-          return `<div class="group-column">
-  <h4 class="group-title">${escapeHtml(group.groupName)}</h4>
-  <div class="metrics-list">
-    ${metricsHtml}
+      const statsTableHtml =
+        groupPerformanceTableData.length > 0
+          ? `<section class="card card-stats">
+  <h2 class="card-title">Portfolio Statistical Table</h2>
+  <div class="table-wrapper">
+    <table class="stats-table">
+      <thead>
+        <tr>
+          <th>Group</th>
+          <th>Metric</th>
+          <th>Latest month performance</th>
+          <th>Failing last 2 months</th>
+          <th>Failing last 3 months</th>
+          <th>Overall target achieving %</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${groupPerformanceTableData
+          .map(
+            row => `<tr>
+          <td>${escapeHtml(row.groupName)}</td>
+          <td>${escapeHtml(row.metricName)}</td>
+          <td>${
+            row.latestMet === null
+              ? '—'
+              : row.latestMet
+              ? '<span class="status-pill status-ok"><span class="status-dot"></span>ok</span>'
+              : '<span class="status-pill status-fail"><span class="status-dot"></span>fail</span>'
+          }</td>
+          <td>${
+            row.fail2
+              ? '<span class="status-pill status-warn"><span class="status-dot"></span>Failing</span>'
+              : '—'
+          }</td>
+          <td>${
+            row.fail3
+              ? '<span class="status-pill status-fail"><span class="status-dot"></span>Failing</span>'
+              : '—'
+          }</td>
+          <td>${
+            row.achievementRate != null
+              ? `${row.achievementRate.toFixed(0)}%`
+              : '—'
+          }</td>
+        </tr>`,
+          )
+          .join('')}
+      </tbody>
+    </table>
   </div>
-  <div class="metrics-trend-list">
-    ${failingHtml ||
-      '<p class="empty-text">No consecutive failing metrics identified.</p>'}
-  </div>
-</div>`;
-        })
-        .join('');
+</section>`
+          : '';
 
       const concernsHtml =
         parsedData.areasOfConcern.length > 0
@@ -340,6 +355,57 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
       color: #9ca3af;
       font-style: italic;
     }
+    .table-wrapper {
+      overflow-x: auto;
+      margin-top: 8px;
+    }
+    .stats-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .stats-table th,
+    .stats-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+    }
+    .stats-table thead th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: #4b5563;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 500;
+      border: 1px solid transparent;
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      margin-right: 4px;
+      background: currentColor;
+    }
+    .status-ok {
+      background: #ecfdf3;
+      color: #166534;
+      border-color: #bbf7d0;
+    }
+    .status-fail {
+      background: #fef2f2;
+      color: #b91c1c;
+      border-color: #fecaca;
+    }
+    .status-warn {
+      background: #fffbeb;
+      color: #92400e;
+      border-color: #fed7aa;
+    }
     @media (max-width: 640px) {
       body { padding: 16px; }
       .summary-header { flex-direction: column; align-items: flex-start; }
@@ -352,7 +418,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
       <div>
         <h1 class="summary-title">Smart Summary & Insights</h1>
         <div class="summary-tag">
-          <span>Performance Analysis</span>
+          <span>Consecutive Failing Metrics Focus</span>
         </div>
       </div>
     </header>
@@ -362,14 +428,9 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
       <p>${executive}</p>
     </section>
 
-    ${a3Summary}
+    ${statsTableHtml}
 
-    <section class="card">
-      <h2 class="card-title">Performance Analysis</h2>
-      <div class="grid-2">
-        ${performanceGroupsHtml}
-      </div>
-    </section>
+    ${a3Summary}
 
     <section class="card card-concerns">
       <h2 class="card-title">Areas of Concern & Recommendations</h2>
@@ -449,7 +510,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
                     </h3>
                     <div className="flex items-center mt-1 space-x-3 text-xs font-medium text-gray-500">
                         <span className="flex items-center bg-green-50 text-green-700 px-2 py-0.5 rounded-full border border-green-100">
-                            <TrendingUp className="w-3 h-3 mr-1" /> Performance Analysis
+                            <TrendingUp className="w-3 h-3 mr-1" /> Consecutive Failing Metrics
                         </span>
                     </div>
                 </div>
@@ -522,69 +583,84 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, con
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Left: Latest Performance */}
-                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                                <h4 className="text-base font-semibold text-gray-800 flex items-center">
-                                    <Activity className="w-4 h-4 mr-2 text-blue-600" />
-                                    Latest Month Performance
-                                </h4>
-                            </div>
-                            <div className="p-4 space-y-6">
-                                {parsedData.performanceGroups.map((group, idx) => (
-                                    <div key={idx} className="space-y-2">
-                                        <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100 pb-1">
-                                            {group.groupName}
-                                        </h5>
-                                        <div className="space-y-2">
-                                            {group.metrics.map((metric, mIdx) => (
-                                                <div key={mIdx} className="flex justify-between items-center text-sm">
-                                                    <span className="font-medium text-gray-700">{metric.name}</span>
-                                                    <span className="text-gray-600 bg-gray-50 px-2 py-1 rounded-md text-xs">{metric.latestPerformance}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Right: Trend Analysis */}
-                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                                <h4 className="text-base font-semibold text-gray-800 flex items-center">
-                                    <TrendingUp className="w-4 h-4 mr-2 text-purple-600" />
-                                    Consecutive Failing Trends
-                                </h4>
-                            </div>
-                            <div className="p-4 space-y-6">
-                                {parsedData.performanceGroups.map((group, idx) => {
-                                    const failingMetrics = group.metrics.filter(m => m.trendAnalysis && m.trendAnalysis.trim() !== '');
-                                    if (failingMetrics.length === 0) return null;
-
+                    {hasStats && (
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                                  <h4 className="text-base font-semibold text-gray-800 flex items-center">
+                                      <Activity className="w-4 h-4 mr-2 text-blue-600" />
+                                      Latest Month Performance
+                                  </h4>
+                              </div>
+                              <div className="p-4 space-y-6">
+                                  {latestGroupNames.map(groupName => {
+                                    const rows = latestByGroup[groupName] || [];
+                                    if (rows.length === 0) return null;
                                     return (
-                                        <div key={idx} className="space-y-2">
-                                            <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100 pb-1">
-                                                {group.groupName}
-                                            </h5>
-                                            <div className="space-y-2">
-                                                {failingMetrics.map((metric, mIdx) => (
-                                                    <div key={mIdx} className="flex justify-between items-center text-sm">
-                                                        <span className="font-medium text-gray-700">{metric.name}</span>
-                                                        <span className="text-gray-600 bg-gray-50 px-2 py-1 rounded-md text-xs">{metric.trendAnalysis}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
+                                      <div key={groupName} className="space-y-2">
+                                          <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100 pb-1">
+                                              {groupName}
+                                          </h5>
+                                          <div className="space-y-2">
+                                              {rows.map(row => (
+                                                  <div key={row.metricId} className="flex justify-between items-center text-sm">
+                                                      <span className="font-medium text-gray-700">{row.metricName}</span>
+                                                      <span className="text-gray-600 bg-gray-50 px-2 py-1 rounded-md text-xs">
+                                                        {row.latestMet === null ? '—' : row.latestMet ? 'ok' : 'fail'}
+                                                      </span>
+                                                  </div>
+                                              ))}
+                                          </div>
+                                      </div>
                                     );
-                                })}
-                                {parsedData.performanceGroups.every(g => g.metrics.every(m => !m.trendAnalysis || m.trendAnalysis.trim() === '')) && (
-                                     <p className="text-sm text-gray-500 italic text-center py-4">No consecutive failing metrics identified.</p>
-                                )}
-                            </div>
-                        </div>
-                    </div>
+                                  })}
+                              </div>
+                          </div>
+
+                          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                                  <h4 className="text-base font-semibold text-gray-800 flex items-center">
+                                      <TrendingUp className="w-4 h-4 mr-2 text-purple-600" />
+                                      Consecutive Failing Trends
+                                  </h4>
+                              </div>
+                              <div className="p-4 space-y-6">
+                                  {latestGroupNames.map(groupName => {
+                                    const rows = (latestByGroup[groupName] || []).filter(row => row.fail2 || row.fail3);
+                                    if (rows.length === 0) return null;
+                                    return (
+                                      <div key={groupName} className="space-y-2">
+                                          <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100 pb-1">
+                                              {groupName}
+                                          </h5>
+                                          <div className="space-y-2">
+                                              {rows.map(row => {
+                                                const label = row.fail3
+                                                  ? 'Failing 3 consecutive months'
+                                                  : 'Failing 2 consecutive months';
+                                                return (
+                                                  <div key={row.metricId} className="flex justify-between items-center text-sm">
+                                                      <span className="font-medium text-gray-700">{row.metricName}</span>
+                                                      <span className="text-gray-600 bg-gray-50 px-2 py-1 rounded-md text-xs">
+                                                        {label}
+                                                      </span>
+                                                  </div>
+                                                );
+                                              })}
+                                          </div>
+                                      </div>
+                                    );
+                                  })}
+                                  {(groupPerformanceTableData.length === 0 ||
+                                    groupPerformanceTableData.every(row => !row.fail2 && !row.fail3)) && (
+                                     <p className="text-sm text-gray-500 italic text-center py-4">
+                                      No consecutive failing metrics identified.
+                                     </p>
+                                  )}
+                              </div>
+                          </div>
+                      </div>
+                    )}
 
                     {parsedData.a3Summary && parsedData.a3Summary.trim() !== '' && (
                       <div className="bg-gradient-to-br from-blue-50 to-white p-6 rounded-xl border border-blue-100 shadow-sm">
