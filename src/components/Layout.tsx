@@ -1464,10 +1464,10 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-2">
             <div className="bg-blue-600 h-9 w-9 rounded-md flex items-center justify-center">
-              <span className="text-xs font-bold tracking-tight text-white">B&A</span>
+              <span className="text-xs font-bold tracking-tight text-white">A&amp;B</span>
             </div>
             <div className="flex items-center space-x-1">
-              <h1 className="text-lg font-semibold text-gray-900 tracking-tight hidden md:block">Bowler &amp; A3</h1>
+              <h1 className="text-lg font-semibold text-gray-900 tracking-tight hidden md:block">A3 Bowler</h1>
               <button 
                   onClick={() => setIsAppInfoOpen(true)}
                   className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -2891,11 +2891,11 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                     className="relative w-full lg:flex-shrink-0 border-b lg:border-b-0 lg:border-r border-gray-100 bg-gray-50/80"
                                     style={{ width: a3TimelineSidebarWidth }}
                                   >
-                                    <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100">
-                                      <p className="text-[11px] font-semibold text-gray-600 uppercase tracking-wide">
+                                    <div className="h-[60px] border-b border-gray-200 bg-gray-50 flex items-center justify-between px-4 font-semibold text-xs text-gray-500 uppercase tracking-wider">
+                                      <p className="truncate">
                                         A3 List
                                       </p>
-                                      <span className="text-[10px] text-gray-500">
+                                      <span className="text-[10px] text-gray-500 font-normal">
                                         {a3Timeline.rows.reduce(
                                           (acc, row) => acc + row.items.length,
                                           0,
@@ -2903,7 +2903,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                         items
                                       </span>
                                     </div>
-                                    <div className="max-h-64 lg:max-h-[280px] overflow-y-auto">
+                                    <div>
                                       {a3Timeline.rows.length === 0 && (
                                         <p className="px-3 py-3 text-[11px] text-gray-400 italic">
                                           No dated cases available.

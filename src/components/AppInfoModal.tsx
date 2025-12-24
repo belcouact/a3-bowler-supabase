@@ -20,10 +20,10 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 sm:px-6 flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <div className="h-7 w-7 rounded-md bg-blue-600 flex items-center justify-center">
-                <span className="text-[10px] font-bold tracking-tight text-white">B&amp;A</span>
+                <span className="text-[10px] font-bold tracking-tight text-white">A&amp;B</span>
               </div>
               <h3 className="text-sm font-medium text-gray-900" id="modal-title">
-                About Bowler &amp; A3
+                About A3 Bowler
               </h3>
             </div>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-500 transition-colors">
@@ -35,17 +35,17 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
             <div className="mb-6 text-center flex flex-col items-center">
               <div className="p-3 bg-blue-100 rounded-full mb-3">
                 <div className="bg-blue-600 h-12 w-12 rounded-md flex items-center justify-center">
-                  <span className="text-sm font-bold tracking-tight text-white">B&amp;A</span>
+                  <span className="text-sm font-bold tracking-tight text-white">A&amp;B</span>
                 </div>
               </div>
-              <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">Bowler &amp; A3</h2>
-              <p className="mt-1 text-sm text-gray-500">AI-Assisted Bowler &amp; A3 Performance Tracker</p>
+              <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">A3 Bowler</h2>
+              <p className="mt-1 text-sm text-gray-500">AI-Assisted Performance Tracker &amp; A3 Problem Solving</p>
             </div>
 
             <div className="border-t border-gray-100 pt-6">
               <h4 className="text-sm font-semibold text-gray-900 mb-2">Overview</h4>
               <p className="text-sm text-gray-600 leading-relaxed">
-                Bowler &amp; A3 is a lightweight performance management tool designed to help teams track metrics,
+                A3 Bowler is a lightweight performance management tool designed to help teams track metrics,
                 visualize trends, and drive problem solving using the A3 methodology. It combines a monthly
                 bowler chart with A3 analysis, enhanced by AI to summarize patterns and support root cause
                 thinking.
