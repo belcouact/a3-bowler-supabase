@@ -374,72 +374,83 @@ const Layout = () => {
           })
           .sort();
 
-        if (months.length === 0) {
-          rows.push({
-            groupName,
-            metricId: metric.id,
-            metricName: metric.name,
-            bowlerId: metricOwnerById[metric.id],
-            latestMet: null,
-            latestActual: null,
-            fail2: false,
-            fail3: false,
-            achievementRate: null,
-          });
-          return;
-        }
-
-        const latestMonth = months[months.length - 1];
-        const latest2Months = months.slice(-2);
-        const latest3Months = months.slice(-3);
-
         let latestMet: boolean | null = null;
         let latestActual: string | null = null;
-        const latestData = monthly[latestMonth];
-        if (hasDataAndTarget(latestData)) {
-          latestMet = !isViolation(metric.targetMeetingRule, latestData.target, latestData.actual);
-          latestActual = `${latestData.actual}`;
-        }
-
         let fail2 = false;
-        if (latest2Months.length === 2) {
-          let allFail2 = true;
-          for (const month of latest2Months) {
-            const data = monthly[month];
-            if (!hasDataAndTarget(data) || !isViolation(metric.targetMeetingRule, data.target, data.actual)) {
-              allFail2 = false;
-              break;
-            }
-          }
-          fail2 = allFail2;
-        }
-
         let fail3 = false;
-        if (latest3Months.length === 3) {
-          let allFail3 = true;
-          for (const month of latest3Months) {
-            const data = monthly[month];
-            if (!hasDataAndTarget(data) || !isViolation(metric.targetMeetingRule, data.target, data.actual)) {
-              allFail3 = false;
-              break;
+        let achievementRate: number | null = null;
+        let linkedA3Count = 0;
+
+        if (months.length > 0) {
+          const latestMonth = months[months.length - 1];
+          const latest2Months = months.slice(-2);
+          const latest3Months = months.slice(-3);
+
+          const latestData = monthly[latestMonth];
+          if (hasDataAndTarget(latestData)) {
+            latestMet = !isViolation(
+              metric.targetMeetingRule,
+              latestData.target,
+              latestData.actual,
+            );
+            latestActual = `${latestData.actual}`;
+          }
+
+          if (latest2Months.length === 2) {
+            let allFail2 = true;
+            for (const month of latest2Months) {
+              const data = monthly[month];
+              if (
+                !hasDataAndTarget(data) ||
+                !isViolation(metric.targetMeetingRule, data.target, data.actual)
+              ) {
+                allFail2 = false;
+                break;
+              }
             }
+            fail2 = allFail2;
           }
-          fail3 = allFail3;
+
+          if (latest3Months.length === 3) {
+            let allFail3 = true;
+            for (const month of latest3Months) {
+              const data = monthly[month];
+              if (
+                !hasDataAndTarget(data) ||
+                !isViolation(metric.targetMeetingRule, data.target, data.actual)
+              ) {
+                allFail3 = false;
+                break;
+              }
+            }
+            fail3 = allFail3;
+          }
+
+          let totalPoints = 0;
+          let metPoints = 0;
+          months.forEach(month => {
+            const data = monthly[month];
+            if (!hasDataAndTarget(data)) return;
+            totalPoints += 1;
+            const violation = isViolation(
+              metric.targetMeetingRule,
+              data.target,
+              data.actual,
+            );
+            if (!violation) {
+              metPoints += 1;
+            }
+          });
+
+          achievementRate = totalPoints > 0 ? (metPoints / totalPoints) * 100 : null;
+
+          const isAtRisk = fail2 || fail3;
+          if (isAtRisk) {
+            linkedA3Count = a3Cases.filter(c =>
+              (c.linkedMetricIds || []).includes(metric.id),
+            ).length;
+          }
         }
-
-        let totalPoints = 0;
-        let metPoints = 0;
-        months.forEach(month => {
-          const data = monthly[month];
-          if (!hasDataAndTarget(data)) return;
-          totalPoints += 1;
-          const violation = isViolation(metric.targetMeetingRule, data.target, data.actual);
-          if (!violation) {
-            metPoints += 1;
-          }
-        });
-
-        const achievementRate = totalPoints > 0 ? (metPoints / totalPoints) * 100 : null;
 
         rows.push({
           groupName,
@@ -451,12 +462,13 @@ const Layout = () => {
           fail2,
           fail3,
           achievementRate,
+          linkedA3Count,
         });
       });
     });
 
     return rows;
-  }, [bowlers]);
+  }, [bowlers, a3Cases]);
 
   const metricA3Coverage = useMemo(
     () => {
@@ -603,9 +615,7 @@ const groupFilterOptions = useMemo(
         }
 
         const isAtRisk = row.fail2 || row.fail3;
-        const linkedA3Count = isAtRisk
-          ? a3Cases.filter(c => (c.linkedMetricIds || []).includes(row.metricId)).length
-          : 0;
+        const linkedA3Count = row.linkedA3Count || 0;
 
         if (a3LinkFilter !== 'all') {
           if (a3LinkFilter === 'missing' && !(isAtRisk && linkedA3Count === 0)) {
@@ -650,7 +660,6 @@ const groupFilterOptions = useMemo(
       fail3Filter,
       a3LinkFilter,
       achievementFilter,
-      a3Cases,
     ],
   );
 
