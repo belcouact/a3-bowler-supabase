@@ -256,7 +256,7 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
                                 <div>
                                     <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Group & tag</label>
                                     <p className="mt-1 text-xs text-gray-500">
-                                        Group and tag are mainly used for consolidation across multiple bowlers and reports.
+                                        Group and tag are mainly used for consolidation across multiple bowlers and reports. Enter multiple tags separated by commas.
                                     </p>
                                 </div>
                                 <div className="hidden sm:flex flex-col items-end space-y-1">
@@ -284,12 +284,13 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 flex items-center" title="Mainly used for consolidation across reports">
+                                    <label className="block text-sm font-medium text-gray-700 flex items-center" title="Mainly used for consolidation across reports. Enter multiple tags separated by commas.">
                                         Tag
                                         <Info className="w-4 h-4 ml-1 text-gray-400 cursor-help" />
                                     </label>
                                     <input
                                         type="text"
+                                        placeholder="e.g. Technical, Urgent"
                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                         value={generalData.tag}
                                         onChange={(e) => setGeneralData({ ...generalData, tag: e.target.value })}

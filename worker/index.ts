@@ -175,7 +175,6 @@ export default {
             cursor = list.cursor;
             listComplete = list.list_complete;
             
-            // Filter for bowler keys
             const bowlerKeys = list.keys.filter((k: any) => k.name.includes(':bowler:'));
             
             if (bowlerKeys.length > 0) {
@@ -185,14 +184,20 @@ export default {
                  for (const data of batchResults) {
                     if (data && typeof data === 'object') {
                         const bowler = data as any;
-                        if (bowler.tag && tags.includes(bowler.tag)) {
-                            allBowlers.push(bowler);
+                        if (bowler.tag) {
+                            const bowlerTags = String(bowler.tag)
+                              .split(',')
+                              .map((t: string) => t.trim())
+                              .filter((t: string) => t.length > 0);
+                            const hasMatch = bowlerTags.some((t: string) => tags.includes(t));
+                            if (hasMatch) {
+                                allBowlers.push(bowler);
+                            }
                         }
                     }
                  }
             }
 
-            // Filter for A3 keys
             const a3Keys = list.keys.filter((k: any) => k.name.includes(':a3:'));
 
             if (a3Keys.length > 0) {
@@ -202,21 +207,25 @@ export default {
                  for (const data of batchResults) {
                     if (data && typeof data === 'object') {
                         const a3 = data as any;
-                        if (a3.tag && tags.includes(a3.tag)) {
-                            allA3Cases.push(a3);
+                        if (a3.tag) {
+                            const a3Tags = String(a3.tag)
+                              .split(',')
+                              .map((t: string) => t.trim())
+                              .filter((t: string) => t.length > 0);
+                            const hasMatch = a3Tags.some((t: string) => tags.includes(t));
+                            if (hasMatch) {
+                                allA3Cases.push(a3);
+                            }
                         }
                     }
                  }
             }
         }
         
-        // Sort results
         const sortFn = (a: any, b: any) => {
-             // Sort by userId first to keep user data grouped
              if (a.userId !== b.userId) {
                  return (a.userId || '').localeCompare(b.userId || '');
              }
-             // Then by order
              const orderA = typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER;
              const orderB = typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER;
              return orderA - orderB;

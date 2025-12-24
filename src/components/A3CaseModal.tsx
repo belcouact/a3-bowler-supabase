@@ -159,7 +159,7 @@ const A3CaseModal = ({ isOpen, onClose, onSave, onDelete, initialData }: A3CaseM
                   <div>
                     <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Ownership & grouping</label>
                     <p className="mt-1 text-xs text-gray-500">
-                      Clarify who owns this A3 and how it is grouped in your portfolio.
+                      Clarify who owns this A3 and how it is grouped in your portfolio. Use tags for consolidation across reports, separated by commas.
                     </p>
                   </div>
                   <div className="hidden sm:flex flex-col items-end space-y-1">
@@ -196,12 +196,13 @@ const A3CaseModal = ({ isOpen, onClose, onSave, onDelete, initialData }: A3CaseM
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 flex items-center" title="For consolidation purpose">
+                    <label className="block text-sm font-medium text-gray-700 flex items-center" title="For consolidation across reports. Enter multiple tags separated by commas.">
                       Tag
                       <Info className="w-4 h-4 ml-1 text-gray-400 cursor-help" />
                     </label>
                     <input
                       type="text"
+                      placeholder="e.g. Technical, Urgent"
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                       value={formData.tag}
                       onChange={(e) => setFormData({ ...formData, tag: e.target.value })}

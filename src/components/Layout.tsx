@@ -1468,8 +1468,8 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
       <header className="bg-white border-b border-gray-200 z-[60] shadow-sm h-16 flex items-center px-6 justify-between relative">
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-2">
-            <div className="bg-blue-600 h-9 w-9 rounded-md flex items-center justify-center">
-              <span className="text-xs font-bold tracking-tight text-white">A&amp;B</span>
+            <div className="w-8 h-8 rounded-md border border-teal-500 text-teal-500 flex items-center justify-center text-xs font-bold">
+              A&amp;B
             </div>
             <div className="flex items-center space-x-1">
               <h1 className="text-lg font-semibold text-gray-900 tracking-tight hidden md:block">A3 Bowler</h1>
