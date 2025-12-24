@@ -79,32 +79,6 @@ const MetricBowler = () => {
     content: React.ReactNode;
   } | null>(null);
 
-  const metricStatus = useMemo(() => {
-    const status: Record<string, { linkedA3Count: number; hasRecentFailures: boolean }> = {};
-    metrics.forEach(metric => {
-      const linkedA3Count = (a3Cases || []).filter(a3 => (a3.linkedMetricIds || []).includes(metric.id)).length;
-      const monthsToCheck = displayMonths.slice(-3);
-      let violationCount = 0;
-      monthsToCheck.forEach(month => {
-        const monthData = metric.monthlyData?.[month.key];
-        if (!monthData?.actual) {
-          return;
-        }
-        const violation = isViolation(
-          metric.targetMeetingRule,
-          monthData.target,
-          monthData.actual
-        );
-        if (violation) {
-          violationCount += 1;
-        }
-      });
-      const hasRecentFailures = violationCount >= 2;
-      status[metric.id] = { linkedA3Count, hasRecentFailures };
-    });
-    return status;
-  }, [metrics, a3Cases, displayMonths]);
-
   const displayMonths = useMemo(() => {
     const [startYearStr, startMonthStr] = startDate.split('-');
     const startYear = parseInt(startYearStr, 10);
@@ -135,6 +109,32 @@ const MetricBowler = () => {
   const selectedBowler = bowlers.find(b => b.id === id);
   const title = selectedBowler ? selectedBowler.name : 'Metric Bowler';
   const metrics = selectedBowler?.metrics || [];
+
+  const metricStatus = useMemo(() => {
+    const status: Record<string, { linkedA3Count: number; hasRecentFailures: boolean }> = {};
+    metrics.forEach(metric => {
+      const linkedA3Count = (a3Cases || []).filter(a3 => (a3.linkedMetricIds || []).includes(metric.id)).length;
+      const monthsToCheck = displayMonths.slice(-3);
+      let violationCount = 0;
+      monthsToCheck.forEach(month => {
+        const monthData = metric.monthlyData?.[month.key];
+        if (!monthData?.actual) {
+          return;
+        }
+        const violation = isViolation(
+          metric.targetMeetingRule,
+          monthData.target,
+          monthData.actual
+        );
+        if (violation) {
+          violationCount += 1;
+        }
+      });
+      const hasRecentFailures = violationCount >= 2;
+      status[metric.id] = { linkedA3Count, hasRecentFailures };
+    });
+    return status;
+  }, [metrics, a3Cases, displayMonths]);
 
   useEffect(() => {
     if (selectedBowler?.metricStartDate) {
