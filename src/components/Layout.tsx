@@ -1072,12 +1072,15 @@ Tasks:
 1) Write "executiveSummary": a concise high-level snapshot of overall portfolio performance across metrics and A3 activity.
 2) Write "a3Summary": an overview of the A3 problem-solving portfolio (key themes, progress, and coverage).
 3) Build "areasOfConcern": each entry must correspond to one metric from the snapshot where fail2 or fail3 is true.
+   - For each metric, write a rich, multi-sentence issue description that references consecutive failures and achievementRate.
+   - For each metric, provide a detailed, action-oriented suggestion that can guide real improvement work (diagnosis, countermeasures, and follow-up).
 
 Guidance for areasOfConcern:
 - Prioritize metrics with fail3 = true, then fail2 = true.
 - Use latestMet and achievementRate to describe severity and risk.
 - Focus on actionable, metric-specific improvement suggestions (avoid generic advice).
 - Suggestions should reflect typical quality, process-improvement, and problem-solving practices.
+- Each suggestion should describe concrete next actions, such as specific analyses to run, experiments or pilots to try, process changes to test, and how to monitor impact over the next 2–3 months.
 - Do not output your own statistical tables or detailed numerical calculations in text; focus on narrative and actions.
 
 Return the response in STRICT JSON format with the following structure:

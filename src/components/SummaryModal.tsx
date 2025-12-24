@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { X, Download, Copy, Sparkles, TrendingUp, AlertTriangle, Target, Activity, ArrowRight } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { MarkdownRenderer } from './MarkdownRenderer';
@@ -34,6 +34,8 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
   groupPerformanceTableData,
 }) => {
   const toast = useToast();
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   if (!isOpen) return null;
 
@@ -54,19 +56,6 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
   }
 
   const hasStats = groupPerformanceTableData.length > 0;
-
-  const latestByGroup: Record<string, GroupPerformanceRow[]> = {};
-  if (hasStats) {
-    groupPerformanceTableData.forEach(row => {
-      const key = row.groupName || 'Ungrouped';
-      if (!latestByGroup[key]) {
-        latestByGroup[key] = [];
-      }
-      latestByGroup[key].push(row);
-    });
-  }
-
-  const latestGroupNames = Object.keys(latestByGroup).sort();
 
   const handleCopy = () => {
     if (isJson && parsedData) {
@@ -489,6 +478,60 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
     toast.success('HTML downloaded!');
   };
 
+  const handleDownloadPdf = async () => {
+    if (!contentRef.current) {
+      toast.error('Nothing to export.');
+      return;
+    }
+
+    try {
+      setIsExportingPdf(true);
+      const [{ default: html2canvas }, { default: JsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
+
+      const canvas = await html2canvas(contentRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        ignoreElements: element => element.classList.contains('export-ignore'),
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new JsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgProps = pdf.getImageProperties(imgData);
+
+      const ratio = Math.min(
+        (pdfWidth - 20) / imgProps.width,
+        (pdfHeight - 20) / imgProps.height,
+      );
+      const imgWidth = imgProps.width * ratio;
+      const imgHeight = imgProps.height * ratio;
+      const x = (pdfWidth - imgWidth) / 2;
+      const y = (pdfHeight - imgHeight) / 2;
+
+      pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+      pdf.save(
+        `metric_bowler_summary_${new Date().toISOString().split('T')[0]}.pdf`,
+      );
+      toast.success('PDF downloaded!');
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      toast.error('Failed to download PDF.');
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[70] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
       <div className="flex items-center justify-center min-h-screen px-4 py-6 text-center sm:block sm:p-0">
@@ -496,7 +539,10 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
 
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-[75vw] sm:w-full">
+        <div
+          ref={contentRef}
+          className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-[75vw] sm:w-full"
+        >
           
           {/* Header */}
           <div className="bg-gradient-to-r from-indigo-50 via-white to-white px-4 py-4 sm:px-6 border-b border-indigo-100 flex justify-between items-center flex-shrink-0">
@@ -584,81 +630,100 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
                     </div>
 
                     {hasStats && (
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                                  <h4 className="text-base font-semibold text-gray-800 flex items-center">
-                                      <Activity className="w-4 h-4 mr-2 text-blue-600" />
-                                      Latest Month Performance
-                                  </h4>
-                              </div>
-                              <div className="p-4 space-y-6">
-                                  {latestGroupNames.map(groupName => {
-                                    const rows = latestByGroup[groupName] || [];
-                                    if (rows.length === 0) return null;
-                                    return (
-                                      <div key={groupName} className="space-y-2">
-                                          <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100 pb-1">
-                                              {groupName}
-                                          </h5>
-                                          <div className="space-y-2">
-                                              {rows.map(row => (
-                                                  <div key={row.metricId} className="flex justify-between items-center text-sm">
-                                                      <span className="font-medium text-gray-700">{row.metricName}</span>
-                                                      <span className="text-gray-600 bg-gray-50 px-2 py-1 rounded-md text-xs">
-                                                        {row.latestMet === null ? '—' : row.latestMet ? 'ok' : 'fail'}
-                                                      </span>
-                                                  </div>
-                                              ))}
-                                          </div>
-                                      </div>
-                                    );
-                                  })}
-                              </div>
+                      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                          <h4 className="text-base font-semibold text-gray-800 flex items-center">
+                            <Activity className="w-4 h-4 mr-2 text-blue-600" />
+                            Portfolio Statistical Table
+                          </h4>
+                          <span className="text-[11px] text-gray-500">
+                            Latest month, consecutive fails, and achievement %
+                          </span>
+                        </div>
+                        <div className="p-4">
+                          <div className="overflow-x-auto">
+                            <table className="min-w-full text-xs md:text-sm">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
+                                    Group
+                                  </th>
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
+                                    Metric
+                                  </th>
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
+                                    Latest month performance
+                                  </th>
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
+                                    Failing last 2 months
+                                  </th>
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
+                                    Failing last 3 months
+                                  </th>
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
+                                    Overall target achieving %
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {groupPerformanceTableData.map(row => (
+                                  <tr key={row.metricId} className="border-b border-gray-100 last:border-0">
+                                    <td className="px-3 py-2 text-gray-700">
+                                      {row.groupName}
+                                    </td>
+                                    <td className="px-3 py-2 text-gray-700">
+                                      {row.metricName}
+                                    </td>
+                                    <td className="px-3 py-2 text-gray-700">
+                                      {row.latestMet === null ? (
+                                        <span>—</span>
+                                      ) : row.latestMet ? (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-50 text-green-700 border border-green-100">
+                                          <span className="mr-1 h-1.5 w-1.5 rounded-full bg-green-500" />
+                                          ok
+                                        </span>
+                                      ) : (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100">
+                                          <span className="mr-1 h-1.5 w-1.5 rounded-full bg-red-500" />
+                                          fail
+                                        </span>
+                                      )}
+                                    </td>
+                                    <td className="px-3 py-2 text-gray-700">
+                                      {row.fail2 ? (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                                          <span className="mr-1 h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                          Failing
+                                        </span>
+                                      ) : (
+                                        <span>—</span>
+                                      )}
+                                    </td>
+                                    <td className="px-3 py-2 text-gray-700">
+                                      {row.fail3 ? (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100">
+                                          <span className="mr-1 h-1.5 w-1.5 rounded-full bg-red-500" />
+                                          Failing
+                                        </span>
+                                      ) : (
+                                        <span>—</span>
+                                      )}
+                                    </td>
+                                    <td className="px-3 py-2 text-gray-700">
+                                      {row.achievementRate != null ? (
+                                        <span className={row.achievementRate <= (2 / 3) * 100 ? 'px-1 rounded bg-amber-50 text-amber-800 font-semibold' : undefined}>
+                                          {row.achievementRate.toFixed(0)}%
+                                        </span>
+                                      ) : (
+                                        '—'
+                                      )}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
                           </div>
-
-                          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                                  <h4 className="text-base font-semibold text-gray-800 flex items-center">
-                                      <TrendingUp className="w-4 h-4 mr-2 text-purple-600" />
-                                      Consecutive Failing Trends
-                                  </h4>
-                              </div>
-                              <div className="p-4 space-y-6">
-                                  {latestGroupNames.map(groupName => {
-                                    const rows = (latestByGroup[groupName] || []).filter(row => row.fail2 || row.fail3);
-                                    if (rows.length === 0) return null;
-                                    return (
-                                      <div key={groupName} className="space-y-2">
-                                          <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100 pb-1">
-                                              {groupName}
-                                          </h5>
-                                          <div className="space-y-2">
-                                              {rows.map(row => {
-                                                const label = row.fail3
-                                                  ? 'Failing 3 consecutive months'
-                                                  : 'Failing 2 consecutive months';
-                                                return (
-                                                  <div key={row.metricId} className="flex justify-between items-center text-sm">
-                                                      <span className="font-medium text-gray-700">{row.metricName}</span>
-                                                      <span className="text-gray-600 bg-gray-50 px-2 py-1 rounded-md text-xs">
-                                                        {label}
-                                                      </span>
-                                                  </div>
-                                                );
-                                              })}
-                                          </div>
-                                      </div>
-                                    );
-                                  })}
-                                  {(groupPerformanceTableData.length === 0 ||
-                                    groupPerformanceTableData.every(row => !row.fail2 && !row.fail3)) && (
-                                     <p className="text-sm text-gray-500 italic text-center py-4">
-                                      No consecutive failing metrics identified.
-                                     </p>
-                                  )}
-                              </div>
-                          </div>
+                        </div>
                       </div>
                     )}
 
@@ -714,7 +779,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
           <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-200 w-full">
             <button
               type="button"
-              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors export-ignore"
               onClick={handleDownload}
               disabled={isLoading || !content}
             >
@@ -723,7 +788,16 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
             </button>
             <button
               type="button"
-              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors export-ignore"
+              onClick={handleDownloadPdf}
+              disabled={isLoading || !content || isExportingPdf}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              {isExportingPdf ? 'Downloading PDF...' : 'Download PDF'}
+            </button>
+            <button
+              type="button"
+              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors export-ignore"
               onClick={handleCopy}
               disabled={isLoading || !content}
             >
