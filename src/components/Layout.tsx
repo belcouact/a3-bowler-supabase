@@ -2555,14 +2555,26 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                         )}
                                       </td>
                                       <td className="px-3 py-2 text-gray-700">
-                                        {isAtRisk ? linkedA3Count : '—'}
+                                        {isAtRisk ? (
+                                          linkedA3Count === 0 ? (
+                                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-semibold bg-red-50 text-red-700 border border-red-200">
+                                              0
+                                            </span>
+                                          ) : (
+                                            <span>{linkedA3Count}</span>
+                                          )
+                                        ) : (
+                                          <span>—</span>
+                                        )}
                                       </td>
                                       <td className="px-3 py-2 text-gray-700">
                                         {row.achievementRate != null ? (
                                           <span
                                             className={clsx(
-                                              row.achievementRate <= (2 / 3) * 100 &&
-                                                'px-1 rounded bg-amber-50 text-amber-800 font-semibold',
+                                              'inline-flex items-center justify-center w-8 h-8 rounded-full text-[10px] font-semibold border',
+                                              row.achievementRate < (2 / 3) * 100
+                                                ? 'bg-red-50 text-red-700 border-red-200'
+                                                : 'bg-green-50 text-green-700 border-green-200',
                                             )}
                                           >
                                             {row.achievementRate.toFixed(0)}%
