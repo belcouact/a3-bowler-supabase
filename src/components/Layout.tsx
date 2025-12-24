@@ -2334,17 +2334,19 @@ const groupFilterOptions = useMemo(
                                         <span>—</span>
                                       )}
                                     </td>
-                                    <td
-                                      className={clsx(
-                                        'px-3 py-2 text-gray-700',
-                                        row.achievementRate != null &&
-                                          row.achievementRate <= (2 / 3) * 100 &&
-                                          'bg-amber-50 text-amber-800 font-semibold',
+                                    <td className="px-3 py-2 text-gray-700">
+                                      {row.achievementRate != null ? (
+                                        <span
+                                          className={clsx(
+                                            row.achievementRate <= (2 / 3) * 100 &&
+                                              'px-1 rounded bg-amber-50 text-amber-800 font-semibold',
+                                          )}
+                                        >
+                                          {row.achievementRate.toFixed(0)}%
+                                        </span>
+                                      ) : (
+                                        '—'
                                       )}
-                                    >
-                                      {row.achievementRate != null
-                                        ? `${row.achievementRate.toFixed(0)}%`
-                                        : '—'}
                                     </td>
                                   </tr>
                                 ))}
@@ -2382,7 +2384,31 @@ const groupFilterOptions = useMemo(
                               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                                 Metric A3 Coverage
                               </p>
-                              <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-gray-500">
+                              <div className="mt-2 h-40">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <PieChart>
+                                    <Pie
+                                      data={metricA3Coverage.pieData}
+                                      dataKey="value"
+                                      nameKey="name"
+                                      innerRadius={30}
+                                      outerRadius={55}
+                                      paddingAngle={2}
+                                      label={renderPieLabel}
+                                      labelLine={false}
+                                    >
+                                      {metricA3Coverage.pieData.map((entry, index) => (
+                                        <Cell
+                                          key={`metric-coverage-cell-${index}`}
+                                          fill={entry.color}
+                                        />
+                                      ))}
+                                    </Pie>
+                                    <Tooltip content={renderPieTooltip} />
+                                  </PieChart>
+                                </ResponsiveContainer>
+                              </div>
+                              <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-gray-500">
                                 <label className="inline-flex items-center gap-1">
                                   <input
                                     type="checkbox"
@@ -2425,30 +2451,6 @@ const groupFilterOptions = useMemo(
                                   />
                                   <span>Failing 3 months</span>
                                 </label>
-                              </div>
-                              <div className="mt-2 h-40">
-                                <ResponsiveContainer width="100%" height="100%">
-                                  <PieChart>
-                                    <Pie
-                                      data={metricA3Coverage.pieData}
-                                      dataKey="value"
-                                      nameKey="name"
-                                      innerRadius={30}
-                                      outerRadius={55}
-                                      paddingAngle={2}
-                                      label={renderPieLabel}
-                                      labelLine={false}
-                                    >
-                                      {metricA3Coverage.pieData.map((entry, index) => (
-                                        <Cell
-                                          key={`metric-coverage-cell-${index}`}
-                                          fill={entry.color}
-                                        />
-                                      ))}
-                                    </Pie>
-                                    <Tooltip content={renderPieTooltip} />
-                                  </PieChart>
-                                </ResponsiveContainer>
                               </div>
                               <p className="mt-2 text-[11px] text-gray-500">
                                 At-risk metrics: {metricA3Coverage.totalAtRisk} · With A3:{' '}
