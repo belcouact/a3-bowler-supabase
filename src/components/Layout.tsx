@@ -2622,7 +2622,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                         {row.achievementRate != null ? (
                                           <span
                                             className={clsx(
-                                              'inline-flex items-center justify-center w-8 h-8 rounded-full text-[10px] font-semibold border',
+                                              'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border',
                                               row.achievementRate < (2 / 3) * 100
                                                 ? 'bg-red-50 text-red-700 border-red-200'
                                                 : 'bg-green-50 text-green-700 border-green-200',
@@ -3009,12 +3009,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
 
                                         return (
                                           <div key={row.groupName}>
-                                            <div className="px-3 py-2 bg-gray-50 text-[11px] text-gray-700 font-medium flex items-center justify-between">
-                                              <span className="truncate">{row.groupName}</span>
-                                              <span className="ml-2 text-[10px] text-gray-400">
-                                                {row.items.length}
-                                              </span>
-                                            </div>
+                                            <div className="px-3 py-2 bg-gray-50" />
                                             {isExpanded && row.items.length === 0 && (
                                               <div className="px-3 py-2 text-[10px] text-gray-400 italic">
                                                 No dated cases in this group.

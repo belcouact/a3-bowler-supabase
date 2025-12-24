@@ -145,10 +145,10 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
           }</td>
           <td>${
             row.achievementRate != null
-              ? `<span class="circle-badge ${
+              ? `<span class="status-pill ${
                   row.achievementRate < (2 / 3) * 100
-                    ? 'circle-badge-fail'
-                    : 'circle-badge-ok'
+                    ? 'status-fail'
+                    : 'status-ok'
                 }">${row.achievementRate.toFixed(0)}%</span>`
               : '—'
           }</td>
@@ -711,7 +711,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
                                         {row.achievementRate != null ? (
                                           <span
                                             className={
-                                              'inline-flex items-center justify-center w-8 h-8 rounded-full text-[10px] font-semibold border ' +
+                                              'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ' +
                                               (row.achievementRate < (2 / 3) * 100
                                                 ? 'bg-red-50 text-red-700 border-red-200'
                                                 : 'bg-green-50 text-green-700 border-green-200')
