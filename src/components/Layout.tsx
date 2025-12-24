@@ -869,7 +869,7 @@ const groupFilterOptions = useMemo(
       }
       const start = parseDate(a3.startDate);
       const end = parseDate(a3.endDate);
-      return !!start && !!end;
+      return !!start || !!end;
     });
 
     if (filtered.length === 0) {
@@ -880,11 +880,13 @@ const groupFilterOptions = useMemo(
     let maxDate: Date | null = null;
 
     filtered.forEach(a3 => {
-      const start = parseDate(a3.startDate);
-      const end = parseDate(a3.endDate);
-      if (!start || !end) {
+      const startRaw = parseDate(a3.startDate);
+      const endRaw = parseDate(a3.endDate);
+      if (!startRaw && !endRaw) {
         return;
       }
+      const start = startRaw || endRaw as Date;
+      const end = endRaw || startRaw as Date;
       if (!minDate || start < minDate) {
         minDate = start;
       }
@@ -921,11 +923,14 @@ const groupFilterOptions = useMemo(
     > = {};
 
     filtered.forEach(a3 => {
-      const start = parseDate(a3.startDate);
-      const end = parseDate(a3.endDate);
-      if (!start || !end) {
+      const startRaw = parseDate(a3.startDate);
+      const endRaw = parseDate(a3.endDate);
+      if (!startRaw && !endRaw) {
         return;
       }
+
+      const start = startRaw || endRaw as Date;
+      const end = endRaw || startRaw as Date;
 
       const groupKey = (a3.group || 'Ungrouped').trim() || 'Ungrouped';
 
@@ -2952,10 +2957,10 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                                   }}
                                                 >
                                                   <div className="flex flex-col items-start min-w-0">
-                                                    <span className="text-gray-900 text-[11px] leading-snug truncate w-full">
+                                                    <span className="text-gray-900 text-[11px] leading-snug truncate w-full text-left">
                                                       {item.title}
                                                     </span>
-                                                    <span className="mt-0.5 text-[10px] text-gray-500 truncate w-full">
+                                                    <span className="mt-0.5 text-[10px] text-gray-500 truncate w-full text-left">
                                                       {item.startDate && item.endDate
                                                         ? `${item.startDate} → ${item.endDate}`
                                                         : item.startDate || item.endDate || ''}
@@ -3054,14 +3059,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                                         );
                                                       }}
                                                     >
-                                                      <div className="flex flex-col items-start max-w-full">
-                                                        <span className="truncate max-w-full">
-                                                          {item.title}
-                                                        </span>
-                                                        <span className="mt-0.5 text-[9px] opacity-80 truncate max-w-full">
-                                                          {item.status || 'Not Started'}
-                                                        </span>
-                                                      </div>
+                                                      <span className="truncate max-w-full">
+                                                        {item.title}
+                                                      </span>
                                                     </button>
                                                   </div>
                                                 </div>
