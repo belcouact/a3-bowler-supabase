@@ -2933,28 +2933,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
 
                                         return (
                                           <div key={row.groupName}>
-                                            <div className="px-3 py-2 bg-gray-50 text-[11px] text-gray-700 font-medium flex items-center justify-between">
-                                              <button
-                                                type="button"
-                                                className="flex items-center gap-1 text-xs text-gray-700 hover:text-gray-900"
-                                                onClick={() => {
-                                                  setA3TimelineExpandedGroups(prev => ({
-                                                    ...prev,
-                                                    [row.groupName]: !(prev[row.groupName] !== false),
-                                                  }));
-                                                }}
-                                              >
-                                                {isExpanded ? (
-                                                  <ChevronDown className="w-3 h-3 text-gray-500" />
-                                                ) : (
-                                                  <ChevronRight className="w-3 h-3 text-gray-500" />
-                                                )}
-                                                <span className="truncate">{row.groupName}</span>
-                                              </button>
-                                              <span className="ml-2 text-[10px] text-gray-400">
-                                                {row.items.length}
-                                              </span>
-                                            </div>
+                                            <div className="px-3 py-2 bg-gray-50 text-[11px] text-gray-700 font-medium flex items-center justify-between" />
                                             {isExpanded && row.items.length === 0 && (
                                               <div className="px-3 py-2 text-[10px] text-gray-400 italic">
                                                 No dated cases in this group.
