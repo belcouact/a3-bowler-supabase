@@ -10,6 +10,7 @@ import { dataService } from '../services/dataService';
 import { useToast } from '../context/ToastContext';
 import { getBowlerStatusColor, isViolation } from '../utils/metricUtils';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { diffDays, addDays, formatDate, getMonthName } from '../utils/dateUtils';
 
 const A3CaseModal = lazy(() => import('./A3CaseModal'));
 const BowlerModal = lazy(() => import('./BowlerModal'));
@@ -120,6 +121,7 @@ const Layout = () => {
     fail2: true,
     fail3: true,
   });
+  const [a3TimelineView, setA3TimelineView] = useState<'week' | 'month'>('month');
 
   const a3PortfolioStats = useMemo(() => {
     const filteredCases = a3PortfolioGroupFilter
@@ -808,6 +810,161 @@ const groupFilterOptions = useMemo(
 
     return filledColumns;
   }, [a3Cases, bowlers, a3PortfolioGroupFilter]);
+
+  const a3Timeline = useMemo(() => {
+    const parseDate = (value?: string) => {
+      if (!value) {
+        return null;
+      }
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) {
+        return null;
+      }
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    };
+
+    const filtered = a3Cases.filter(a3 => {
+      if (a3PortfolioGroupFilter) {
+        const groupKey = (a3.group || 'Ungrouped').trim() || 'Ungrouped';
+        if (groupKey !== a3PortfolioGroupFilter) {
+          return false;
+        }
+      }
+      const start = parseDate(a3.startDate);
+      const end = parseDate(a3.endDate);
+      return !!start && !!end;
+    });
+
+    if (filtered.length === 0) {
+      return null;
+    }
+
+    let minDate: Date | null = null;
+    let maxDate: Date | null = null;
+
+    filtered.forEach(a3 => {
+      const start = parseDate(a3.startDate);
+      const end = parseDate(a3.endDate);
+      if (!start || !end) {
+        return;
+      }
+      if (!minDate || start < minDate) {
+        minDate = start;
+      }
+      if (!maxDate || end > maxDate) {
+        maxDate = end;
+      }
+    });
+
+    if (!minDate || !maxDate) {
+      return null;
+    }
+
+    const timelineStart = minDate as Date;
+    const timelineEnd = maxDate as Date;
+
+    const totalDaysRaw = diffDays(timelineEnd, timelineStart);
+    const totalDays = totalDaysRaw <= 0 ? 1 : totalDaysRaw;
+
+    const groups: Record<
+      string,
+      {
+        groupName: string;
+        items: {
+          id: string;
+          title: string;
+          status: string;
+          priority: string;
+          startDate: string;
+          endDate: string;
+          left: number;
+          width: number;
+        }[];
+      }
+    > = {};
+
+    filtered.forEach(a3 => {
+      const start = parseDate(a3.startDate);
+      const end = parseDate(a3.endDate);
+      if (!start || !end) {
+        return;
+      }
+
+      const groupKey = (a3.group || 'Ungrouped').trim() || 'Ungrouped';
+
+      if (!groups[groupKey]) {
+        groups[groupKey] = {
+          groupName: groupKey,
+          items: [],
+        };
+      }
+
+      const startOffset = diffDays(start, timelineStart);
+      const endOffset = diffDays(end, timelineStart);
+
+      const clampedStart = Math.max(0, Math.min(startOffset, totalDays));
+      const clampedEnd = Math.max(clampedStart + 1, Math.min(endOffset, totalDays));
+
+      const left = (clampedStart / totalDays) * 100;
+      const width = ((clampedEnd - clampedStart) / totalDays) * 100;
+
+      groups[groupKey].items.push({
+        id: a3.id,
+        title: a3.title,
+        status: (a3.status || 'Not Started').trim(),
+        priority: (a3.priority || 'Medium').trim(),
+        startDate: a3.startDate || '',
+        endDate: a3.endDate || '',
+        left,
+        width,
+      });
+    });
+
+    const periods: { key: string; label: string }[] = [];
+
+    if (a3TimelineView === 'month') {
+      const startMonth = new Date(
+        timelineStart.getFullYear(),
+        timelineStart.getMonth(),
+        1,
+      );
+      const endMonth = new Date(
+        timelineEnd.getFullYear(),
+        timelineEnd.getMonth(),
+        1,
+      );
+
+      let current = startMonth;
+      while (current <= endMonth) {
+        periods.push({
+          key: `${current.getFullYear()}-${current.getMonth()}`,
+          label: `${getMonthName(current.getMonth())} ${current.getFullYear()}`,
+        });
+        current = new Date(current.getFullYear(), current.getMonth() + 1, 1);
+      }
+    } else {
+      let current = timelineStart;
+      while (current <= timelineEnd) {
+        periods.push({
+          key: formatDate(current),
+          label: `${current.getDate()} ${getMonthName(current.getMonth())}`,
+        });
+        current = addDays(current, 7);
+      }
+    }
+
+    const rows = Object.values(groups).sort((a, b) =>
+      a.groupName.localeCompare(b.groupName),
+    );
+
+    return {
+      minDate,
+      maxDate,
+      totalDays,
+      periods,
+      rows,
+    };
+  }, [a3Cases, a3PortfolioGroupFilter, a3TimelineView]);
 
   const toggleGroup = (group: string) => {
     setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
@@ -2392,10 +2549,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 ))}
                               </select>
                             </div>
-                          </div>
-
-                          <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-                            <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
+                      </div>
+                      <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                        <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
                               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                                 Metric A3 Coverage
                               </p>
@@ -2573,7 +2729,123 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                               </p>
                             </div>
                           </div>
-
+                          {a3Timeline && (
+                            <div className="mt-6 pt-4 border-t border-gray-200">
+                              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                                <div>
+                                  <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                                    A3 Timeline (Gantt)
+                                  </p>
+                                  <p className="mt-0.5 text-xs text-gray-500">
+                                    View cases on a time axis, grouped by portfolio group.
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[11px] text-gray-500">View by</span>
+                                  <div className="inline-flex rounded-md border border-gray-200 bg-white p-0.5">
+                                    <button
+                                      type="button"
+                                      className={clsx(
+                                        'px-2 py-0.5 text-[11px] rounded-sm',
+                                        a3TimelineView === 'week'
+                                          ? 'bg-blue-600 text-white shadow-sm'
+                                          : 'text-gray-600 hover:bg-gray-50',
+                                      )}
+                                      onClick={() => setA3TimelineView('week')}
+                                    >
+                                      Week
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className={clsx(
+                                        'px-2 py-0.5 text-[11px] rounded-sm',
+                                        a3TimelineView === 'month'
+                                          ? 'bg-blue-600 text-white shadow-sm'
+                                          : 'text-gray-600 hover:bg-gray-50',
+                                      )}
+                                      onClick={() => setA3TimelineView('month')}
+                                    >
+                                      Month
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="mt-3 border border-gray-100 rounded-lg bg-white overflow-hidden">
+                                <div className="border-b border-gray-100 bg-gray-50">
+                                  <div className="grid grid-cols-[120px,1fr] text-[11px] text-gray-500">
+                                    <div className="px-3 py-2 border-r border-gray-100">
+                                      Group
+                                    </div>
+                                    <div className="px-3 py-2">
+                                      <div className="flex items-stretch gap-px">
+                                        {a3Timeline.periods.map(period => (
+                                          <div
+                                            key={period.key}
+                                            className="flex-1 text-center text-[10px] text-gray-500"
+                                          >
+                                            {period.label}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="divide-y divide-gray-100">
+                                  {a3Timeline.rows.map(row => (
+                                    <div
+                                      key={row.groupName}
+                                      className="grid grid-cols-[120px,1fr] text-[11px]"
+                                    >
+                                      <div className="px-3 py-2 border-r border-gray-100 bg-gray-50 text-gray-700 font-medium">
+                                        {row.groupName}
+                                      </div>
+                                      <div className="relative px-3 py-2">
+                                        <div className="absolute inset-y-2 left-3 right-3 pointer-events-none">
+                                          <div className="flex h-full gap-px">
+                                            {a3Timeline.periods.map(period => (
+                                              <div
+                                                key={period.key}
+                                                className="flex-1 border-l border-dashed border-gray-200 last:border-r"
+                                              />
+                                            ))}
+                                          </div>
+                                        </div>
+                                        <div className="relative space-y-1">
+                                          {row.items.map(item => (
+                                            <button
+                                              key={item.id}
+                                              type="button"
+                                              className={clsx(
+                                                'relative inline-flex items-center rounded-sm px-2 py-1 text-[10px] font-medium shadow-sm border',
+                                                'bg-blue-50 border-blue-100 text-blue-700 hover:bg-blue-100',
+                                              )}
+                                              style={{
+                                                left: `${item.left}%`,
+                                                width: `${Math.max(item.width, 2)}%`,
+                                                maxWidth: '100%',
+                                              }}
+                                              onClick={() => {
+                                                navigate(
+                                                  `/a3-analysis/${item.id}/problem-statement`,
+                                                );
+                                              }}
+                                            >
+                                              <span className="truncate">{item.title}</span>
+                                            </button>
+                                          ))}
+                                          {row.items.length === 0 && (
+                                            <p className="text-[10px] text-gray-400 italic">
+                                              No dated cases in this group.
+                                            </p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
                           <div className="mt-6 pt-4 border-t border-gray-200">
                             <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
                               A3 Kanban
