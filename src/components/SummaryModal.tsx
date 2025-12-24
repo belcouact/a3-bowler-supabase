@@ -618,17 +618,18 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
                                       {row.metricName}
                                     </td>
                                     <td className="px-3 py-2 text-gray-700">
-                                      {row.latestMet === null ? (
+                                      {row.latestMet === null || !row.latestActual ? (
                                         <span>—</span>
-                                      ) : row.latestMet ? (
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-50 text-green-700 border border-green-100">
-                                          <span className="mr-1 h-1.5 w-1.5 rounded-full bg-green-500" />
-                                          ok
-                                        </span>
                                       ) : (
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100">
-                                          <span className="mr-1 h-1.5 w-1.5 rounded-full bg-red-500" />
-                                          fail
+                                        <span
+                                          className={
+                                            'inline-flex items-center justify-center w-8 h-8 rounded-full text-[10px] font-semibold border ' +
+                                            (row.latestMet === false
+                                              ? 'bg-red-50 text-red-700 border-red-200'
+                                              : 'bg-green-50 text-green-700 border-green-200')
+                                          }
+                                        >
+                                          {row.latestActual}
                                         </span>
                                       )}
                                     </td>

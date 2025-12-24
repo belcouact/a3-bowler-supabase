@@ -106,6 +106,7 @@ export interface GroupPerformanceRow {
   metricName: string;
   bowlerId?: string;
   latestMet: boolean | null;
+  latestActual: string | null;
   fail2: boolean;
   fail3: boolean;
   achievementRate: number | null;

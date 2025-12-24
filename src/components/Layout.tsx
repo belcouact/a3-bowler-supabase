@@ -351,16 +351,7 @@ const Layout = () => {
 
     if (groupNames.length === 0) return [];
 
-    const rows: {
-      groupName: string;
-      metricId: string;
-      metricName: string;
-      bowlerId?: string;
-      latestMet: boolean | null;
-      fail2: boolean;
-      fail3: boolean;
-      achievementRate: number | null;
-    }[] = [];
+    const rows: GroupPerformanceRow[] = [];
 
     const isValuePresent = (value: unknown) => {
       if (value === null || value === undefined) return false;
@@ -390,6 +381,7 @@ const Layout = () => {
             metricName: metric.name,
             bowlerId: metricOwnerById[metric.id],
             latestMet: null,
+            latestActual: null,
             fail2: false,
             fail3: false,
             achievementRate: null,
@@ -402,9 +394,11 @@ const Layout = () => {
         const latest3Months = months.slice(-3);
 
         let latestMet: boolean | null = null;
+        let latestActual: string | null = null;
         const latestData = monthly[latestMonth];
         if (hasDataAndTarget(latestData)) {
           latestMet = !isViolation(metric.targetMeetingRule, latestData.target, latestData.actual);
+          latestActual = `${latestData.actual}`;
         }
 
         let fail2 = false;
@@ -453,6 +447,7 @@ const Layout = () => {
           metricName: metric.name,
           bowlerId: metricOwnerById[metric.id],
           latestMet,
+          latestActual,
           fail2,
           fail3,
           achievementRate,
@@ -2564,17 +2559,18 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                         </button>
                                       </td>
                                       <td className="px-3 py-2 text-gray-700">
-                                        {row.latestMet === null ? (
+                                        {row.latestMet === null || !row.latestActual ? (
                                           <span>—</span>
-                                        ) : row.latestMet ? (
-                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-50 text-green-700 border border-green-100">
-                                            <span className="mr-1 h-1.5 w-1.5 rounded-full bg-green-500" />
-                                            ok
-                                          </span>
                                         ) : (
-                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100">
-                                            <span className="mr-1 h-1.5 w-1.5 rounded-full bg-red-500" />
-                                            fail
+                                          <span
+                                            className={clsx(
+                                              'inline-flex items-center justify-center w-8 h-8 rounded-full text-[10px] font-semibold border',
+                                              row.latestMet === false
+                                                ? 'bg-red-50 text-red-700 border-red-200'
+                                                : 'bg-green-50 text-green-700 border-green-200',
+                                            )}
+                                          >
+                                            {row.latestActual}
                                           </span>
                                         )}
                                       </td>
@@ -2605,7 +2601,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                               0
                                             </span>
                                           ) : (
-                                            <span>{linkedA3Count}</span>
+                                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-semibold bg-green-50 text-green-700 border border-green-200">
+                                              {linkedA3Count}
+                                            </span>
                                           )
                                         ) : (
                                           <span>—</span>
@@ -3012,56 +3010,44 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                               row.items.map(item => (
                                                 <div
                                                   key={item.id}
-                                                  className="relative px-3 py-2 text-[11px] flex items-center gap-2"
+                                                  className="relative px-3 py-2 text-[11px]"
                                                 >
-                                                  <div className="w-40 shrink-0">
-                                                    <div className="truncate text-gray-800">
-                                                      {item.title}
-                                                    </div>
-                                                    <div className="mt-0.5 text-[10px] text-gray-400">
-                                                      {item.startDate && item.endDate
-                                                        ? `${item.startDate} → ${item.endDate}`
-                                                        : item.startDate || item.endDate || ''}
+                                                  <div className="absolute inset-y-2 left-0 right-0 pointer-events-none">
+                                                    <div className="flex h-full gap-px">
+                                                      {a3Timeline.periods.map(period => (
+                                                        <div
+                                                          key={period.key}
+                                                          className="flex-1 border-l border-dashed border-gray-200 last:border-r"
+                                                        />
+                                                      ))}
                                                     </div>
                                                   </div>
-                                                  <div className="relative flex-1">
-                                                    <div className="absolute inset-y-2 left-0 right-0 pointer-events-none">
-                                                      <div className="flex h-full gap-px">
-                                                        {a3Timeline.periods.map(period => (
-                                                          <div
-                                                            key={period.key}
-                                                            className="flex-1 border-l border-dashed border-gray-200 last:border-r"
-                                                          />
-                                                        ))}
-                                                      </div>
-                                                    </div>
-                                                    <div className="relative">
-                                                      <button
-                                                        type="button"
-                                                        className={clsx(
-                                                          'relative inline-flex items-center justify-center rounded-sm px-2 py-1 text-[10px] font-medium shadow-sm border border-opacity-20 text-white overflow-hidden text-center',
-                                                          item.status === 'Completed'
-                                                            ? 'bg-green-500 border-green-700'
-                                                            : item.status === 'In Progress'
-                                                            ? 'bg-blue-500 border-blue-700'
-                                                            : 'bg-gray-400 border-gray-600',
-                                                        )}
-                                                        style={{
-                                                          left: `${item.left}%`,
-                                                          width: `${Math.max(item.width, 2)}%`,
-                                                          maxWidth: '100%',
-                                                        }}
-                                                        onClick={() => {
-                                                          navigate(
-                                                            `/a3-analysis/${item.id}/problem-statement`,
-                                                          );
-                                                        }}
-                                                      >
-                                                        <span className="truncate">
-                                                          {item.status || 'Not Started'}
-                                                        </span>
-                                                      </button>
-                                                    </div>
+                                                  <div className="relative">
+                                                    <button
+                                                      type="button"
+                                                      className={clsx(
+                                                        'relative inline-flex items-center justify-center rounded-sm px-2 py-1 text-[10px] font-medium shadow-sm border border-opacity-20 text-white overflow-hidden text-center',
+                                                        item.status === 'Completed'
+                                                          ? 'bg-green-500 border-green-700'
+                                                          : item.status === 'In Progress'
+                                                          ? 'bg-blue-500 border-blue-700'
+                                                          : 'bg-gray-400 border-gray-600',
+                                                      )}
+                                                      style={{
+                                                        left: `${item.left}%`,
+                                                        width: `${Math.max(item.width, 2)}%`,
+                                                        maxWidth: '100%',
+                                                      }}
+                                                      onClick={() => {
+                                                        navigate(
+                                                          `/a3-analysis/${item.id}/problem-statement`,
+                                                        );
+                                                      }}
+                                                    >
+                                                      <span className="truncate">
+                                                        {item.status || 'Not Started'}
+                                                      </span>
+                                                    </button>
                                                   </div>
                                                 </div>
                                               ))}
