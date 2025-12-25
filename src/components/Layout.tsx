@@ -2351,7 +2351,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       Integrated View
                     </h2>
                     <p className="mt-0.5 text-xs text-gray-500">
-                      Switch between Bowler metrics and A3 portfolio dashboard.
+                      Connect underperforming Bowler metrics to A3 problem solving.
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -2385,25 +2385,27 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                         type="button"
                         onClick={() => setPortfolioTab('bowler')}
                         className={clsx(
-                          'whitespace-nowrap py-2 px-1 border-b-2 text-xs md:text-sm font-medium',
+                          'whitespace-nowrap py-2 px-1 border-b-2 text-xs md:text-sm font-medium inline-flex items-center gap-1.5',
                           portfolioTab === 'bowler'
                             ? 'border-blue-500 text-blue-600'
                             : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
                         )}
                       >
-                        Bowler Overview
+                        <TrendingUp className="w-3 h-3 md:w-4 md:h-4" />
+                        <span>Bowler Overview</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => setPortfolioTab('a3')}
                         className={clsx(
-                          'whitespace-nowrap py-2 px-1 border-b-2 text-xs md:text-sm font-medium',
+                          'whitespace-nowrap py-2 px-1 border-b-2 text-xs md:text-sm font-medium inline-flex items-center gap-1.5',
                           portfolioTab === 'a3'
                             ? 'border-blue-500 text-blue-600'
                             : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
                         )}
                       >
-                        A3 Portfolio
+                        <Layers className="w-3 h-3 md:w-4 md:h-4" />
+                        <span>A3 Portfolio</span>
                       </button>
                     </nav>
                   </div>
@@ -2652,7 +2654,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                         <>
                           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                             <div className="text-xs text-gray-500">
-                              Filter the A3 dashboard by portfolio group.
+                              Filter A3 pby portfolio group.
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-[11px] text-gray-500">Group</span>
@@ -2670,7 +2672,12 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                               </select>
                             </div>
                       </div>
-                      <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                      <div className="mt-4">
+                        <p className="text-xs font-semibold tracking-wide text-gray-600 uppercase">
+                          A3 Dashboard
+                        </p>
+                      </div>
+                      <div className="mt-2 pt-4 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                         <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
                               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                                 Metric A3 Coverage
