@@ -108,7 +108,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     // Clear any existing timeout
     if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
 
-    // Set 30s timeout
+    // Set 60s timeout
     loadingTimeoutRef.current = setTimeout(() => {
         if (isMountedRef.current) {
             setIsLoading(false);
@@ -120,7 +120,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                 }
             });
         }
-    }, 30000);
+    }, 60000);
 
     // 1. Try Local Storage / IndexedDB (Instant)
     const localDataKey = `user_data_${username}`;

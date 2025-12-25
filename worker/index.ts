@@ -294,18 +294,29 @@ export default {
 
         // List keys for the user
         // Ensure we are reading data that was written with the same userId
-        const bowlerList = await env.BOWLER_DATA.list({ prefix: `user:${userId}:bowler:` });
-        for (const key of bowlerList.keys) {
-          const value = await env.BOWLER_DATA.get(key.name);
-          if (value) {
-            const data = JSON.parse(value);
-            
-            // Verify userId matches (though key prefix ensures this)
-            if (data.userId === userId || data.userAccountId === userId) {
-                bowlers.push(data);
-            } else {
-                // Fallback for old data or mismatch, still push if we trust the key
-                bowlers.push(data); 
+        const bowlerListPromise = env.BOWLER_DATA.list({ prefix: `user:${userId}:bowler:` });
+        const a3ListPromise = env.BOWLER_DATA.list({ prefix: `user:${userId}:a3:` });
+
+        const [bowlerList, a3List] = await Promise.all([bowlerListPromise, a3ListPromise]);
+
+        const bowlerKeys = bowlerList.keys.map((k: any) => k.name);
+        const a3Keys = a3List.keys.map((k: any) => k.name);
+
+        const batchSize = 32;
+
+        for (let i = 0; i < bowlerKeys.length; i += batchSize) {
+          const slice = bowlerKeys.slice(i, i + batchSize);
+          const batch = await Promise.all(
+            slice.map(name => env.BOWLER_DATA.get(name, 'json' as any))
+          );
+          for (const data of batch) {
+            if (data && typeof data === 'object') {
+              const record: any = data;
+              if (record.userId === userId || record.userAccountId === userId) {
+                bowlers.push(record);
+              } else {
+                bowlers.push(record);
+              }
             }
           }
         }
@@ -317,16 +328,19 @@ export default {
             return orderA - orderB;
         });
 
-        const a3List = await env.BOWLER_DATA.list({ prefix: `user:${userId}:a3:` });
-        for (const key of a3List.keys) {
-          const value = await env.BOWLER_DATA.get(key.name);
-          if (value) {
-            const data = JSON.parse(value);
-             // Verify userId matches
-            if (data.userId === userId || data.userAccountId === userId) {
-                a3Cases.push(data);
-            } else {
-                 a3Cases.push(data);
+        for (let i = 0; i < a3Keys.length; i += batchSize) {
+          const slice = a3Keys.slice(i, i + batchSize);
+          const batch = await Promise.all(
+            slice.map(name => env.BOWLER_DATA.get(name, 'json' as any))
+          );
+          for (const data of batch) {
+            if (data && typeof data === 'object') {
+              const record: any = data;
+              if (record.userId === userId || record.userAccountId === userId) {
+                a3Cases.push(record);
+              } else {
+                a3Cases.push(record);
+              }
             }
           }
         }
