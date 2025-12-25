@@ -1,8 +1,5 @@
-// This service will interact with the Cloudflare Worker to save/load data
-// Since the worker URL is not yet deployed, we will use a placeholder or assume a local development URL
-// You should update this URL when you deploy the worker.
-
 const API_BASE_URL = 'https://bowler-worker.study-llm.me';
+const EMAIL_API_BASE_URL = 'https://email-worker.study-llm.me';
 
 export const dataService = {
   async saveData(
@@ -87,6 +84,28 @@ export const dataService = {
 
     if (!response.ok) {
       throw new Error('Failed to consolidate bowlers');
+    }
+
+    return response.json();
+  },
+
+  async scheduleEmail(options: {
+    userId?: string;
+    recipients: string[];
+    subject: string;
+    body: string;
+    sendAt: string;
+  }) {
+    const response = await fetch(`${EMAIL_API_BASE_URL}/schedule-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(options),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to schedule email');
     }
 
     return response.json();

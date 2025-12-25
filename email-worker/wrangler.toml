@@ -1,0 +1,16 @@
+name = "email-sender-worker"
+main = "index.ts"
+compatibility_date = "2023-10-02"
+
+routes = [
+	{ pattern = "email-worker.study-llm.me", custom_domain = true }
+]
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[[kv_namespaces]]
+binding = "EMAIL_JOBS"
+id = "REPLACE_WITH_REAL_KV_ID"
+preview_id = "REPLACE_WITH_REAL_KV_ID"
+

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Lock, CreditCard, Check, RefreshCw } from 'lucide-react';
+import { X, Lock, CreditCard, Check, RefreshCw, Mail } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
 import { useToast } from '../context/ToastContext';
+import { dataService } from '../services/dataService';
 
 interface AccountSettingsModalProps {
   isOpen: boolean;
@@ -12,8 +13,9 @@ interface AccountSettingsModalProps {
 export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOpen, onClose }) => {
   const { user, refreshUser } = useAuth();
   const toast = useToast();
-  const [activeTab, setActiveTab] = useState<'password' | 'profile'>('password');
+  const [activeTab, setActiveTab] = useState<'password' | 'profile' | 'email'>('password');
   const [isLoading, setIsLoading] = useState(false);
+  const [isScheduling, setIsScheduling] = useState(false);
 
   // Password State
   const [currentPassword, setCurrentPassword] = useState('');
@@ -27,6 +29,12 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
   const [team, setTeam] = useState('GBS');
   const [isPublic, setIsPublic] = useState(true);
 
+  // Email Schedule State
+  const [emailRecipients, setEmailRecipients] = useState('');
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailBody, setEmailBody] = useState('');
+  const [emailSendAt, setEmailSendAt] = useState('');
+
   useEffect(() => {
     if (user) {
       setRole(user.role || '');
@@ -34,6 +42,9 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
       setPlant(user.plant || 'SZFTZ');
       setTeam(user.team || 'GBS');
       setIsPublic(user.isPublicProfile !== undefined ? user.isPublicProfile : true);
+      if (user.email) {
+        setEmailRecipients(user.email);
+      }
     }
   }, [user, isOpen]);
 
@@ -109,6 +120,56 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
     }
   };
 
+  const handleScheduleEmail = async () => {
+    const recipients = emailRecipients
+      .split(/[,\n]/)
+      .map(r => r.trim())
+      .filter(r => r.length > 0);
+
+    if (recipients.length === 0) {
+      toast.error('Please enter at least one recipient email');
+      return;
+    }
+
+    if (!emailSubject.trim()) {
+      toast.error('Please enter an email subject');
+      return;
+    }
+
+    if (!emailBody.trim()) {
+      toast.error('Please enter an email body');
+      return;
+    }
+
+    if (!emailSendAt) {
+      toast.error('Please choose a send date and time');
+      return;
+    }
+
+    const sendAtDate = new Date(emailSendAt);
+    if (Number.isNaN(sendAtDate.getTime())) {
+      toast.error('Please enter a valid date and time');
+      return;
+    }
+
+    setIsScheduling(true);
+    try {
+      const userId = user?.username || undefined;
+      await dataService.scheduleEmail({
+        userId,
+        recipients,
+        subject: emailSubject.trim(),
+        body: emailBody.trim(),
+        sendAt: sendAtDate.toISOString(),
+      });
+      toast.success('Email scheduled successfully');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to schedule email');
+    } finally {
+      setIsScheduling(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[70] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
       <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -126,7 +187,6 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
             </button>
           </div>
 
-          {/* Tabs */}
           <div className="flex border-b border-gray-200">
             <button
               className={`flex-1 py-3 text-sm font-medium text-center flex items-center justify-center space-x-2 ${activeTab === 'password' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
@@ -141,6 +201,13 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
             >
               <CreditCard className="w-4 h-4" />
               <span>Profile</span>
+            </button>
+            <button
+              className={`flex-1 py-3 text-sm font-medium text-center flex items-center justify-center space-x-2 ${activeTab === 'email' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              onClick={() => setActiveTab('email')}
+            >
+              <Mail className="w-4 h-4" />
+              <span>Email</span>
             </button>
           </div>
 
@@ -160,7 +227,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
                </button>
             </div>
 
-            {activeTab === 'password' ? (
+            {activeTab === 'password' && (
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Current Password</label>
@@ -202,7 +269,9 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
                   </div>
                 </div>
               </div>
-            ) : (
+            )}
+
+            {activeTab === 'profile' && (
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Role</label>
@@ -257,8 +326,8 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
                       <option value="SC">SC</option>
                       <option value="Technical">Technical</option>
                     </select>
-                  </div>
-                
+                </div>
+
                 <div className="pt-2">
                     <div className="border border-gray-200 rounded-md p-4 flex items-center justify-between">
                         <div>
@@ -278,28 +347,88 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
                 </div>
               </div>
             )}
+
+            {activeTab === 'email' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Recipients</label>
+                  <textarea
+                    value={emailRecipients}
+                    onChange={(e) => setEmailRecipients(e.target.value)}
+                    rows={2}
+                    placeholder="user1@example.com, user2@example.com"
+                    className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                  />
+                  <p className="mt-1 text-xs text-gray-400">
+                    Separate multiple emails with commas or new lines.
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Subject</label>
+                  <input
+                    type="text"
+                    value={emailSubject}
+                    onChange={(e) => setEmailSubject(e.target.value)}
+                    placeholder="Weekly A3 / metric summary"
+                    className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Send At</label>
+                  <input
+                    type="datetime-local"
+                    value={emailSendAt}
+                    onChange={(e) => setEmailSendAt(e.target.value)}
+                    className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Message</label>
+                  <textarea
+                    value={emailBody}
+                    onChange={(e) => setEmailBody(e.target.value)}
+                    rows={4}
+                    placeholder="Add the summary or message you want to email."
+                    className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Footer */}
           <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            {activeTab === 'password' ? (
-                <button
+            {activeTab === 'password' && (
+              <button
                 type="button"
                 className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
                 onClick={handleUpdatePassword}
                 disabled={isLoading}
-                >
+              >
                 {isLoading ? 'Updating...' : 'Update Password'}
-                </button>
-            ) : (
-                 <button
+              </button>
+            )}
+
+            {activeTab === 'profile' && (
+              <button
                 type="button"
                 className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
                 onClick={handleUpdateProfile}
                 disabled={isLoading}
-                >
+              >
                 {isLoading ? 'Saving...' : 'Save Profile'}
-                </button>
+              </button>
+            )}
+
+            {activeTab === 'email' && (
+              <button
+                type="button"
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                onClick={handleScheduleEmail}
+                disabled={isScheduling}
+              >
+                {isScheduling ? 'Scheduling...' : 'Schedule Email'}
+              </button>
             )}
             
             <button
