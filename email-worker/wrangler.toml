@@ -11,6 +11,6 @@ crons = ["*/5 * * * *"]
 
 [[kv_namespaces]]
 binding = "EMAIL_JOBS"
-id = "REPLACE_WITH_REAL_KV_ID"
-preview_id = "REPLACE_WITH_REAL_KV_ID"
+id = "ee95c68527e74031a4af461974e7f1b8"
+preview_id = "ee95c68527e74031a4af461974e7f1b8"
 

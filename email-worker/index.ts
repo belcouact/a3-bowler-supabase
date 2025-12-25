@@ -49,87 +49,94 @@ const sendEmailWithResend = async (env: Env, job: ScheduledEmailJob) => {
 
 export default {
   async fetch(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
-    const url = new URL(request.url);
-
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     };
 
-    if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders });
-    }
-
-    if (request.method === 'POST' && url.pathname === '/schedule-email') {
-      try {
-        const data = (await request.json()) as {
-          userId?: string;
-          recipients: string[];
-          subject: string;
-          body: string;
-          sendAt: string;
-        };
-
-        const { userId, recipients, subject, body, sendAt } = data;
-
-        if (!Array.isArray(recipients) || recipients.length === 0) {
-          return new Response(
-            JSON.stringify({ success: false, error: 'At least one recipient is required' }),
-            {
-              status: 400,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            },
-          );
-        }
-
-        if (!subject || !body) {
-          return new Response(
-            JSON.stringify({ success: false, error: 'Subject and body are required' }),
-            {
-              status: 400,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            },
-          );
-        }
-
-        const sendAtMs = Date.parse(sendAt);
-        if (Number.isNaN(sendAtMs)) {
-          return new Response(
-            JSON.stringify({ success: false, error: 'sendAt must be a valid date/time string' }),
-            {
-              status: 400,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            },
-          );
-        }
-
-        const id = createId('email');
-
-        const job: ScheduledEmailJob = {
-          id,
-          userId: userId || null,
-          recipients,
-          subject,
-          body,
-          sendAt: sendAtMs,
-          sent: false,
-        };
-
-        await env.EMAIL_JOBS.put(`email:${id}`, JSON.stringify(job));
-
-        return new Response(JSON.stringify({ success: true, id }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      } catch (err: any) {
-        return new Response(JSON.stringify({ success: false, error: err.message || String(err) }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+    try {
+      if (request.method === 'OPTIONS') {
+        return new Response(null, { headers: corsHeaders });
       }
-    }
 
-    return new Response('Not Found', { status: 404, headers: corsHeaders });
+      const url = new URL(request.url);
+
+      if (request.method === 'POST' && url.pathname === '/schedule-email') {
+        try {
+          const data = (await request.json()) as {
+            userId?: string;
+            recipients: string[];
+            subject: string;
+            body: string;
+            sendAt: string;
+          };
+
+          const { userId, recipients, subject, body, sendAt } = data;
+
+          if (!Array.isArray(recipients) || recipients.length === 0) {
+            return new Response(
+              JSON.stringify({ success: false, error: 'At least one recipient is required' }),
+              {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              },
+            );
+          }
+
+          if (!subject || !body) {
+            return new Response(
+              JSON.stringify({ success: false, error: 'Subject and body are required' }),
+              {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              },
+            );
+          }
+
+          const sendAtMs = Date.parse(sendAt);
+          if (Number.isNaN(sendAtMs)) {
+            return new Response(
+              JSON.stringify({ success: false, error: 'sendAt must be a valid date/time string' }),
+              {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              },
+            );
+          }
+
+          const id = createId('email');
+
+          const job: ScheduledEmailJob = {
+            id,
+            userId: userId || null,
+            recipients,
+            subject,
+            body,
+            sendAt: sendAtMs,
+            sent: false,
+          };
+
+          await env.EMAIL_JOBS.put(`email:${id}`, JSON.stringify(job));
+
+          return new Response(JSON.stringify({ success: true, id }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (err: any) {
+          return new Response(JSON.stringify({ success: false, error: err.message || String(err) }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
+      return new Response('Not Found', { status: 404, headers: corsHeaders });
+    } catch (err: any) {
+      return new Response(JSON.stringify({ success: false, error: err.message || String(err) }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
   },
 
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
@@ -177,4 +184,3 @@ export default {
     }
   },
 };
-
