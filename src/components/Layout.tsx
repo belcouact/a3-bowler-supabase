@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { dataService } from '../services/dataService';
 import { useToast } from '../context/ToastContext';
-import { getBowlerStatusColor, isViolation } from '../utils/metricUtils';
+import { getBowlerStatusColor, computeGroupPerformanceTableData } from '../utils/metricUtils';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { diffDays, addDays, formatDate, getMonthName } from '../utils/dateUtils';
 
@@ -328,148 +328,7 @@ const Layout = () => {
   );
 
   const groupPerformanceTableData = useMemo<GroupPerformanceRow[]>(() => {
-    const groupToMetrics: Record<string, Metric[]> = {};
-    const metricOwnerById: Record<string, string> = {};
-
-    bowlers.forEach(bowler => {
-      const groupName = (bowler.group || 'Ungrouped').trim() || 'Ungrouped';
-      const metrics = bowler.metrics || [];
-
-      metrics.forEach(metric => {
-        if (!metric || !metric.monthlyData || Object.keys(metric.monthlyData).length === 0) {
-          return;
-        }
-
-        metricOwnerById[metric.id] = bowler.id;
-
-        if (!groupToMetrics[groupName]) {
-          groupToMetrics[groupName] = [];
-        }
-        groupToMetrics[groupName].push(metric);
-      });
-    });
-
-    const groupNames = Object.keys(groupToMetrics).sort();
-
-    if (groupNames.length === 0) return [];
-
-    const rows: GroupPerformanceRow[] = [];
-
-    const isValuePresent = (value: unknown) => {
-      if (value === null || value === undefined) return false;
-      if (typeof value === 'string') return value.trim() !== '';
-      return true;
-    };
-
-    const hasDataAndTarget = (data: { actual?: unknown; target?: unknown } | undefined) =>
-      !!data && isValuePresent(data.actual) && isValuePresent(data.target);
-
-    groupNames.forEach(groupName => {
-      const metrics = groupToMetrics[groupName] || [];
-
-      metrics.forEach(metric => {
-        const monthly = metric.monthlyData || {};
-        const months = Object.keys(monthly)
-          .filter(month => {
-            const data = monthly[month];
-            return hasDataAndTarget(data);
-          })
-          .sort();
-
-        let latestMet: boolean | null = null;
-        let latestActual: string | null = null;
-        let fail2 = false;
-        let fail3 = false;
-        let achievementRate: number | null = null;
-        let linkedA3Count = 0;
-
-        if (months.length > 0) {
-          const latestMonth = months[months.length - 1];
-          const latest2Months = months.slice(-2);
-          const latest3Months = months.slice(-3);
-
-          const latestData = monthly[latestMonth];
-          if (hasDataAndTarget(latestData)) {
-            latestMet = !isViolation(
-              metric.targetMeetingRule,
-              latestData.target,
-              latestData.actual,
-            );
-            latestActual = `${latestData.actual}`;
-          }
-
-          if (latest2Months.length === 2) {
-            let allFail2 = true;
-            for (const month of latest2Months) {
-              const data = monthly[month];
-              if (
-                !hasDataAndTarget(data) ||
-                !isViolation(metric.targetMeetingRule, data.target, data.actual)
-              ) {
-                allFail2 = false;
-                break;
-              }
-            }
-            fail2 = allFail2;
-          }
-
-          if (latest3Months.length === 3) {
-            let allFail3 = true;
-            for (const month of latest3Months) {
-              const data = monthly[month];
-              if (
-                !hasDataAndTarget(data) ||
-                !isViolation(metric.targetMeetingRule, data.target, data.actual)
-              ) {
-                allFail3 = false;
-                break;
-              }
-            }
-            fail3 = allFail3;
-          }
-
-          let totalPoints = 0;
-          let metPoints = 0;
-          months.forEach(month => {
-            const data = monthly[month];
-            if (!hasDataAndTarget(data)) return;
-            totalPoints += 1;
-            const violation = isViolation(
-              metric.targetMeetingRule,
-              data.target,
-              data.actual,
-            );
-            if (!violation) {
-              metPoints += 1;
-            }
-          });
-
-          achievementRate = totalPoints > 0 ? (metPoints / totalPoints) * 100 : null;
-
-          const isAtRisk = fail2 || fail3;
-          if (isAtRisk) {
-            linkedA3Count = a3Cases.filter(c =>
-              (c.linkedMetricIds || []).includes(metric.id),
-            ).length;
-          }
-        }
-
-        rows.push({
-          groupName,
-          metricId: metric.id,
-          metricName: metric.name,
-          bowlerId: metricOwnerById[metric.id],
-          latestMet,
-          latestActual,
-          fail2,
-          fail3,
-          achievementRate,
-          linkedA3Count,
-        });
-      });
-    });
-
-    return rows;
+    return computeGroupPerformanceTableData(bowlers, a3Cases);
   }, [bowlers, a3Cases]);
 
   const metricA3Coverage = useMemo(
@@ -1390,10 +1249,374 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
         }
       };
 
+      const buildEmailHtml = (raw: string) => {
+        try {
+          const clean = raw.replace(/```json/g, '').replace(/```/g, '').trim();
+          const parsed = JSON.parse(clean) as {
+            executiveSummary?: string;
+            a3Summary?: string;
+            areasOfConcern?: {
+              metricName: string;
+              groupName: string;
+              issue: string;
+              suggestion: string;
+            }[];
+          };
+
+          if (!parsed || !parsed.executiveSummary || !Array.isArray(parsed.areasOfConcern)) {
+            return '';
+          }
+
+          const escapeHtml = (value: string) =>
+            value
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#039;');
+
+          const executive = escapeHtml(parsed.executiveSummary);
+          const a3Summary =
+            parsed.a3Summary && parsed.a3Summary.trim() !== ''
+              ? `<section class="card card-a3">
+  <h2 class="card-title">A3 Problem Solving Summary</h2>
+  <p>${escapeHtml(parsed.a3Summary)}</p>
+</section>`
+              : '';
+
+          const statsTableHtml =
+            groupPerformanceTableData.length > 0
+              ? `<section class="card card-stats">
+  <h2 class="card-title">Portfolio Statistical Table</h2>
+  <div class="table-wrapper">
+    <table class="stats-table">
+      <thead>
+        <tr>
+          <th>Group</th>
+          <th>Metric</th>
+          <th>Latest month</th>
+          <th>Last 2 months</th>
+          <th>Last 3 months</th>
+          <th>Linked A3s</th>
+          <th>Overall target achieving %</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${groupPerformanceTableData
+          .map(
+            row => `<tr>
+          <td>${escapeHtml(row.groupName)}</td>
+          <td>${escapeHtml(row.metricName)}</td>
+          <td>${
+            row.latestMet === null || !row.latestActual
+              ? '—'
+              : `<span class="status-pill ${
+                  row.latestMet === false ? 'status-fail' : 'status-ok'
+                }">${escapeHtml(row.latestActual)}</span>`
+          }</td>
+          <td>${
+            row.fail2
+              ? '<span class="status-pill status-warn"><span class="status-dot"></span>Failing</span>'
+              : '—'
+          }</td>
+          <td>${
+            row.fail3
+              ? '<span class="status-pill status-fail"><span class="status-dot"></span>Failing</span>'
+              : '—'
+          }</td>
+          <td>${
+            row.fail2 || row.fail3
+              ? row.linkedA3Count === 0
+                ? '<span class="circle-badge circle-badge-fail">0</span>'
+                : `<span class="circle-badge circle-badge-ok">${row.linkedA3Count}</span>`
+              : '—'
+          }</td>
+          <td>${
+            row.achievementRate != null
+              ? `<span class="status-pill ${
+                  row.achievementRate < (2 / 3) * 100
+                    ? 'status-fail'
+                    : 'status-ok'
+                }">${row.achievementRate.toFixed(0)}%</span>`
+              : '—'
+          }</td>
+        </tr>`,
+          )
+          .join('')}
+      </tbody>
+    </table>
+  </div>
+</section>`
+              : '';
+
+          const concernsHtml =
+            parsed.areasOfConcern.length > 0
+              ? parsed.areasOfConcern
+                  .map(
+                    area => `<div class="concern-card">
+  <div class="concern-header">
+    <span class="concern-metric">${escapeHtml(area.metricName)}</span>
+    <span class="concern-group">${escapeHtml(area.groupName)}</span>
+  </div>
+  <p class="concern-issue">${escapeHtml(area.issue)}</p>
+  <p class="concern-suggestion">${escapeHtml(area.suggestion)}</p>
+</div>`,
+                  )
+                  .join('')
+              : '<p class="empty-text">No major areas of concern identified. Keep up the good work!</p>';
+
+          const html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Smart Summary & Insights</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --card-bg: #ffffff;
+      --primary: #4f46e5;
+      --primary-soft: #eef2ff;
+      --border-subtle: #e5e7eb;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --danger: #b91c1c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      background: var(--bg);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text-main);
+    }
+    .summary-root {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .summary-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-radius: 16px;
+      background: linear-gradient(90deg, #eef2ff, #ffffff);
+      border: 1px solid #e0e7ff;
+      margin-bottom: 20px;
+    }
+    .summary-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0;
+    }
+    .summary-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #ecfdf3;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+      font-size: 11px;
+      font-weight: 500;
+      margin-top: 4px;
+    }
+    .summary-tag span {
+      margin-left: 4px;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border-subtle);
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+    }
+    .card-executive {
+      background: linear-gradient(135deg, #eef2ff, #ffffff);
+      border-color: #e0e7ff;
+    }
+    .card-a3 {
+      background: linear-gradient(135deg, #eff6ff, #ffffff);
+      border-color: #bfdbfe;
+    }
+    .card-title {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .card p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
+    .card-concerns {
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+    .concern-card {
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #fee2e2;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .concern-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .concern-metric {
+      font-size: 13px;
+      font-weight: 700;
+      margin-right: 6px;
+      color: #111827;
+    }
+    .concern-group {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      color: #4b5563;
+    }
+    .concern-issue {
+      font-size: 13px;
+      color: var(--danger);
+      font-weight: 500;
+      margin: 0 0 4px 0;
+    }
+    .concern-suggestion {
+      font-size: 13px;
+      color: #4b5563;
+      margin: 0;
+      font-style: italic;
+    }
+    .empty-text {
+      font-size: 13px;
+      color: #9ca3af;
+      font-style: italic;
+    }
+    .table-wrapper {
+      overflow-x: auto;
+      margin-top: 8px;
+    }
+    .stats-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .stats-table th,
+    .stats-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+    }
+    .stats-table thead th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: #4b5563;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 500;
+      border: 1px solid transparent;
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      margin-right: 4px;
+      background: currentColor;
+    }
+    .status-ok {
+      background: #ecfdf3;
+      color: #166534;
+      border-color: #bbf7d0;
+    }
+    .status-fail {
+      background: #fef2f2;
+      color: #b91c1c;
+      border-color: #fecaca;
+    }
+    .status-warn {
+      background: #fffbeb;
+      color: #92400e;
+      border-color: #fed7aa;
+    }
+    .circle-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid transparent;
+    }
+    .circle-badge-ok {
+      background: #ecfdf3;
+      color: #166534;
+      border-color: #bbf7d0;
+    }
+    .circle-badge-fail {
+      background: #fef2f2;
+      color: #b91c1c;
+      border-color: #fecaca;
+    }
+    @media (max-width: 640px) {
+      body { padding: 16px; }
+      .summary-header { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="summary-root">
+    <header class="summary-header">
+      <div>
+        <h1 class="summary-title">Smart Summary & Insights</h1>
+        <div class="summary-tag">
+          <span>Consecutive Failing Metrics Focus</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="card card-executive">
+      <h2 class="card-title">Executive Overview</h2>
+      <p>${executive}</p>
+    </section>
+
+    ${statsTableHtml}
+
+    ${a3Summary}
+
+    <section class="card card-concerns">
+      <h2 class="card-title">Areas of Concern & Recommendations</h2>
+      ${concernsHtml}
+    </section>
+  </div>
+</body>
+</html>`;
+
+          return html;
+        } catch {
+          return '';
+        }
+      };
+
       const emailSummary = buildEmailSummary(summary);
+      const emailHtml = buildEmailHtml(summary);
+
       setDashboardSettings({
         ...dashboardSettings,
         latestSummaryForEmail: emailSummary,
+        latestSummaryHtmlForEmail: emailHtml || undefined,
       });
     } catch (error) {
       console.error('Summary generation error:', error);

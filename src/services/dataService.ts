@@ -94,6 +94,7 @@ export const dataService = {
     recipients: string[];
     subject: string;
     body: string;
+    bodyHtml?: string;
     sendAt: string;
   }) {
     const response = await fetch(`${EMAIL_API_BASE_URL}/schedule-email`, {
@@ -125,6 +126,7 @@ export const dataService = {
     recipients: string[];
     subject: string;
     body: string;
+    bodyHtml?: string;
   }) {
     const response = await fetch(`${EMAIL_API_BASE_URL}/send-email-now`, {
       method: 'POST',

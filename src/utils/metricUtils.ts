@@ -1,4 +1,4 @@
-import { Bowler, Metric } from '../types';
+import { Bowler, Metric, A3Case, GroupPerformanceRow } from '../types';
 
 export const isViolation = (
   rule: 'gte' | 'lte' | 'within_range' | undefined,
@@ -133,4 +133,158 @@ export const getBowlerStatusColor = (bowler: Bowler): string => {
 
   // Yellow: anything else
   return DEFAULT_COLOR;
+};
+
+export const computeGroupPerformanceTableData = (
+  bowlers: Bowler[],
+  a3Cases: A3Case[],
+): GroupPerformanceRow[] => {
+  const groupToMetrics: Record<string, Metric[]> = {};
+  const metricOwnerById: Record<string, string> = {};
+
+  bowlers.forEach(bowler => {
+    const groupName = (bowler.group || 'Ungrouped').trim() || 'Ungrouped';
+    const metrics = bowler.metrics || [];
+
+    metrics.forEach(metric => {
+      if (!metric || !metric.monthlyData || Object.keys(metric.monthlyData).length === 0) {
+        return;
+      }
+
+      metricOwnerById[metric.id] = bowler.id;
+
+      if (!groupToMetrics[groupName]) {
+        groupToMetrics[groupName] = [];
+      }
+      groupToMetrics[groupName].push(metric);
+    });
+  });
+
+  const groupNames = Object.keys(groupToMetrics).sort();
+
+  if (groupNames.length === 0) return [];
+
+  const rows: GroupPerformanceRow[] = [];
+
+  const isValuePresent = (value: unknown) => {
+    if (value === null || value === undefined) return false;
+    if (typeof value === 'string') return value.trim() !== '';
+    return true;
+  };
+
+  const hasDataAndTarget = (data: { actual?: unknown; target?: unknown } | undefined) =>
+    !!data && isValuePresent(data.actual) && isValuePresent(data.target);
+
+  groupNames.forEach(groupName => {
+    const metrics = groupToMetrics[groupName] || [];
+
+    metrics.forEach(metric => {
+      const monthly = metric.monthlyData || {};
+      const months = Object.keys(monthly)
+        .filter(month => {
+          const data = monthly[month];
+          return hasDataAndTarget(data);
+        })
+        .sort();
+
+      let latestMet: boolean | null = null;
+      let latestActual: string | null = null;
+      let fail2 = false;
+      let fail3 = false;
+      let achievementRate: number | null = null;
+      let linkedA3Count = 0;
+
+      if (months.length > 0) {
+        const latestMonth = months[months.length - 1];
+        const latest2Months = months.slice(-2);
+        const latest3Months = months.slice(-3);
+
+        const latestData = monthly[latestMonth];
+        if (hasDataAndTarget(latestData)) {
+          latestMet = !isViolation(
+            metric.targetMeetingRule,
+            latestData.target as string | undefined,
+            latestData.actual as string | undefined,
+          );
+          latestActual = `${latestData.actual as string}`;
+        }
+
+        if (latest2Months.length === 2) {
+          let allFail2 = true;
+          for (const month of latest2Months) {
+            const data = monthly[month];
+            if (
+              !hasDataAndTarget(data) ||
+              !isViolation(
+                metric.targetMeetingRule,
+                data.target as string | undefined,
+                data.actual as string | undefined,
+              )
+            ) {
+              allFail2 = false;
+              break;
+            }
+          }
+          fail2 = allFail2;
+        }
+
+        if (latest3Months.length === 3) {
+          let allFail3 = true;
+          for (const month of latest3Months) {
+            const data = monthly[month];
+            if (
+              !hasDataAndTarget(data) ||
+              !isViolation(
+                metric.targetMeetingRule,
+                data.target as string | undefined,
+                data.actual as string | undefined,
+              )
+            ) {
+              allFail3 = false;
+              break;
+            }
+          }
+          fail3 = allFail3;
+        }
+
+        let totalPoints = 0;
+        let metPoints = 0;
+        months.forEach(month => {
+          const data = monthly[month];
+          if (!hasDataAndTarget(data)) return;
+          totalPoints += 1;
+          const violation = isViolation(
+            metric.targetMeetingRule,
+            data.target as string | undefined,
+            data.actual as string | undefined,
+          );
+          if (!violation) {
+            metPoints += 1;
+          }
+        });
+
+        achievementRate = totalPoints > 0 ? (metPoints / totalPoints) * 100 : null;
+
+        const isAtRisk = fail2 || fail3;
+        if (isAtRisk) {
+          linkedA3Count = a3Cases.filter(c => (c.linkedMetricIds || []).includes(metric.id)).length;
+        }
+      }
+
+      rows.push({
+        groupName,
+        metricId: metric.id,
+        metricName: metric.name,
+        bowlerId: metricOwnerById[metric.id],
+        latestMet,
+        latestActual,
+        fail2,
+        fail3,
+        achievementRate,
+        linkedA3Count,
+      });
+    });
+  });
+
+  return rows;
 };

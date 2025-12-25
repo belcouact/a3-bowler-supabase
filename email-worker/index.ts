@@ -9,6 +9,7 @@ interface ScheduledEmailJob {
   recipients: string[];
   subject: string;
   body: string;
+  bodyHtml?: string;
   sendAt: number;
   sent: boolean;
 }
@@ -39,6 +40,7 @@ const sendEmailWithResend = async (env: Env, job: ScheduledEmailJob) => {
       to: job.recipients,
       subject: job.subject,
       text: job.body,
+      html: job.bodyHtml,
     }),
   });
 
@@ -75,10 +77,11 @@ export default {
             recipients: string[];
             subject: string;
             body: string;
+            bodyHtml?: string;
             sendAt: string;
           };
 
-          const { userId, recipients, subject, body, sendAt } = data;
+          const { userId, recipients, subject, body, bodyHtml, sendAt } = data;
 
           if (!Array.isArray(recipients) || recipients.length === 0) {
             return new Response(
@@ -119,6 +122,7 @@ export default {
             recipients,
             subject,
             body,
+            bodyHtml,
             sendAt: sendAtMs,
             sent: false,
           };
@@ -143,9 +147,10 @@ export default {
             recipients: string[];
             subject: string;
             body: string;
+            bodyHtml?: string;
           };
 
-          const { userId, recipients, subject, body } = data;
+          const { userId, recipients, subject, body, bodyHtml } = data;
 
           if (!Array.isArray(recipients) || recipients.length === 0) {
             return new Response(
@@ -173,6 +178,7 @@ export default {
             recipients,
             subject,
             body,
+            bodyHtml,
             sendAt: Date.now(),
             sent: false,
           };
