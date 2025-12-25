@@ -133,7 +133,9 @@ const generateComprehensiveSummary = async (
   }
 };
 
-const buildAutoSummaryForJob = async (job: ScheduledEmailJob): Promise<ScheduledEmailJob> => {
+const buildAutoSummaryForJob = async (
+  job: ScheduledEmailJob,
+): Promise<{ jobToSend: ScheduledEmailJob; dashboardSettings: any | null }> => {
   if (!job.userId) {
     throw new Error('userId is required for auto summary emails');
   }
@@ -158,7 +160,7 @@ const buildAutoSummaryForJob = async (job: ScheduledEmailJob): Promise<Scheduled
   const data = (await response.json()) as any;
   const bowlers = Array.isArray(data.bowlers) ? data.bowlers : [];
   const a3Cases = Array.isArray(data.a3Cases) ? data.a3Cases : [];
-  const dashboardSettings = data.dashboardSettings || {};
+  const dashboardSettings = data.dashboardSettings || null;
 
   const context = JSON.stringify({
     bowlers: bowlers.map((b: any) => ({
@@ -196,10 +198,64 @@ Write the response as a clear, concise email body suitable for busy leaders. Do 
   const html = buildSimpleHtmlFromText(summary);
 
   return {
-    ...job,
-    body: summary,
-    bodyHtml: html,
+    jobToSend: {
+      ...job,
+      body: summary,
+      bodyHtml: html,
+    },
+    dashboardSettings,
   };
+};
+
+const computeNextSendAtFromSchedule = (schedule: any, now: Date): Date | null => {
+  if (!schedule || typeof schedule !== 'object') {
+    return null;
+  }
+
+  const frequency = schedule.frequency === 'monthly' ? 'monthly' : 'weekly';
+  const timeOfDay = typeof schedule.timeOfDay === 'string' ? schedule.timeOfDay : '08:00';
+  const [hourStr, minuteStr] = timeOfDay.split(':');
+  const hour = Number(hourStr) || 8;
+  const minute = Number(minuteStr) || 0;
+
+  if (frequency === 'weekly') {
+    const dayOfWeekRaw =
+      typeof schedule.dayOfWeek === 'number' && schedule.dayOfWeek >= 1 && schedule.dayOfWeek <= 7
+        ? schedule.dayOfWeek
+        : 1;
+    const current = new Date(now.getTime());
+    const currentDay = current.getDay();
+    const targetDay = dayOfWeekRaw === 7 ? 0 : dayOfWeekRaw;
+
+    current.setHours(hour, minute, 0, 0);
+
+    let diff = targetDay - currentDay;
+    if (diff <= 0) {
+      diff += 7;
+    }
+    current.setDate(current.getDate() + diff);
+    return current;
+  }
+
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const dayOfMonthRaw =
+    typeof schedule.dayOfMonth === 'number' && schedule.dayOfMonth >= 1 && schedule.dayOfMonth <= 31
+      ? schedule.dayOfMonth
+      : 1;
+
+  const daysInCurrentMonth = new Date(year, month + 1, 0).getDate();
+  const day = Math.min(dayOfMonthRaw, daysInCurrentMonth);
+
+  let candidate = new Date(year, month, day, hour, minute, 0, 0);
+  if (candidate <= now) {
+    const nextMonth = new Date(year, month + 1, 1);
+    const daysInNextMonth = new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0).getDate();
+    const nextDay = Math.min(dayOfMonthRaw, daysInNextMonth);
+    candidate = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), nextDay, hour, minute, 0, 0);
+  }
+
+  return candidate;
 };
 
 export default {
@@ -415,11 +471,29 @@ export default {
           (async () => {
             try {
               let jobToSend = job;
+              let dashboardSettingsForJob: any | null = null;
               if (job.mode === 'autoSummary') {
-                jobToSend = await buildAutoSummaryForJob(job);
+                const result = await buildAutoSummaryForJob(job);
+                jobToSend = result.jobToSend;
+                dashboardSettingsForJob = result.dashboardSettings;
               }
               await sendEmailWithResend(env, jobToSend);
-              job.sent = true;
+
+              if (job.mode === 'autoSummary' && dashboardSettingsForJob && dashboardSettingsForJob.emailSchedule) {
+                const next = computeNextSendAtFromSchedule(
+                  dashboardSettingsForJob.emailSchedule,
+                  new Date(now),
+                );
+                if (next) {
+                  job.sendAt = next.getTime();
+                  job.sent = false;
+                } else {
+                  job.sent = true;
+                }
+              } else {
+                job.sent = true;
+              }
+
               await env.EMAIL_JOBS.put(key.name, JSON.stringify(job));
             } catch (err) {
               console.error('Failed to send scheduled email', err);
