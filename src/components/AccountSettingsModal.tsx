@@ -1312,16 +1312,6 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                             Saved to dashboard settings for recurring email schedule. Next send time is calculated automatically.
                           </p>
                         </div>
-                        <div className="pt-2">
-                          <button
-                            type="button"
-                            className="inline-flex items-center rounded-md border border-red-600 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-60 disabled:cursor-not-allowed"
-                            onClick={handleCancelRecurringSchedule}
-                            disabled={isScheduling}
-                          >
-                            Cancel recurring emails
-                          </button>
-                        </div>
                       </>
                     )}
                     {emailMode === 'oneTime' && (
@@ -1412,6 +1402,16 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                     disabled={isSendingNow || isScheduling}
                   >
                     {isSendingNow ? 'Sending...' : 'Send Now'}
+                  </button>
+                )}
+                {emailMode === 'scheduled' && (
+                  <button
+                    type="button"
+                    className="mt-3 w-full inline-flex justify-center rounded-md border border-red-600 shadow-sm px-4 py-2 bg-white text-base font-medium text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                    onClick={handleCancelRecurringSchedule}
+                    disabled={isScheduling}
+                  >
+                    Cancel recurring emails
                   </button>
                 )}
               </>
