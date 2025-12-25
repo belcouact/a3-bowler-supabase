@@ -16,6 +16,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
   const [activeTab, setActiveTab] = useState<'password' | 'profile' | 'email'>('password');
   const [isLoading, setIsLoading] = useState(false);
   const [isScheduling, setIsScheduling] = useState(false);
+  const [isSendingNow, setIsSendingNow] = useState(false);
 
   // Password State
   const [currentPassword, setCurrentPassword] = useState('');
@@ -167,6 +168,44 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
       toast.error(error.message || 'Failed to schedule email');
     } finally {
       setIsScheduling(false);
+    }
+  };
+
+  const handleSendEmailNow = async () => {
+    const recipients = emailRecipients
+      .split(/[,\n]/)
+      .map(r => r.trim())
+      .filter(r => r.length > 0);
+
+    if (recipients.length === 0) {
+      toast.error('Please enter at least one recipient email');
+      return;
+    }
+
+    if (!emailSubject.trim()) {
+      toast.error('Please enter an email subject');
+      return;
+    }
+
+    if (!emailBody.trim()) {
+      toast.error('Please enter an email body');
+      return;
+    }
+
+    setIsSendingNow(true);
+    try {
+      const userId = user?.username || undefined;
+      await dataService.sendEmailNow({
+        userId,
+        recipients,
+        subject: emailSubject.trim(),
+        body: emailBody.trim(),
+      });
+      toast.success('Email sent successfully');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send email');
+    } finally {
+      setIsSendingNow(false);
     }
   };
 
@@ -421,14 +460,24 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
             )}
 
             {activeTab === 'email' && (
-              <button
-                type="button"
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
-                onClick={handleScheduleEmail}
-                disabled={isScheduling}
-              >
-                {isScheduling ? 'Scheduling...' : 'Schedule Email'}
-              </button>
+              <>
+                <button
+                  type="button"
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                  onClick={handleScheduleEmail}
+                  disabled={isScheduling || isSendingNow}
+                >
+                  {isScheduling ? 'Scheduling...' : 'Schedule Email'}
+                </button>
+                <button
+                  type="button"
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-blue-600 shadow-sm px-4 py-2 bg-white text-base font-medium text-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  onClick={handleSendEmailNow}
+                  disabled={isSendingNow || isScheduling}
+                >
+                  {isSendingNow ? 'Sending...' : 'Send Now'}
+                </button>
+              </>
             )}
             
             <button

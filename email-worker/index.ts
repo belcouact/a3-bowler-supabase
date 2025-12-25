@@ -35,7 +35,7 @@ const sendEmailWithResend = async (env: Env, job: ScheduledEmailJob) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'A3 Bowler <no-reply@example.com>',
+      from: 'A3 Bowler <no-reply@study-llm.me>',
       to: job.recipients,
       subject: job.subject,
       text: job.body,
@@ -120,6 +120,60 @@ export default {
           await env.EMAIL_JOBS.put(`email:${id}`, JSON.stringify(job));
 
           return new Response(JSON.stringify({ success: true, id }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (err: any) {
+          return new Response(JSON.stringify({ success: false, error: err.message || String(err) }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
+      if (request.method === 'POST' && url.pathname === '/send-email-now') {
+        try {
+          const data = (await request.json()) as {
+            userId?: string;
+            recipients: string[];
+            subject: string;
+            body: string;
+          };
+
+          const { userId, recipients, subject, body } = data;
+
+          if (!Array.isArray(recipients) || recipients.length === 0) {
+            return new Response(
+              JSON.stringify({ success: false, error: 'At least one recipient is required' }),
+              {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              },
+            );
+          }
+
+          if (!subject || !body) {
+            return new Response(
+              JSON.stringify({ success: false, error: 'Subject and body are required' }),
+              {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              },
+            );
+          }
+
+          const job: ScheduledEmailJob = {
+            id: createId('email'),
+            userId: userId || null,
+            recipients,
+            subject,
+            body,
+            sendAt: Date.now(),
+            sent: false,
+          };
+
+          await sendEmailWithResend(env, job);
+
+          return new Response(JSON.stringify({ success: true }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         } catch (err: any) {

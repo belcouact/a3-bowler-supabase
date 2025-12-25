@@ -110,4 +110,25 @@ export const dataService = {
 
     return response.json();
   },
+
+  async sendEmailNow(options: {
+    userId?: string;
+    recipients: string[];
+    subject: string;
+    body: string;
+  }) {
+    const response = await fetch(`${EMAIL_API_BASE_URL}/send-email-now`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(options),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to send email');
+    }
+
+    return response.json();
+  },
 };
