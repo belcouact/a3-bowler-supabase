@@ -112,7 +112,7 @@ export const dataService = {
           message = data.error;
         }
       } catch (e) {
-        const _ignored = e;
+        void e;
       }
       throw new Error(message);
     }
@@ -142,7 +142,7 @@ export const dataService = {
           message = data.error;
         }
       } catch (e) {
-        const _ignored = e;
+        void e;
       }
       throw new Error(message);
     }
