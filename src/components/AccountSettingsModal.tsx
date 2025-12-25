@@ -83,15 +83,15 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
     if (!isOpen) {
       return;
     }
-    setDashboardSettings(prev => ({
-      ...prev,
+    setDashboardSettings({
+      ...dashboardSettings,
       emailSchedule: {
         frequency: scheduleFrequency,
         dayOfWeek: scheduleFrequency === 'weekly' ? scheduleDayOfWeek : undefined,
         dayOfMonth: scheduleFrequency === 'monthly' ? scheduleDayOfMonth : undefined,
         timeOfDay: scheduleTime,
       },
-    }));
+    });
   }, [scheduleFrequency, scheduleDayOfWeek, scheduleDayOfMonth, scheduleTime, isOpen, setDashboardSettings]);
 
   useEffect(() => {
@@ -532,15 +532,12 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
                       type="button"
                       className="text-xs px-2 py-1 rounded border border-blue-500 text-blue-600 hover:bg-blue-50"
                       onClick={() => {
-                        if (!dashboardSettings.latestSummaryForEmail) {
+                        const summary = dashboardSettings.latestSummaryForEmail;
+                        if (!summary) {
                           toast.error('No latest AI summary found. Please run one-click summary first.');
                           return;
                         }
-                        setEmailBody(prev =>
-                          prev
-                            ? `${prev}\n\n${dashboardSettings.latestSummaryForEmail}`
-                            : dashboardSettings.latestSummaryForEmail,
-                        );
+                        setEmailBody((prev: string) => (prev ? `${prev}\n\n${summary}` : summary));
                       }}
                     >
                       Insert latest AI summary
