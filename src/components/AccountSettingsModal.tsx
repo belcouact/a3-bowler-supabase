@@ -6,7 +6,6 @@ import { useToast } from '../context/ToastContext';
 import { dataService } from '../services/dataService';
 import { useApp } from '../context/AppContext';
 import { EmailScheduleFrequency, GroupPerformanceRow } from '../types';
-import { MarkdownRenderer } from './MarkdownRenderer';
 import { generateAIContext, generateComprehensiveSummary } from '../services/aiService';
 import { computeGroupPerformanceTableData } from '../utils/metricUtils';
 
@@ -1153,11 +1152,6 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                     placeholder="Add the summary or message you want to email."
                     className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
                   />
-                  {emailBody && (
-                    <div className="mt-3 border border-gray-200 rounded-md bg-gray-50 p-3 max-h-64 overflow-y-auto">
-                      <MarkdownRenderer content={emailBody} />
-                    </div>
-                  )}
                 </div>
                 <div className="mt-4 border rounded-md">
                   <div className="flex text-xs font-medium border-b">
