@@ -21,6 +21,10 @@ export interface DashboardSettings {
   emailSchedule?: EmailScheduleSettings;
   latestSummaryForEmail?: string;
   latestSummaryHtmlForEmail?: string;
+  emailDefaults?: {
+    recipients?: string;
+    subject?: string;
+  };
 }
 
 export interface Metric {

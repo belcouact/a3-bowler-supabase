@@ -46,7 +46,7 @@ interface AppContextType {
     options?: { createNew?: boolean; description?: string }
   ) => void;
   dashboardSettings: DashboardSettings;
-  setDashboardSettings: (settings: DashboardSettings) => void;
+  setDashboardSettings: (value: DashboardSettings | ((prev: DashboardSettings) => DashboardSettings)) => void;
 }
 
 // Context

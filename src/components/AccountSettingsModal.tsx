@@ -17,7 +17,17 @@ interface AccountSettingsModalProps {
 export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOpen, onClose }) => {
   const { user, refreshUser } = useAuth();
   const toast = useToast();
-  const { bowlers, a3Cases, selectedModel, dashboardSettings, setDashboardSettings } = useApp();
+  const {
+    bowlers,
+    a3Cases,
+    selectedModel,
+    dashboardSettings,
+    setDashboardSettings,
+    dashboardMarkdown,
+    dashboardTitle,
+    dashboardMindmaps,
+    activeMindmapId,
+  } = useApp();
   const [activeTab, setActiveTab] = useState<'password' | 'profile' | 'email'>('password');
   const [isLoading, setIsLoading] = useState(false);
   const [isScheduling, setIsScheduling] = useState(false);
@@ -48,6 +58,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
   const [scheduleDayOfMonth, setScheduleDayOfMonth] = useState<number>(1);
   const [scheduleTime, setScheduleTime] = useState<string>('08:00');
   const [hasInitializedSchedule, setHasInitializedSchedule] = useState(false);
+  const [hasInitializedEmailDefaults, setHasInitializedEmailDefaults] = useState(false);
   const [emailMode, setEmailMode] = useState<'scheduled' | 'oneTime'>('scheduled');
 
   useEffect(() => {
@@ -57,15 +68,13 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
       setPlant(user.plant || 'SZFTZ');
       setTeam(user.team || 'GBS');
       setIsPublic(user.isPublicProfile !== undefined ? user.isPublicProfile : true);
-      if (user.email) {
-        setEmailRecipients(user.email);
-      }
     }
   }, [user, isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
       setHasInitializedSchedule(false);
+      setHasInitializedEmailDefaults(false);
       return;
     }
     if (hasInitializedSchedule) {
@@ -93,27 +102,71 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
     if (!isOpen) {
       return;
     }
+    if (hasInitializedEmailDefaults) {
+      return;
+    }
+    const defaults = (dashboardSettings as any).emailDefaults || {};
+    if (!emailRecipients) {
+      if (typeof defaults.recipients === 'string' && defaults.recipients.trim() !== '') {
+        setEmailRecipients(defaults.recipients);
+      } else if (user && user.email) {
+        setEmailRecipients(user.email);
+      }
+    }
+    if (!emailSubject && typeof defaults.subject === 'string' && defaults.subject.trim() !== '') {
+      setEmailSubject(defaults.subject);
+    }
+    setHasInitializedEmailDefaults(true);
+  }, [
+    isOpen,
+    dashboardSettings,
+    hasInitializedEmailDefaults,
+    emailRecipients,
+    emailSubject,
+    user,
+  ]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
     if (!hasInitializedSchedule) {
       return;
     }
-    setDashboardSettings({
-      ...dashboardSettings,
+    setDashboardSettings(prev => ({
+      ...prev,
       emailSchedule: {
         frequency: scheduleFrequency,
         dayOfWeek: scheduleFrequency === 'weekly' ? scheduleDayOfWeek : undefined,
         dayOfMonth: scheduleFrequency === 'monthly' ? scheduleDayOfMonth : undefined,
         timeOfDay: scheduleTime,
       },
-    });
+    }));
   }, [
     scheduleFrequency,
     scheduleDayOfWeek,
     scheduleDayOfMonth,
     scheduleTime,
     isOpen,
-    setDashboardSettings,
     hasInitializedSchedule,
   ]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    if (!hasInitializedEmailDefaults) {
+      return;
+    }
+    setDashboardSettings(prev => ({
+      ...prev,
+      emailDefaults: {
+        ...((prev as any).emailDefaults || {}),
+        recipients: emailRecipients,
+        subject: emailSubject,
+      },
+    }));
+  }, [emailRecipients, emailSubject, isOpen, hasInitializedEmailDefaults, setDashboardSettings]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -209,6 +262,38 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
         toast.error('Failed to reload profile');
     } finally {
         setIsLoading(false);
+    }
+  };
+
+  const handleCancelRecurringSchedule = async () => {
+    if (!user || !user.username) {
+      toast.error('You must be logged in to cancel recurring emails');
+      return;
+    }
+    setIsScheduling(true);
+    try {
+      const updatedSettings = {
+        ...dashboardSettings,
+      };
+      if ('emailSchedule' in updatedSettings) {
+        delete (updatedSettings as any).emailSchedule;
+      }
+      setDashboardSettings(updatedSettings);
+      await dataService.saveData(
+        bowlers,
+        a3Cases,
+        user.username,
+        dashboardMarkdown,
+        dashboardTitle,
+        dashboardMindmaps,
+        activeMindmapId,
+        updatedSettings,
+      );
+      toast.success('Recurring email schedule cancelled');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to cancel recurring schedule');
+    } finally {
+      setIsScheduling(false);
     }
   };
 
@@ -977,19 +1062,21 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
 
           {/* Content */}
           <div className="px-6 py-6">
-            <div className="mb-6 flex items-center justify-between">
-               <div>
+            {activeTab !== 'email' && (
+              <div className="mb-6 flex items-center justify-between">
+                <div>
                   <span className="text-gray-500">User: </span>
                   <span className="font-semibold text-blue-600">{user?.username}</span>
-               </div>
-               <button 
+                </div>
+                <button
                   onClick={handleRefreshProfile}
                   className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
                   title="Reload Profile from Server"
-               >
+                >
                   <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-               </button>
-            </div>
+                </button>
+              </div>
+            )}
 
             {activeTab === 'password' && (
               <div className="space-y-4">
@@ -1224,6 +1311,16 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                           <p className="mt-1 text-xs text-gray-400">
                             Saved to dashboard settings for recurring email schedule. Next send time is calculated automatically.
                           </p>
+                        </div>
+                        <div className="pt-2">
+                          <button
+                            type="button"
+                            className="inline-flex items-center rounded-md border border-red-600 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-60 disabled:cursor-not-allowed"
+                            onClick={handleCancelRecurringSchedule}
+                            disabled={isScheduling}
+                          >
+                            Cancel recurring emails
+                          </button>
                         </div>
                       </>
                     )}
