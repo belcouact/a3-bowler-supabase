@@ -43,7 +43,13 @@ const sendEmailWithResend = async (env: Env, job: ScheduledEmailJob) => {
   });
 
   if (!response.ok) {
-    throw new Error(`Resend error: ${response.status} ${response.statusText}`);
+    let bodyText = '';
+    try {
+      bodyText = await response.text();
+    } catch {
+      bodyText = '';
+    }
+    throw new Error(`Resend error: ${response.status} ${response.statusText} ${bodyText}`);
   }
 };
 

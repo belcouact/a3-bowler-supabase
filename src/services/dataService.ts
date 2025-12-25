@@ -105,7 +105,16 @@ export const dataService = {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to schedule email');
+      let message = 'Failed to schedule email';
+      try {
+        const data = await response.json();
+        if (data && typeof data.error === 'string') {
+          message = data.error;
+        }
+      } catch (e) {
+        const _ignored = e;
+      }
+      throw new Error(message);
     }
 
     return response.json();
@@ -126,7 +135,16 @@ export const dataService = {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to send email');
+      let message = 'Failed to send email';
+      try {
+        const data = await response.json();
+        if (data && typeof data.error === 'string') {
+          message = data.error;
+        }
+      } catch (e) {
+        const _ignored = e;
+      }
+      throw new Error(message);
     }
 
     return response.json();
