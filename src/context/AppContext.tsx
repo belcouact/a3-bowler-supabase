@@ -4,7 +4,18 @@ import { dataService } from '../services/dataService';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
 import { generateShortId } from '../utils/idUtils';
-import { Bowler, A3Case, Metric, MetricData, MindMapNodeData, ActionPlanTaskData, DataAnalysisImage, DashboardMindmap, AIModelKey } from '../types';
+import {
+  Bowler,
+  A3Case,
+  Metric,
+  MetricData,
+  MindMapNodeData,
+  ActionPlanTaskData,
+  DataAnalysisImage,
+  DashboardMindmap,
+  AIModelKey,
+  DashboardSettings,
+} from '../types';
 import { getBowlerStatusColor } from '../utils/metricUtils';
 
 export type { Bowler, A3Case, Metric, MetricData, MindMapNodeData, ActionPlanTaskData, DataAnalysisImage, DashboardMindmap };
@@ -34,6 +45,8 @@ interface AppContextType {
     title?: string,
     options?: { createNew?: boolean; description?: string }
   ) => void;
+  dashboardSettings: DashboardSettings;
+  setDashboardSettings: (settings: DashboardSettings) => void;
 }
 
 // Context
@@ -59,6 +72,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [activeMindmapId, setActiveMindmapId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState<AIModelKey>('deepseek');
+  const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings>({ aiModel: 'deepseek' });
   
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMountedRef = useRef(true);
@@ -77,6 +91,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       }
     }
     return '';
+  };
+
+  const handleSetSelectedModel = (model: AIModelKey) => {
+    setSelectedModel(model);
+    setDashboardSettings(prev => ({
+      ...prev,
+      aiModel: model,
+    }));
   };
 
   const loadUserData = useCallback(async (username: string) => {
@@ -127,13 +149,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             const data = (typeof localData === 'string') ? JSON.parse(localData) : localData;
             const mindmaps = (data.dashboardMindmaps || []) as DashboardMindmap[];
             const cachedActiveId = (data.activeMindmapId as string | undefined) || null;
-            const dashboardSettings = (data.dashboardSettings || {}) as { aiModel?: AIModelKey };
-            const savedModel = dashboardSettings.aiModel as AIModelKey | undefined;
+            const rawDashboardSettings = (data.dashboardSettings || {}) as DashboardSettings;
+            const savedModel = rawDashboardSettings.aiModel as AIModelKey | undefined;
             const effectiveModel = getValidModel(savedModel);
 
             setBowlers(data.bowlers || []);
             setA3Cases(data.a3Cases || []);
             setSelectedModel(effectiveModel);
+            setDashboardSettings({
+              ...rawDashboardSettings,
+              aiModel: effectiveModel,
+            });
 
             if (mindmaps.length > 0) {
                 const activeId = cachedActiveId && mindmaps.some(m => m.id === cachedActiveId)
@@ -165,13 +191,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         if (isMountedRef.current && data.success) {
             const mindmaps = (data.dashboardMindmaps || []) as DashboardMindmap[];
             const backendActiveId = (data.activeMindmapId as string | undefined) || null;
-            const dashboardSettings = (data.dashboardSettings || {}) as { aiModel?: AIModelKey };
-            const savedModel = dashboardSettings.aiModel as AIModelKey | undefined;
+            const rawDashboardSettings = (data.dashboardSettings || {}) as DashboardSettings;
+            const savedModel = rawDashboardSettings.aiModel as AIModelKey | undefined;
             const effectiveModel = getValidModel(savedModel);
 
             setBowlers(data.bowlers || []);
             setA3Cases(data.a3Cases || []);
             setSelectedModel(effectiveModel);
+            setDashboardSettings({
+              ...rawDashboardSettings,
+              aiModel: effectiveModel,
+            });
 
             if (mindmaps.length > 0) {
                 const activeId = backendActiveId && mindmaps.some(m => m.id === backendActiveId)
@@ -190,7 +220,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                         dashboardTitle: active.title,
                         dashboardMindmaps: mindmaps,
                         activeMindmapId: activeId,
-                        dashboardSettings: { aiModel: effectiveModel }
+                        dashboardSettings: {
+                          ...rawDashboardSettings,
+                          aiModel: effectiveModel,
+                        }
                     });
                 } catch (e) {
                     console.warn("Failed to update local cache.", e);
@@ -208,7 +241,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                         dashboardTitle: '',
                         dashboardMindmaps: [],
                         activeMindmapId: null,
-                        dashboardSettings: { aiModel: effectiveModel }
+                        dashboardSettings: {
+                          ...rawDashboardSettings,
+                          aiModel: effectiveModel,
+                        }
                     });
                 } catch (e) {
                     console.warn("Failed to update local cache.", e);
@@ -245,6 +281,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setDashboardMarkdown('');
         setDashboardTitle('');
         setSelectedModel('deepseek');
+        setDashboardSettings({ aiModel: 'deepseek' });
     }
     return () => {
         if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
@@ -270,7 +307,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           dashboardTitle: newTitle,
           dashboardMindmaps: newMindmaps,
           activeMindmapId: newActiveMindmapId,
-          dashboardSettings: { aiModel: selectedModel }
+          dashboardSettings,
       }).catch(e => {
         console.error("Local Cache save failed", e);
       });
@@ -452,14 +489,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         reorderA3Cases,
         isLoading,
         selectedModel,
-        setSelectedModel,
+        setSelectedModel: handleSetSelectedModel,
         dashboardMarkdown,
         dashboardTitle,
         dashboardMindmaps,
         activeMindmapId,
         setActiveMindmap,
         deleteMindmap,
-        updateDashboardMarkdown
+        updateDashboardMarkdown,
+        dashboardSettings,
+        setDashboardSettings,
       }}
     >
       {children}

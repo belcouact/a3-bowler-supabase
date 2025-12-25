@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
 import { useToast } from '../context/ToastContext';
 import { dataService } from '../services/dataService';
+import { useApp } from '../context/AppContext';
+import { EmailScheduleFrequency } from '../types';
 
 interface AccountSettingsModalProps {
   isOpen: boolean;
@@ -13,6 +15,7 @@ interface AccountSettingsModalProps {
 export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOpen, onClose }) => {
   const { user, refreshUser } = useAuth();
   const toast = useToast();
+  const { dashboardSettings, setDashboardSettings } = useApp();
   const [activeTab, setActiveTab] = useState<'password' | 'profile' | 'email'>('password');
   const [isLoading, setIsLoading] = useState(false);
   const [isScheduling, setIsScheduling] = useState(false);
@@ -36,6 +39,11 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
   const [emailBody, setEmailBody] = useState('');
   const [emailSendAt, setEmailSendAt] = useState('');
 
+  const [scheduleFrequency, setScheduleFrequency] = useState<EmailScheduleFrequency>('weekly');
+  const [scheduleDayOfWeek, setScheduleDayOfWeek] = useState<number>(1);
+  const [scheduleDayOfMonth, setScheduleDayOfMonth] = useState<number>(1);
+  const [scheduleTime, setScheduleTime] = useState<string>('08:00');
+
   useEffect(() => {
     if (user) {
       setRole(user.role || '');
@@ -48,6 +56,39 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
       }
     }
   }, [user, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    const existing = dashboardSettings.emailSchedule;
+    if (existing) {
+      if (existing.frequency === 'weekly' || existing.frequency === 'monthly') {
+        setScheduleFrequency(existing.frequency);
+      }
+      if (typeof existing.dayOfWeek === 'number') {
+        setScheduleDayOfWeek(existing.dayOfWeek);
+      }
+      if (typeof existing.dayOfMonth === 'number') {
+        setScheduleDayOfMonth(existing.dayOfMonth);
+      }
+      if (existing.timeOfDay) {
+        setScheduleTime(existing.timeOfDay);
+      }
+    }
+  }, [isOpen, dashboardSettings.emailSchedule]);
+
+  useEffect(() => {
+    setDashboardSettings({
+      ...dashboardSettings,
+      emailSchedule: {
+        frequency: scheduleFrequency,
+        dayOfWeek: scheduleFrequency === 'weekly' ? scheduleDayOfWeek : undefined,
+        dayOfMonth: scheduleFrequency === 'monthly' ? scheduleDayOfMonth : undefined,
+        timeOfDay: scheduleTime,
+      },
+    });
+  }, [scheduleFrequency, scheduleDayOfWeek, scheduleDayOfMonth, scheduleTime, dashboardSettings, setDashboardSettings]);
 
   if (!isOpen) return null;
 
@@ -411,6 +452,66 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
                     placeholder="Weekly A3 / metric summary"
                     className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
                   />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Repeat</label>
+                    <select
+                      value={scheduleFrequency}
+                      onChange={(e) => setScheduleFrequency(e.target.value as EmailScheduleFrequency)}
+                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                    >
+                      <option value="weekly">Every week</option>
+                      <option value="monthly">Every month</option>
+                    </select>
+                  </div>
+                  <div>
+                    {scheduleFrequency === 'weekly' ? (
+                      <>
+                        <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Day of Week</label>
+                        <select
+                          value={scheduleDayOfWeek}
+                          onChange={(e) => setScheduleDayOfWeek(Number(e.target.value))}
+                          className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                        >
+                          <option value={1}>Monday</option>
+                          <option value={2}>Tuesday</option>
+                          <option value={3}>Wednesday</option>
+                          <option value={4}>Thursday</option>
+                          <option value={5}>Friday</option>
+                          <option value={6}>Saturday</option>
+                          <option value={7}>Sunday</option>
+                        </select>
+                      </>
+                    ) : (
+                      <>
+                        <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Date of Month</label>
+                        <select
+                          value={scheduleDayOfMonth}
+                          onChange={(e) => setScheduleDayOfMonth(Number(e.target.value))}
+                          className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                        >
+                          {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                            <option key={day} value={day}>
+                              {day}
+                            </option>
+                          ))}
+                        </select>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Time</label>
+                  <input
+                    type="time"
+                    value={scheduleTime}
+                    onChange={(e) => setScheduleTime(e.target.value)}
+                    className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                  />
+                  <p className="mt-1 text-xs text-gray-400">
+                    Saved to dashboard settings for recurring email schedule.
+                  </p>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Send At</label>

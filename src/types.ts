@@ -7,6 +7,20 @@ export interface MetricData {
 
 export type AIModelKey = 'gemini' | 'deepseek' | 'kimi' | 'glm';
 
+export type EmailScheduleFrequency = 'weekly' | 'monthly';
+
+export interface EmailScheduleSettings {
+  frequency: EmailScheduleFrequency;
+  dayOfWeek?: number;
+  dayOfMonth?: number;
+  timeOfDay: string;
+}
+
+export interface DashboardSettings {
+  aiModel?: AIModelKey;
+  emailSchedule?: EmailScheduleSettings;
+}
+
 export interface Metric {
   id: string;
   name: string;

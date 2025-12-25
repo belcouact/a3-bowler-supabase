@@ -57,20 +57,48 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
 
   const handleCopy = () => {
     if (isJson && parsedData) {
-        let textToCopy = `Executive Overview:\n${parsedData.executiveSummary}\n\n`;
-        
-        if (parsedData.a3Summary && parsedData.a3Summary.trim() !== '') {
-          textToCopy += `A3 Problem Solving Summary:\n${parsedData.a3Summary}\n\n`;
-        }
+      let textToCopy = `Executive Overview:\n${parsedData.executiveSummary}\n\n`;
 
-        textToCopy += `\nAreas of Concern & Recommendations:\n`;
-        parsedData.areasOfConcern.forEach(area => {
-            textToCopy += `- ${area.metricName} (${area.groupName}): ${area.issue}\n  Suggestion: ${area.suggestion}\n`;
+      if (parsedData.a3Summary && parsedData.a3Summary.trim() !== '') {
+        textToCopy += `A3 Problem Solving Summary:\n${parsedData.a3Summary}\n\n`;
+      }
+
+      if (hasStats) {
+        textToCopy += 'Portfolio Statistical Table:\n';
+        textToCopy +=
+          'Group | Metric | Latest month | Last 2 months | Last 3 months | Linked A3s | Overall target achieving %\n';
+        textToCopy +=
+          '----- | ------ | ------------ | ------------- | ------------- | ---------- | --------------------------\n';
+
+        groupPerformanceTableData.forEach(row => {
+          const latestText =
+            row.latestMet === null || !row.latestActual
+              ? '—'
+              : row.latestActual;
+
+          const last2Text = row.fail2 ? 'Failing' : '—';
+          const last3Text = row.fail3 ? 'Failing' : '—';
+
+          const atRisk = row.fail2 || row.fail3;
+          const linkedText = atRisk ? (row.linkedA3Count === 0 ? '0' : String(row.linkedA3Count)) : '—';
+
+          const achievementText =
+            row.achievementRate != null ? `${row.achievementRate.toFixed(0)}%` : '—';
+
+          textToCopy += `${row.groupName} | ${row.metricName} | ${latestText} | ${last2Text} | ${last3Text} | ${linkedText} | ${achievementText}\n`;
         });
 
-        navigator.clipboard.writeText(textToCopy);
+        textToCopy += '\n';
+      }
+
+      textToCopy += `Areas of Concern & Recommendations:\n`;
+      parsedData.areasOfConcern.forEach(area => {
+        textToCopy += `- ${area.metricName} (${area.groupName}): ${area.issue}\n  Suggestion: ${area.suggestion}\n`;
+      });
+
+      navigator.clipboard.writeText(textToCopy);
     } else {
-        navigator.clipboard.writeText(content);
+      navigator.clipboard.writeText(content);
     }
     toast.success('Summary copied to clipboard!');
   };

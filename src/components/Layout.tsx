@@ -72,7 +72,8 @@ const Layout = () => {
     activeMindmapId,
     setActiveMindmap,
     selectedModel,
-    setSelectedModel
+    setSelectedModel,
+    dashboardSettings,
   } = useApp();
   const { user, logout, isLoading } = useAuth();
   const toast = useToast();
@@ -1392,7 +1393,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
           dashboardTitle,
           dashboardMindmaps,
           activeMindmapId,
-          { aiModel: selectedModel }
+          dashboardSettings
         );
         toast.success('Data saved successfully!');
       } catch (error) {
