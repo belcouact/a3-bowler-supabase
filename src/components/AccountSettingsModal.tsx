@@ -43,6 +43,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
   const [scheduleDayOfWeek, setScheduleDayOfWeek] = useState<number>(1);
   const [scheduleDayOfMonth, setScheduleDayOfMonth] = useState<number>(1);
   const [scheduleTime, setScheduleTime] = useState<string>('08:00');
+  const [emailMode, setEmailMode] = useState<'scheduled' | 'oneTime'>('scheduled');
 
   useEffect(() => {
     if (user) {
@@ -79,16 +80,43 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
   }, [isOpen, dashboardSettings.emailSchedule]);
 
   useEffect(() => {
-    setDashboardSettings({
-      ...dashboardSettings,
+    if (!isOpen) {
+      return;
+    }
+    setDashboardSettings(prev => ({
+      ...prev,
       emailSchedule: {
         frequency: scheduleFrequency,
         dayOfWeek: scheduleFrequency === 'weekly' ? scheduleDayOfWeek : undefined,
         dayOfMonth: scheduleFrequency === 'monthly' ? scheduleDayOfMonth : undefined,
         timeOfDay: scheduleTime,
       },
-    });
-  }, [scheduleFrequency, scheduleDayOfWeek, scheduleDayOfMonth, scheduleTime, dashboardSettings, setDashboardSettings]);
+    }));
+  }, [scheduleFrequency, scheduleDayOfWeek, scheduleDayOfMonth, scheduleTime, isOpen, setDashboardSettings]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    if (!emailBody) {
+      if (dashboardSettings.latestSummaryForEmail) {
+        setEmailBody(dashboardSettings.latestSummaryForEmail);
+      }
+    }
+  }, [isOpen, dashboardSettings.latestSummaryForEmail, emailBody]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    if (!emailSubject) {
+      const base =
+        scheduleFrequency === 'weekly'
+          ? 'Weekly A3 / metric summary'
+          : 'Monthly A3 / metric summary';
+      setEmailSubject(base);
+    }
+  }, [isOpen, scheduleFrequency, emailSubject]);
 
   if (!isOpen) return null;
 
@@ -162,6 +190,43 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
     }
   };
 
+  const getNextScheduledSendAt = () => {
+    const now = new Date();
+    const [hourStr, minuteStr] = scheduleTime.split(':');
+    const hour = Number(hourStr) || 8;
+    const minute = Number(minuteStr) || 0;
+
+    if (scheduleFrequency === 'weekly') {
+      const current = new Date(now.getTime());
+      const currentDay = current.getDay();
+      const targetDay = scheduleDayOfWeek === 7 ? 0 : scheduleDayOfWeek;
+
+      current.setHours(hour, minute, 0, 0);
+
+      let diff = targetDay - currentDay;
+      if (diff < 0 || (diff === 0 && current <= now)) {
+        diff += 7;
+      }
+      current.setDate(current.getDate() + diff);
+      return current;
+    }
+
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const daysInCurrentMonth = new Date(year, month + 1, 0).getDate();
+    const day = Math.min(scheduleDayOfMonth, daysInCurrentMonth);
+
+    let candidate = new Date(year, month, day, hour, minute, 0, 0);
+    if (candidate <= now) {
+      const nextMonth = new Date(year, month + 1, 1);
+      const daysInNextMonth = new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0).getDate();
+      const nextDay = Math.min(scheduleDayOfMonth, daysInNextMonth);
+      candidate = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), nextDay, hour, minute, 0, 0);
+    }
+
+    return candidate;
+  };
+
   const handleScheduleEmail = async () => {
     const recipients = emailRecipients
       .split(/[,\n]/)
@@ -183,15 +248,22 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
       return;
     }
 
-    if (!emailSendAt) {
-      toast.error('Please choose a send date and time');
-      return;
-    }
+    let sendAtDate: Date | null = null;
 
-    const sendAtDate = new Date(emailSendAt);
-    if (Number.isNaN(sendAtDate.getTime())) {
-      toast.error('Please enter a valid date and time');
-      return;
+    if (emailMode === 'scheduled') {
+      sendAtDate = getNextScheduledSendAt();
+    } else {
+      if (!emailSendAt) {
+        toast.error('Please choose a send date and time');
+        return;
+      }
+
+      const parsed = new Date(emailSendAt);
+      if (Number.isNaN(parsed.getTime())) {
+        toast.error('Please enter a valid date and time');
+        return;
+      }
+      sendAtDate = parsed;
     }
 
     setIsScheduling(true);
@@ -453,77 +525,27 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
                     className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
                   />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Repeat</label>
-                    <select
-                      value={scheduleFrequency}
-                      onChange={(e) => setScheduleFrequency(e.target.value as EmailScheduleFrequency)}
-                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                <div>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Message</label>
+                    <button
+                      type="button"
+                      className="text-xs px-2 py-1 rounded border border-blue-500 text-blue-600 hover:bg-blue-50"
+                      onClick={() => {
+                        if (!dashboardSettings.latestSummaryForEmail) {
+                          toast.error('No latest AI summary found. Please run one-click summary first.');
+                          return;
+                        }
+                        setEmailBody(prev =>
+                          prev
+                            ? `${prev}\n\n${dashboardSettings.latestSummaryForEmail}`
+                            : dashboardSettings.latestSummaryForEmail,
+                        );
+                      }}
                     >
-                      <option value="weekly">Every week</option>
-                      <option value="monthly">Every month</option>
-                    </select>
+                      Insert latest AI summary
+                    </button>
                   </div>
-                  <div>
-                    {scheduleFrequency === 'weekly' ? (
-                      <>
-                        <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Day of Week</label>
-                        <select
-                          value={scheduleDayOfWeek}
-                          onChange={(e) => setScheduleDayOfWeek(Number(e.target.value))}
-                          className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
-                        >
-                          <option value={1}>Monday</option>
-                          <option value={2}>Tuesday</option>
-                          <option value={3}>Wednesday</option>
-                          <option value={4}>Thursday</option>
-                          <option value={5}>Friday</option>
-                          <option value={6}>Saturday</option>
-                          <option value={7}>Sunday</option>
-                        </select>
-                      </>
-                    ) : (
-                      <>
-                        <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Date of Month</label>
-                        <select
-                          value={scheduleDayOfMonth}
-                          onChange={(e) => setScheduleDayOfMonth(Number(e.target.value))}
-                          className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
-                        >
-                          {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                            <option key={day} value={day}>
-                              {day}
-                            </option>
-                          ))}
-                        </select>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Time</label>
-                  <input
-                    type="time"
-                    value={scheduleTime}
-                    onChange={(e) => setScheduleTime(e.target.value)}
-                    className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
-                  />
-                  <p className="mt-1 text-xs text-gray-400">
-                    Saved to dashboard settings for recurring email schedule.
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Send At</label>
-                  <input
-                    type="datetime-local"
-                    value={emailSendAt}
-                    onChange={(e) => setEmailSendAt(e.target.value)}
-                    className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Message</label>
                   <textarea
                     value={emailBody}
                     onChange={(e) => setEmailBody(e.target.value)}
@@ -531,6 +553,109 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
                     placeholder="Add the summary or message you want to email."
                     className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
                   />
+                </div>
+                <div className="mt-4 border rounded-md">
+                  <div className="flex text-xs font-medium border-b">
+                    <button
+                      type="button"
+                      className={`flex-1 px-3 py-2 text-center ${
+                        emailMode === 'scheduled'
+                          ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-500'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                      onClick={() => setEmailMode('scheduled')}
+                    >
+                      Scheduled (repeat)
+                    </button>
+                    <button
+                      type="button"
+                      className={`flex-1 px-3 py-2 text-center ${
+                        emailMode === 'oneTime'
+                          ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-500'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                      onClick={() => setEmailMode('oneTime')}
+                    >
+                      One-time
+                    </button>
+                  </div>
+                  <div className="p-3 space-y-3">
+                    {emailMode === 'scheduled' && (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Repeat</label>
+                            <select
+                              value={scheduleFrequency}
+                              onChange={(e) => setScheduleFrequency(e.target.value as EmailScheduleFrequency)}
+                              className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                            >
+                              <option value="weekly">Every week</option>
+                              <option value="monthly">Every month</option>
+                            </select>
+                          </div>
+                          <div>
+                            {scheduleFrequency === 'weekly' ? (
+                              <>
+                                <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Day of Week</label>
+                                <select
+                                  value={scheduleDayOfWeek}
+                                  onChange={(e) => setScheduleDayOfWeek(Number(e.target.value))}
+                                  className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                                >
+                                  <option value={1}>Monday</option>
+                                  <option value={2}>Tuesday</option>
+                                  <option value={3}>Wednesday</option>
+                                  <option value={4}>Thursday</option>
+                                  <option value={5}>Friday</option>
+                                  <option value={6}>Saturday</option>
+                                  <option value={7}>Sunday</option>
+                                </select>
+                              </>
+                            ) : (
+                              <>
+                                <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Date of Month</label>
+                                <select
+                                  value={scheduleDayOfMonth}
+                                  onChange={(e) => setScheduleDayOfMonth(Number(e.target.value))}
+                                  className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                                >
+                                  {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                                    <option key={day} value={day}>
+                                      {day}
+                                    </option>
+                                  ))}
+                                </select>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Time</label>
+                          <input
+                            type="time"
+                            value={scheduleTime}
+                            onChange={(e) => setScheduleTime(e.target.value)}
+                            className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                          />
+                          <p className="mt-1 text-xs text-gray-400">
+                            Saved to dashboard settings for recurring email schedule. Next send time is calculated automatically.
+                          </p>
+                        </div>
+                      </>
+                    )}
+                    {emailMode === 'oneTime' && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Send At</label>
+                        <input
+                          type="datetime-local"
+                          value={emailSendAt}
+                          onChange={(e) => setEmailSendAt(e.target.value)}
+                          className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -568,16 +693,22 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
                   onClick={handleScheduleEmail}
                   disabled={isScheduling || isSendingNow}
                 >
-                  {isScheduling ? 'Scheduling...' : 'Schedule Email'}
+                  {isScheduling
+                    ? 'Scheduling...'
+                    : emailMode === 'scheduled'
+                      ? 'Schedule recurring email'
+                      : 'Schedule one-time email'}
                 </button>
-                <button
-                  type="button"
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-blue-600 shadow-sm px-4 py-2 bg-white text-base font-medium text-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                  onClick={handleSendEmailNow}
-                  disabled={isSendingNow || isScheduling}
-                >
-                  {isSendingNow ? 'Sending...' : 'Send Now'}
-                </button>
+                {emailMode === 'oneTime' && (
+                  <button
+                    type="button"
+                    className="mt-3 w-full inline-flex justify-center rounded-md border border-blue-600 shadow-sm px-4 py-2 bg-white text-base font-medium text-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                    onClick={handleSendEmailNow}
+                    disabled={isSendingNow || isScheduling}
+                  >
+                    {isSendingNow ? 'Sending...' : 'Send Now'}
+                  </button>
+                )}
               </>
             )}
             

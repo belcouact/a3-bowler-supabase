@@ -19,6 +19,7 @@ export interface EmailScheduleSettings {
 export interface DashboardSettings {
   aiModel?: AIModelKey;
   emailSchedule?: EmailScheduleSettings;
+  latestSummaryForEmail?: string;
 }
 
 export interface Metric {

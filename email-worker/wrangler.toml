@@ -7,10 +7,9 @@ routes = [
 ]
 
 [triggers]
-crons = ["*/5 * * * *"]
+crons = ["0 8 * * *"]
 
 [[kv_namespaces]]
 binding = "EMAIL_JOBS"
 id = "ee95c68527e74031a4af461974e7f1b8"
 preview_id = "ee95c68527e74031a4af461974e7f1b8"
-

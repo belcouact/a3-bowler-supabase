@@ -74,6 +74,7 @@ const Layout = () => {
     selectedModel,
     setSelectedModel,
     dashboardSettings,
+    setDashboardSettings,
   } = useApp();
   const { user, logout, isLoading } = useAuth();
   const toast = useToast();
@@ -1323,6 +1324,77 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
 
       const summary = await generateComprehensiveSummary(context, prompt, selectedModel);
       setSummaryContent(summary);
+
+      const buildEmailSummary = (raw: string) => {
+        try {
+          const clean = raw.replace(/```json/g, '').replace(/```/g, '').trim();
+          const parsed = JSON.parse(clean) as {
+            executiveSummary?: string;
+            a3Summary?: string;
+            areasOfConcern?: {
+              metricName: string;
+              groupName: string;
+              issue: string;
+              suggestion: string;
+            }[];
+          };
+
+          if (!parsed || !parsed.executiveSummary) {
+            return raw;
+          }
+
+          let text = `Executive Overview:\n${parsed.executiveSummary}\n\n`;
+
+          if (parsed.a3Summary && parsed.a3Summary.trim() !== '') {
+            text += `A3 Problem Solving Summary:\n${parsed.a3Summary}\n\n`;
+          }
+
+          if (groupPerformanceTableData.length > 0) {
+            text += 'Portfolio Statistical Table:\n';
+            text +=
+              'Group | Metric | Latest month | Last 2 months | Last 3 months | Linked A3s | Overall target achieving %\n';
+            text +=
+              '----- | ------ | ------------ | ------------- | ------------- | ---------- | --------------------------\n';
+
+            groupPerformanceTableData.forEach(row => {
+              const latestText =
+                row.latestMet === null || !row.latestActual
+                  ? '—'
+                  : row.latestActual;
+
+              const last2Text = row.fail2 ? 'Failing' : '—';
+              const last3Text = row.fail3 ? 'Failing' : '—';
+
+              const atRisk = row.fail2 || row.fail3;
+              const linkedText = atRisk ? (row.linkedA3Count === 0 ? '0' : String(row.linkedA3Count)) : '—';
+
+              const achievementText =
+                row.achievementRate != null ? `${row.achievementRate.toFixed(0)}%` : '—';
+
+              text += `${row.groupName} | ${row.metricName} | ${latestText} | ${last2Text} | ${last3Text} | ${linkedText} | ${achievementText}\n`;
+            });
+
+            text += '\n';
+          }
+
+          if (Array.isArray(parsed.areasOfConcern) && parsed.areasOfConcern.length > 0) {
+            text += 'Areas of Concern & Recommendations:\n';
+            parsed.areasOfConcern.forEach(area => {
+              text += `- ${area.metricName} (${area.groupName}): ${area.issue}\n  Suggestion: ${area.suggestion}\n`;
+            });
+          }
+
+          return text;
+        } catch {
+          return raw;
+        }
+      };
+
+      const emailSummary = buildEmailSummary(summary);
+      setDashboardSettings({
+        ...dashboardSettings,
+        latestSummaryForEmail: emailSummary,
+      });
     } catch (error) {
       console.error('Summary generation error:', error);
       setSummaryContent("Failed to generate summary. Please try again.");
