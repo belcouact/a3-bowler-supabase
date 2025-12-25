@@ -93,9 +93,11 @@ export const dataService = {
     userId?: string;
     recipients: string[];
     subject: string;
-    body: string;
+    body?: string;
     bodyHtml?: string;
     sendAt: string;
+    mode?: 'manual' | 'autoSummary';
+    aiModel?: string;
   }) {
     const response = await fetch(`${EMAIL_API_BASE_URL}/schedule-email`, {
       method: 'POST',

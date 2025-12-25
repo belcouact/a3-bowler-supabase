@@ -12,6 +12,8 @@ interface ScheduledEmailJob {
   bodyHtml?: string;
   sendAt: number;
   sent: boolean;
+  mode?: 'manual' | 'autoSummary';
+  aiModel?: string;
 }
 
 const createId = (prefix: string, index?: number) => {
@@ -55,6 +57,151 @@ const sendEmailWithResend = async (env: Env, job: ScheduledEmailJob) => {
   }
 };
 
+const getValidModel = (model?: string | null): string => {
+  if (model === 'gemini' || model === 'deepseek' || model === 'kimi' || model === 'glm') {
+    return model;
+  }
+  return 'deepseek';
+};
+
+const buildSimpleHtmlFromText = (text: string): string => {
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+
+  const withBreaks = escaped
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/\n/g, '<br />');
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Monthly A3 / metric summary</title>
+</head>
+<body>
+  <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6;">
+    ${withBreaks}
+  </div>
+</body>
+</html>`;
+};
+
+const generateComprehensiveSummary = async (
+  context: string,
+  prompt: string,
+  model: string,
+): Promise<string> => {
+  try {
+    const response = await fetch('https://multi-model-worker.study-llm.me/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: 'system',
+            content: `You are an AI assistant for the Metric Bowler & A3 Problem Solving application. 
+            Here is the current data in the application: ${context}.
+            Answer the user's questions based on this data. Be concise and helpful.`,
+          },
+          { role: 'user', content: prompt },
+        ],
+        stream: false,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return (
+      data.choices?.[0]?.message?.content ||
+      data.choices?.[0]?.delta?.content ||
+      "Sorry, I couldn't generate a response."
+    );
+  } catch (error) {
+    console.error('AI Summary Error:', error);
+    return 'Sorry, there was an error generating the summary. Please try again later.';
+  }
+};
+
+const buildAutoSummaryForJob = async (job: ScheduledEmailJob): Promise<ScheduledEmailJob> => {
+  if (!job.userId) {
+    throw new Error('userId is required for auto summary emails');
+  }
+
+  const userId = job.userId;
+  const response = await fetch(
+    `https://bowler-worker.study-llm.me/load?userId=${encodeURIComponent(userId)}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to load user data for summary: ${response.status} ${response.statusText}`,
+    );
+  }
+
+  const data = (await response.json()) as any;
+  const bowlers = Array.isArray(data.bowlers) ? data.bowlers : [];
+  const a3Cases = Array.isArray(data.a3Cases) ? data.a3Cases : [];
+  const dashboardSettings = data.dashboardSettings || {};
+
+  const context = JSON.stringify({
+    bowlers: bowlers.map((b: any) => ({
+      ...b,
+      group: b.group || 'Ungrouped',
+    })),
+    a3Cases: a3Cases.map((c: any) => {
+      const clone = { ...c };
+      delete (clone as any).mindMapNodes;
+      delete (clone as any).dataAnalysisImages;
+      delete (clone as any).resultImages;
+      delete (clone as any).dataAnalysisCanvasHeight;
+      delete (clone as any).resultCanvasHeight;
+      return clone;
+    }),
+  });
+
+  const prompt = `You are generating a monthly A3 / metric summary email for the Metric Bowler & A3 Problem Solving application.
+
+Use the provided context of bowler metrics and A3 cases.
+
+Goals:
+1) Provide an executive overview of overall metric performance.
+2) Highlight key metrics or groups that are off-track or at risk.
+3) Summarize the status and coverage of A3 problem-solving work.
+4) Suggest 3–5 specific focus areas for the upcoming month.
+
+Write the response as a clear, concise email body suitable for busy leaders. Do not use markdown or code fences.`;
+
+  const aiModelFromSettings =
+    typeof dashboardSettings.aiModel === 'string' ? dashboardSettings.aiModel : null;
+  const model = getValidModel(aiModelFromSettings || job.aiModel || null);
+
+  const summary = await generateComprehensiveSummary(context, prompt, model);
+  const html = buildSimpleHtmlFromText(summary);
+
+  return {
+    ...job,
+    body: summary,
+    bodyHtml: html,
+  };
+};
+
 export default {
   async fetch(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
     const corsHeaders = {
@@ -76,12 +223,14 @@ export default {
             userId?: string;
             recipients: string[];
             subject: string;
-            body: string;
+            body?: string;
             bodyHtml?: string;
             sendAt: string;
+            mode?: 'manual' | 'autoSummary';
+            aiModel?: string;
           };
 
-          const { userId, recipients, subject, body, bodyHtml, sendAt } = data;
+          const { userId, recipients, subject, body, bodyHtml, sendAt, mode, aiModel } = data;
 
           if (!Array.isArray(recipients) || recipients.length === 0) {
             return new Response(
@@ -93,7 +242,32 @@ export default {
             );
           }
 
-          if (!subject || !body) {
+          if (!subject) {
+            return new Response(
+              JSON.stringify({ success: false, error: 'Subject is required' }),
+              {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              },
+            );
+          }
+
+          const jobMode: 'manual' | 'autoSummary' = mode === 'autoSummary' ? 'autoSummary' : 'manual';
+
+          if (jobMode === 'autoSummary') {
+            if (!userId) {
+              return new Response(
+                JSON.stringify({
+                  success: false,
+                  error: 'userId is required for auto summary emails',
+                }),
+                {
+                  status: 400,
+                  headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                },
+              );
+            }
+          } else if (!body) {
             return new Response(
               JSON.stringify({ success: false, error: 'Subject and body are required' }),
               {
@@ -121,10 +295,12 @@ export default {
             userId: userId || null,
             recipients,
             subject,
-            body,
+            body: body || '',
             bodyHtml,
             sendAt: sendAtMs,
             sent: false,
+            mode: jobMode,
+            aiModel,
           };
 
           await env.EMAIL_JOBS.put(`email:${id}`, JSON.stringify(job));
@@ -238,7 +414,11 @@ export default {
         ctx.waitUntil(
           (async () => {
             try {
-              await sendEmailWithResend(env, job);
+              let jobToSend = job;
+              if (job.mode === 'autoSummary') {
+                jobToSend = await buildAutoSummaryForJob(job);
+              }
+              await sendEmailWithResend(env, jobToSend);
               job.sent = true;
               await env.EMAIL_JOBS.put(key.name, JSON.stringify(job));
             } catch (err) {

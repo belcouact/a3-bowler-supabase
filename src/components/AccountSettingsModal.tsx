@@ -119,13 +119,9 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
       return;
     }
     if (!emailSubject) {
-      const base =
-        scheduleFrequency === 'weekly'
-          ? 'Weekly A3 / metric summary'
-          : 'Monthly A3 / metric summary';
-      setEmailSubject(base);
+      setEmailSubject('Monthly A3 / metric summary');
     }
-  }, [isOpen, scheduleFrequency, emailSubject]);
+  }, [isOpen, emailSubject]);
 
   if (!isOpen) return null;
 
@@ -649,22 +645,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
     }
   };
 
-  const handleAutoGenerateSummaryAndSend = async () => {
-    const recipients = emailRecipients
-      .split(/[,\n]/)
-      .map(r => r.trim())
-      .filter(r => r.length > 0);
-
-    if (recipients.length === 0) {
-      toast.error('Please enter at least one recipient email');
-      return;
-    }
-
-    if (!emailSubject.trim()) {
-      toast.error('Please enter an email subject');
-      return;
-    }
-
+  const handleGenerateSummaryForMessage = async () => {
     setIsAutoGenerating(true);
     try {
       const context = generateAIContext(bowlers, a3Cases);
@@ -767,32 +748,10 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
         latestSummaryHtmlForEmail: finalEmailHtml,
       });
 
-      const userId = user?.username || undefined;
-
-      if (emailMode === 'scheduled') {
-        const sendAtDate = getNextScheduledSendAt();
-        await dataService.scheduleEmail({
-          userId,
-          recipients,
-          subject: emailSubject.trim(),
-          body: emailSummary.trim(),
-          bodyHtml: finalEmailHtml,
-          sendAt: sendAtDate.toISOString(),
-        });
-        toast.success('AI summary generated and email scheduled');
-      } else {
-        await dataService.sendEmailNow({
-          userId,
-          recipients,
-          subject: emailSubject.trim(),
-          body: emailSummary.trim(),
-          bodyHtml: finalEmailHtml,
-        });
-        toast.success('AI summary generated and email sent');
-      }
+      toast.success('AI summary generated');
     } catch (error: any) {
-      console.error('Auto summary email error:', error);
-      toast.error(error.message || 'Failed to generate summary and send email');
+      console.error('Generate summary error:', error);
+      toast.error(error.message || 'Failed to generate summary');
     } finally {
       setIsAutoGenerating(false);
     }
@@ -851,11 +810,6 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
       return;
     }
 
-    if (!emailBody.trim()) {
-      toast.error('Please enter an email body');
-      return;
-    }
-
     let sendAtDate: Date | null = null;
 
     if (emailMode === 'scheduled') {
@@ -874,21 +828,44 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
       sendAtDate = parsed;
     }
 
+    if (emailMode === 'oneTime' && !emailBody.trim()) {
+      toast.error('Please enter an email body or generate a summary');
+      return;
+    }
+
+    if (emailMode === 'scheduled' && !user?.username) {
+      toast.error('You must be logged in to schedule recurring summary emails');
+      return;
+    }
+
     setIsScheduling(true);
     try {
       const userId = user?.username || undefined;
-      const htmlForSend =
-        emailBodyHtml && emailBodyHtml.trim() !== ''
-          ? emailBodyHtml
-          : buildSimpleHtmlFromText(emailBody.trim());
-      await dataService.scheduleEmail({
-        userId,
-        recipients,
-        subject: emailSubject.trim(),
-        body: emailBody.trim(),
-        bodyHtml: htmlForSend,
-        sendAt: sendAtDate.toISOString(),
-      });
+
+      if (emailMode === 'scheduled') {
+        await dataService.scheduleEmail({
+          userId,
+          recipients,
+          subject: emailSubject.trim(),
+          body: '',
+          sendAt: sendAtDate.toISOString(),
+          mode: 'autoSummary',
+          aiModel: dashboardSettings.aiModel,
+        });
+      } else {
+        const htmlForSend =
+          emailBodyHtml && emailBodyHtml.trim() !== ''
+            ? emailBodyHtml
+            : buildSimpleHtmlFromText(emailBody.trim());
+        await dataService.scheduleEmail({
+          userId,
+          recipients,
+          subject: emailSubject.trim(),
+          body: emailBody.trim(),
+          bodyHtml: htmlForSend,
+          sendAt: sendAtDate.toISOString(),
+        });
+      }
       toast.success('Email scheduled successfully');
     } catch (error: any) {
       toast.error(error.message || 'Failed to schedule email');
@@ -1139,51 +1116,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                     type="text"
                     value={emailSubject}
                     onChange={(e) => setEmailSubject(e.target.value)}
-                    placeholder="Weekly A3 / metric summary"
-                    className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
-                  />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Message</label>
-                    <div className="flex space-x-2">
-                      <button
-                        type="button"
-                        className="text-xs px-2 py-1 rounded border border-blue-500 text-blue-600 hover:bg-blue-50"
-                        onClick={() => {
-                          const summary = dashboardSettings.latestSummaryForEmail;
-                          if (!summary) {
-                            toast.error('No latest AI summary found. Please run one-click summary first.');
-                            return;
-                          }
-                          setEmailBody(summary);
-                          if (dashboardSettings.latestSummaryHtmlForEmail) {
-                            setEmailBodyHtml(dashboardSettings.latestSummaryHtmlForEmail);
-                          } else {
-                            setEmailBodyHtml(null);
-                          }
-                        }}
-                      >
-                        Insert latest summary
-                      </button>
-                      <button
-                        type="button"
-                        className="text-xs px-2 py-1 rounded border border-blue-500 text-blue-600 hover:bg-blue-50 disabled:opacity-60 disabled:cursor-not-allowed"
-                        onClick={handleAutoGenerateSummaryAndSend}
-                        disabled={isAutoGenerating || isScheduling || isSendingNow}
-                      >
-                        {isAutoGenerating ? 'Auto generating…' : 'Auto generate summary'}
-                      </button>
-                    </div>
-                  </div>
-                  <textarea
-                    value={emailBody}
-                    onChange={(e) => {
-                      setEmailBody(e.target.value);
-                      setEmailBodyHtml(null);
-                    }}
-                    rows={4}
-                    placeholder="Add the summary or message you want to email."
+                    placeholder="Monthly A3 / metric summary"
                     className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
                   />
                 </div>
@@ -1278,14 +1211,39 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       </>
                     )}
                     {emailMode === 'oneTime' && (
-                      <div>
-                        <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Send At</label>
-                        <input
-                          type="datetime-local"
-                          value={emailSendAt}
-                          onChange={(e) => setEmailSendAt(e.target.value)}
-                          className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
-                        />
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Send At</label>
+                          <input
+                            type="datetime-local"
+                            value={emailSendAt}
+                            onChange={(e) => setEmailSendAt(e.target.value)}
+                            className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                          />
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Message</label>
+                            <button
+                              type="button"
+                              className="text-xs px-2 py-1 rounded border border-blue-500 text-blue-600 hover:bg-blue-50 disabled:opacity-60 disabled:cursor-not-allowed"
+                              onClick={handleGenerateSummaryForMessage}
+                              disabled={isAutoGenerating || isScheduling || isSendingNow}
+                            >
+                              {isAutoGenerating ? 'Generating…' : 'Generate summary'}
+                            </button>
+                          </div>
+                          <textarea
+                            value={emailBody}
+                            onChange={(e) => {
+                              setEmailBody(e.target.value);
+                              setEmailBodyHtml(null);
+                            }}
+                            rows={4}
+                            placeholder="Add the summary or message you want to email."
+                            className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                          />
+                        </div>
                       </div>
                     )}
                   </div>
