@@ -136,7 +136,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
       return;
     }
     if (!emailSubject) {
-      setEmailSubject('Monthly A3 / metric summary');
+      setEmailSubject('Monthly A3 / Bowler Summary');
     }
   }, [isOpen, emailSubject]);
 

@@ -1,3 +1,5 @@
+/// <reference types="@cloudflare/workers-types" />
+
 export interface Env {
   EMAIL_JOBS: KVNamespace;
   RESEND_API_KEY: string;
@@ -81,7 +83,7 @@ const buildSimpleHtmlFromText = (text: string): string => {
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Monthly A3 / metric summary</title>
+  <title>Monthly A3 / Bowler Summary</title>
 </head>
 <body>
   <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6;">
@@ -121,10 +123,10 @@ const generateComprehensiveSummary = async (
       throw new Error(`API Error: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data: any = await response.json();
     return (
-      data.choices?.[0]?.message?.content ||
-      data.choices?.[0]?.delta?.content ||
+      (data.choices?.[0]?.message?.content as string | undefined) ||
+      (data.choices?.[0]?.delta?.content as string | undefined) ||
       "Sorry, I couldn't generate a response."
     );
   } catch (error) {
@@ -437,13 +439,13 @@ export default {
     }
   },
 
-  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+  async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
     const now = Date.now();
     let cursor: string | undefined = undefined;
     let done = false;
 
     while (!done) {
-      const list = await env.EMAIL_JOBS.list({ prefix: 'email:', cursor });
+      const list: any = await env.EMAIL_JOBS.list({ prefix: 'email:', cursor });
       cursor = list.cursor;
       done = list.list_complete;
 
