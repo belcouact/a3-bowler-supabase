@@ -25,7 +25,11 @@ const parseTarget = (targetStr: string): { min?: number; max?: number; val?: num
     return isNaN(val) ? {} : { val };
 };
 
-export const analyzeMetric = async (metric: Metric, model: AIModelKey): Promise<AnalysisResult> => {
+export const analyzeMetric = async (
+  metric: Metric,
+  model: AIModelKey,
+  linkedA3Cases: A3Case[],
+): Promise<AnalysisResult> => {
   const months = Object.keys(metric.monthlyData || {}).sort();
   const dataPoints: { month: string; actual: string; target: string }[] = [];
   const numericActuals: number[] = [];
@@ -44,6 +48,42 @@ export const analyzeMetric = async (metric: Metric, model: AIModelKey): Promise<
   });
 
   const stats = calculateStats(numericActuals);
+
+  const completedA3s = (linkedA3Cases || []).filter(
+    c => (c.status || '').trim().toLowerCase() === 'completed',
+  );
+  const otherA3s = (linkedA3Cases || []).filter(
+    c => (c.status || '').trim().toLowerCase() !== 'completed',
+  );
+
+  const a3ContextForPrompt =
+    completedA3s.length === 0 && otherA3s.length === 0
+      ? 'No A3 cases are currently linked to this metric.'
+      : JSON.stringify(
+          {
+            completedA3s: completedA3s.map(c => ({
+              id: c.id,
+              title: c.title,
+              owner: c.owner,
+              group: c.group,
+              tag: c.tag,
+              startDate: c.startDate,
+              endDate: c.endDate,
+            })),
+            otherA3s: otherA3s.map(c => ({
+              id: c.id,
+              title: c.title,
+              owner: c.owner,
+              group: c.group,
+              tag: c.tag,
+              status: c.status,
+              startDate: c.startDate,
+              endDate: c.endDate,
+            })),
+          },
+          null,
+          2,
+        );
   
   // Try to calculate Capability (very rough estimate based on latest target)
   let capabilityInfo = "Not calculated (insufficient data or complex targets).";
@@ -91,6 +131,9 @@ export const analyzeMetric = async (metric: Metric, model: AIModelKey): Promise<
   - Max: ${stats.max}
   - Process Capability: ${capabilityInfo}
 
+  Linked A3 Problem-Solving Context (for this metric only):
+  ${a3ContextForPrompt}
+
   Raw Data (Month | Actual | Target):
   ${dataPoints.map(p => `${p.month} | ${p.actual} | ${p.target}`).join('\n')}
 
@@ -111,7 +154,13 @@ export const analyzeMetric = async (metric: Metric, model: AIModelKey): Promise<
      - If "improving", suggest standardizing the new methods.
      - Relate suggestions to the Metric Definition and Attribute.
 
-  4. **Summary:** Provide a professional statistical summary. Mention stability (variation), capability (meeting targets), and any significant shifts. Avoid generic phrases.
+  4. **Completed A3 Effectiveness and Next Step:**
+     - If there are linked A3 cases, especially any with status "Completed", briefly assess whether performance appears to have improved after the A3 end date based on the data.
+     - Comment explicitly on whether the completed A3 work appears effective or not.
+     - Recommend the most appropriate next step (for example: sustain and standardize gains, run follow-up verification, extend or revise the A3, or initiate a new A3 with a different problem focus).
+     - If there are no linked A3 cases and the process is unstable, degrading, or incapable, explicitly recommend starting an A3 and outline the likely problem focus.
+
+  5. **Summary:** Provide a professional statistical summary. Mention stability (variation), capability (meeting targets), any significant shifts, and how current or future A3 work should focus on this metric. Avoid generic phrases.
 
   Response Format (JSON ONLY):
   {

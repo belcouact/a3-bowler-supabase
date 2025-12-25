@@ -44,7 +44,9 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initi
         role: 'system',
         content: `You are an AI assistant for the Metric Bowler & A3 Problem Solving application. 
         Here is the current data in the application: ${context}.
-        Answer the user's questions based on this data. Be concise and helpful.`
+        Answer the user's questions based on this data. Be concise and helpful.
+        When a question involves a specific metric, look for any A3 cases whose linkedMetricIds include that metric's id.
+        If there are completed A3 cases linked to the metric, briefly comment on whether performance appears to have improved since those A3s were closed and suggest the next step (for example: sustain, follow-up A3, or additional countermeasures).`
       };
 
       const historyMessages = messages.filter(m => m.role !== 'system');

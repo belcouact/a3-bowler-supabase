@@ -152,7 +152,10 @@ const MetricBowler = () => {
   const handleAIAnalysis = async (metric: Metric) => {
     setAnalyzingMetrics(prev => ({ ...prev, [metric.id]: true }));
     try {
-        const result = await analyzeMetric(metric, selectedModel);
+        const linkedA3Cases = a3Cases.filter(
+          c => (c.linkedMetricIds || []).includes(metric.id),
+        );
+        const result = await analyzeMetric(metric, selectedModel, linkedA3Cases);
         setAnalysisResult(result);
         setAnalyzingMetricName(metric.name);
         setIsAnalysisModalOpen(true);

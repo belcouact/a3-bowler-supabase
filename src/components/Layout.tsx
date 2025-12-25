@@ -1242,14 +1242,29 @@ const groupFilterOptions = useMemo(
       const failingMetricsForAI = groupPerformanceTableData.filter(row => row.fail2 || row.fail3);
 
       const statsForPrompt = JSON.stringify(
-        failingMetricsForAI.map(row => ({
-          groupName: row.groupName,
-          metricName: row.metricName,
-          latestMet: row.latestMet,
-          fail2: row.fail2,
-          fail3: row.fail3,
-          achievementRate: row.achievementRate != null ? Number(row.achievementRate.toFixed(1)) : null,
-        })),
+        failingMetricsForAI.map(row => {
+          const linked = a3Cases.filter(c => (c.linkedMetricIds || []).includes(row.metricId));
+          const completedCount = linked.filter(
+            c => (c.status || '').trim().toLowerCase() === 'completed',
+          ).length;
+          const activeCount = linked.filter(
+            c => (c.status || '').trim().toLowerCase() !== 'completed',
+          ).length;
+
+          return {
+            groupName: row.groupName,
+            metricName: row.metricName,
+            metricId: row.metricId,
+            latestMet: row.latestMet,
+            fail2: row.fail2,
+            fail3: row.fail3,
+            achievementRate:
+              row.achievementRate != null ? Number(row.achievementRate.toFixed(1)) : null,
+            linkedA3Total: linked.length,
+            linkedA3Completed: completedCount,
+            linkedA3Active: activeCount,
+          };
+        }),
         null,
         2,
       );
@@ -1266,17 +1281,24 @@ Definitions:
 - fail2: true if the metric missed its target for the latest 2 consecutive months.
 - fail3: true if the metric missed its target for the latest 3 consecutive months.
 - achievementRate: percentage of historical data points that met target.
+- metricId: unique id of the metric (matches linkedMetricIds in A3 cases from context).
+- linkedA3Total: total number of A3 cases linked to this metric.
+- linkedA3Completed: number of linked A3s with status "Completed".
+- linkedA3Active: number of linked A3s that are not completed.
 
 Tasks:
 1) Write "executiveSummary": a concise high-level snapshot of overall portfolio performance across metrics and A3 activity.
-2) Write "a3Summary": an overview of the A3 problem-solving portfolio (key themes, progress, and coverage).
+2) Write "a3Summary": an overview of the A3 problem-solving portfolio (key themes, progress, coverage, and where A3 work is effective or insufficient).
 3) Build "areasOfConcern": each entry must correspond to one metric from the snapshot where fail2 or fail3 is true.
-   - For each metric, write a rich, multi-sentence issue description that references consecutive failures and achievementRate.
+   - For each metric, write a rich, multi-sentence issue description that references consecutive failures, achievementRate, and any linked A3 activity.
    - For each metric, provide a detailed, action-oriented suggestion that can guide real improvement work (diagnosis, countermeasures, and follow-up).
 
 Guidance for areasOfConcern:
 - Prioritize metrics with fail3 = true, then fail2 = true.
 - Use latestMet and achievementRate to describe severity and risk.
+- Use metricId together with the A3 cases in the provided context to identify any A3s linked to each metric.
+- When linkedA3Completed > 0, briefly assess whether performance appears to have improved since those A3s were completed and state whether the A3 work seems effective or not.
+- When linkedA3Total = 0 or performance is still weak despite completed A3s, explicitly recommend the next A3 step (for example: start a new A3, extend or revise an existing A3, or move to follow-up/standardization).
 - Focus on actionable, metric-specific improvement suggestions (avoid generic advice).
 - Suggestions should reflect typical quality, process-improvement, and problem-solving practices.
 - Each suggestion should describe concrete next actions, such as specific analyses to run, experiments or pilots to try, process changes to test, and how to monitor impact over the next 2–3 months.
@@ -2653,9 +2675,6 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       {portfolioTab === 'a3' && (
                         <>
                           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                            <div className="text-xs text-gray-500">
-                              Filter A3 pby portfolio group.
-                            </div>
                             <div className="flex items-center gap-2">
                               <span className="text-[11px] text-gray-500">Group</span>
                               <select
@@ -2671,13 +2690,16 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 ))}
                               </select>
                             </div>
-                      </div>
-                      <div className="mt-4">
-                        <p className="text-xs font-semibold tracking-wide text-gray-600 uppercase">
-                          A3 Dashboard
-                        </p>
-                      </div>
-                      <div className="mt-2 pt-4 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                          </div>
+                          <div className="mt-4">
+                            <p className="text-xs font-semibold tracking-wide text-gray-600 uppercase">
+                              A3 Dashboard
+                            </p>
+                            <p className="mt-0.5 text-xs text-gray-500">
+                              Snapshot of portfolio A3s addressing at-risk metrics by coverage, timing, status, and priority.
+                            </p>
+                          </div>
+                          <div className="mt-2 pt-4 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                         <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
                               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                                 Metric A3 Coverage
