@@ -47,6 +47,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
   const [scheduleDayOfWeek, setScheduleDayOfWeek] = useState<number>(1);
   const [scheduleDayOfMonth, setScheduleDayOfMonth] = useState<number>(1);
   const [scheduleTime, setScheduleTime] = useState<string>('08:00');
+  const [hasInitializedSchedule, setHasInitializedSchedule] = useState(false);
   const [emailMode, setEmailMode] = useState<'scheduled' | 'oneTime'>('scheduled');
 
   useEffect(() => {
@@ -64,6 +65,10 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
 
   useEffect(() => {
     if (!isOpen) {
+      setHasInitializedSchedule(false);
+      return;
+    }
+    if (hasInitializedSchedule) {
       return;
     }
     const existing = dashboardSettings.emailSchedule;
@@ -81,10 +86,14 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
         setScheduleTime(existing.timeOfDay);
       }
     }
-  }, [isOpen, dashboardSettings.emailSchedule]);
+    setHasInitializedSchedule(true);
+  }, [isOpen, dashboardSettings.emailSchedule, hasInitializedSchedule]);
 
   useEffect(() => {
     if (!isOpen) {
+      return;
+    }
+    if (!hasInitializedSchedule) {
       return;
     }
     setDashboardSettings({
@@ -96,7 +105,15 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
         timeOfDay: scheduleTime,
       },
     });
-  }, [scheduleFrequency, scheduleDayOfWeek, scheduleDayOfMonth, scheduleTime, isOpen, setDashboardSettings]);
+  }, [
+    scheduleFrequency,
+    scheduleDayOfWeek,
+    scheduleDayOfMonth,
+    scheduleTime,
+    isOpen,
+    setDashboardSettings,
+    hasInitializedSchedule,
+  ]);
 
   useEffect(() => {
     if (!isOpen) {
