@@ -264,6 +264,30 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
     }
   };
 
+  const buildSimpleHtmlFromText = (text: string) => {
+    const escaped = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+
+    const withBreaks = escaped.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n/g, '<br />');
+
+    return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>A3 Summary Email</title>
+</head>
+<body>
+  <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6;">
+    ${withBreaks}
+  </div>
+</body>
+</html>`;
+  };
+
   const buildEmailHtmlForRows = (raw: string, rows: GroupPerformanceRow[]) => {
     try {
       const clean = raw.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -730,15 +754,17 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
       const summary = await generateComprehensiveSummary(context, prompt, selectedModel);
 
       const emailSummary = buildEmailSummaryForRows(summary, rows);
-      const emailHtml = buildEmailHtmlForRows(summary, rows);
+      const richHtml = buildEmailHtmlForRows(summary, rows);
+      const finalEmailHtml =
+        richHtml && richHtml.trim() !== '' ? richHtml : buildSimpleHtmlFromText(emailSummary);
 
       setEmailBody(emailSummary);
-      setEmailBodyHtml(emailHtml || null);
+      setEmailBodyHtml(finalEmailHtml);
 
       setDashboardSettings({
         ...dashboardSettings,
         latestSummaryForEmail: emailSummary,
-        latestSummaryHtmlForEmail: emailHtml || undefined,
+        latestSummaryHtmlForEmail: finalEmailHtml,
       });
 
       const userId = user?.username || undefined;
@@ -750,7 +776,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
           recipients,
           subject: emailSubject.trim(),
           body: emailSummary.trim(),
-          bodyHtml: emailHtml || undefined,
+          bodyHtml: finalEmailHtml,
           sendAt: sendAtDate.toISOString(),
         });
         toast.success('AI summary generated and email scheduled');
@@ -760,7 +786,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
           recipients,
           subject: emailSubject.trim(),
           body: emailSummary.trim(),
-          bodyHtml: emailHtml || undefined,
+          bodyHtml: finalEmailHtml,
         });
         toast.success('AI summary generated and email sent');
       }
@@ -851,12 +877,16 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
     setIsScheduling(true);
     try {
       const userId = user?.username || undefined;
+      const htmlForSend =
+        emailBodyHtml && emailBodyHtml.trim() !== ''
+          ? emailBodyHtml
+          : buildSimpleHtmlFromText(emailBody.trim());
       await dataService.scheduleEmail({
         userId,
         recipients,
         subject: emailSubject.trim(),
         body: emailBody.trim(),
-        bodyHtml: emailBodyHtml || undefined,
+        bodyHtml: htmlForSend,
         sendAt: sendAtDate.toISOString(),
       });
       toast.success('Email scheduled successfully');
@@ -891,12 +921,16 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
     setIsSendingNow(true);
     try {
       const userId = user?.username || undefined;
+      const htmlForSend =
+        emailBodyHtml && emailBodyHtml.trim() !== ''
+          ? emailBodyHtml
+          : buildSimpleHtmlFromText(emailBody.trim());
       await dataService.sendEmailNow({
         userId,
         recipients,
         subject: emailSubject.trim(),
         body: emailBody.trim(),
-        bodyHtml: emailBodyHtml || undefined,
+        bodyHtml: htmlForSend,
       });
       toast.success('Email sent successfully');
     } catch (error: any) {
