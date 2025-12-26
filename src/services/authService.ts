@@ -96,4 +96,18 @@ export const authService = {
     }
     return responseData;
   },
+
+  async getUsers() {
+    const response = await fetch(`${API_BASE_URL}/users`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const responseData = await response.json().catch(() => ({}));
+    if (!response.ok || responseData.success === false) {
+      throw new Error(responseData.error || responseData.message || 'Failed to fetch users');
+    }
+    return responseData;
+  },
 };

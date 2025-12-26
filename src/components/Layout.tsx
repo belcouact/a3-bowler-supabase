@@ -7,6 +7,7 @@ import { Bowler, Metric, AIModelKey, GroupPerformanceRow } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { dataService } from '../services/dataService';
+import { authService } from '../services/authService';
 import { useToast } from '../context/ToastContext';
 import { getBowlerStatusColor, computeGroupPerformanceTableData } from '../utils/metricUtils';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
@@ -154,19 +155,63 @@ const Layout = () => {
   const [adminTab, setAdminTab] = useState<'users' | 'audit'>('users');
   const [adminAccounts, setAdminAccounts] = useState<AdminAccount[]>([]);
   const [adminAuditLogs, setAdminAuditLogs] = useState<AuditLogEntry[]>([]);
+  const [isLoadingAdminUsers, setIsLoadingAdminUsers] = useState(false);
+  const [adminUsersError, setAdminUsersError] = useState<string | null>(null);
+
+  const loadAdminUsers = async () => {
+    setIsLoadingAdminUsers(true);
+    setAdminUsersError(null);
+    try {
+      const localRaw = localStorage.getItem('user_accounts');
+      const localAccounts: AdminAccount[] = localRaw ? JSON.parse(localRaw) : [];
+      const localMap = new Map(localAccounts.map(account => [account.username, account]));
+
+      const response = await authService.getUsers();
+      const apiUsers = (response as any).users || response || [];
+
+      const mergedAccounts: AdminAccount[] = (apiUsers as any[]).map(user => {
+        const profile = user.profile || {};
+        const local = localMap.get(user.username);
+        const profileIsPublic = typeof profile.isPublic === 'boolean' ? profile.isPublic : undefined;
+        return {
+          username: user.username,
+          email: (local && local.email) || profile.email,
+          role: (local && local.role) || user.role,
+          country: (local && local.country) || profile.country,
+          plant: (local && local.plant) || profile.plant,
+          team: (local && local.team) || profile.team,
+          isPublicProfile:
+            local && typeof local.isPublicProfile === 'boolean'
+              ? local.isPublicProfile
+              : profileIsPublic,
+          lastLoginAt:
+            (local && local.lastLoginAt) ||
+            (user.createdAt ? new Date(user.createdAt).toISOString() : undefined),
+        };
+      });
+
+      setAdminAccounts(mergedAccounts);
+    } catch (error: any) {
+      console.error('Failed to load users from server', error);
+      setAdminUsersError(error?.message || 'Failed to load users from server');
+      try {
+        const rawAccounts = localStorage.getItem('user_accounts');
+        const parsedAccounts: AdminAccount[] = rawAccounts ? JSON.parse(rawAccounts) : [];
+        setAdminAccounts(parsedAccounts);
+      } catch (fallbackError) {
+        console.error('Failed to load user accounts from local storage', fallbackError);
+        setAdminAccounts([]);
+      }
+    } finally {
+      setIsLoadingAdminUsers(false);
+    }
+  };
 
   useEffect(() => {
     if (!isAdminPanelOpen) {
       return;
     }
-    try {
-      const rawAccounts = localStorage.getItem('user_accounts');
-      const parsedAccounts: AdminAccount[] = rawAccounts ? JSON.parse(rawAccounts) : [];
-      setAdminAccounts(parsedAccounts);
-    } catch (error) {
-      console.error('Failed to load user accounts', error);
-      setAdminAccounts([]);
-    }
+    loadAdminUsers();
     try {
       const rawLogs = localStorage.getItem('audit_logs');
       const parsedLogs: AuditLogEntry[] = rawLogs ? JSON.parse(rawLogs) : [];
@@ -3575,7 +3620,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
 
       {isAdminPanelOpen && (
         <div className="fixed inset-0 z-[120] bg-gray-900/80 flex flex-col">
-          <div className="flex-1 bg-white flex flex-col max-w-6xl w-full mx-auto my-6 rounded-lg shadow-2xl overflow-hidden">
+          <div className="flex-1 bg-white flex flex-col w-full h-full rounded-none shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
               <div className="flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-700 text-white text-sm font-semibold">
@@ -3586,7 +3631,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                     Admin Center
                   </h2>
                   <p className="text-xs text-gray-500">
-                    Manage users and review activity on this browser.
+                    Manage all registered users and review activity on this device.
                   </p>
                 </div>
               </div>
@@ -3630,31 +3675,29 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                 <div className="h-full flex flex-col">
                   <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-semibold text-gray-900">Accounts on this browser</h3>
+                      <h3 className="text-sm font-semibold text-gray-900">All registered accounts</h3>
                       <p className="text-xs text-gray-500">
-                        These accounts come from successful logins in this browser.
+                        Loaded from the login service, with local last-login where available.
                       </p>
                     </div>
                     <button
-                      onClick={() => {
-                        try {
-                          const rawAccounts = localStorage.getItem('user_accounts');
-                          const parsedAccounts: AdminAccount[] = rawAccounts ? JSON.parse(rawAccounts) : [];
-                          setAdminAccounts(parsedAccounts);
-                        } catch (error) {
-                          console.error('Failed to reload user accounts', error);
-                          setAdminAccounts([]);
-                        }
-                      }}
+                      onClick={loadAdminUsers}
                       className="text-xs px-3 py-1.5 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
                     >
                       Refresh
                     </button>
                   </div>
                   <div className="flex-1 overflow-auto px-6 py-4">
-                    {adminAccounts.length === 0 ? (
+                    {adminUsersError && (
+                      <p className="mb-2 text-xs text-red-500">
+                        {adminUsersError}
+                      </p>
+                    )}
+                    {isLoadingAdminUsers ? (
+                      <p className="text-sm text-gray-500">Loading users...</p>
+                    ) : adminAccounts.length === 0 ? (
                       <p className="text-sm text-gray-500">
-                        No accounts have been recorded yet. Log in to start tracking accounts.
+                        No accounts have been recorded yet.
                       </p>
                     ) : (
                       <table className="min-w-full border border-gray-200 text-xs">
