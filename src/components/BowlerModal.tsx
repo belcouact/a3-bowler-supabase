@@ -4,6 +4,28 @@ import { Bowler, Metric } from '../context/AppContext';
 import clsx from 'clsx';
 import { generateShortId } from '../utils/idUtils';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
+
+interface AuditLogEntry {
+  id: string;
+  type: string;
+  username?: string;
+  timestamp: string;
+  summary: string;
+  details?: any;
+}
+
+const appendAuditLog = (entry: AuditLogEntry) => {
+  try {
+    const raw = localStorage.getItem('audit_logs');
+    const logs: AuditLogEntry[] = raw ? JSON.parse(raw) : [];
+    const next = [entry, ...logs];
+    const trimmed = next.slice(0, 500);
+    localStorage.setItem('audit_logs', JSON.stringify(trimmed));
+  } catch (error) {
+    console.error('Failed to append audit log', error);
+  }
+};
 
 interface BowlerModalProps {
   isOpen: boolean;
@@ -16,6 +38,7 @@ interface BowlerModalProps {
 const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerModalProps) => {
   const [activeTab, setActiveTab] = useState<'General' | 'Metrics'>('General');
   const toast = useToast();
+  const { user } = useAuth();
   
   // General State
   const [generalData, setGeneralData] = useState({
@@ -71,6 +94,18 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
       targetMeetingRule: 'gte'
     };
     setMetrics([...metrics, newMetric]);
+    if (user?.username) {
+      appendAuditLog({
+        id: generateShortId(),
+        type: 'metric_created',
+        username: user.username,
+        timestamp: new Date().toISOString(),
+        summary: 'Created new metric in bowler editor',
+        details: {
+          metricId: newMetric.id,
+        },
+      });
+    }
   };
 
   const handleUpdateMetric = (id: string, field: keyof Metric, value: string) => {

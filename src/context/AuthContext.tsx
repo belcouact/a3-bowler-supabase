@@ -1,5 +1,54 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { authService, User } from '../services/authService';
+import { generateShortId } from '../utils/idUtils';
+
+interface AuditLogEntry {
+  id: string;
+  type: string;
+  username?: string;
+  timestamp: string;
+  summary: string;
+  details?: any;
+}
+
+const appendAuditLog = (entry: AuditLogEntry) => {
+  try {
+    const raw = localStorage.getItem('audit_logs');
+    const logs: AuditLogEntry[] = raw ? JSON.parse(raw) : [];
+    const next = [entry, ...logs];
+    const trimmed = next.slice(0, 500);
+    localStorage.setItem('audit_logs', JSON.stringify(trimmed));
+  } catch (error) {
+    console.error('Failed to append audit log', error);
+  }
+};
+
+const updateUserAccounts = (user: User) => {
+  try {
+    const raw = localStorage.getItem('user_accounts');
+    const list: any[] = raw ? JSON.parse(raw) : [];
+    const now = new Date().toISOString();
+    const base = {
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      country: (user as any).country,
+      plant: (user as any).plant,
+      team: (user as any).team,
+      isPublicProfile: (user as any).isPublicProfile,
+      lastLoginAt: now,
+    };
+    const index = list.findIndex(item => item && item.username === user.username);
+    if (index >= 0) {
+      list[index] = { ...list[index], ...base };
+    } else {
+      list.push(base);
+    }
+    localStorage.setItem('user_accounts', JSON.stringify(list));
+  } catch (error) {
+    console.error('Failed to update user accounts', error);
+  }
+};
 
 interface AuthContextType {
   user: User | null;
@@ -43,6 +92,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userProfile = normalizeUser(apiUser);
       setUser(userProfile);
       localStorage.setItem('user', JSON.stringify(userProfile));
+      updateUserAccounts(userProfile);
+      appendAuditLog({
+        id: generateShortId(),
+        type: 'login',
+        username: userProfile.username,
+        timestamp: new Date().toISOString(),
+        summary: 'User login',
+        details: {
+          role: userProfile.role,
+          country: (userProfile as any).country,
+          plant: (userProfile as any).plant,
+          team: (userProfile as any).team,
+        },
+      });
     } finally {
       setIsLoading(false);
     }
@@ -78,6 +141,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const updatedUser = normalizeUser(apiUser);
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
+      updateUserAccounts(updatedUser);
     } catch (error) {
       console.error('Refresh user error:', error);
       throw error;

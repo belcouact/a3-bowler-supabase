@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Bot, Inbox } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Bot, Inbox, Users, Activity, X } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
 import { Bowler, Metric, AIModelKey, GroupPerformanceRow } from '../types';
@@ -50,6 +50,26 @@ const modelShortLabels: Record<AIModelKey, string> = {
   kimi: 'KI',
   glm: 'GL',
 };
+
+interface AdminAccount {
+  username: string;
+  email?: string;
+  role?: string;
+  country?: string;
+  plant?: string;
+  team?: string;
+  isPublicProfile?: boolean;
+  lastLoginAt?: string;
+}
+
+interface AuditLogEntry {
+  id: string;
+  type: string;
+  username?: string;
+  timestamp: string;
+  summary: string;
+  details?: any;
+}
 
 const Layout = () => {
   const location = useLocation();
@@ -130,6 +150,32 @@ const Layout = () => {
   const [isResizingA3TimelineSidebar, setIsResizingA3TimelineSidebar] = useState(false);
   const [a3TimelineSidebarDragStartX, setA3TimelineSidebarDragStartX] = useState(0);
   const [a3TimelineSidebarStartWidth, setA3TimelineSidebarStartWidth] = useState(260);
+  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
+  const [adminTab, setAdminTab] = useState<'users' | 'audit'>('users');
+  const [adminAccounts, setAdminAccounts] = useState<AdminAccount[]>([]);
+  const [adminAuditLogs, setAdminAuditLogs] = useState<AuditLogEntry[]>([]);
+
+  useEffect(() => {
+    if (!isAdminPanelOpen) {
+      return;
+    }
+    try {
+      const rawAccounts = localStorage.getItem('user_accounts');
+      const parsedAccounts: AdminAccount[] = rawAccounts ? JSON.parse(rawAccounts) : [];
+      setAdminAccounts(parsedAccounts);
+    } catch (error) {
+      console.error('Failed to load user accounts', error);
+      setAdminAccounts([]);
+    }
+    try {
+      const rawLogs = localStorage.getItem('audit_logs');
+      const parsedLogs: AuditLogEntry[] = rawLogs ? JSON.parse(rawLogs) : [];
+      setAdminAuditLogs(parsedLogs);
+    } catch (error) {
+      console.error('Failed to load audit logs', error);
+      setAdminAuditLogs([]);
+    }
+  }, [isAdminPanelOpen]);
 
   const a3PortfolioStats = useMemo(() => {
     const filteredCases = a3PortfolioGroupFilter
@@ -1876,6 +1922,16 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
               <Download className="w-4 h-4" />
             </button>
             <button
+              onClick={() => {
+                setAdminTab('users');
+                setIsAdminPanelOpen(true);
+              }}
+              className="p-2 rounded-md bg-slate-700 text-white shadow-sm hover:bg-slate-800 transition-colors"
+              title="User management & audit logs"
+            >
+              <Users className="w-4 h-4" />
+            </button>
+            <button
               onClick={() => navigate('/mindmap')}
               className="p-2 rounded-md bg-amber-500 text-white shadow-sm hover:bg-amber-600 transition-colors"
               title="Map Ideas"
@@ -1944,6 +2000,17 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   >
                     <Download className="w-4 h-4 mr-3" />
                     Download
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAdminTab('users');
+                      setIsAdminPanelOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-slate-700"
+                  >
+                    <Users className="w-4 h-4 mr-3" />
+                    User Mgmt & Logs
                   </button>
                   <button
                     onClick={() => {
@@ -3505,6 +3572,222 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
           )}
         </main>
       </div>
+
+      {isAdminPanelOpen && (
+        <div className="fixed inset-0 z-[120] bg-gray-900/80 flex flex-col">
+          <div className="flex-1 bg-white flex flex-col max-w-6xl w-full mx-auto my-6 rounded-lg shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-700 text-white text-sm font-semibold">
+                  <Users className="w-4 h-4" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-semibold text-gray-900">
+                    Admin Center
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    Manage users and review activity on this browser.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsAdminPanelOpen(false)}
+                className="rounded-full p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="px-6 pt-3 border-b border-gray-200 bg-white">
+              <div className="flex space-x-4 text-sm">
+                <button
+                  onClick={() => setAdminTab('users')}
+                  className={clsx(
+                    'inline-flex items-center gap-1 border-b-2 px-1.5 pb-2',
+                    adminTab === 'users'
+                      ? 'border-slate-700 text-slate-800'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200',
+                  )}
+                >
+                  <UserIcon className="w-4 h-4" />
+                  <span>User Mgmt</span>
+                </button>
+                <button
+                  onClick={() => setAdminTab('audit')}
+                  className={clsx(
+                    'inline-flex items-center gap-1 border-b-2 px-1.5 pb-2',
+                    adminTab === 'audit'
+                      ? 'border-slate-700 text-slate-800'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200',
+                  )}
+                >
+                  <Activity className="w-4 h-4" />
+                  <span>Audit Logs</span>
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-hidden bg-white">
+              {adminTab === 'users' ? (
+                <div className="h-full flex flex-col">
+                  <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-900">Accounts on this browser</h3>
+                      <p className="text-xs text-gray-500">
+                        These accounts come from successful logins in this browser.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        try {
+                          const rawAccounts = localStorage.getItem('user_accounts');
+                          const parsedAccounts: AdminAccount[] = rawAccounts ? JSON.parse(rawAccounts) : [];
+                          setAdminAccounts(parsedAccounts);
+                        } catch (error) {
+                          console.error('Failed to reload user accounts', error);
+                          setAdminAccounts([]);
+                        }
+                      }}
+                      className="text-xs px-3 py-1.5 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+                    >
+                      Refresh
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-auto px-6 py-4">
+                    {adminAccounts.length === 0 ? (
+                      <p className="text-sm text-gray-500">
+                        No accounts have been recorded yet. Log in to start tracking accounts.
+                      </p>
+                    ) : (
+                      <table className="min-w-full border border-gray-200 text-xs">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
+                              Username
+                            </th>
+                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
+                              Email
+                            </th>
+                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
+                              Role
+                            </th>
+                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
+                              Country
+                            </th>
+                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
+                              Plant/Office
+                            </th>
+                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
+                              Team
+                            </th>
+                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
+                              Visibility
+                            </th>
+                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200 whitespace-nowrap">
+                              Last Login
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {adminAccounts.map(account => (
+                            <tr key={account.username}>
+                              <td className="px-3 py-2 text-gray-900 font-medium">
+                                {account.username}
+                              </td>
+                              <td className="px-3 py-2 text-gray-700">
+                                {account.email || '—'}
+                              </td>
+                              <td className="px-3 py-2 text-gray-700">
+                                {account.role || '—'}
+                              </td>
+                              <td className="px-3 py-2 text-gray-700">
+                                {account.country || '—'}
+                              </td>
+                              <td className="px-3 py-2 text-gray-700">
+                                {account.plant || '—'}
+                              </td>
+                              <td className="px-3 py-2 text-gray-700">
+                                {account.team || '—'}
+                              </td>
+                              <td className="px-3 py-2 text-gray-700">
+                                {account.isPublicProfile === false ? 'Private' : 'Public'}
+                              </td>
+                              <td className="px-3 py-2 text-gray-700">
+                                {account.lastLoginAt
+                                  ? new Date(account.lastLoginAt).toLocaleString()
+                                  : '—'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="h-full flex flex-col">
+                  <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-900">Audit log for key actions</h3>
+                      <p className="text-xs text-gray-500">
+                        Includes login, metric creation, and A3 changes recorded in this browser.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        try {
+                          const rawLogs = localStorage.getItem('audit_logs');
+                          const parsedLogs: AuditLogEntry[] = rawLogs ? JSON.parse(rawLogs) : [];
+                          setAdminAuditLogs(parsedLogs);
+                        } catch (error) {
+                          console.error('Failed to reload audit logs', error);
+                          setAdminAuditLogs([]);
+                        }
+                      }}
+                      className="text-xs px-3 py-1.5 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+                    >
+                      Refresh
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-auto px-6 py-4">
+                    {adminAuditLogs.length === 0 ? (
+                      <p className="text-sm text-gray-500">
+                        No audit entries recorded yet.
+                      </p>
+                    ) : (
+                      <ul className="space-y-3">
+                        {adminAuditLogs.map(entry => (
+                          <li
+                            key={entry.id}
+                            className="border border-gray-200 rounded-md px-3 py-2 text-xs bg-gray-50/60"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-700">
+                                  {entry.type}
+                                </span>
+                                {entry.username && (
+                                  <span className="text-gray-700 font-medium">
+                                    {entry.username}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[10px] text-gray-500">
+                                {new Date(entry.timestamp).toLocaleString()}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-gray-800">
+                              {entry.summary}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <Suspense fallback={null}>
         <A3CaseModal 
