@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { X, LayoutDashboard, FileText, Sparkles, Upload, Download, Smartphone, Lightbulb, Inbox, Layers } from 'lucide-react';
+import { X, LayoutDashboard, FileText, Sparkles, Upload, Download, Smartphone, Lightbulb, Inbox, Layers, CalendarDays } from 'lucide-react';
 
 interface AppInfoModalProps {
   isOpen: boolean;
@@ -115,6 +115,18 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                     <p className="text-sm font-medium text-gray-900">Integrated View</p>
                     <p className="text-xs text-gray-600 mt-1">
                       See a combined portfolio of key bowlers and A3s for a single, aligned overview.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-teal-50/80">
+                  <div className="h-9 w-9 shrink-0 rounded-lg bg-teal-500 flex items-center justify-center">
+                    <CalendarDays className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">Auto Scheduling Updates</p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Schedule automatic data consolidation and email summaries so stakeholders receive fresh updates without manual steps.
                     </p>
                   </div>
                 </div>
