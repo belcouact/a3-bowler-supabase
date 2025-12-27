@@ -25,6 +25,10 @@ export interface DashboardSettings {
     recipients?: string;
     subject?: string;
   };
+  emailConsolidate?: {
+    enabled?: boolean;
+    tags?: string;
+  };
 }
 
 export interface Metric {

@@ -810,18 +810,76 @@ const buildAutoSummaryForJob = async (
   const a3Cases = Array.isArray(data.a3Cases) ? data.a3Cases : [];
   const dashboardSettings = data.dashboardSettings || null;
 
-  const normalizedBowlers = bowlers.map((b: any) => ({
+  let effectiveBowlers = bowlers;
+  let effectiveA3Cases = a3Cases;
+
+  try {
+    const consolidateSettings =
+      dashboardSettings && typeof dashboardSettings === 'object'
+        ? (dashboardSettings as any).emailConsolidate || {}
+        : {};
+
+    const consolidateEnabled =
+      typeof consolidateSettings.enabled === 'boolean'
+        ? consolidateSettings.enabled
+        : false;
+
+    if (consolidateEnabled) {
+      const rawTags =
+        typeof consolidateSettings.tags === 'string' ? consolidateSettings.tags : '';
+      const tags = rawTags
+        .split(',')
+        .map((t: string) => t.trim())
+        .filter((t: string) => t.length > 0);
+
+      if (tags.length > 0) {
+        const consolidateResponse = await fetch(
+          'https://bowler-worker.study-llm.me/consolidate',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ tags }),
+          },
+        );
+
+        if (consolidateResponse.ok) {
+          const consolidateData = (await consolidateResponse.json()) as any;
+          if (consolidateData && consolidateData.success) {
+            const mergedBowlers = Array.isArray(consolidateData.bowlers)
+              ? consolidateData.bowlers
+              : [];
+            const mergedA3Cases = Array.isArray(consolidateData.a3Cases)
+              ? consolidateData.a3Cases
+              : [];
+
+            if (mergedBowlers.length > 0 || mergedA3Cases.length > 0) {
+              effectiveBowlers = mergedBowlers;
+              effectiveA3Cases = mergedA3Cases;
+            }
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Consolidation before auto summary failed', error);
+  }
+
+  const normalizedBowlers = effectiveBowlers.map((b: any) => ({
     ...b,
     group: b.group || 'Ungrouped',
   }));
 
-  const rows = computeGroupPerformanceTableData(normalizedBowlers, a3Cases);
+  const rows = computeGroupPerformanceTableData(normalizedBowlers, effectiveA3Cases);
 
   const failingMetricsForAI = rows.filter(row => row.fail2 || row.fail3);
 
   const statsForPrompt = JSON.stringify(
     failingMetricsForAI.map(row => {
-      const linked = a3Cases.filter((c: any) => (c.linkedMetricIds || []).includes(row.metricId));
+      const linked = effectiveA3Cases.filter((c: any) =>
+        (c.linkedMetricIds || []).includes(row.metricId),
+      );
       const completedCount = linked.filter(
         (c: any) => (c.status || '').trim().toLowerCase() === 'completed',
       ).length;
@@ -849,7 +907,7 @@ const buildAutoSummaryForJob = async (
 
   const context = JSON.stringify({
     bowlers: normalizedBowlers,
-    a3Cases: a3Cases.map((c: any) => {
+    a3Cases: effectiveA3Cases.map((c: any) => {
       const clone = { ...c };
       delete (clone as any).mindMapNodes;
       delete (clone as any).dataAnalysisImages;

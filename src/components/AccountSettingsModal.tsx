@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Lock, CreditCard, Check, RefreshCw, Mail } from 'lucide-react';
+import { X, Lock, CreditCard, Check, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
 import { useToast } from '../context/ToastContext';
@@ -12,9 +12,14 @@ import { computeGroupPerformanceTableData } from '../utils/metricUtils';
 interface AccountSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  mode?: 'account' | 'email';
 }
 
-export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOpen, onClose }) => {
+export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
+  isOpen,
+  onClose,
+  mode = 'account',
+}) => {
   const { user, refreshUser } = useAuth();
   const toast = useToast();
   const {
@@ -60,6 +65,9 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
   const [hasInitializedSchedule, setHasInitializedSchedule] = useState(false);
   const [hasInitializedEmailDefaults, setHasInitializedEmailDefaults] = useState(false);
   const [emailMode, setEmailMode] = useState<'scheduled' | 'oneTime'>('scheduled');
+  const [hasInitializedConsolidateSettings, setHasInitializedConsolidateSettings] = useState(false);
+  const [emailConsolidateTags, setEmailConsolidateTags] = useState('');
+  const [emailConsolidateEnabled, setEmailConsolidateEnabled] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -75,6 +83,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
     if (!isOpen) {
       setHasInitializedSchedule(false);
       setHasInitializedEmailDefaults(false);
+      setHasInitializedConsolidateSettings(false);
       return;
     }
     if (hasInitializedSchedule) {
@@ -130,6 +139,34 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
     if (!isOpen) {
       return;
     }
+    if (mode === 'email') {
+      setActiveTab('email');
+    } else if (mode === 'account' && activeTab === 'email') {
+      setActiveTab('password');
+    }
+  }, [isOpen, mode, activeTab]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    if (hasInitializedConsolidateSettings) {
+      return;
+    }
+    const consolidate = (dashboardSettings as any).emailConsolidate || {};
+    if (typeof consolidate.tags === 'string') {
+      setEmailConsolidateTags(consolidate.tags);
+    }
+    if (typeof consolidate.enabled === 'boolean') {
+      setEmailConsolidateEnabled(consolidate.enabled);
+    }
+    setHasInitializedConsolidateSettings(true);
+  }, [isOpen, dashboardSettings, hasInitializedConsolidateSettings]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
     if (!hasInitializedSchedule) {
       return;
     }
@@ -167,6 +204,29 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ isOp
       },
     }));
   }, [emailRecipients, emailSubject, isOpen, hasInitializedEmailDefaults, setDashboardSettings]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    if (!hasInitializedConsolidateSettings) {
+      return;
+    }
+    setDashboardSettings(prev => ({
+      ...prev,
+      emailConsolidate: {
+        ...((prev as any).emailConsolidate || {}),
+        enabled: emailConsolidateEnabled,
+        tags: emailConsolidateTags,
+      },
+    }));
+  }, [
+    emailConsolidateEnabled,
+    emailConsolidateTags,
+    isOpen,
+    hasInitializedConsolidateSettings,
+    setDashboardSettings,
+  ]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -1024,48 +1084,63 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
 
   return (
     <div className="fixed inset-0 z-[70] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+      <div
+        className={
+          mode === 'email'
+            ? 'flex min-h-screen items-stretch justify-center pt-4 px-4 pb-4 text-center sm:block sm:p-0'
+            : 'flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0'
+        }
+      >
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={onClose}></div>
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div
+          className={
+            mode === 'email'
+              ? 'inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all w-full h-[calc(100vh-2rem)] max-w-5xl sm:align-middle'
+              : 'inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full'
+          }
+        >
           
           {/* Header */}
           <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-gray-200 flex justify-between items-center">
             <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-              Account Settings
+              {mode === 'email' ? 'Email Settings' : 'Account Settings'}
             </h3>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
               <X className="h-5 w-5" />
             </button>
           </div>
 
-          <div className="flex border-b border-gray-200">
-            <button
-              className={`flex-1 py-3 text-sm font-medium text-center flex items-center justify-center space-x-2 ${activeTab === 'password' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-              onClick={() => setActiveTab('password')}
-            >
-              <Lock className="w-4 h-4" />
-              <span>Password</span>
-            </button>
-            <button
-              className={`flex-1 py-3 text-sm font-medium text-center flex items-center justify-center space-x-2 ${activeTab === 'profile' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-              onClick={() => setActiveTab('profile')}
-            >
-              <CreditCard className="w-4 h-4" />
-              <span>Profile</span>
-            </button>
-            <button
-              className={`flex-1 py-3 text-sm font-medium text-center flex items-center justify-center space-x-2 ${activeTab === 'email' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-              onClick={() => setActiveTab('email')}
-            >
-              <Mail className="w-4 h-4" />
-              <span>Email</span>
-            </button>
-          </div>
+          {mode !== 'email' && (
+            <div className="flex border-b border-gray-200">
+              <button
+                className={`flex-1 py-3 text-sm font-medium text-center flex items-center justify-center space-x-2 ${
+                  activeTab === 'password'
+                    ? 'border-b-2 border-blue-500 text-blue-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+                onClick={() => setActiveTab('password')}
+              >
+                <Lock className="w-4 h-4" />
+                <span>Password</span>
+              </button>
+              <button
+                className={`flex-1 py-3 text-sm font-medium text-center flex items-center justify-center space-x-2 ${
+                  activeTab === 'profile'
+                    ? 'border-b-2 border-blue-500 text-blue-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+                onClick={() => setActiveTab('profile')}
+              >
+                <CreditCard className="w-4 h-4" />
+                <span>Profile</span>
+              </button>
+            </div>
+          )}
 
           {/* Content */}
           <div className="px-6 py-6">
-            {activeTab !== 'email' && (
+            {user && (
               <div className="mb-6 flex items-center justify-between">
                 <div>
                   <span className="text-gray-500">User: </span>
@@ -1081,7 +1156,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
               </div>
             )}
 
-            {activeTab === 'password' && (
+            {mode === 'account' && activeTab === 'password' && (
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Current Password</label>
@@ -1125,7 +1200,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
               </div>
             )}
 
-            {activeTab === 'profile' && (
+            {mode === 'account' && activeTab === 'profile' && (
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Role</label>
@@ -1202,7 +1277,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
               </div>
             )}
 
-            {activeTab === 'email' && (
+            {mode === 'email' && (
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Recipients</label>
@@ -1315,6 +1390,38 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                             Saved to dashboard settings for recurring email schedule. Next send time is calculated automatically.
                           </p>
                         </div>
+                        <div className="mt-4 border-t border-gray-100 pt-3 space-y-2">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h4 className="text-xs font-medium text-gray-700 uppercase mb-1">Consolidate before summary</h4>
+                              <p className="text-xs text-gray-500">
+                                When enabled, consolidate tagged bowlers and A3 cases before generating the summary email.
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              className={`${emailConsolidateEnabled ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                              role="switch"
+                              aria-checked={emailConsolidateEnabled}
+                              onClick={() => setEmailConsolidateEnabled(!emailConsolidateEnabled)}
+                            >
+                              <span className={`${emailConsolidateEnabled ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}></span>
+                            </button>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Consolidate tags</label>
+                            <input
+                              type="text"
+                              value={emailConsolidateTags}
+                              onChange={e => setEmailConsolidateTags(e.target.value)}
+                              placeholder="e.g. Technical, Q1, Portfolio"
+                              className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                            />
+                            <p className="mt-1 text-xs text-gray-400">
+                              Tags are matched during consolidation before each scheduled summary email.
+                            </p>
+                          </div>
+                        </div>
                       </>
                     )}
                     {emailMode === 'oneTime' && (
@@ -1361,7 +1468,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
 
           {/* Footer */}
           <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            {activeTab === 'password' && (
+            {mode === 'account' && activeTab === 'password' && (
               <button
                 type="button"
                 className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
@@ -1372,7 +1479,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
               </button>
             )}
 
-            {activeTab === 'profile' && (
+            {mode === 'account' && activeTab === 'profile' && (
               <button
                 type="button"
                 className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
@@ -1383,7 +1490,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
               </button>
             )}
 
-            {activeTab === 'email' && (
+            {mode === 'email' && (
               <>
                 <button
                   type="button"

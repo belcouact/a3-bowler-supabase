@@ -206,6 +206,31 @@ export default {
             }
         });
       }
+
+      // GET /users
+      // List all registered users (without passwords)
+      if (path === '/users' && request.method === 'GET') {
+        const list = await env.USERS_KV.list();
+        const users = [];
+
+        for (const entry of list.keys) {
+          const key = entry.name;
+          const raw = await env.USERS_KV.get(key);
+          if (!raw) continue;
+          try {
+            const user = JSON.parse(raw);
+            users.push({
+              username: user.username,
+              role: user.role,
+              profile: user.profile || {},
+              createdAt: user.createdAt || null
+            });
+          } catch (e) {
+          }
+        }
+
+        return jsonResponse({ success: true, users });
+      }
       
       // Default
       return errorResponse("Not found", 404);

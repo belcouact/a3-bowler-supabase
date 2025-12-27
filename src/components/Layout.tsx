@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Bot, Inbox, Users, Activity, X } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Bot, Inbox, Users, Activity, X, Mail } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
 import { Bowler, Metric, AIModelKey, GroupPerformanceRow } from '../types';
@@ -124,6 +124,7 @@ const Layout = () => {
   const [editingBowler, setEditingBowler] = useState<Bowler | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
+  const [isEmailSettingsOpen, setIsEmailSettingsOpen] = useState(false);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [initialAIPrompt, setInitialAIPrompt] = useState<string | undefined>(undefined);
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
@@ -2143,6 +2144,13 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
             >
               <Inbox className="w-4 h-4" />
             </button>
+            <button
+              onClick={() => setIsEmailSettingsOpen(true)}
+              className="p-2 bg-rose-600 text-white rounded-md shadow-sm hover:bg-rose-700 transition-colors"
+              title="Email settings"
+            >
+              <Mail className="w-4 h-4" />
+            </button>
           </div>
 
           {/* Mobile Menu Dropdown */}
@@ -2212,6 +2220,17 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   >
                     <Inbox className="w-4 h-4 mr-3" />
                     Consolidate
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsEmailSettingsOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-rose-600"
+                  >
+                    <Mail className="w-4 h-4 mr-3" />
+                    Email Settings
                   </button>
 
                   <button
@@ -4176,9 +4195,18 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
       </Suspense>
 
       <Suspense fallback={null}>
-        <AccountSettingsModal 
-          isOpen={isAccountSettingsOpen} 
-          onClose={() => setIsAccountSettingsOpen(false)} 
+        <AccountSettingsModal
+          isOpen={isAccountSettingsOpen}
+          onClose={() => setIsAccountSettingsOpen(false)}
+          mode="account"
+        />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <AccountSettingsModal
+          isOpen={isEmailSettingsOpen}
+          onClose={() => setIsEmailSettingsOpen(false)}
+          mode="email"
         />
       </Suspense>
 
