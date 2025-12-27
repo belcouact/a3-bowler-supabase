@@ -373,6 +373,56 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
         delete (updatedSettings as any).emailSchedule;
       }
       setDashboardSettings(updatedSettings);
+      const settingsForPersist = {
+        ...updatedSettings,
+        emailDefaults: {
+          ...(((updatedSettings as any).emailDefaults as any) || {}),
+          recipients: emailRecipients,
+          subject: emailSubject,
+        },
+        emailConsolidate: {
+          ...(((updatedSettings as any).emailConsolidate as any) || {}),
+          enabled: emailConsolidateEnabled,
+          tags: emailConsolidateTags,
+        },
+      };
+      await persistDashboardSettingsToBackend(settingsForPersist);
+      toast.success('Recurring email schedule cancelled');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to cancel recurring schedule');
+    } finally {
+      setIsScheduling(false);
+    }
+  };
+
+  const buildEmailDashboardSettingsForPersist = () => {
+    const base = dashboardSettings as any;
+    return {
+      ...base,
+      emailDefaults: {
+        ...(base.emailDefaults || {}),
+        recipients: emailRecipients,
+        subject: emailSubject,
+      },
+      emailConsolidate: {
+        ...(base.emailConsolidate || {}),
+        enabled: emailConsolidateEnabled,
+        tags: emailConsolidateTags,
+      },
+      emailSchedule: {
+        frequency: scheduleFrequency,
+        dayOfWeek: scheduleFrequency === 'weekly' ? scheduleDayOfWeek : undefined,
+        dayOfMonth: scheduleFrequency === 'monthly' ? scheduleDayOfMonth : undefined,
+        timeOfDay: scheduleTime,
+      },
+    };
+  };
+
+  const persistDashboardSettingsToBackend = async (settings: any) => {
+    if (!user || !user.username) {
+      return;
+    }
+    try {
       await dataService.saveData(
         bowlers,
         a3Cases,
@@ -381,13 +431,10 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
         dashboardTitle,
         dashboardMindmaps,
         activeMindmapId,
-        updatedSettings,
+        settings,
       );
-      toast.success('Recurring email schedule cancelled');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to cancel recurring schedule');
-    } finally {
-      setIsScheduling(false);
+      console.error('Failed to persist email settings to backend', error);
     }
   };
 
@@ -1064,6 +1111,8 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
           fromName: 'A3 Bowler',
         });
       }
+      const settingsForPersist = buildEmailDashboardSettingsForPersist();
+      await persistDashboardSettingsToBackend(settingsForPersist);
       toast.success('Email scheduled successfully');
     } catch (error: any) {
       toast.error(error.message || 'Failed to schedule email');
@@ -1103,11 +1152,13 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
       await dataService.sendEmailNow({
         userId,
         recipients,
-        subject: emailSubject.trim(),
-        body: emailBody.trim(),
-        bodyHtml: htmlForSend,
-        fromName: 'A3 Bowler',
-      });
+          subject: emailSubject.trim(),
+          body: emailBody.trim(),
+          bodyHtml: htmlForSend,
+          fromName: 'A3 Bowler',
+        });
+      const settingsForPersist = buildEmailDashboardSettingsForPersist();
+      await persistDashboardSettingsToBackend(settingsForPersist);
       toast.success('Email sent successfully');
     } catch (error: any) {
       toast.error(error.message || 'Failed to send email');

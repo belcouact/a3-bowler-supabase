@@ -2232,7 +2232,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   setAdminTab('users');
                   setIsAdminPanelOpen(true);
                 }}
-                className="p-2 rounded-md bg-slate-600 text-white shadow-sm hover:bg-slate-700 transition-colors"
+                className="p-2 rounded-md bg-orange-500 text-white shadow-sm hover:bg-orange-600 transition-colors"
                 title="User management & audit logs"
               >
                 <Users className="w-4 h-4" />
