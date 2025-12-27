@@ -1082,6 +1082,10 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
     }
   };
 
+  if (!isOpen) {
+    return null;
+  }
+
   return (
     <div className="fixed inset-0 z-[70] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
       <div
@@ -1096,7 +1100,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
         <div
           className={
             mode === 'email'
-              ? 'inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all w-full h-[calc(100vh-2rem)] max-w-5xl sm:align-middle flex flex-col'
+              ? 'inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all w-full max-h-[calc(100vh-2rem)] max-w-5xl sm:align-middle overflow-y-auto'
               : 'inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full'
           }
         >
@@ -1139,7 +1143,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
           )}
 
           {/* Content */}
-          <div className={mode === 'email' ? 'px-6 py-6 flex-1 overflow-y-auto' : 'px-6 py-6'}>
+          <div className="px-6 py-6">
             {mode !== 'email' && user && (
               <div className="mb-6 flex items-center justify-between">
                 <div>
