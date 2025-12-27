@@ -1,7 +1,7 @@
 import { Link, Outlet, useLocation, useParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { useApp } from '../context/AppContext';
-import { AlertCircle, BarChart2, GitBranch, Calendar, CheckCircle, FileText } from 'lucide-react';
+import { AlertCircle, BarChart2, GitBranch, Calendar, CheckCircle, FileText, Bot } from 'lucide-react';
 
 const A3Analysis = () => {
   const location = useLocation();
@@ -18,6 +18,7 @@ const A3Analysis = () => {
     { path: 'action-plan', label: 'Action Plan', icon: Calendar },
     { path: 'result', label: 'Result', icon: CheckCircle },
     { path: 'summary', label: 'Report', icon: FileText },
+    { path: 'ai-coach', label: 'AI Coach', icon: Bot },
   ];
 
   if (!id) {

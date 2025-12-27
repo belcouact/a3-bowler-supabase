@@ -13,6 +13,7 @@ const Result = lazy(() => import('./pages/a3-subpages/Result'));
 const Summary = lazy(() => import('./pages/a3-subpages/Summary'));
 const A3Redirect = lazy(() => import('./components/A3Redirect'));
 const MarkmapPage = lazy(() => import('./pages/MarkmapPage'));
+const AICoach = lazy(() => import('./pages/a3-subpages/AICoach'));
 
 const LoadingView = ({ message }: { message: string }) => (
   <div className="flex items-center justify-center py-16">
@@ -78,6 +79,7 @@ function App() {
               <Route path="action-plan" element={<ActionPlan />} />
               <Route path="result" element={<Result />} />
               <Route path="summary" element={<Summary />} />
+              <Route path="ai-coach" element={<AICoach />} />
             </Route>
           </Route>
           <Route path="portfolio" element={<PortfolioPlaceholder />} />
