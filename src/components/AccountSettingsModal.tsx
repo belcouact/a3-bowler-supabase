@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Lock, CreditCard, Check, RefreshCw } from 'lucide-react';
+import { X, Lock, CreditCard, Check, RefreshCw, Repeat, Clock3 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
 import { useToast } from '../context/ToastContext';
@@ -1310,25 +1310,27 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   <div className="flex flex-wrap text-xs font-medium border-b">
                     <button
                       type="button"
-                      className={`flex-1 px-3 py-2 text-center ${
+                      className={`flex-1 px-3 py-2 text-center flex items-center justify-center space-x-2 ${
                         emailMode === 'scheduled'
                           ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-500'
                           : 'text-gray-500 hover:text-gray-700'
                       }`}
                       onClick={() => setEmailMode('scheduled')}
                     >
-                      Scheduled (repeat)
+                      <Repeat className="w-4 h-4" />
+                      <span>Scheduled (repeat)</span>
                     </button>
                     <button
                       type="button"
-                      className={`flex-1 px-3 py-2 text-center ${
+                      className={`flex-1 px-3 py-2 text-center flex items-center justify-center space-x-2 ${
                         emailMode === 'oneTime'
                           ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-500'
                           : 'text-gray-500 hover:text-gray-700'
                       }`}
                       onClick={() => setEmailMode('oneTime')}
                     >
-                      One-time
+                      <Clock3 className="w-4 h-4" />
+                      <span>One-time</span>
                     </button>
                   </div>
                   <div className="p-3 space-y-3">
@@ -1389,9 +1391,6 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                               onChange={(e) => setScheduleTime(e.target.value)}
                               className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
                             />
-                            <p className="mt-1 text-xs text-gray-400">
-                              Saved to dashboard settings for recurring email schedule. Next send time is calculated automatically.
-                            </p>
                           </div>
                         </div>
                         <div className="mt-4 border-t border-gray-100 pt-3 space-y-2">
