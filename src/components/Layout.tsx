@@ -887,6 +887,7 @@ const groupFilterOptions = useMemo(
       return null;
     }
 
+    let metricsWithLatestData = 0;
     let greenCount = 0;
     let failing2or3Count = 0;
     let metricsWithActiveA3 = 0;
@@ -895,11 +896,15 @@ const groupFilterOptions = useMemo(
     let activeA3Count = 0;
 
     rows.forEach(row => {
-      if (row.latestMet === true) {
-        greenCount += 1;
-      }
-      if (row.fail2 || row.fail3) {
-        failing2or3Count += 1;
+      const hasLatestData = row.latestMet !== null;
+      if (hasLatestData) {
+        metricsWithLatestData += 1;
+        if (row.latestMet === true) {
+          greenCount += 1;
+        }
+        if (row.fail2 || row.fail3) {
+          failing2or3Count += 1;
+        }
       }
 
       const linked = a3Cases.filter(c => (c.linkedMetricIds || []).includes(row.metricId));
@@ -927,14 +932,17 @@ const groupFilterOptions = useMemo(
       });
     });
 
-    const pctGreen = (greenCount / totalMetrics) * 100;
-    const pctFailing2or3 = (failing2or3Count / totalMetrics) * 100;
+    const pctGreen =
+      metricsWithLatestData > 0 ? (greenCount / metricsWithLatestData) * 100 : null;
+    const pctFailing2or3 =
+      metricsWithLatestData > 0 ? (failing2or3Count / metricsWithLatestData) * 100 : null;
     const pctWithActiveA3 = (metricsWithActiveA3 / totalMetrics) * 100;
     const avgActiveA3AgeDays =
       activeA3Count > 0 ? totalActiveA3AgeDays / activeA3Count : null;
 
     return {
       totalMetrics,
+      metricsWithLatestData,
       pctGreen,
       pctFailing2or3,
       pctWithActiveA3,
@@ -3229,29 +3237,42 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                           </div>
                           {bowlerDashboardStats && (
                             <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
-                              <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
+                              <div
+                                className="rounded-lg border border-gray-100 bg-white px-3 py-3"
+                                title="Share of metrics with latest month meeting target, among metrics that have latest data."
+                              >
                                 <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
                                   Metrics green (latest)
                                 </p>
                                 <p className="mt-1 text-lg font-semibold text-gray-900">
-                                  {bowlerDashboardStats.pctGreen.toFixed(0)}%
+                                  {bowlerDashboardStats.pctGreen != null
+                                    ? `${bowlerDashboardStats.pctGreen.toFixed(0)}%`
+                                    : '—'}
                                 </p>
                                 <p className="mt-0.5 text-[11px] text-gray-500">
-                                  {bowlerDashboardStats.totalMetrics} metrics
+                                  {bowlerDashboardStats.metricsWithLatestData} metrics with latest data
                                 </p>
                               </div>
-                              <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
+                              <div
+                                className="rounded-lg border border-gray-100 bg-white px-3 py-3"
+                                title="Share of metrics failing in the last 2 or 3 months, among metrics that have latest data."
+                              >
                                 <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
                                   Failing 2–3 months
                                 </p>
                                 <p className="mt-1 text-lg font-semibold text-gray-900">
-                                  {bowlerDashboardStats.pctFailing2or3.toFixed(0)}%
+                                  {bowlerDashboardStats.pctFailing2or3 != null
+                                    ? `${bowlerDashboardStats.pctFailing2or3.toFixed(0)}%`
+                                    : '—'}
                                 </p>
                                 <p className="mt-0.5 text-[11px] text-gray-500">
-                                  Based on latest low‑performing rules
+                                  Based on latest low-performing rules
                                 </p>
                               </div>
-                              <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
+                              <div
+                                className="rounded-lg border border-gray-100 bg-white px-3 py-3"
+                                title="Share of metrics linked to at least one active A3."
+                              >
                                 <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
                                   With active A3
                                 </p>
@@ -3259,10 +3280,13 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                   {bowlerDashboardStats.pctWithActiveA3.toFixed(0)}%
                                 </p>
                                 <p className="mt-0.5 text-[11px] text-gray-500">
-                                  Metrics linked to at least one active A3
+                                  {bowlerDashboardStats.totalMetrics} metrics with any history
                                 </p>
                               </div>
-                              <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
+                              <div
+                                className="rounded-lg border border-gray-100 bg-white px-3 py-3"
+                                title="Average age in days of active A3s linked to these metrics."
+                              >
                                 <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
                                   Avg age of active A3s
                                 </p>
