@@ -175,15 +175,11 @@ Keep your answers specific, practical, and focused on this A3 only.`,
       <div>
         <h3 className="text-xl font-bold text-gray-900 flex items-center">
           <Sparkles className="h-5 w-5 text-indigo-500 mr-2" />
-          AI Coach
+          AI Coach for{' '}
+          <span className="font-semibold text-gray-900">
+            {currentCase.title || 'Untitled A3'}
+          </span>
         </h3>
-        <p className="mt-1 text-sm text-gray-500">
-          Ask for guidance about risks, priorities, and next steps for this A3.
-        </p>
-        <p className="mt-1 text-xs text-gray-400">
-          Coaching for:{' '}
-          <span className="font-medium text-gray-700">{currentCase.title || 'Untitled A3'}</span>
-        </p>
       </div>
 
       <div className="flex-1 flex flex-col rounded-lg border border-gray-200 bg-gray-50 overflow-hidden">

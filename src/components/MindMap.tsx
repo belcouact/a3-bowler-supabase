@@ -241,9 +241,10 @@ const MindMapNode = ({
 interface MindMapProps {
   initialNodes?: MindMapNodeData[];
   onChange?: (nodes: MindMapNodeData[]) => void;
+  autoHeight?: boolean;
 }
 
-export const MindMap = ({ initialNodes, onChange }: MindMapProps) => {
+export const MindMap = ({ initialNodes, onChange, autoHeight }: MindMapProps) => {
   const [nodes, setNodes] = useState<Node[]>(
     initialNodes && initialNodes.length > 0
       ? initialNodes
@@ -266,6 +267,7 @@ export const MindMap = ({ initialNodes, onChange }: MindMapProps) => {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const onChangeRef = useRef(onChange);
+  const [containerHeight, setContainerHeight] = useState(600);
 
   // Update ref when onChange prop changes to avoid effect dependency
   useEffect(() => {
@@ -278,6 +280,14 @@ export const MindMap = ({ initialNodes, onChange }: MindMapProps) => {
       onChangeRef.current(nodes);
     }
   }, [nodes]);
+
+  useEffect(() => {
+    if (!autoHeight || nodes.length === 0) return;
+    const minY = Math.min(...nodes.map(n => n.y));
+    const maxY = Math.max(...nodes.map(n => n.y + (n.height || DEFAULT_HEIGHT)));
+    const height = maxY - minY + 100;
+    setContainerHeight(Math.max(300, height));
+  }, [nodes, autoHeight]);
 
   // Sync with external updates
   useEffect(() => {
@@ -459,7 +469,11 @@ export const MindMap = ({ initialNodes, onChange }: MindMapProps) => {
     <div className="flex flex-col space-y-2">
         <div 
           ref={containerRef}
-          className="w-full h-[600px] bg-slate-50 relative overflow-hidden border border-slate-200 rounded-lg cursor-grab active:cursor-grabbing resize-y"
+          className={clsx(
+            "w-full bg-slate-50 relative overflow-hidden border border-slate-200 rounded-lg cursor-grab active:cursor-grabbing resize-y",
+            !autoHeight && "h-[600px]"
+          )}
+          style={autoHeight ? { height: containerHeight } : undefined}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
