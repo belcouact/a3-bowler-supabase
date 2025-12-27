@@ -1140,7 +1140,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
 
           {/* Content */}
           <div className="px-6 py-6">
-            {user && (
+            {mode !== 'email' && user && (
               <div className="mb-6 flex items-center justify-between">
                 <div>
                   <span className="text-gray-500">User: </span>
