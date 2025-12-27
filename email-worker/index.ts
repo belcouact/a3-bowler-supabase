@@ -1117,7 +1117,35 @@ export default {
             );
           }
 
-          const sendAtMs = Date.parse(sendAt);
+          let sendAtMs = Date.parse(sendAt);
+          if (jobMode === 'autoSummary' && userId) {
+            try {
+              const response = await fetch(
+                `https://bowler-worker.study-llm.me/load?userId=${encodeURIComponent(userId)}`,
+                {
+                  method: 'GET',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                },
+              );
+              if (response.ok) {
+                const data = (await response.json()) as any;
+                const dashboardSettings = data.dashboardSettings || null;
+                const schedule =
+                  dashboardSettings && typeof dashboardSettings === 'object'
+                    ? (dashboardSettings as any).emailSchedule
+                    : null;
+                const next = computeNextSendAtFromSchedule(schedule, new Date());
+                if (next) {
+                  sendAtMs = next.getTime();
+                }
+              }
+            } catch (e) {
+              console.error('Failed to derive initial sendAt from dashboard schedule', e);
+            }
+          }
+
           if (Number.isNaN(sendAtMs)) {
             return new Response(
               JSON.stringify({ success: false, error: 'sendAt must be a valid date/time string' }),
@@ -1205,6 +1233,63 @@ export default {
           await sendEmailWithResend(env, job);
 
           return new Response(JSON.stringify({ success: true }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (err: any) {
+          return new Response(JSON.stringify({ success: false, error: err.message || String(err) }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
+      if (request.method === 'POST' && url.pathname === '/cancel-auto-summary') {
+        try {
+          const data = (await request.json()) as {
+            userId?: string;
+          };
+
+          const userId = (data.userId || '').trim();
+          if (!userId) {
+            return new Response(
+              JSON.stringify({ success: false, error: 'userId is required' }),
+              {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              },
+            );
+          }
+
+          let cursor: string | undefined = undefined;
+          let done = false;
+          let cancelled = 0;
+
+          while (!done) {
+            const list: any = await env.EMAIL_JOBS.list({ prefix: 'email:', cursor });
+            cursor = list.cursor;
+            done = list.list_complete;
+
+            for (const key of list.keys) {
+              const value = await env.EMAIL_JOBS.get(key.name);
+              if (!value) {
+                continue;
+              }
+
+              let job: ScheduledEmailJob;
+              try {
+                job = JSON.parse(value) as ScheduledEmailJob;
+              } catch {
+                continue;
+              }
+
+              if (job.userId === userId && job.mode === 'autoSummary') {
+                await env.EMAIL_JOBS.delete(key.name);
+                cancelled += 1;
+              }
+            }
+          }
+
+          return new Response(JSON.stringify({ success: true, cancelled }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         } catch (err: any) {
