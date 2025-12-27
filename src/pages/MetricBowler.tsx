@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, Navigate } from 'react-router-dom';
-import { Info, Settings, HelpCircle, Sparkles, Loader2, Calendar } from 'lucide-react';
+import { Info, Settings, HelpCircle, Sparkles, Loader2, Calendar, FileText } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Metric } from '../types';
 import { HelpModal } from '../components/HelpModal';
@@ -42,7 +42,7 @@ const CustomizedDot = (props: any) => {
 
 const MetricBowler = () => {
   const { id } = useParams();
-  const { bowlers, updateBowler, selectedModel, a3Cases } = useApp();
+  const { bowlers, updateBowler, selectedModel, a3Cases, addA3Case } = useApp();
   const toast = useToast();
   
   const [startDate, setStartDate] = useState(() => {
@@ -72,6 +72,7 @@ const MetricBowler = () => {
   const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
   const [analyzingMetricName, setAnalyzingMetricName] = useState('');
   const [analyzingMetrics, setAnalyzingMetrics] = useState<Record<string, boolean>>({});
+  const [creatingA3FromMetric, setCreatingA3FromMetric] = useState<Record<string, boolean>>({});
 
   const [tooltip, setTooltip] = useState<{
     x: number;
@@ -163,6 +164,79 @@ const MetricBowler = () => {
         console.error("Analysis failed", error);
     } finally {
         setAnalyzingMetrics(prev => ({ ...prev, [metric.id]: false }));
+    }
+  };
+
+  const handleCreateA3FromMetric = async (metric: Metric) => {
+    if (creatingA3FromMetric[metric.id]) return;
+    setCreatingA3FromMetric(prev => ({ ...prev, [metric.id]: true }));
+    try {
+      const linkedA3Cases = a3Cases.filter(
+        c => (c.linkedMetricIds || []).includes(metric.id),
+      );
+      const result = await analyzeMetric(metric, selectedModel, linkedA3Cases);
+      const today = new Date().toISOString().split('T')[0];
+      const trendLabel = result.trend.charAt(0).toUpperCase() + result.trend.slice(1);
+      const achievement = typeof result.achievementRate === 'number'
+        ? `${result.achievementRate.toFixed(1)}%`
+        : '';
+      let priority: 'Low' | 'Medium' | 'High' = 'Medium';
+      const loweredTrend = result.trend.toLowerCase();
+      if (
+        loweredTrend === 'degrading' ||
+        loweredTrend === 'unstable' ||
+        loweredTrend === 'incapable' ||
+        result.achievementRate < 50
+      ) {
+        priority = 'High';
+      } else if (result.achievementRate >= 80 && (loweredTrend === 'capable' || loweredTrend === 'improving' || loweredTrend === 'stable')) {
+        priority = 'Low';
+      }
+      const selectedBowler = bowlers.find(b => (b.metrics || []).some(m => m.id === metric.id));
+      const owner = metric.owner || selectedBowler?.champion || '';
+      const group = selectedBowler?.group || '';
+      const tag = selectedBowler?.tag || '';
+      const suggestionText = (result.suggestion || []).join('\n- ');
+      const descriptionParts = [];
+      if (result.summary) {
+        descriptionParts.push(result.summary.trim());
+      }
+      if (suggestionText) {
+        descriptionParts.push(`Key AI suggestions:\n- ${suggestionText}`);
+      }
+      if (achievement) {
+        descriptionParts.push(`Current target achievement: ${achievement}.`);
+      }
+      const description = descriptionParts.join('\n\n');
+      addA3Case({
+        title: `A3: ${metric.name} – ${trendLabel}`,
+        description,
+        owner,
+        group,
+        tag,
+        linkedMetricIds: [metric.id],
+        priority,
+        startDate: today,
+        endDate: '',
+        status: 'In Progress',
+        problemStatement: description || `Improve performance of metric "${metric.name}".`,
+        results: '',
+        mindMapNodes: [],
+        mindMapText: '',
+        rootCause: '',
+        actionPlanTasks: [],
+        dataAnalysisObservations: '',
+        dataAnalysisImages: [],
+        dataAnalysisCanvasHeight: undefined,
+        resultImages: [],
+        resultCanvasHeight: undefined,
+      });
+      toast.success('Created new A3 case from AI insight.');
+    } catch (error) {
+      console.error('Failed to create A3 from AI', error);
+      toast.error('Failed to create A3 from AI. Please try again.');
+    } finally {
+      setCreatingA3FromMetric(prev => ({ ...prev, [metric.id]: false }));
     }
   };
 
@@ -688,21 +762,43 @@ const MetricBowler = () => {
                   <div className="flex justify-between items-start mb-4">
                     <h4 className="text-sm font-medium text-gray-900">{metric.name}</h4>
                     <div className="flex items-center space-x-1">
-                        <button
-                            onClick={() => handleAIAnalysis(metric)}
-                            disabled={analyzingMetrics[metric.id]}
-                            className="p-1 rounded-md transition-colors text-blue-500 hover:text-blue-700 hover:bg-blue-50 disabled:opacity-50"
-                            title="AI Analysis"
-                        >
-                            {analyzingMetrics[metric.id] ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                        </button>
-                        <button
-                            onClick={() => setChartSettingsOpen(prev => ({ ...prev, [metric.id]: !prev[metric.id] }))}
-                            className={`p-1 rounded-md transition-colors ${isSettingsOpen ? 'bg-gray-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
-                            title="Adjust Scale"
-                        >
-                            <Settings className="w-4 h-4" />
-                        </button>
+                      <button
+                        onClick={() => handleAIAnalysis(metric)}
+                        disabled={analyzingMetrics[metric.id]}
+                        className="p-1 rounded-md transition-colors text-blue-500 hover:text-blue-700 hover:bg-blue-50 disabled:opacity-50"
+                        title="AI Analysis"
+                      >
+                        {analyzingMetrics[metric.id] ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Sparkles className="w-4 h-4" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() =>
+                          setChartSettingsOpen(prev => ({ ...prev, [metric.id]: !prev[metric.id] }))
+                        }
+                        className={`p-1 rounded-md transition-colors ${
+                          isSettingsOpen
+                            ? 'bg-gray-100 text-blue-600'
+                            : 'text-gray-400 hover:text-gray-600'
+                        }`}
+                        title="Adjust Scale"
+                      >
+                        <Settings className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleCreateA3FromMetric(metric)}
+                        disabled={creatingA3FromMetric[metric.id]}
+                        className="p-1 rounded-md transition-colors text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                        title="Create A3 with AI"
+                      >
+                        {creatingA3FromMetric[metric.id] ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <FileText className="w-4 h-4" />
+                        )}
+                      </button>
                     </div>
                   </div>
                   
