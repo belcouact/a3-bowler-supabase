@@ -175,6 +175,58 @@ export const dataService = {
     return response.json();
   },
 
+  async listScheduledEmails(userId: string) {
+    const url = new URL(`${EMAIL_API_BASE_URL}/list-scheduled-emails`);
+    url.searchParams.set('userId', userId);
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      let message = 'Failed to load scheduled emails';
+      try {
+        const data = await response.json();
+        if (data && typeof data.error === 'string') {
+          message = data.error;
+        }
+      } catch (e) {
+        void e;
+      }
+      throw new Error(message);
+    }
+
+    return response.json();
+  },
+
+  async cancelScheduledEmail(userId: string, id: string) {
+    const response = await fetch(`${EMAIL_API_BASE_URL}/cancel-scheduled-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId, id }),
+    });
+
+    if (!response.ok) {
+      let message = 'Failed to cancel scheduled email';
+      try {
+        const data = await response.json();
+        if (data && typeof data.error === 'string') {
+          message = data.error;
+        }
+      } catch (e) {
+        void e;
+      }
+      throw new Error(message);
+    }
+
+    return response.json();
+  },
+
   async sendEmailNow(options: {
     userId?: string;
     recipients: string[];

@@ -1243,13 +1243,9 @@ export default {
         }
       }
 
-      if (request.method === 'POST' && url.pathname === '/cancel-auto-summary') {
+      if (request.method === 'GET' && url.pathname === '/list-scheduled-emails') {
         try {
-          const data = (await request.json()) as {
-            userId?: string;
-          };
-
-          const userId = (data.userId || '').trim();
+          const userId = (url.searchParams.get('userId') || '').trim();
           if (!userId) {
             return new Response(
               JSON.stringify({ success: false, error: 'userId is required' }),
@@ -1262,7 +1258,13 @@ export default {
 
           let cursor: string | undefined = undefined;
           let done = false;
-          let cancelled = 0;
+          const jobs: {
+            id: string;
+            subject: string;
+            sendAt: number;
+            mode?: 'manual' | 'autoSummary';
+            recipients: string[];
+          }[] = [];
 
           while (!done) {
             const list: any = await env.EMAIL_JOBS.list({ prefix: 'email:', cursor });
@@ -1282,14 +1284,96 @@ export default {
                 continue;
               }
 
-              if (job.userId === userId && job.mode === 'autoSummary') {
-                await env.EMAIL_JOBS.delete(key.name);
-                cancelled += 1;
+              if (job.userId !== userId) {
+                continue;
               }
+              if (job.sent) {
+                continue;
+              }
+
+              jobs.push({
+                id: job.id,
+                subject: job.subject,
+                sendAt: job.sendAt,
+                mode: job.mode,
+                recipients: job.recipients,
+              });
             }
           }
 
-          return new Response(JSON.stringify({ success: true, cancelled }), {
+          jobs.sort((a, b) => {
+            if (a.sendAt === b.sendAt) {
+              return a.id.localeCompare(b.id);
+            }
+            return a.sendAt - b.sendAt;
+          });
+
+          return new Response(JSON.stringify({ success: true, jobs }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (err: any) {
+          return new Response(JSON.stringify({ success: false, error: err.message || String(err) }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
+      if (request.method === 'POST' && url.pathname === '/cancel-scheduled-email') {
+        try {
+          const data = (await request.json()) as {
+            userId?: string;
+            id?: string;
+          };
+
+          const userId = (data.userId || '').trim();
+          const id = (data.id || '').trim();
+
+          if (!userId || !id) {
+            return new Response(
+              JSON.stringify({ success: false, error: 'userId and id are required' }),
+              {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              },
+            );
+          }
+
+          const key = `email:${id}`;
+          const value = await env.EMAIL_JOBS.get(key);
+
+          if (!value) {
+            return new Response(JSON.stringify({ success: true, cancelled: false }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          let job: ScheduledEmailJob;
+          try {
+            job = JSON.parse(value) as ScheduledEmailJob;
+          } catch {
+            return new Response(
+              JSON.stringify({ success: false, error: 'Failed to parse scheduled email job' }),
+              {
+                status: 500,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              },
+            );
+          }
+
+          if (job.userId !== userId) {
+            return new Response(
+              JSON.stringify({ success: false, error: 'Forbidden to cancel this scheduled email' }),
+              {
+                status: 403,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              },
+            );
+          }
+
+          await env.EMAIL_JOBS.delete(key);
+
+          return new Response(JSON.stringify({ success: true, cancelled: true }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         } catch (err: any) {
