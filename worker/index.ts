@@ -246,6 +246,92 @@ export default {
       }
     }
 
+    if (request.method === 'POST' && url.pathname === '/audit-log') {
+      try {
+        const entry = await request.json() as {
+          id?: string;
+          type: string;
+          username?: string;
+          timestamp?: string;
+          summary: string;
+          details?: any;
+        };
+
+        const id =
+          typeof entry.id === 'string' && entry.id.length > 0
+            ? entry.id
+            : (typeof (globalThis as any).crypto?.randomUUID === 'function'
+                ? (globalThis as any).crypto.randomUUID()
+                : `log-${Date.now()}`);
+
+        const timestamp =
+          typeof entry.timestamp === 'string' && entry.timestamp.length > 0
+            ? entry.timestamp
+            : new Date().toISOString();
+
+        const toStore = {
+          ...entry,
+          id,
+          timestamp,
+        };
+
+        await env.BOWLER_DATA.put(`audit:${id}`, JSON.stringify(toStore));
+
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    if (request.method === 'GET' && url.pathname === '/audit-logs') {
+      try {
+        const logs: any[] = [];
+        let cursor: string | undefined = undefined;
+        let listComplete = false;
+
+        while (!listComplete) {
+          const list: any = await env.BOWLER_DATA.list({ prefix: 'audit:', cursor });
+          cursor = list.cursor;
+          listComplete = list.list_complete;
+
+          if (list.keys.length > 0) {
+            const batchPromises = list.keys.map((key: any) =>
+              env.BOWLER_DATA.get(key.name, 'json'),
+            );
+            const batchResults = await Promise.all(batchPromises);
+            for (const data of batchResults) {
+              if (data && typeof data === 'object') {
+                logs.push(data);
+              }
+            }
+          }
+        }
+
+        logs.sort((a, b) => {
+          const ta = new Date((a as any).timestamp || 0).getTime();
+          const tb = new Date((b as any).timestamp || 0).getTime();
+          if (isNaN(ta) && isNaN(tb)) return 0;
+          if (isNaN(ta)) return 1;
+          if (isNaN(tb)) return -1;
+          return tb - ta;
+        });
+
+        return new Response(JSON.stringify({ success: true, logs }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     if (request.method === 'GET' && url.pathname === '/load') {
       const userId = url.searchParams.get('userId');
 

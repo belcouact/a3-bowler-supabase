@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import { generateShortId } from '../utils/idUtils';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
+import { dataService } from '../services/dataService';
 
 interface AuditLogEntry {
   id: string;
@@ -25,6 +26,10 @@ const appendAuditLog = (entry: AuditLogEntry) => {
   } catch (error) {
     console.error('Failed to append audit log', error);
   }
+
+  dataService.appendAuditLog(entry).catch(error => {
+    console.error('Failed to persist audit log to backend', error);
+  });
 };
 
 interface BowlerModalProps {

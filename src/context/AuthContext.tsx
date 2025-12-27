@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { authService, User } from '../services/authService';
+import { dataService } from '../services/dataService';
 import { generateShortId } from '../utils/idUtils';
 
 interface AuditLogEntry {
@@ -21,6 +22,10 @@ const appendAuditLog = (entry: AuditLogEntry) => {
   } catch (error) {
     console.error('Failed to append audit log', error);
   }
+
+  dataService.appendAuditLog(entry).catch(error => {
+    console.error('Failed to persist audit log to backend', error);
+  });
 };
 
 const updateUserAccounts = (user: User) => {

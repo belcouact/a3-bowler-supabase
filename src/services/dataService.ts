@@ -1,6 +1,15 @@
 const API_BASE_URL = 'https://bowler-worker.study-llm.me';
 const EMAIL_API_BASE_URL = 'https://email-worker.study-llm.me';
 
+type AuditLogEntry = {
+  id: string;
+  type: string;
+  username?: string;
+  timestamp: string;
+  summary: string;
+  details?: any;
+};
+
 export const dataService = {
   async saveData(
     bowlers: any[],
@@ -56,20 +65,17 @@ export const dataService = {
       });
 
       if (!response.ok) {
-        // If 404, it might mean the worker route isn't found OR no data for user (depending on worker logic).
-        // To prevent "crashing" or blocking the UI, we return empty data.
         if (response.status === 404) {
-             console.warn(`Data load endpoint returned 404 for user ${userId}. Returning empty data.`);
-             return { success: true, bowlers: [], a3Cases: [] };
+          console.warn(`Data load endpoint returned 404 for user ${userId}. Returning empty data.`);
+          return { success: true, bowlers: [], a3Cases: [] };
         }
         throw new Error(`Failed to load data: ${response.status} ${response.statusText}`);
       }
 
       return response.json();
     } catch (error) {
-        console.error("Error in loadData:", error);
-        // Return empty structure to prevent app crash
-        return { success: false, bowlers: [], a3Cases: [] };
+      console.error('Error in loadData:', error);
+      return { success: false, bowlers: [], a3Cases: [] };
     }
   },
 
@@ -87,6 +93,51 @@ export const dataService = {
     }
 
     return response.json();
+  },
+
+  async appendAuditLog(entry: AuditLogEntry) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/audit-log`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(entry),
+      });
+
+      if (!response.ok) {
+        let message = 'Failed to append audit log';
+        try {
+          const data = await response.json();
+          if (data && typeof data.error === 'string') {
+            message = data.error;
+          }
+        } catch (e) {
+          void e;
+        }
+        throw new Error(message);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Error in appendAuditLog:', error);
+      return { success: false };
+    }
+  },
+
+  async loadAuditLogs() {
+    const response = await fetch(`${API_BASE_URL}/audit-logs`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const responseData = await response.json().catch(() => ({}));
+    if (!response.ok || responseData.success === false) {
+      throw new Error(responseData.error || responseData.message || 'Failed to load audit logs');
+    }
+    return responseData;
   },
 
   async scheduleEmail(options: {

@@ -12,6 +12,7 @@ import { useToast } from '../context/ToastContext';
 import { getBowlerStatusColor, computeGroupPerformanceTableData } from '../utils/metricUtils';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { diffDays, addDays, formatDate, getMonthName } from '../utils/dateUtils';
+import { generateShortId } from '../utils/idUtils';
 
 const A3CaseModal = lazy(() => import('./A3CaseModal'));
 const BowlerModal = lazy(() => import('./BowlerModal'));
@@ -111,6 +112,11 @@ const Layout = () => {
   } = useApp();
   const { user, logout, isLoading } = useAuth();
   const toast = useToast();
+
+  const normalizedRole = (user?.role || '').trim().toLowerCase();
+  const isAdmin = normalizedRole === 'admin';
+  const isSuperAdmin = normalizedRole === 'super admin';
+  const isAdminOrSuperAdmin = isAdmin || isSuperAdmin;
   
   // Identify active module based on path
   const isMetricBowler = location.pathname.includes('/metric-bowler');
@@ -176,6 +182,21 @@ const Layout = () => {
   const [auditUserFilter, setAuditUserFilter] = useState<string>('All');
   const [auditFromDate, setAuditFromDate] = useState<string>('');
   const [auditToDate, setAuditToDate] = useState<string>('');
+  const [editingAdminAccount, setEditingAdminAccount] = useState<AdminAccount | null>(null);
+  const [isSavingAdminAccount, setIsSavingAdminAccount] = useState(false);
+  const [editAdminForm, setEditAdminForm] = useState<{
+    role: string;
+    country: string;
+    plant: string;
+    team: string;
+    isPublicProfile: boolean;
+  }>({
+    role: '',
+    country: '',
+    plant: '',
+    team: '',
+    isPublicProfile: true,
+  });
 
   const loadAdminUsers = async () => {
     setIsLoadingAdminUsers(true);
@@ -224,6 +245,24 @@ const Layout = () => {
       }
     } finally {
       setIsLoadingAdminUsers(false);
+    }
+  };
+
+  const loadAdminAuditLogs = async () => {
+    try {
+      const response = await dataService.loadAuditLogs();
+      const logs = (response as any).logs || response || [];
+      setAdminAuditLogs(logs as AuditLogEntry[]);
+    } catch (error) {
+      console.error('Failed to load audit logs from backend', error);
+      try {
+        const rawLogs = localStorage.getItem('audit_logs');
+        const parsedLogs: AuditLogEntry[] = rawLogs ? JSON.parse(rawLogs) : [];
+        setAdminAuditLogs(parsedLogs);
+      } catch (fallbackError) {
+        console.error('Failed to load audit logs from local storage', fallbackError);
+        setAdminAuditLogs([]);
+      }
     }
   };
 
@@ -278,19 +317,93 @@ const Layout = () => {
     }
   };
 
+  const handleOpenEditAdminAccount = (account: AdminAccount) => {
+    setEditingAdminAccount(account);
+    setEditAdminForm({
+      role: account.role || '',
+      country: account.country || '',
+      plant: account.plant || '',
+      team: account.team || '',
+      isPublicProfile: account.isPublicProfile === false ? false : true,
+    });
+  };
+
+  const handleChangeEditAdminField = (
+    field: 'role' | 'country' | 'plant' | 'team' | 'isPublicProfile',
+    value: string | boolean,
+  ) => {
+    setEditAdminForm(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleSaveAdminAccount = async () => {
+    if (!editingAdminAccount) return;
+    if (!isSuperAdmin) {
+      toast.error('Only Super admin can update user accounts.');
+      return;
+    }
+
+    const isEditingSelf = user?.username && editingAdminAccount.username === user.username;
+    const desiredRole = (editAdminForm.role || '').trim();
+    const desiredRoleNormalized = desiredRole.toLowerCase();
+
+    if (isEditingSelf && isSuperAdmin && desiredRoleNormalized !== 'super admin') {
+      toast.error('Super admin cannot change their own role.');
+      return;
+    }
+
+    setIsSavingAdminAccount(true);
+    try {
+      await authService.updateProfile({
+        username: editingAdminAccount.username,
+        role: desiredRole || undefined,
+        profile: {
+          country: editAdminForm.country || undefined,
+          plant: editAdminForm.plant || undefined,
+          team: editAdminForm.team || undefined,
+          isPublic: editAdminForm.isPublicProfile,
+        },
+      });
+      toast.success('User account updated');
+      await loadAdminUsers();
+
+      if (user?.username) {
+        dataService.appendAuditLog({
+          id: generateShortId(),
+          type: 'user_admin_updated',
+          username: user.username,
+          timestamp: new Date().toISOString(),
+          summary: `Updated user account "${editingAdminAccount.username}"`,
+          details: {
+            target: editingAdminAccount.username,
+            role: desiredRole || undefined,
+            country: editAdminForm.country || undefined,
+            plant: editAdminForm.plant || undefined,
+            team: editAdminForm.team || undefined,
+            isPublicProfile: editAdminForm.isPublicProfile,
+          },
+        }).catch(error => {
+          console.error('Failed to persist admin user update audit log', error);
+        });
+      }
+
+      setEditingAdminAccount(null);
+    } catch (error: any) {
+      console.error('Failed to update user account', error);
+      toast.error(error?.message || 'Failed to update user account');
+    } finally {
+      setIsSavingAdminAccount(false);
+    }
+  };
+
   useEffect(() => {
     if (!isAdminPanelOpen) {
       return;
     }
     loadAdminUsers();
-    try {
-      const rawLogs = localStorage.getItem('audit_logs');
-      const parsedLogs: AuditLogEntry[] = rawLogs ? JSON.parse(rawLogs) : [];
-      setAdminAuditLogs(parsedLogs);
-    } catch (error) {
-      console.error('Failed to load audit logs', error);
-      setAdminAuditLogs([]);
-    }
+    loadAdminAuditLogs();
   }, [isAdminPanelOpen]);
 
   const filteredAuditLogs = useMemo(() => {
@@ -1938,7 +2051,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
   };
 
   const handleOpenConsolidateModal = () => {
-    if (user?.role !== 'admin') {
+    if (!isAdminOrSuperAdmin) {
       toast.error('Only administrators can perform this action.');
       return;
     }
@@ -2113,7 +2226,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
             >
               <Download className="w-4 h-4" />
             </button>
-            {user?.role === 'admin' && (
+            {isSuperAdmin && (
               <button
                 onClick={() => {
                   setAdminTab('users');
@@ -3980,6 +4093,11 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 )}
                               </button>
                             </th>
+                            {isSuperAdmin && (
+                              <th className="px-3 py-2 text-right font-semibold text-gray-600 border-b border-gray-200 whitespace-nowrap">
+                                Edit
+                              </th>
+                            )}
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -4016,6 +4134,17 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                   ? new Date(account.lastLoginAt).toLocaleString()
                                   : '—'}
                               </td>
+                              {isSuperAdmin && (
+                                <td className="px-3 py-2 text-right">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenEditAdminAccount(account)}
+                                    className="px-2 py-1 text-xs rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                                  >
+                                    Edit
+                                  </button>
+                                </td>
+                              )}
                             </tr>
                           ))}
                         </tbody>
@@ -4031,16 +4160,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                     </div>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => {
-                          try {
-                            const rawLogs = localStorage.getItem('audit_logs');
-                            const parsedLogs: AuditLogEntry[] = rawLogs ? JSON.parse(rawLogs) : [];
-                            setAdminAuditLogs(parsedLogs);
-                          } catch (error) {
-                            console.error('Failed to reload audit logs', error);
-                            setAdminAuditLogs([]);
-                          }
-                        }}
+                        onClick={loadAdminAuditLogs}
                         className="text-xs px-3 py-1.5 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
                       >
                         Refresh
@@ -4152,6 +4272,131 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isAdminPanelOpen && editingAdminAccount && (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center px-4">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => {
+              if (!isSavingAdminAccount) {
+                setEditingAdminAccount(null);
+              }
+            }}
+          />
+          <div className="relative w-full max-w-md bg-white rounded-lg shadow-xl border border-gray-200">
+            <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900">
+                  Edit user account
+                </h3>
+                <p className="text-xs text-gray-500">
+                  Update role and profile fields for {editingAdminAccount.username}.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  if (!isSavingAdminAccount) {
+                    setEditingAdminAccount(null);
+                  }
+                }}
+                className="rounded-full p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="px-4 py-4 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Role
+                </label>
+                <input
+                  type="text"
+                  value={editAdminForm.role}
+                  onChange={e => handleChangeEditAdminField('role', e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Role"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Country/Region
+                  </label>
+                  <input
+                    type="text"
+                    value={editAdminForm.country}
+                    onChange={e => handleChangeEditAdminField('country', e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Country"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Plant/Office
+                  </label>
+                  <input
+                    type="text"
+                    value={editAdminForm.plant}
+                    onChange={e => handleChangeEditAdminField('plant', e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Plant or office"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Team
+                </label>
+                <input
+                  type="text"
+                  value={editAdminForm.team}
+                  onChange={e => handleChangeEditAdminField('team', e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Team"
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-700">Profile visibility</span>
+                <select
+                  value={editAdminForm.isPublicProfile ? 'public' : 'private'}
+                  onChange={e =>
+                    handleChangeEditAdminField(
+                      'isPublicProfile',
+                      e.target.value === 'public',
+                    )
+                  }
+                  className="border border-gray-300 rounded-md px-2 py-1 text-xs text-gray-700"
+                >
+                  <option value="public">Public</option>
+                  <option value="private">Private</option>
+                </select>
+              </div>
+            </div>
+            <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-end gap-2 bg-gray-50">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isSavingAdminAccount) {
+                    setEditingAdminAccount(null);
+                  }
+                }}
+                className="px-3 py-1.5 text-xs rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
+                disabled={isSavingAdminAccount}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveAdminAccount}
+                className="px-3 py-1.5 text-xs rounded-md bg-slate-700 text-white hover:bg-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={isSavingAdminAccount}
+              >
+                {isSavingAdminAccount ? 'Saving...' : 'Save changes'}
+              </button>
             </div>
           </div>
         </div>

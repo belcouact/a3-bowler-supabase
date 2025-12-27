@@ -5,6 +5,7 @@ import { useApp } from '../context/AppContext';
 import { dataService } from '../services/dataService';
 import { useToast } from '../context/ToastContext';
 import { Bowler, A3Case } from '../types';
+import { generateShortId } from '../utils/idUtils';
 
 interface ConsolidateModalProps {
   isOpen: boolean;
@@ -50,7 +51,11 @@ export const ConsolidateModal: React.FC<ConsolidateModalProps> = ({ isOpen, onCl
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (user?.role !== 'admin') {
+    const normalizedRole = (user?.role || '').trim().toLowerCase();
+    const isAdminOrSuperAdmin =
+      normalizedRole === 'admin' || normalizedRole === 'super admin';
+
+    if (!isAdminOrSuperAdmin) {
       toast.error('Only administrators can perform this action.');
       return;
     }
@@ -105,6 +110,25 @@ export const ConsolidateModal: React.FC<ConsolidateModalProps> = ({ isOpen, onCl
             if (updatedA3Count > 0) parts.push(`${updatedA3Count} A3s updated`);
             
             toast.success(`Successfully consolidated: ${parts.join(', ')}.`);
+
+            if (user?.username) {
+              dataService.appendAuditLog({
+                id: generateShortId(),
+                type: 'consolidate_run',
+                username: user.username,
+                timestamp: new Date().toISOString(),
+                summary: `Consolidated data for tags: ${tags.join(', ')}`,
+                details: {
+                  tags,
+                  addedBowlersCount,
+                  updatedBowlersCount,
+                  addedA3Count,
+                  updatedA3Count,
+                },
+              }).catch(error => {
+                console.error('Failed to persist consolidation audit log', error);
+              });
+            }
         } else {
             toast.info('No new or updated items found with these tags.');
         }

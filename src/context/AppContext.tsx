@@ -37,6 +37,10 @@ const appendAuditLog = (entry: AuditLogEntry) => {
   } catch (error) {
     console.error('Failed to append audit log', error);
   }
+
+  dataService.appendAuditLog(entry).catch(error => {
+    console.error('Failed to persist audit log to backend', error);
+  });
 };
 
 export type { Bowler, A3Case, Metric, MetricData, MindMapNodeData, ActionPlanTaskData, DataAnalysisImage, DashboardMindmap };
