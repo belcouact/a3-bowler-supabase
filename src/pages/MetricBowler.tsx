@@ -1,15 +1,17 @@
 import { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { Info, Settings, HelpCircle, Sparkles, Loader2, Calendar, FileText } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { Metric } from '../types';
+import { Metric, MindMapNodeData, ActionPlanTaskData } from '../types';
 import { HelpModal } from '../components/HelpModal';
 import { AIAnalysisModal } from '../components/AIAnalysisModal';
-import { analyzeMetric, AnalysisResult } from '../services/aiService';
+import { analyzeMetric, AnalysisResult, generateA3PlanFromMetric } from '../services/aiService';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { useToast } from '../context/ToastContext';
 import { isViolation } from '../utils/metricUtils';
+import { addDays, formatDate } from '../utils/dateUtils';
+import { generateShortId } from '../utils/idUtils';
 
 const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -42,6 +44,7 @@ const CustomizedDot = (props: any) => {
 
 const MetricBowler = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { bowlers, updateBowler, selectedModel, a3Cases, addA3Case } = useApp();
   const toast = useToast();
   
@@ -174,41 +177,121 @@ const MetricBowler = () => {
       const linkedA3Cases = a3Cases.filter(
         c => (c.linkedMetricIds || []).includes(metric.id),
       );
-      const result = await analyzeMetric(metric, selectedModel, linkedA3Cases);
-      const today = new Date().toISOString().split('T')[0];
-      const trendLabel = result.trend.charAt(0).toUpperCase() + result.trend.slice(1);
-      const achievement = typeof result.achievementRate === 'number'
-        ? `${result.achievementRate.toFixed(1)}%`
-        : '';
+      const analysis = await analyzeMetric(metric, selectedModel, linkedA3Cases);
+      const plan = await generateA3PlanFromMetric(metric, selectedModel);
+      const today = formatDate(new Date());
+      const trendLabel = analysis.trend.charAt(0).toUpperCase() + analysis.trend.slice(1);
       let priority: 'Low' | 'Medium' | 'High' = 'Medium';
-      const loweredTrend = result.trend.toLowerCase();
+      const loweredTrend = analysis.trend.toLowerCase();
       if (
         loweredTrend === 'degrading' ||
         loweredTrend === 'unstable' ||
         loweredTrend === 'incapable' ||
-        result.achievementRate < 50
+        analysis.achievementRate < 50
       ) {
         priority = 'High';
-      } else if (result.achievementRate >= 80 && (loweredTrend === 'capable' || loweredTrend === 'improving' || loweredTrend === 'stable')) {
+      } else if (
+        analysis.achievementRate >= 80 &&
+        (loweredTrend === 'capable' || loweredTrend === 'improving' || loweredTrend === 'stable')
+      ) {
         priority = 'Low';
       }
-      const selectedBowler = bowlers.find(b => (b.metrics || []).some(m => m.id === metric.id));
-      const owner = metric.owner || selectedBowler?.champion || '';
-      const group = selectedBowler?.group || '';
-      const tag = selectedBowler?.tag || '';
-      const suggestionText = (result.suggestion || []).join('\n- ');
-      const descriptionParts = [];
-      if (result.summary) {
-        descriptionParts.push(result.summary.trim());
-      }
-      if (suggestionText) {
-        descriptionParts.push(`Key AI suggestions:\n- ${suggestionText}`);
+      const hostBowler = bowlers.find(b => (b.metrics || []).some(m => m.id === metric.id));
+      const owner = metric.owner || hostBowler?.champion || '';
+      const group = hostBowler?.group || '';
+      const tag = hostBowler?.tag || '';
+      const achievement =
+        typeof analysis.achievementRate === 'number'
+          ? `${analysis.achievementRate.toFixed(1)}%`
+          : '';
+      const descriptionParts: string[] = [];
+      if (analysis.summary) {
+        descriptionParts.push(analysis.summary.trim());
       }
       if (achievement) {
         descriptionParts.push(`Current target achievement: ${achievement}.`);
       }
       const description = descriptionParts.join('\n\n');
-      addA3Case({
+
+      const rootCauseText = plan.rootCauses.length
+        ? `Most likely root causes:\n- ${plan.rootCauses.join('\n- ')}`
+        : '';
+
+      const mindMapNodes: MindMapNodeData[] = [];
+      const rootId = 'root';
+      const rootText =
+        plan.problemStatement && plan.problemStatement.trim().length > 0
+          ? plan.problemStatement.trim()
+          : `Improve performance of metric "${metric.name}".`;
+      mindMapNodes.push({
+        id: rootId,
+        text: rootText,
+        x: 50,
+        y: 220,
+        parentId: null,
+        type: 'root',
+      });
+
+      const addChildren = (
+        nodes: MindMapNodeData[],
+        tree: { cause: string; children?: { cause: string; children?: any[] }[] }[],
+        parentId: string,
+        depth: number,
+        startY: number,
+      ): number => {
+        let currentY = startY;
+        const stepY = 120;
+        const stepX = 220;
+        tree.forEach(node => {
+          if (!node.cause) {
+            return;
+          }
+          const id = generateShortId();
+          nodes.push({
+            id,
+            text: node.cause,
+            x: 50 + stepX * depth,
+            y: currentY,
+            parentId,
+            type: 'child',
+          });
+          if (node.children && node.children.length > 0) {
+            currentY = addChildren(nodes, node.children, id, depth + 1, currentY + stepY);
+          } else {
+            currentY += stepY;
+          }
+        });
+        return currentY;
+      };
+
+      if (plan.whyTree && plan.whyTree.length > 0) {
+        addChildren(mindMapNodes, plan.whyTree as any, rootId, 1, 260);
+      }
+
+      const actions: ActionPlanTaskData[] = [];
+      const baseDate = new Date();
+      const actionsSource = Array.isArray(plan.actions) && plan.actions.length > 0 ? plan.actions : [];
+      actionsSource.forEach((a, index) => {
+        const name = a.name || `Action ${index + 1}`;
+        const descriptionText = a.description || '';
+        const ownerText = a.owner || owner;
+        const groupText = a.group || undefined;
+        const start = addDays(baseDate, index * 7);
+        const end = addDays(start, 7);
+        actions.push({
+          id: generateShortId(),
+          name,
+          description: descriptionText,
+          owner: ownerText,
+          group: groupText,
+          startDate: formatDate(start),
+          endDate: formatDate(end),
+          status: 'Not Started',
+          progress: 0,
+        });
+      });
+
+      const created = addA3Case({
         title: `A3: ${metric.name} – ${trendLabel}`,
         description,
         owner,
@@ -219,19 +302,21 @@ const MetricBowler = () => {
         startDate: today,
         endDate: '',
         status: 'In Progress',
-        problemStatement: description || `Improve performance of metric "${metric.name}".`,
+        problemStatement: plan.problemStatement || rootText,
         results: '',
-        mindMapNodes: [],
+        mindMapNodes,
         mindMapText: '',
-        rootCause: '',
-        actionPlanTasks: [],
+        rootCause: rootCauseText,
+        actionPlanTasks: actions,
         dataAnalysisObservations: '',
         dataAnalysisImages: [],
         dataAnalysisCanvasHeight: undefined,
         resultImages: [],
         resultCanvasHeight: undefined,
       });
+
       toast.success('Created new A3 case from AI insight.');
+      navigate(`/a3-analysis/${created.id}`);
     } catch (error) {
       console.error('Failed to create A3 from AI', error);
       toast.error('Failed to create A3 from AI. Please try again.');

@@ -43,14 +43,23 @@ const appendAuditLog = (entry: AuditLogEntry) => {
   });
 };
 
-export type { Bowler, A3Case, Metric, MetricData, MindMapNodeData, ActionPlanTaskData, DataAnalysisImage, DashboardMindmap };
+export type {
+  Bowler,
+  A3Case,
+  Metric,
+  MetricData,
+  MindMapNodeData,
+  ActionPlanTaskData,
+  DataAnalysisImage,
+  DashboardMindmap,
+};
 
 interface AppContextType {
   bowlers: Bowler[];
   a3Cases: A3Case[];
   addBowler: (data: Omit<Bowler, 'id'>) => void;
   updateBowler: (bowler: Bowler) => void;
-  addA3Case: (caseData: Omit<A3Case, 'id'>) => void;
+  addA3Case: (caseData: Omit<A3Case, 'id'>) => A3Case;
   updateA3Case: (a3Case: A3Case) => void;
   deleteBowler: (id: string) => void;
   deleteA3Case: (id: string) => void;
@@ -465,8 +474,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const addA3Case = (caseData: Omit<A3Case, 'id'>) => {
-    const newCase = {
+  const addA3Case = (caseData: Omit<A3Case, 'id'>): A3Case => {
+    const newCase: A3Case = {
       id: generateShortId(),
       ...caseData
     };
@@ -488,6 +497,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         },
       });
     }
+    return newCase;
   };
 
   const updateA3Case = (updatedCase: A3Case) => {

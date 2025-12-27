@@ -2,9 +2,26 @@ import { Metric, Bowler, A3Case, AIModelKey } from '../types';
 
 export interface AnalysisResult {
   trend: 'stable' | 'capable' | 'unstable' | 'incapable' | 'improving' | 'degrading';
-  achievementRate: number; // percentage 0-100
-  suggestion: string[]; // Renamed from anomalies
+  achievementRate: number;
+  suggestion: string[];
   summary: string;
+}
+
+interface A3WhyNode {
+  cause: string;
+  children?: A3WhyNode[];
+}
+
+export interface A3FromMetricPlan {
+  problemStatement: string;
+  whyTree: A3WhyNode[];
+  rootCauses: string[];
+  actions: {
+    name: string;
+    description?: string;
+    owner?: string;
+    group?: string;
+  }[];
 }
 
 const calculateStats = (values: number[]) => {
@@ -268,4 +285,173 @@ export const generateAIContext = (bowlers: Bowler[], a3Cases: A3Case[]): string 
       return clone;
     })
   });
+};
+
+export const generateA3PlanFromMetric = async (
+  metric: Metric,
+  model: AIModelKey,
+): Promise<A3FromMetricPlan> => {
+  const months = Object.keys(metric.monthlyData || {}).sort();
+  const dataPoints: { month: string; actual: string; target: string }[] = [];
+  months.forEach(month => {
+    const data = metric.monthlyData?.[month];
+    if (data && data.actual) {
+      dataPoints.push({
+        month,
+        actual: data.actual,
+        target: data.target || 'N/A',
+      });
+    }
+  });
+
+  if (dataPoints.length === 0) {
+    return {
+      problemStatement: '',
+      whyTree: [],
+      rootCauses: [],
+      actions: [],
+    };
+  }
+
+  const prompt = `
+You are an expert in A3 Problem Solving and root cause analysis.
+
+You will receive the history of one performance metric.
+
+Your tasks:
+1) Write a clear, formal A3 Problem Statement in English only. It must describe the gap from target, where and when it occurs, and the impact. Do not include any solutions or suggestions in this field.
+2) Build a concise 5-Whys style cause tree for this problem.
+3) Identify the most likely root causes from that tree.
+4) Propose a practical action plan based on the root causes.
+
+Metric Context:
+- Name: "${metric.name}"
+- Definition: "${metric.definition || 'N/A'}"
+- Attribute: "${metric.attribute || 'Individual Data'}"
+- Target Meeting Rule: "${metric.targetMeetingRule || 'gte'}"
+
+Raw Data (Month | Actual | Target):
+${dataPoints.map(p => `${p.month} | ${p.actual} | ${p.target}`).join('\n')}
+
+Response requirements:
+- Always respond in English.
+- Return JSON ONLY with this exact structure:
+{
+  "problemStatement": "single formal problem statement string",
+  "whyTree": [
+    {
+      "cause": "first-level cause text",
+      "children": [
+        {
+          "cause": "second-level cause text",
+          "children": [
+            {
+              "cause": "third-level cause text"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "rootCauses": [
+    "root cause sentence 1",
+    "root cause sentence 2"
+  ],
+  "actions": [
+    {
+      "name": "short action title",
+      "description": "detailed what/how that a team can execute",
+      "owner": "role or function (for example: Production Supervisor)",
+      "group": "theme or workstream name (for example: Standard Work, Training)"
+    }
+  ]
+}
+`;
+
+  try {
+    const response = await fetch('https://multi-model-worker.study-llm.me/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You are an A3 Problem Solving coach that outputs strictly JSON in the requested schema.',
+          },
+          { role: 'user', content: prompt },
+        ],
+        stream: false,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '{}';
+    const cleanContent = content.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+    let parsed: any;
+    try {
+      parsed = JSON.parse(cleanContent);
+    } catch {
+      parsed = {};
+    }
+
+    const problemStatement =
+      typeof parsed.problemStatement === 'string' ? parsed.problemStatement.trim() : '';
+
+    const rawWhyTree = Array.isArray(parsed.whyTree) ? parsed.whyTree : [];
+    const whyTree: A3WhyNode[] = rawWhyTree
+      .map((n: any) => ({
+        cause: typeof n.cause === 'string' ? n.cause.trim() : '',
+        children: Array.isArray(n.children)
+          ? n.children.map((c: any) => ({
+              cause: typeof c.cause === 'string' ? c.cause.trim() : '',
+              children: Array.isArray(c.children)
+                ? c.children.map((g: any) => ({
+                    cause: typeof g.cause === 'string' ? g.cause.trim() : '',
+                  }))
+                : undefined,
+            }))
+          : undefined,
+      }))
+      .filter(n => n.cause);
+
+    const rootCauses = Array.isArray(parsed.rootCauses)
+      ? parsed.rootCauses
+          .map((r: any) => (typeof r === 'string' ? r.trim() : ''))
+          .filter((r: string) => r)
+      : [];
+
+    const actionsArray = Array.isArray(parsed.actions) ? parsed.actions : [];
+    const actions = actionsArray
+      .map((a: any) => ({
+        name: typeof a.name === 'string' ? a.name.trim() : '',
+        description: typeof a.description === 'string' ? a.description.trim() : '',
+        owner: typeof a.owner === 'string' ? a.owner.trim() : '',
+        group: typeof a.group === 'string' ? a.group.trim() : '',
+      }))
+      .filter(a => a.name);
+
+    return {
+      problemStatement,
+      whyTree,
+      rootCauses,
+      actions,
+    };
+  } catch (error) {
+    console.error('AI A3 Plan Error:', error);
+    return {
+      problemStatement: '',
+      whyTree: [],
+      rootCauses: [],
+      actions: [],
+    };
+  }
 };
