@@ -1303,7 +1303,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   />
                 </div>
                 <div className="mt-4 border rounded-md">
-                  <div className="flex text-xs font-medium border-b">
+                  <div className="flex flex-wrap text-xs font-medium border-b">
                     <button
                       type="button"
                       className={`flex-1 px-3 py-2 text-center ${
