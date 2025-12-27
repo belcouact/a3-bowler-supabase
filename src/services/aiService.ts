@@ -335,6 +335,9 @@ ${dataPoints.map(p => `${p.month} | ${p.actual} | ${p.target}`).join('\n')}
 
 Response requirements:
 - Always respond in English.
+- Make the cause tree logically streamlined: do NOT repeat the same cause text at the same level, and avoid creating multiple nodes that say essentially the same thing.
+- When several detailed sub-causes share the same higher-level idea, represent that idea once as a single parent "cause" node and place the detailed variations under "children" instead of duplicating the parent text.
+- Remove or merge any redundant nodes so that each "cause" string is distinct and adds new information.
 - Return JSON ONLY with this exact structure:
 {
   "problemStatement": "single formal problem statement string",

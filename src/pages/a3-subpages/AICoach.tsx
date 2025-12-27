@@ -25,7 +25,7 @@ const AICoach = () => {
     }
   }, [messages]);
 
-  const buildContext = () => {
+  const buildContext = (history: Message[]) => {
     if (!currentCase) return '';
 
     const linkedIds = currentCase.linkedMetricIds || [];
@@ -73,9 +73,17 @@ const AICoach = () => {
     delete sanitizedCase.dataAnalysisCanvasHeight;
     delete sanitizedCase.resultCanvasHeight;
 
+    const conversation = history
+      .filter(m => m.role === 'user' || m.role === 'assistant')
+      .map(m => ({
+        role: m.role,
+        content: m.content,
+      }));
+
     return JSON.stringify({
       a3Case: sanitizedCase,
       linkedMetrics,
+      conversation,
     });
   };
 
@@ -89,7 +97,8 @@ const AICoach = () => {
     setIsLoading(true);
 
     try {
-      const context = buildContext();
+      const historyMessages = newMessages.filter(m => m.role !== 'system');
+      const context = buildContext(historyMessages);
       const systemMessage: Message = {
         role: 'system',
         content: `You are an AI coach helping the owner of a single A3 case.
@@ -97,15 +106,12 @@ const AICoach = () => {
 Here is the JSON context for this A3, including any linked metrics:
 ${context}
 
-Use this information to:
-- highlight top risks or uncertainties
-- suggest which actions to prioritize and why
-- recommend additional analysis, experiments, or follow-up
+Your job is to answer any questions the user has about this A3 and its related metrics.
+Examples include: clarifying the problem, commenting on data and analysis, suggesting root-cause checks, highlighting risks or uncertainties, advising on action plan design and prioritization, or discussing follow-up and sustainment.
 
-Be specific and practical, and keep answers focused on this A3 only.`,
+Keep your answers specific, practical, and focused on this A3 only.`,
       };
 
-      const historyMessages = newMessages.filter(m => m.role !== 'system');
       const apiMessages = [systemMessage, ...historyMessages];
 
       const response = await fetch('https://multi-model-worker.study-llm.me/api/chat', {
@@ -271,4 +277,3 @@ Be specific and practical, and keep answers focused on this A3 only.`,
 };
 
 export default AICoach;
-
