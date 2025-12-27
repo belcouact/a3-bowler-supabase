@@ -60,6 +60,7 @@ interface AdminAccount {
   plant?: string;
   team?: string;
   isPublicProfile?: boolean;
+  createdAt?: string;
   lastLoginAt?: string;
 }
 
@@ -157,6 +158,10 @@ const Layout = () => {
   const [adminAuditLogs, setAdminAuditLogs] = useState<AuditLogEntry[]>([]);
   const [isLoadingAdminUsers, setIsLoadingAdminUsers] = useState(false);
   const [adminUsersError, setAdminUsersError] = useState<string | null>(null);
+  const [auditActionFilter, setAuditActionFilter] = useState<string>('All');
+  const [auditUserFilter, setAuditUserFilter] = useState<string>('All');
+  const [auditFromDate, setAuditFromDate] = useState<string>('');
+  const [auditToDate, setAuditToDate] = useState<string>('');
 
   const loadAdminUsers = async () => {
     setIsLoadingAdminUsers(true);
@@ -184,6 +189,7 @@ const Layout = () => {
             local && typeof local.isPublicProfile === 'boolean'
               ? local.isPublicProfile
               : profileIsPublic,
+          createdAt: user.createdAt ? new Date(user.createdAt).toISOString() : undefined,
           lastLoginAt:
             (local && local.lastLoginAt) ||
             (user.createdAt ? new Date(user.createdAt).toISOString() : undefined),
@@ -221,6 +227,82 @@ const Layout = () => {
       setAdminAuditLogs([]);
     }
   }, [isAdminPanelOpen]);
+
+  const filteredAuditLogs = useMemo(() => {
+    let logs = adminAuditLogs;
+    if (auditActionFilter !== 'All') {
+      logs = logs.filter(entry => entry.type === auditActionFilter);
+    }
+    if (auditUserFilter !== 'All') {
+      logs = logs.filter(entry => entry.username === auditUserFilter);
+    }
+    if (auditFromDate) {
+      const from = new Date(`${auditFromDate}T00:00:00`);
+      logs = logs.filter(entry => {
+        const ts = new Date(entry.timestamp);
+        return !isNaN(ts.getTime()) && ts >= from;
+      });
+    }
+    if (auditToDate) {
+      const to = new Date(`${auditToDate}T23:59:59.999`);
+      logs = logs.filter(entry => {
+        const ts = new Date(entry.timestamp);
+        return !isNaN(ts.getTime()) && ts <= to;
+      });
+    }
+    return logs;
+  }, [adminAuditLogs, auditActionFilter, auditUserFilter, auditFromDate, auditToDate]);
+
+  const auditActions = useMemo(
+    () => Array.from(new Set(adminAuditLogs.map(entry => entry.type))).filter(Boolean),
+    [adminAuditLogs],
+  );
+
+  const auditUsers = useMemo(
+    () => Array.from(new Set(adminAuditLogs.map(entry => entry.username).filter(Boolean))) as string[],
+    [adminAuditLogs],
+  );
+
+  const handleExportAuditCsv = () => {
+    if (!filteredAuditLogs.length) {
+      return;
+    }
+    const header = ['Time', 'User', 'Action', 'Details', 'Target'];
+    const rows = filteredAuditLogs.map(entry => {
+      const time = new Date(entry.timestamp).toLocaleString();
+      const userName = entry.username || '';
+      const action = entry.type || '';
+      const detailsText =
+        entry.summary ||
+        (entry.details ? JSON.stringify(entry.details) : '');
+      const target =
+        (entry.details && (entry.details as any).target) ||
+        '';
+      return [time, userName, action, detailsText, target];
+    });
+    const csv = [header, ...rows]
+      .map(row =>
+        row
+          .map(cell => {
+            const value = cell ?? '';
+            if (/[",\n]/.test(value)) {
+              return `"${value.replace(/"/g, '""')}"`;
+            }
+            return value;
+          })
+          .join(','),
+      )
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'audit_logs.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   const a3PortfolioStats = useMemo(() => {
     const filteredCases = a3PortfolioGroupFilter
@@ -3725,6 +3807,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                               Visibility
                             </th>
                             <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200 whitespace-nowrap">
+                              Created At
+                            </th>
+                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200 whitespace-nowrap">
                               Last Login
                             </th>
                           </tr>
@@ -3754,6 +3839,11 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 {account.isPublicProfile === false ? 'Private' : 'Public'}
                               </td>
                               <td className="px-3 py-2 text-gray-700">
+                                {account.createdAt
+                                  ? new Date(account.createdAt).toLocaleString()
+                                  : '—'}
+                              </td>
+                              <td className="px-3 py-2 text-gray-700">
                                 {account.lastLoginAt
                                   ? new Date(account.lastLoginAt).toLocaleString()
                                   : '—'}
@@ -3769,60 +3859,127 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                 <div className="h-full flex flex-col">
                   <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-semibold text-gray-900">Audit log for key actions</h3>
-                      <p className="text-xs text-gray-500">
-                        Includes login, metric creation, and A3 changes recorded in this browser.
-                      </p>
+                      <h3 className="text-sm font-semibold text-gray-900">View system audit logs tracking user actions.</h3>
                     </div>
-                    <button
-                      onClick={() => {
-                        try {
-                          const rawLogs = localStorage.getItem('audit_logs');
-                          const parsedLogs: AuditLogEntry[] = rawLogs ? JSON.parse(rawLogs) : [];
-                          setAdminAuditLogs(parsedLogs);
-                        } catch (error) {
-                          console.error('Failed to reload audit logs', error);
-                          setAdminAuditLogs([]);
-                        }
-                      }}
-                      className="text-xs px-3 py-1.5 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
-                    >
-                      Refresh
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          try {
+                            const rawLogs = localStorage.getItem('audit_logs');
+                            const parsedLogs: AuditLogEntry[] = rawLogs ? JSON.parse(rawLogs) : [];
+                            setAdminAuditLogs(parsedLogs);
+                          } catch (error) {
+                            console.error('Failed to reload audit logs', error);
+                            setAdminAuditLogs([]);
+                          }
+                        }}
+                        className="text-xs px-3 py-1.5 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+                      >
+                        Refresh
+                      </button>
+                      <button
+                        onClick={handleExportAuditCsv}
+                        className="text-xs px-3 py-1.5 rounded-md border border-blue-500 text-blue-600 hover:bg-blue-50 transition-colors"
+                      >
+                        Export CSV
+                      </button>
+                    </div>
                   </div>
+                  
+                  <div className="px-6 py-3 border-b border-gray-100 bg-white">
+                    <div className="flex flex-wrap items-center gap-3 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500">Action</span>
+                        <select
+                          value={auditActionFilter}
+                          onChange={(e) => setAuditActionFilter(e.target.value)}
+                          className="border border-gray-300 rounded-md px-2 py-1 text-gray-700"
+                        >
+                          <option>All</option>
+                          {auditActions.map(action => (
+                            <option key={action} value={action}>{action}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500">User</span>
+                        <select
+                          value={auditUserFilter}
+                          onChange={(e) => setAuditUserFilter(e.target.value)}
+                          className="border border-gray-300 rounded-md px-2 py-1 text-gray-700"
+                        >
+                          <option>All</option>
+                          {auditUsers.map(u => (
+                            <option key={u} value={u}>{u}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500">From</span>
+                        <input
+                          type="date"
+                          value={auditFromDate}
+                          onChange={(e) => setAuditFromDate(e.target.value)}
+                          className="border border-gray-300 rounded-md px-2 py-1 text-gray-700"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500">To</span>
+                        <input
+                          type="date"
+                          value={auditToDate}
+                          onChange={(e) => setAuditToDate(e.target.value)}
+                          className="border border-gray-300 rounded-md px-2 py-1 text-gray-700"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="flex-1 overflow-auto px-6 py-4">
-                    {adminAuditLogs.length === 0 ? (
+                    {filteredAuditLogs.length === 0 ? (
                       <p className="text-sm text-gray-500">
                         No audit entries recorded yet.
                       </p>
                     ) : (
-                      <ul className="space-y-3">
-                        {adminAuditLogs.map(entry => (
-                          <li
-                            key={entry.id}
-                            className="border border-gray-200 rounded-md px-3 py-2 text-xs bg-gray-50/60"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-700">
-                                  {entry.type}
-                                </span>
-                                {entry.username && (
-                                  <span className="text-gray-700 font-medium">
-                                    {entry.username}
+                      <table className="min-w-full border border-gray-200 text-xs">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">Time</th>
+                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">User</th>
+                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">Action</th>
+                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">Details</th>
+                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">Target</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {filteredAuditLogs.map(entry => {
+                            const time = new Date(entry.timestamp).toLocaleString();
+                            const userName = entry.username || '—';
+                            const action = entry.type || '—';
+                            const detailsText =
+                              entry.summary ||
+                              (entry.details ? JSON.stringify(entry.details) : '—');
+                            const target =
+                              (entry.details && (entry.details as any).target) ||
+                              '—';
+                            return (
+                              <tr key={entry.id}>
+                                <td className="px-3 py-2 text-gray-700">{time}</td>
+                                <td className="px-3 py-2 text-gray-700">{userName}</td>
+                                <td className="px-3 py-2">
+                                  <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-700">
+                                    {action}
                                   </span>
-                                )}
-                              </div>
-                              <span className="text-[10px] text-gray-500">
-                                {new Date(entry.timestamp).toLocaleString()}
-                              </span>
-                            </div>
-                            <p className="mt-1 text-gray-800">
-                              {entry.summary}
-                            </p>
-                          </li>
-                        ))}
-                      </ul>
+                                </td>
+                                <td className="px-3 py-2 text-gray-700">{detailsText}</td>
+                                <td className="px-3 py-2 text-blue-600">
+                                  {target}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
                     )}
                   </div>
                 </div>
