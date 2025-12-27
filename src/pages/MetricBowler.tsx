@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
-import { Info, Settings, HelpCircle, Sparkles, Loader2, Calendar, FileText, Zap } from 'lucide-react';
+import { Info, Settings, HelpCircle, Sparkles, Loader2, Calendar, Zap } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Metric, MindMapNodeData, ActionPlanTaskData } from '../types';
 import { HelpModal } from '../components/HelpModal';
