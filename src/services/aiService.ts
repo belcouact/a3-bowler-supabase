@@ -421,7 +421,7 @@ Response requirements:
             }))
           : undefined,
       }))
-      .filter(n => n.cause);
+      .filter((n: A3WhyNode) => n.cause);
 
     const rootCauses = Array.isArray(parsed.rootCauses)
       ? parsed.rootCauses
@@ -437,7 +437,7 @@ Response requirements:
         owner: typeof a.owner === 'string' ? a.owner.trim() : '',
         group: typeof a.group === 'string' ? a.group.trim() : '',
       }))
-      .filter(a => a.name);
+      .filter((a: { name: string }) => a.name);
 
     return {
       problemStatement,
