@@ -1027,7 +1027,7 @@ const computeNextSendAtFromSchedule = (schedule: any, now: Date): Date | null =>
     current.setHours(hour, minute, 0, 0);
 
     let diff = targetDay - currentDay;
-    if (diff <= 0) {
+    if (diff < 0 || (diff === 0 && current <= now)) {
       diff += 7;
     }
     current.setDate(current.getDate() + diff);
