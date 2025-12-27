@@ -1591,7 +1591,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                           onClick={() => setEmailMode('autoSummary')}
                         >
                           <Repeat className="w-4 h-4" />
-                          <span>Scheduled Auto Summary</span>
+                          <span>Schedule Auto Summary</span>
                         </button>
                         <button
                           type="button"

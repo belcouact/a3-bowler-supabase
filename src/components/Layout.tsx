@@ -875,6 +875,73 @@ const groupFilterOptions = useMemo(
     ],
   );
 
+  const bowlerDashboardStats = useMemo(() => {
+    let rows = groupPerformanceTableData;
+
+    if (groupFilter) {
+      rows = rows.filter(row => row.groupName === groupFilter);
+    }
+
+    const totalMetrics = rows.length;
+    if (totalMetrics === 0) {
+      return null;
+    }
+
+    let greenCount = 0;
+    let failing2or3Count = 0;
+    let metricsWithActiveA3 = 0;
+    const today = new Date();
+    let totalActiveA3AgeDays = 0;
+    let activeA3Count = 0;
+
+    rows.forEach(row => {
+      if (row.latestMet === true) {
+        greenCount += 1;
+      }
+      if (row.fail2 || row.fail3) {
+        failing2or3Count += 1;
+      }
+
+      const linked = a3Cases.filter(c => (c.linkedMetricIds || []).includes(row.metricId));
+      const activeCases = linked.filter(
+        c => (c.status || '').trim().toLowerCase() !== 'completed',
+      );
+
+      if (activeCases.length > 0) {
+        metricsWithActiveA3 += 1;
+      }
+
+      activeCases.forEach(c => {
+        if (!c.startDate) {
+          return;
+        }
+        const start = new Date(c.startDate);
+        if (isNaN(start.getTime())) {
+          return;
+        }
+        const diffDays = (today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+        if (diffDays >= 0) {
+          totalActiveA3AgeDays += diffDays;
+          activeA3Count += 1;
+        }
+      });
+    });
+
+    const pctGreen = (greenCount / totalMetrics) * 100;
+    const pctFailing2or3 = (failing2or3Count / totalMetrics) * 100;
+    const pctWithActiveA3 = (metricsWithActiveA3 / totalMetrics) * 100;
+    const avgActiveA3AgeDays =
+      activeA3Count > 0 ? totalActiveA3AgeDays / activeA3Count : null;
+
+    return {
+      totalMetrics,
+      pctGreen,
+      pctFailing2or3,
+      pctWithActiveA3,
+      avgActiveA3AgeDays,
+    };
+  }, [groupPerformanceTableData, groupFilter, a3Cases]);
+
   const pieLabelRadian = Math.PI / 180;
 
   const renderPieLabel = (props: any) => {
@@ -3127,8 +3194,89 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                     </div>
                   ) : (
                     <>
+                      {portfolioTab === 'bowler' && groupPerformanceTableData.length === 0 && (
+                        <div className="py-8 text-center text-sm text-gray-500">
+                          No metrics added yet. Use the + button to add metrics.
+                        </div>
+                      )}
                       {portfolioTab === 'bowler' && groupPerformanceTableData.length > 0 && (
-                        <div className="mb-2">
+                        <div className="mb-4">
+                          <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                            <div>
+                              <p className="text-xs font-semibold tracking-wide text-gray-600 uppercase">
+                                Bowler Dashboard
+                              </p>
+                              <p className="mt-0.5 text-xs text-gray-500">
+                                Latest month performance and A3 coverage snapshot
+                                {groupFilter ? ` for ${groupFilter}` : ''}.
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[11px] text-gray-500">Group</span>
+                              <select
+                                className="rounded border border-gray-200 bg-white px-2 py-1 text-[11px] md:text-xs text-gray-700"
+                                value={groupFilter}
+                                onChange={e => setGroupFilter(e.target.value)}
+                              >
+                                <option value="">All groups</option>
+                                {groupFilterOptions.map(name => (
+                                  <option key={name} value={name}>
+                                    {name}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                          {bowlerDashboardStats && (
+                            <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
+                              <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
+                                <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                                  Metrics green (latest)
+                                </p>
+                                <p className="mt-1 text-lg font-semibold text-gray-900">
+                                  {bowlerDashboardStats.pctGreen.toFixed(0)}%
+                                </p>
+                                <p className="mt-0.5 text-[11px] text-gray-500">
+                                  {bowlerDashboardStats.totalMetrics} metrics
+                                </p>
+                              </div>
+                              <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
+                                <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                                  Failing 2–3 months
+                                </p>
+                                <p className="mt-1 text-lg font-semibold text-gray-900">
+                                  {bowlerDashboardStats.pctFailing2or3.toFixed(0)}%
+                                </p>
+                                <p className="mt-0.5 text-[11px] text-gray-500">
+                                  Based on latest low‑performing rules
+                                </p>
+                              </div>
+                              <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
+                                <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                                  With active A3
+                                </p>
+                                <p className="mt-1 text-lg font-semibold text-gray-900">
+                                  {bowlerDashboardStats.pctWithActiveA3.toFixed(0)}%
+                                </p>
+                                <p className="mt-0.5 text-[11px] text-gray-500">
+                                  Metrics linked to at least one active A3
+                                </p>
+                              </div>
+                              <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
+                                <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                                  Avg age of active A3s
+                                </p>
+                                <p className="mt-1 text-lg font-semibold text-gray-900">
+                                  {bowlerDashboardStats.avgActiveA3AgeDays != null
+                                    ? `${Math.round(bowlerDashboardStats.avgActiveA3AgeDays)} days`
+                                    : '—'}
+                                </p>
+                                <p className="mt-0.5 text-[11px] text-gray-500">
+                                  From A3 start date to today
+                                </p>
+                              </div>
+                            </div>
+                          )}
                           <div className="overflow-x-auto">
                             <table className="min-w-full text-xs md:text-sm">
                               <thead className="bg-gray-50">
