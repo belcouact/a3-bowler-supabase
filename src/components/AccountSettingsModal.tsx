@@ -22,6 +22,7 @@ interface ActiveScheduleItem {
   sendAt: number;
   mode?: 'manual' | 'autoSummary';
   recipients: string[];
+  recurring?: boolean;
 }
 
 export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
@@ -71,9 +72,10 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
   const [scheduleDayOfWeek, setScheduleDayOfWeek] = useState<number>(1);
   const [scheduleDayOfMonth, setScheduleDayOfMonth] = useState<number>(1);
   const [scheduleTime, setScheduleTime] = useState<string>('08:00');
+  const [scheduleStopDate, setScheduleStopDate] = useState<string>('');
   const [hasInitializedSchedule, setHasInitializedSchedule] = useState(false);
   const [hasInitializedEmailDefaults, setHasInitializedEmailDefaults] = useState(false);
-  const [emailMode, setEmailMode] = useState<'scheduled' | 'oneTime'>('scheduled');
+  const [emailMode, setEmailMode] = useState<'autoSummary' | 'manualRepeat' | 'oneTime'>('autoSummary');
   const [hasInitializedConsolidateSettings, setHasInitializedConsolidateSettings] = useState(false);
   const [emailConsolidateTags, setEmailConsolidateTags] = useState('');
   const [emailConsolidateEnabled, setEmailConsolidateEnabled] = useState(false);
@@ -102,6 +104,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
       setEmailTab('schedule');
       setActiveSchedules([]);
       setSelectedScheduleIds([]);
+      setScheduleStopDate('');
       return;
     }
     if (hasInitializedSchedule) {
@@ -120,6 +123,9 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
       }
       if (existing.timeOfDay) {
         setScheduleTime(existing.timeOfDay);
+      }
+      if (typeof (existing as any).stopDate === 'string') {
+        setScheduleStopDate((existing as any).stopDate);
       }
     }
     setHasInitializedSchedule(true);
@@ -195,6 +201,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
         dayOfWeek: scheduleFrequency === 'weekly' ? scheduleDayOfWeek : undefined,
         dayOfMonth: scheduleFrequency === 'monthly' ? scheduleDayOfMonth : undefined,
         timeOfDay: scheduleTime,
+        stopDate: scheduleStopDate || undefined,
       },
     }));
   }, [
@@ -202,6 +209,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
     scheduleDayOfWeek,
     scheduleDayOfMonth,
     scheduleTime,
+    scheduleStopDate,
     isOpen,
     hasInitializedSchedule,
   ]);
@@ -546,6 +554,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
         dayOfWeek: scheduleFrequency === 'weekly' ? scheduleDayOfWeek : undefined,
         dayOfMonth: scheduleFrequency === 'monthly' ? scheduleDayOfMonth : undefined,
         timeOfDay: scheduleTime,
+        stopDate: scheduleStopDate || undefined,
       },
     };
   };
@@ -1187,7 +1196,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
 
     let sendAtDate: Date | null = null;
 
-    if (emailMode === 'scheduled') {
+    if (emailMode === 'autoSummary' || emailMode === 'manualRepeat') {
       sendAtDate = getNextScheduledSendAt();
     } else {
       if (!emailSendAt) {
@@ -1203,13 +1212,13 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
       sendAtDate = parsed;
     }
 
-    if (emailMode === 'oneTime' && !emailBody.trim()) {
+    if ((emailMode === 'oneTime' || emailMode === 'manualRepeat') && !emailBody.trim()) {
       toast.error('Please enter an email body or generate a summary');
       return;
     }
 
-    if (emailMode === 'scheduled' && !user?.username) {
-      toast.error('You must be logged in to schedule recurring summary emails');
+    if ((emailMode === 'autoSummary' || emailMode === 'manualRepeat') && !user?.username) {
+      toast.error('You must be logged in to schedule recurring emails');
       return;
     }
 
@@ -1217,7 +1226,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
     try {
       const userId = user?.username || undefined;
 
-      if (emailMode === 'scheduled') {
+      if (emailMode === 'autoSummary') {
         await dataService.scheduleEmail({
           userId,
           recipients,
@@ -1227,6 +1236,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
           mode: 'autoSummary',
           aiModel: dashboardSettings.aiModel,
           fromName: 'A3 Bowler',
+          recurring: true,
         });
       } else {
         const htmlForSend =
@@ -1240,7 +1250,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
           body: emailBody.trim(),
           bodyHtml: htmlForSend,
           sendAt: sendAtDate.toISOString(),
+          mode: 'manual',
           fromName: 'A3 Bowler',
+          recurring: emailMode === 'manualRepeat',
         });
       }
       const settingsForPersist = buildEmailDashboardSettingsForPersist();
@@ -1500,25 +1512,25 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
 
             {mode === 'email' && (
               <div className="space-y-4">
-                <div className="flex border-b border-gray-200">
-                  <button
-                    type="button"
-                    className={`flex-1 py-2 text-sm font-medium text-center ${
-                      emailTab === 'schedule'
-                        ? 'border-b-2 border-blue-500 text-blue-600'
-                        : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                    onClick={() => setEmailTab('schedule')}
-                  >
-                    Schedule
-                  </button>
-                  <button
-                    type="button"
-                    className={`flex-1 py-2 text-sm font-medium text-center ${
-                      emailTab === 'active'
-                        ? 'border-b-2 border-blue-500 text-blue-600'
-                        : 'text-gray-500 hover:text-gray-700'
-                    }`}
+            <div className="flex border-b border-gray-200">
+              <button
+                type="button"
+                className={`flex-1 py-2 text-sm font-medium text-center ${
+                  emailTab === 'schedule'
+                    ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+                onClick={() => setEmailTab('schedule')}
+              >
+                Schedule
+              </button>
+              <button
+                type="button"
+                className={`flex-1 py-2 text-sm font-medium text-center ${
+                  emailTab === 'active'
+                    ? 'border-b-2 border-amber-500 text-amber-600 bg-amber-50'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
                     onClick={() => setEmailTab('active')}
                   >
                     Active schedules
@@ -1555,21 +1567,33 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                         <button
                           type="button"
                           className={`flex-1 px-3 py-2 text-center flex items-center justify-center space-x-2 ${
-                            emailMode === 'scheduled'
+                            emailMode === 'autoSummary'
                               ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-500'
-                              : 'text-gray-500 hover:text-gray-700'
+                            : 'text-gray-500 hover:text-gray-700'
                           }`}
-                          onClick={() => setEmailMode('scheduled')}
+                          onClick={() => setEmailMode('autoSummary')}
                         >
                           <Repeat className="w-4 h-4" />
-                          <span>Scheduled (repeat)</span>
+                          <span>Scheduled Auto Summary</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={`flex-1 px-3 py-2 text-center flex items-center justify-center space-x-2 ${
+                            emailMode === 'manualRepeat'
+                              ? 'bg-emerald-50 text-emerald-700 border-b-2 border-emerald-500'
+                              : 'text-gray-500 hover:text-gray-700'
+                          }`}
+                          onClick={() => setEmailMode('manualRepeat')}
+                        >
+                          <Repeat className="w-4 h-4" />
+                          <span>Schedule Manual Content</span>
                         </button>
                         <button
                           type="button"
                           className={`flex-1 px-3 py-2 text-center flex items-center justify-center space-x-2 ${
                             emailMode === 'oneTime'
-                              ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-500'
-                              : 'text-gray-500 hover:text-gray-700'
+                              ? 'bg-purple-50 text-purple-700 border-b-2 border-purple-500'
+                            : 'text-gray-500 hover:text-gray-700'
                           }`}
                           onClick={() => setEmailMode('oneTime')}
                         >
@@ -1578,7 +1602,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                         </button>
                       </div>
                       <div className="p-3 space-y-3">
-                        {emailMode === 'scheduled' && (
+                        {(emailMode === 'autoSummary' || emailMode === 'manualRepeat') && (
                           <>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                               <div>
@@ -1637,38 +1661,77 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 />
                               </div>
                             </div>
-                            <div className="mt-4 border-t border-gray-100 pt-3 space-y-2">
-                              <div className="flex items-start justify-between">
+                            <div className="mt-3">
+                              <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Repeat Until (optional)</label>
+                              <input
+                                type="date"
+                                value={scheduleStopDate}
+                                onChange={e => setScheduleStopDate(e.target.value)}
+                                className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                              />
+                              <p className="mt-1 text-xs text-gray-400">
+                                After this date, recurring emails will stop automatically.
+                              </p>
+                            </div>
+                            {emailMode === 'autoSummary' && (
+                              <div className="mt-4 border-t border-gray-100 pt-3 space-y-2">
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <h4 className="text-xs font-medium text-gray-700 uppercase mb-1">Consolidate before summary</h4>
+                                    <p className="text-xs text-gray-500">
+                                      When enabled, consolidate tagged bowlers and A3 cases before generating the summary email.
+                                    </p>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className={`${emailConsolidateEnabled ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                                    role="switch"
+                                    aria-checked={emailConsolidateEnabled}
+                                    onClick={() => setEmailConsolidateEnabled(!emailConsolidateEnabled)}
+                                  >
+                                    <span className={`${emailConsolidateEnabled ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}></span>
+                                  </button>
+                                </div>
                                 <div>
-                                  <h4 className="text-xs font-medium text-gray-700 uppercase mb-1">Consolidate before summary</h4>
-                                  <p className="text-xs text-gray-500">
-                                    When enabled, consolidate tagged bowlers and A3 cases before generating the summary email.
+                                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Consolidate tags</label>
+                                  <input
+                                    type="text"
+                                    value={emailConsolidateTags}
+                                    onChange={e => setEmailConsolidateTags(e.target.value)}
+                                    placeholder="e.g. Technical, Q1, Portfolio"
+                                    className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                                  />
+                                  <p className="mt-1 text-xs text-gray-400">
+                                    Tags are matched during consolidation before each scheduled summary email.
                                   </p>
                                 </div>
-                                <button
-                                  type="button"
-                                  className={`${emailConsolidateEnabled ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-                                  role="switch"
-                                  aria-checked={emailConsolidateEnabled}
-                                  onClick={() => setEmailConsolidateEnabled(!emailConsolidateEnabled)}
-                                >
-                                  <span className={`${emailConsolidateEnabled ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200`}></span>
-                                </button>
                               </div>
-                              <div>
-                                <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Consolidate tags</label>
-                                <input
-                                  type="text"
-                                  value={emailConsolidateTags}
-                                  onChange={e => setEmailConsolidateTags(e.target.value)}
-                                  placeholder="e.g. Technical, Q1, Portfolio"
+                            )}
+                            {emailMode === 'manualRepeat' && (
+                              <div className="mt-4 space-y-2 border-t border-gray-100 pt-3">
+                                <div className="flex items-center justify-between">
+                                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Message</label>
+                                  <button
+                                    type="button"
+                                    className="text-xs px-2 py-1 rounded border border-blue-500 text-blue-600 hover:bg-blue-50 disabled:opacity-60 disabled:cursor-not-allowed"
+                                    onClick={handleGenerateSummaryForMessage}
+                                    disabled={isAutoGenerating || isScheduling || isSendingNow}
+                                  >
+                                    {isAutoGenerating ? 'Generating…' : 'Generate summary'}
+                                  </button>
+                                </div>
+                                <textarea
+                                  value={emailBody}
+                                  onChange={(e) => {
+                                    setEmailBody(e.target.value);
+                                    setEmailBodyHtml(null);
+                                  }}
+                                  rows={4}
+                                  placeholder="Add the summary or message you want to email."
                                   className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
                                 />
-                                <p className="mt-1 text-xs text-gray-400">
-                                  Tags are matched during consolidation before each scheduled summary email.
-                                </p>
                               </div>
-                            </div>
+                            )}
                           </>
                         )}
                         {emailMode === 'oneTime' && (
@@ -1766,7 +1829,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 <p className="text-xs text-gray-500">
                                   {item.mode === 'autoSummary'
                                     ? 'Auto summary (recurring)'
-                                    : 'One-time'}{' '}
+                                    : item.mode === 'manual' && item.recurring
+                                      ? 'Manual (recurring)'
+                                      : 'One-time'}{' '}
                                   · Next run: {new Date(item.sendAt).toLocaleString()}
                                 </p>
                               </div>
@@ -1823,9 +1888,11 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                 >
                   {isScheduling
                     ? 'Scheduling...'
-                    : emailMode === 'scheduled'
-                      ? 'Schedule recurring email'
-                      : 'Schedule one-time email'}
+                    : emailMode === 'autoSummary'
+                      ? 'Schedule auto summary'
+                      : emailMode === 'manualRepeat'
+                        ? 'Schedule recurring manual email'
+                        : 'Schedule one-time email'}
                 </button>
                 {emailMode === 'oneTime' && (
                   <button

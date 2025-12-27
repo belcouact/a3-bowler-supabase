@@ -14,6 +14,7 @@ export interface EmailScheduleSettings {
   dayOfWeek?: number;
   dayOfMonth?: number;
   timeOfDay: string;
+  stopDate?: string;
 }
 
 export interface DashboardSettings {

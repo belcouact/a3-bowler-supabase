@@ -150,6 +150,7 @@ export const dataService = {
     mode?: 'manual' | 'autoSummary';
     aiModel?: string;
     fromName?: string;
+    recurring?: boolean;
   }) {
     const response = await fetch(`${EMAIL_API_BASE_URL}/schedule-email`, {
       method: 'POST',

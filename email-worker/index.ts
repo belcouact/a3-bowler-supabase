@@ -17,6 +17,7 @@ interface ScheduledEmailJob {
   mode?: 'manual' | 'autoSummary';
   aiModel?: string;
   fromName?: string;
+  recurring?: boolean;
 }
 
 interface GroupPerformanceRow {
@@ -1000,6 +1001,20 @@ const computeNextSendAtFromSchedule = (schedule: any, now: Date): Date | null =>
   const hour = Number(hourStr) || 8;
   const minute = Number(minuteStr) || 0;
 
+  const rawStopDate =
+    typeof schedule.stopDate === 'string' ? schedule.stopDate.trim() : '';
+  let stopAt: Date | null = null;
+  if (rawStopDate) {
+    const parsed = new Date(`${rawStopDate}T23:59:59`);
+    if (!Number.isNaN(parsed.getTime())) {
+      stopAt = parsed;
+    }
+  }
+
+  if (stopAt && now >= stopAt) {
+    return null;
+  }
+
   if (frequency === 'weekly') {
     const dayOfWeekRaw =
       typeof schedule.dayOfWeek === 'number' && schedule.dayOfWeek >= 1 && schedule.dayOfWeek <= 7
@@ -1016,6 +1031,9 @@ const computeNextSendAtFromSchedule = (schedule: any, now: Date): Date | null =>
       diff += 7;
     }
     current.setDate(current.getDate() + diff);
+    if (stopAt && current > stopAt) {
+      return null;
+    }
     return current;
   }
 
@@ -1035,6 +1053,10 @@ const computeNextSendAtFromSchedule = (schedule: any, now: Date): Date | null =>
     const daysInNextMonth = new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0).getDate();
     const nextDay = Math.min(dayOfMonthRaw, daysInNextMonth);
     candidate = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), nextDay, hour, minute, 0, 0);
+  }
+
+  if (stopAt && candidate > stopAt) {
+    return null;
   }
 
   return candidate;
@@ -1067,10 +1089,21 @@ export default {
             mode?: 'manual' | 'autoSummary';
             aiModel?: string;
             fromName?: string;
+            recurring?: boolean;
           };
 
-          const { userId, recipients, subject, body, bodyHtml, sendAt, mode, aiModel, fromName } =
-            data;
+          const {
+            userId,
+            recipients,
+            subject,
+            body,
+            bodyHtml,
+            sendAt,
+            mode,
+            aiModel,
+            fromName,
+            recurring,
+          } = data;
 
           if (!Array.isArray(recipients) || recipients.length === 0) {
             return new Response(
@@ -1170,6 +1203,7 @@ export default {
             mode: jobMode,
             aiModel,
             fromName,
+            recurring: recurring === true,
           };
 
           await env.EMAIL_JOBS.put(`email:${id}`, JSON.stringify(job));
@@ -1264,6 +1298,7 @@ export default {
             sendAt: number;
             mode?: 'manual' | 'autoSummary';
             recipients: string[];
+            recurring?: boolean;
           }[] = [];
 
           while (!done) {
@@ -1297,6 +1332,7 @@ export default {
                 sendAt: job.sendAt,
                 mode: job.mode,
                 recipients: job.recipients,
+                recurring: job.recurring === true,
               });
             }
           }
@@ -1444,6 +1480,38 @@ export default {
                   job.sendAt = next.getTime();
                   job.sent = false;
                 } else {
+                  job.sent = true;
+                }
+              } else if (job.recurring && job.userId) {
+                try {
+                  const response = await fetch(
+                    `https://bowler-worker.study-llm.me/load?userId=${encodeURIComponent(job.userId)}`,
+                    {
+                      method: 'GET',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    },
+                  );
+                  if (response.ok) {
+                    const data = (await response.json()) as any;
+                    const dashboardSettings = data.dashboardSettings || null;
+                    const schedule =
+                      dashboardSettings && typeof dashboardSettings === 'object'
+                        ? (dashboardSettings as any).emailSchedule
+                        : null;
+                    const next = computeNextSendAtFromSchedule(schedule, new Date(now));
+                    if (next) {
+                      job.sendAt = next.getTime();
+                      job.sent = false;
+                    } else {
+                      job.sent = true;
+                    }
+                  } else {
+                    job.sent = true;
+                  }
+                } catch (e) {
+                  console.error('Failed to compute next send time for recurring manual email', e);
                   job.sent = true;
                 }
               } else {
