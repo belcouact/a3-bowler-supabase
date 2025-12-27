@@ -3097,10 +3097,10 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                         type="button"
                         onClick={() => setPortfolioTab('bowler')}
                         className={clsx(
-                          'whitespace-nowrap py-2 px-1 border-b-2 text-xs md:text-sm font-medium inline-flex items-center gap-1.5',
+                          'whitespace-nowrap py-2 px-2 border-b-2 text-xs md:text-sm font-medium inline-flex items-center gap-1.5 rounded-t-md transition-colors',
                           portfolioTab === 'bowler'
-                            ? 'border-blue-500 text-blue-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                            ? 'border-blue-500 text-blue-700 bg-blue-50'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200 hover:bg-gray-50',
                         )}
                       >
                         <TrendingUp className="w-3 h-3 md:w-4 md:h-4" />
@@ -3110,10 +3110,10 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                         type="button"
                         onClick={() => setPortfolioTab('a3')}
                         className={clsx(
-                          'whitespace-nowrap py-2 px-1 border-b-2 text-xs md:text-sm font-medium inline-flex items-center gap-1.5',
+                          'whitespace-nowrap py-2 px-2 border-b-2 text-xs md:text-sm font-medium inline-flex items-center gap-1.5 rounded-t-md transition-colors',
                           portfolioTab === 'a3'
-                            ? 'border-blue-500 text-blue-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                            ? 'border-indigo-500 text-indigo-700 bg-indigo-50'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200 hover:bg-gray-50',
                         )}
                       >
                         <Layers className="w-3 h-3 md:w-4 md:h-4" />
@@ -3925,14 +3925,14 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
               </button>
             </div>
             <div className="px-6 pt-3 border-b border-gray-200 bg-white">
-              <div className="flex space-x-4 text-sm">
+              <div className="flex space-x-2 text-sm">
                 <button
                   onClick={() => setAdminTab('users')}
                   className={clsx(
-                    'inline-flex items-center gap-1 border-b-2 px-1.5 pb-2',
+                    'inline-flex items-center gap-1 border-b-2 px-2 py-1 rounded-t-md transition-colors',
                     adminTab === 'users'
-                      ? 'border-slate-700 text-slate-800'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200',
+                      ? 'border-slate-700 text-slate-900 bg-slate-50'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200 hover:bg-gray-50',
                   )}
                 >
                   <UserIcon className="w-4 h-4" />
@@ -3941,10 +3941,10 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                 <button
                   onClick={() => setAdminTab('audit')}
                   className={clsx(
-                    'inline-flex items-center gap-1 border-b-2 px-1.5 pb-2',
+                    'inline-flex items-center gap-1 border-b-2 px-2 py-1 rounded-t-md transition-colors',
                     adminTab === 'audit'
-                      ? 'border-slate-700 text-slate-800'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200',
+                      ? 'border-slate-700 text-slate-900 bg-slate-50'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200 hover:bg-gray-50',
                   )}
                 >
                   <Activity className="w-4 h-4" />

@@ -196,7 +196,7 @@ export const MindmapModal = ({ isOpen, onClose, mode }: MindmapModalProps) => {
                   onClick={() => setActiveTab('ai')}
                   className={
                     activeTab === 'ai'
-                      ? 'inline-flex items-center px-3 py-1.5 text-xs font-medium rounded bg-white text-indigo-700 shadow-sm'
+                      ? 'inline-flex items-center px-3 py-1.5 text-xs font-medium rounded bg-indigo-50 text-indigo-700 shadow-sm'
                       : 'inline-flex items-center px-3 py-1.5 text-xs font-medium rounded text-gray-600 hover:text-gray-800 hover:bg-white/60'
                   }
                 >
@@ -208,7 +208,7 @@ export const MindmapModal = ({ isOpen, onClose, mode }: MindmapModalProps) => {
                   onClick={() => setActiveTab('manual')}
                   className={
                     activeTab === 'manual'
-                      ? 'inline-flex items-center px-3 py-1.5 text-xs font-medium rounded bg-white text-gray-900 shadow-sm'
+                      ? 'inline-flex items-center px-3 py-1.5 text-xs font-medium rounded bg-amber-50 text-amber-800 shadow-sm'
                       : 'inline-flex items-center px-3 py-1.5 text-xs font-medium rounded text-gray-600 hover:text-gray-800 hover:bg-white/60'
                   }
                 >
