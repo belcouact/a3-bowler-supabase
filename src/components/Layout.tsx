@@ -3238,7 +3238,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                           {bowlerDashboardStats && (
                             <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
                               <div
-                                className="rounded-lg border border-gray-100 bg-white px-3 py-3"
+                                className="rounded-lg border border-green-100 bg-green-50 px-3 py-3"
                                 title="Share of metrics with latest month meeting target, among metrics that have latest data."
                               >
                                 <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
@@ -3254,7 +3254,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 </p>
                               </div>
                               <div
-                                className="rounded-lg border border-gray-100 bg-white px-3 py-3"
+                                className="rounded-lg border border-red-100 bg-red-50 px-3 py-3"
                                 title="Share of metrics failing in the last 2 or 3 months, among metrics that have latest data."
                               >
                                 <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
@@ -3270,7 +3270,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 </p>
                               </div>
                               <div
-                                className="rounded-lg border border-gray-100 bg-white px-3 py-3"
+                                className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-3"
                                 title="Share of metrics linked to at least one active A3."
                               >
                                 <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
@@ -3284,7 +3284,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 </p>
                               </div>
                               <div
-                                className="rounded-lg border border-gray-100 bg-white px-3 py-3"
+                                className="rounded-lg border border-orange-100 bg-orange-50 px-3 py-3"
                                 title="Average age in days of active A3s linked to these metrics."
                               >
                                 <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
