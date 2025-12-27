@@ -995,23 +995,30 @@ const computeNextSendAtFromSchedule = (schedule: any, now: Date): Date | null =>
     return null;
   }
 
+  const timezoneOffsetMinutes =
+    typeof schedule.timezoneOffsetMinutes === 'number' && !Number.isNaN(schedule.timezoneOffsetMinutes)
+      ? schedule.timezoneOffsetMinutes
+      : 0;
+  const offsetMs = timezoneOffsetMinutes * 60 * 1000;
+
+  const localNow = new Date(now.getTime() - offsetMs);
+
   const frequency = schedule.frequency === 'monthly' ? 'monthly' : 'weekly';
   const timeOfDay = typeof schedule.timeOfDay === 'string' ? schedule.timeOfDay : '08:00';
   const [hourStr, minuteStr] = timeOfDay.split(':');
   const hour = Number(hourStr) || 8;
   const minute = Number(minuteStr) || 0;
 
-  const rawStopDate =
-    typeof schedule.stopDate === 'string' ? schedule.stopDate.trim() : '';
-  let stopAt: Date | null = null;
+  const rawStopDate = typeof schedule.stopDate === 'string' ? schedule.stopDate.trim() : '';
+  let localStopAt: Date | null = null;
   if (rawStopDate) {
     const parsed = new Date(`${rawStopDate}T23:59:59`);
     if (!Number.isNaN(parsed.getTime())) {
-      stopAt = parsed;
+      localStopAt = parsed;
     }
   }
 
-  if (stopAt && now >= stopAt) {
+  if (localStopAt && localNow >= localStopAt) {
     return null;
   }
 
@@ -1020,25 +1027,25 @@ const computeNextSendAtFromSchedule = (schedule: any, now: Date): Date | null =>
       typeof schedule.dayOfWeek === 'number' && schedule.dayOfWeek >= 1 && schedule.dayOfWeek <= 7
         ? schedule.dayOfWeek
         : 1;
-    const current = new Date(now.getTime());
+    const current = new Date(localNow.getTime());
     const currentDay = current.getDay();
     const targetDay = dayOfWeekRaw === 7 ? 0 : dayOfWeekRaw;
 
     current.setHours(hour, minute, 0, 0);
 
     let diff = targetDay - currentDay;
-    if (diff < 0 || (diff === 0 && current <= now)) {
+    if (diff < 0 || (diff === 0 && current <= localNow)) {
       diff += 7;
     }
     current.setDate(current.getDate() + diff);
-    if (stopAt && current > stopAt) {
+    if (localStopAt && current > localStopAt) {
       return null;
     }
-    return current;
+    return new Date(current.getTime() + offsetMs);
   }
 
-  const year = now.getFullYear();
-  const month = now.getMonth();
+  const year = localNow.getFullYear();
+  const month = localNow.getMonth();
   const dayOfMonthRaw =
     typeof schedule.dayOfMonth === 'number' && schedule.dayOfMonth >= 1 && schedule.dayOfMonth <= 31
       ? schedule.dayOfMonth
@@ -1048,18 +1055,18 @@ const computeNextSendAtFromSchedule = (schedule: any, now: Date): Date | null =>
   const day = Math.min(dayOfMonthRaw, daysInCurrentMonth);
 
   let candidate = new Date(year, month, day, hour, minute, 0, 0);
-  if (candidate <= now) {
+  if (candidate <= localNow) {
     const nextMonth = new Date(year, month + 1, 1);
     const daysInNextMonth = new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0).getDate();
     const nextDay = Math.min(dayOfMonthRaw, daysInNextMonth);
     candidate = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), nextDay, hour, minute, 0, 0);
   }
 
-  if (stopAt && candidate > stopAt) {
+  if (localStopAt && candidate > localStopAt) {
     return null;
   }
 
-  return candidate;
+  return new Date(candidate.getTime() + offsetMs);
 };
 
 export default {

@@ -194,16 +194,26 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
     if (!hasInitializedSchedule) {
       return;
     }
-    setDashboardSettings(prev => ({
-      ...prev,
-      emailSchedule: {
-        frequency: scheduleFrequency,
-        dayOfWeek: scheduleFrequency === 'weekly' ? scheduleDayOfWeek : undefined,
-        dayOfMonth: scheduleFrequency === 'monthly' ? scheduleDayOfMonth : undefined,
-        timeOfDay: scheduleTime,
-        stopDate: scheduleStopDate || undefined,
-      },
-    }));
+    setDashboardSettings(prev => {
+      const prevAny = prev as any;
+      const existingSchedule = prevAny.emailSchedule || {};
+      const timezoneOffsetMinutes =
+        typeof existingSchedule.timezoneOffsetMinutes === 'number'
+          ? existingSchedule.timezoneOffsetMinutes
+          : new Date().getTimezoneOffset();
+      return {
+        ...prev,
+        emailSchedule: {
+          ...existingSchedule,
+          frequency: scheduleFrequency,
+          dayOfWeek: scheduleFrequency === 'weekly' ? scheduleDayOfWeek : undefined,
+          dayOfMonth: scheduleFrequency === 'monthly' ? scheduleDayOfMonth : undefined,
+          timeOfDay: scheduleTime,
+          stopDate: scheduleStopDate || undefined,
+          timezoneOffsetMinutes,
+        },
+      };
+    });
   }, [
     scheduleFrequency,
     scheduleDayOfWeek,
@@ -537,6 +547,11 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
 
   const buildEmailDashboardSettingsForPersist = () => {
     const base = dashboardSettings as any;
+    const existingSchedule = base.emailSchedule || {};
+    const timezoneOffsetMinutes =
+      typeof existingSchedule.timezoneOffsetMinutes === 'number'
+        ? existingSchedule.timezoneOffsetMinutes
+        : new Date().getTimezoneOffset();
     return {
       ...base,
       emailDefaults: {
@@ -550,11 +565,13 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
         tags: emailConsolidateTags,
       },
       emailSchedule: {
+        ...existingSchedule,
         frequency: scheduleFrequency,
         dayOfWeek: scheduleFrequency === 'weekly' ? scheduleDayOfWeek : undefined,
         dayOfMonth: scheduleFrequency === 'monthly' ? scheduleDayOfMonth : undefined,
         timeOfDay: scheduleTime,
         stopDate: scheduleStopDate || undefined,
+        timezoneOffsetMinutes,
       },
     };
   };
