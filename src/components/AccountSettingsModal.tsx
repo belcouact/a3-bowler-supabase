@@ -1330,7 +1330,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   <div className="p-3 space-y-3">
                     {emailMode === 'scheduled' && (
                       <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
                             <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Repeat</label>
                             <select
@@ -1377,18 +1377,18 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                               </>
                             )}
                           </div>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Time</label>
-                          <input
-                            type="time"
-                            value={scheduleTime}
-                            onChange={(e) => setScheduleTime(e.target.value)}
-                            className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
-                          />
-                          <p className="mt-1 text-xs text-gray-400">
-                            Saved to dashboard settings for recurring email schedule. Next send time is calculated automatically.
-                          </p>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Time</label>
+                            <input
+                              type="time"
+                              value={scheduleTime}
+                              onChange={(e) => setScheduleTime(e.target.value)}
+                              className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                            />
+                            <p className="mt-1 text-xs text-gray-400">
+                              Saved to dashboard settings for recurring email schedule. Next send time is calculated automatically.
+                            </p>
+                          </div>
                         </div>
                         <div className="mt-4 border-t border-gray-100 pt-3 space-y-2">
                           <div className="flex items-start justify-between">
