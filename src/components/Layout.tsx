@@ -52,6 +52,17 @@ const modelShortLabels: Record<AIModelKey, string> = {
   glm: 'GL',
 };
 
+type AdminSortKey =
+  | 'username'
+  | 'email'
+  | 'role'
+  | 'country'
+  | 'plant'
+  | 'team'
+  | 'visibility'
+  | 'createdAt'
+  | 'lastLoginAt';
+
 interface AdminAccount {
   username: string;
   email?: string;
@@ -158,6 +169,8 @@ const Layout = () => {
   const [adminAuditLogs, setAdminAuditLogs] = useState<AuditLogEntry[]>([]);
   const [isLoadingAdminUsers, setIsLoadingAdminUsers] = useState(false);
   const [adminUsersError, setAdminUsersError] = useState<string | null>(null);
+  const [adminSortKey, setAdminSortKey] = useState<AdminSortKey>('username');
+  const [adminSortDirection, setAdminSortDirection] = useState<'asc' | 'desc'>('asc');
   const [auditActionFilter, setAuditActionFilter] = useState<string>('All');
   const [auditUserFilter, setAuditUserFilter] = useState<string>('All');
   const [auditFromDate, setAuditFromDate] = useState<string>('');
@@ -210,6 +223,57 @@ const Layout = () => {
       }
     } finally {
       setIsLoadingAdminUsers(false);
+    }
+  };
+
+  const sortedAdminAccounts = useMemo(() => {
+    const list = [...adminAccounts];
+    const direction = adminSortDirection === 'asc' ? 1 : -1;
+    list.sort((a, b) => {
+      const compareString = (aValue?: string, bValue?: string) => {
+        const av = aValue || '';
+        const bv = bValue || '';
+        return av.localeCompare(bv);
+      };
+      const compareDate = (aValue?: string, bValue?: string) => {
+        const aTime = aValue ? new Date(aValue).getTime() : 0;
+        const bTime = bValue ? new Date(bValue).getTime() : 0;
+        if (aTime === bTime) return 0;
+        return aTime < bTime ? -1 : 1;
+      };
+      let result = 0;
+      if (adminSortKey === 'username') {
+        result = compareString(a.username, b.username);
+      } else if (adminSortKey === 'email') {
+        result = compareString(a.email, b.email);
+      } else if (adminSortKey === 'role') {
+        result = compareString(a.role, b.role);
+      } else if (adminSortKey === 'country') {
+        result = compareString(a.country, b.country);
+      } else if (adminSortKey === 'plant') {
+        result = compareString(a.plant, b.plant);
+      } else if (adminSortKey === 'team') {
+        result = compareString(a.team, b.team);
+      } else if (adminSortKey === 'visibility') {
+        const aVisibility = a.isPublicProfile === false ? 'Private' : 'Public';
+        const bVisibility = b.isPublicProfile === false ? 'Private' : 'Public';
+        result = compareString(aVisibility, bVisibility);
+      } else if (adminSortKey === 'createdAt') {
+        result = compareDate(a.createdAt, b.createdAt);
+      } else if (adminSortKey === 'lastLoginAt') {
+        result = compareDate(a.lastLoginAt, b.lastLoginAt);
+      }
+      return result * direction;
+    });
+    return list;
+  }, [adminAccounts, adminSortKey, adminSortDirection]);
+
+  const handleAdminSort = (key: AdminSortKey) => {
+    if (adminSortKey === key) {
+      setAdminSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setAdminSortKey(key);
+      setAdminSortDirection('asc');
     }
   };
 
@@ -3786,36 +3850,117 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                         <thead className="bg-gray-50">
                           <tr>
                             <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
-                              Username
+                              <button
+                                type="button"
+                                onClick={() => handleAdminSort('username')}
+                                className="inline-flex items-center gap-1"
+                              >
+                                <span>Username</span>
+                                {adminSortKey === 'username' && (
+                                  <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
+                                )}
+                              </button>
                             </th>
                             <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
-                              Email
+                              <button
+                                type="button"
+                                onClick={() => handleAdminSort('email')}
+                                className="inline-flex items-center gap-1"
+                              >
+                                <span>Email</span>
+                                {adminSortKey === 'email' && (
+                                  <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
+                                )}
+                              </button>
                             </th>
                             <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
-                              Role
+                              <button
+                                type="button"
+                                onClick={() => handleAdminSort('role')}
+                                className="inline-flex items-center gap-1"
+                              >
+                                <span>Role</span>
+                                {adminSortKey === 'role' && (
+                                  <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
+                                )}
+                              </button>
                             </th>
                             <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
-                              Country
+                              <button
+                                type="button"
+                                onClick={() => handleAdminSort('country')}
+                                className="inline-flex items-center gap-1"
+                              >
+                                <span>Country</span>
+                                {adminSortKey === 'country' && (
+                                  <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
+                                )}
+                              </button>
                             </th>
                             <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
-                              Plant/Office
+                              <button
+                                type="button"
+                                onClick={() => handleAdminSort('plant')}
+                                className="inline-flex items-center gap-1"
+                              >
+                                <span>Plant/Office</span>
+                                {adminSortKey === 'plant' && (
+                                  <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
+                                )}
+                              </button>
                             </th>
                             <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
-                              Team
+                              <button
+                                type="button"
+                                onClick={() => handleAdminSort('team')}
+                                className="inline-flex items-center gap-1"
+                              >
+                                <span>Team</span>
+                                {adminSortKey === 'team' && (
+                                  <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
+                                )}
+                              </button>
                             </th>
                             <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
-                              Visibility
+                              <button
+                                type="button"
+                                onClick={() => handleAdminSort('visibility')}
+                                className="inline-flex items-center gap-1"
+                              >
+                                <span>Visibility</span>
+                                {adminSortKey === 'visibility' && (
+                                  <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
+                                )}
+                              </button>
                             </th>
                             <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200 whitespace-nowrap">
-                              Created At
+                              <button
+                                type="button"
+                                onClick={() => handleAdminSort('createdAt')}
+                                className="inline-flex items-center gap-1"
+                              >
+                                <span>Created At</span>
+                                {adminSortKey === 'createdAt' && (
+                                  <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
+                                )}
+                              </button>
                             </th>
                             <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200 whitespace-nowrap">
-                              Last Login
+                              <button
+                                type="button"
+                                onClick={() => handleAdminSort('lastLoginAt')}
+                                className="inline-flex items-center gap-1"
+                              >
+                                <span>Last Login</span>
+                                {adminSortKey === 'lastLoginAt' && (
+                                  <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
+                                )}
+                              </button>
                             </th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                          {adminAccounts.map(account => (
+                          {sortedAdminAccounts.map(account => (
                             <tr key={account.username}>
                               <td className="px-3 py-2 text-gray-900 font-medium">
                                 {account.username}
