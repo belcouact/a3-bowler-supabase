@@ -2315,7 +2315,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                     <Download className="w-4 h-4 mr-3" />
                     Download
                   </button>
-                  {user?.role === 'admin' && (
+                  {isAdminOrSuperAdmin && (
                     <button
                       onClick={() => {
                         setAdminTab('users');

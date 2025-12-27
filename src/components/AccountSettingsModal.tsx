@@ -81,6 +81,8 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
   const [activeSchedules, setActiveSchedules] = useState<ActiveScheduleItem[]>([]);
   const [isLoadingSchedules, setIsLoadingSchedules] = useState(false);
   const [isCancellingScheduleId, setIsCancellingScheduleId] = useState<string | null>(null);
+  const [selectedScheduleIds, setSelectedScheduleIds] = useState<string[]>([]);
+  const [isBulkCancellingSchedules, setIsBulkCancellingSchedules] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -99,6 +101,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
       setHasInitializedConsolidateSettings(false);
       setEmailTab('schedule');
       setActiveSchedules([]);
+      setSelectedScheduleIds([]);
       return;
     }
     if (hasInitializedSchedule) {
@@ -466,10 +469,61 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
         return a.sendAt - b.sendAt;
       });
       setActiveSchedules(jobs);
+      setSelectedScheduleIds(prev => prev.filter(id => id !== item.id));
     } catch (error: any) {
       toast.error(error.message || 'Failed to cancel scheduled email');
     } finally {
       setIsCancellingScheduleId(null);
+    }
+  };
+
+  const toggleScheduleSelection = (id: string) => {
+    setSelectedScheduleIds(prev =>
+      prev.includes(id) ? prev.filter(existingId => existingId !== id) : [...prev, id],
+    );
+  };
+
+  const handleSelectAllSchedules = () => {
+    if (selectedScheduleIds.length === activeSchedules.length) {
+      setSelectedScheduleIds([]);
+      return;
+    }
+    setSelectedScheduleIds(activeSchedules.map(item => item.id));
+  };
+
+  const handleCancelSelectedSchedules = async () => {
+    if (!user || !user.username) {
+      toast.error('You must be logged in to cancel scheduled emails');
+      return;
+    }
+    if (selectedScheduleIds.length === 0) {
+      toast.error('Please select at least one scheduled email to cancel');
+      return;
+    }
+
+    setIsBulkCancellingSchedules(true);
+    try {
+      for (const id of selectedScheduleIds) {
+        try {
+          await dataService.cancelScheduledEmail(user.username as string, id);
+        } catch (error: any) {
+          toast.error(error.message || `Failed to cancel scheduled email (${id})`);
+        }
+      }
+
+      const response = await dataService.listScheduledEmails(user.username as string);
+      const jobs = Array.isArray((response as any).jobs) ? (response as any).jobs : [];
+      jobs.sort((a: ActiveScheduleItem, b: ActiveScheduleItem) => {
+        if (a.sendAt === b.sendAt) {
+          return a.id.localeCompare(b.id);
+        }
+        return a.sendAt - b.sendAt;
+      });
+      setActiveSchedules(jobs);
+      setSelectedScheduleIds([]);
+      toast.success('Selected scheduled emails cancelled');
+    } finally {
+      setIsBulkCancellingSchedules(false);
     }
   };
 
@@ -1668,23 +1722,60 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                     )}
                     {!isLoadingSchedules && activeSchedules.length > 0 && (
                       <div className="space-y-2">
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="flex items-center gap-2 text-xs text-gray-600">
+                            <input
+                              type="checkbox"
+                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              checked={
+                                selectedScheduleIds.length > 0 &&
+                                selectedScheduleIds.length === activeSchedules.length
+                              }
+                              onChange={handleSelectAllSchedules}
+                            />
+                            <span>Select all</span>
+                          </label>
+                          <button
+                            type="button"
+                            onClick={handleCancelSelectedSchedules}
+                            disabled={
+                              selectedScheduleIds.length === 0 || isBulkCancellingSchedules
+                            }
+                            className="inline-flex items-center px-3 py-1.5 rounded-md border border-red-600 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-60 disabled:cursor-not-allowed"
+                          >
+                            {isBulkCancellingSchedules ? 'Cancelling...' : 'Cancel selected'}
+                            {selectedScheduleIds.length > 0 && !isBulkCancellingSchedules && (
+                              <span className="ml-1">({selectedScheduleIds.length})</span>
+                            )}
+                          </button>
+                        </div>
                         {activeSchedules.map(item => (
                           <div
                             key={item.id}
-                            className="flex items-center justify-between p-3 border border-gray-200 rounded-md"
+                            className="flex items-center justify-between gap-3 p-3 border border-gray-200 rounded-md"
                           >
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">{item.subject}</p>
-                              <p className="text-xs text-gray-500">
-                                {item.mode === 'autoSummary' ? 'Auto summary (recurring)' : 'One-time'} · Next run:{' '}
-                                {new Date(item.sendAt).toLocaleString()}
-                              </p>
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="checkbox"
+                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                checked={selectedScheduleIds.includes(item.id)}
+                                onChange={() => toggleScheduleSelection(item.id)}
+                              />
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">{item.subject}</p>
+                                <p className="text-xs text-gray-500">
+                                  {item.mode === 'autoSummary'
+                                    ? 'Auto summary (recurring)'
+                                    : 'One-time'}{' '}
+                                  · Next run: {new Date(item.sendAt).toLocaleString()}
+                                </p>
+                              </div>
                             </div>
                             <button
                               type="button"
                               className="inline-flex items-center justify-center rounded-full p-2 text-red-600 hover:bg-red-50 disabled:opacity-60 disabled:cursor-not-allowed"
                               onClick={() => handleCancelScheduleItem(item)}
-                              disabled={isCancellingScheduleId === item.id}
+                              disabled={isCancellingScheduleId === item.id || isBulkCancellingSchedules}
                             >
                               <X className="w-4 h-4" />
                             </button>

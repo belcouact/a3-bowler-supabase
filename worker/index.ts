@@ -165,6 +165,17 @@ export default {
           });
         }
 
+        const normalizedTags = tags
+          .map(t => (typeof t === 'string' ? t.trim().toLowerCase() : ''))
+          .filter(t => t.length > 0);
+
+        if (normalizedTags.length === 0) {
+          return new Response(JSON.stringify({ success: false, error: 'Tags list is required' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
         const allBowlers: any[] = [];
         const allA3Cases: any[] = [];
         let cursor: string | undefined = undefined;
@@ -189,7 +200,8 @@ export default {
                               .split(',')
                               .map((t: string) => t.trim())
                               .filter((t: string) => t.length > 0);
-                            const hasMatch = bowlerTags.some((t: string) => tags.includes(t));
+                            const bowlerTagsLower = bowlerTags.map((t: string) => t.toLowerCase());
+                            const hasMatch = bowlerTagsLower.some((t: string) => normalizedTags.includes(t));
                             if (hasMatch) {
                                 allBowlers.push(bowler);
                             }
@@ -212,7 +224,8 @@ export default {
                               .split(',')
                               .map((t: string) => t.trim())
                               .filter((t: string) => t.length > 0);
-                            const hasMatch = a3Tags.some((t: string) => tags.includes(t));
+                            const a3TagsLower = a3Tags.map((t: string) => t.toLowerCase());
+                            const hasMatch = a3TagsLower.some((t: string) => normalizedTags.includes(t));
                             if (hasMatch) {
                                 allA3Cases.push(a3);
                             }
