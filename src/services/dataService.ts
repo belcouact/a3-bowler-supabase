@@ -98,6 +98,7 @@ export const dataService = {
     sendAt: string;
     mode?: 'manual' | 'autoSummary';
     aiModel?: string;
+    fromName?: string;
   }) {
     const response = await fetch(`${EMAIL_API_BASE_URL}/schedule-email`, {
       method: 'POST',
@@ -129,6 +130,7 @@ export const dataService = {
     subject: string;
     body: string;
     bodyHtml?: string;
+    fromName?: string;
   }) {
     const response = await fetch(`${EMAIL_API_BASE_URL}/send-email-now`, {
       method: 'POST',

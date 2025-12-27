@@ -16,6 +16,7 @@ interface ScheduledEmailJob {
   sent: boolean;
   mode?: 'manual' | 'autoSummary';
   aiModel?: string;
+  fromName?: string;
 }
 
 interface GroupPerformanceRow {
@@ -668,6 +669,16 @@ const sendEmailWithResend = async (env: Env, job: ScheduledEmailJob) => {
     throw new Error('Missing RESEND_API_KEY');
   }
 
+  const rawFromName = (job.fromName || '').trim();
+  let fromName = 'study-llm.me';
+  if (rawFromName === 'Equipment Fault Manager') {
+    fromName = 'Equipment Fault Manager';
+  } else if (rawFromName === 'A3 Bowler') {
+    fromName = 'A3 Bowler';
+  } else if (rawFromName === 'Light Gantt') {
+    fromName = 'Light Gantt';
+  }
+
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -675,7 +686,7 @@ const sendEmailWithResend = async (env: Env, job: ScheduledEmailJob) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'A3 Bowler <no-reply@study-llm.me>',
+      from: `${fromName} <no-reply@study-llm.me>`,
       to: job.recipients,
       subject: job.subject,
       text: job.body,
@@ -997,9 +1008,11 @@ export default {
             sendAt: string;
             mode?: 'manual' | 'autoSummary';
             aiModel?: string;
+            fromName?: string;
           };
 
-          const { userId, recipients, subject, body, bodyHtml, sendAt, mode, aiModel } = data;
+          const { userId, recipients, subject, body, bodyHtml, sendAt, mode, aiModel, fromName } =
+            data;
 
           if (!Array.isArray(recipients) || recipients.length === 0) {
             return new Response(
@@ -1070,6 +1083,7 @@ export default {
             sent: false,
             mode: jobMode,
             aiModel,
+            fromName,
           };
 
           await env.EMAIL_JOBS.put(`email:${id}`, JSON.stringify(job));
@@ -1093,9 +1107,10 @@ export default {
             subject: string;
             body: string;
             bodyHtml?: string;
+            fromName?: string;
           };
 
-          const { userId, recipients, subject, body, bodyHtml } = data;
+          const { userId, recipients, subject, body, bodyHtml, fromName } = data;
 
           if (!Array.isArray(recipients) || recipients.length === 0) {
             return new Response(
@@ -1126,6 +1141,7 @@ export default {
             bodyHtml,
             sendAt: Date.now(),
             sent: false,
+            fromName,
           };
 
           await sendEmailWithResend(env, job);

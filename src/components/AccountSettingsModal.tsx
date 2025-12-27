@@ -953,6 +953,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
           sendAt: sendAtDate.toISOString(),
           mode: 'autoSummary',
           aiModel: dashboardSettings.aiModel,
+          fromName: 'A3 Bowler',
         });
       } else {
         const htmlForSend =
@@ -966,6 +967,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
           body: emailBody.trim(),
           bodyHtml: htmlForSend,
           sendAt: sendAtDate.toISOString(),
+          fromName: 'A3 Bowler',
         });
       }
       toast.success('Email scheduled successfully');
@@ -1010,6 +1012,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
         subject: emailSubject.trim(),
         body: emailBody.trim(),
         bodyHtml: htmlForSend,
+        fromName: 'A3 Bowler',
       });
       toast.success('Email sent successfully');
     } catch (error: any) {
