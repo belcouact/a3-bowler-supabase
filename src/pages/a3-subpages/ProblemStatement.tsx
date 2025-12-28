@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Sparkles, Loader2, CheckCircle, AlertCircle, X, ClipboardList, Route } from 'lucide-react';
+import { Sparkles, Loader2, CheckCircle, AlertCircle, X, ClipboardList } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
 interface AssessmentResult {
@@ -17,9 +17,6 @@ const ProblemStatement = () => {
   const [isAssessing, setIsAssessing] = useState(false);
   const [assessmentResult, setAssessmentResult] = useState<AssessmentResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
-  const [troubleshootingPlan, setTroubleshootingPlan] = useState<string | null>(null);
-  const [planError, setPlanError] = useState<string | null>(null);
 
   useEffect(() => {
     if (currentCase && textareaRef.current) {
@@ -104,65 +101,6 @@ const ProblemStatement = () => {
     }
   };
 
-  const handleGeneratePlan = async () => {
-    if (!currentCase?.problemStatement) return;
-
-    setIsGeneratingPlan(true);
-    setPlanError(null);
-    setTroubleshootingPlan(null);
-
-    try {
-      const messages = [
-        {
-          role: 'system',
-          content: `You are an expert troubleshooting coach, skilled in many areas.
-          
-          The user will provide a single Problem Statement.
-
-          Your task:
-          - Generate a practical troubleshooting plan to address this problem.
-          - Respond in English by default, even if the input is in another language.
-          
-          Structure the response as clear sections with markdown headings:
-          1. Immediate Checks
-          2. Data Collection
-          3. Hypotheses to Test
-
-          For each bullet, be specific and actionable, but concise.`
-        },
-        {
-          role: 'user',
-          content: `Problem Statement: "${currentCase.problemStatement}"`
-        }
-      ];
-
-      const response = await fetch('https://multi-model-worker.study-llm.me/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'deepseek',
-          messages,
-          stream: false
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to generate troubleshooting plan');
-
-      const data = await response.json();
-      let content = data.choices?.[0]?.message?.content || '';
-
-      content = content.replace(/^```[\s\S]*?```/g, '').trim();
-
-      setTroubleshootingPlan(content);
-    } catch (err) {
-      setPlanError('Failed to generate troubleshooting plan. Please try again.');
-    } finally {
-      setIsGeneratingPlan(false);
-    }
-  };
-
   const handleBlur = () => {
     if (currentCase && textareaRef.current) {
       const newValue = textareaRef.current.value;
@@ -210,23 +148,6 @@ const ProblemStatement = () => {
                     <>
                       <ClipboardList className="-ml-0.5 mr-0 sm:mr-2 h-3 w-3" />
                       <span className="hidden sm:inline">AI Assessment</span>
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={handleGeneratePlan}
-                  disabled={isGeneratingPlan || !currentCase.problemStatement}
-                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isGeneratingPlan ? (
-                    <>
-                      <Loader2 className="animate-spin -ml-0.5 mr-2 h-3 w-3" />
-                      <span className="hidden sm:inline">Generating plan...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Route className="-ml-0.5 mr-0 sm:mr-2 h-3 w-3" />
-                      <span className="hidden sm:inline">AI Troubleshooting Plan</span>
                     </>
                   )}
                 </button>
@@ -304,44 +225,6 @@ const ProblemStatement = () => {
                         </div>
                     )}
                 </div>
-            </div>
-          )}
-
-          {planError && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <AlertCircle className="h-5 w-5 text-red-400" aria-hidden="true" />
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">Error</h3>
-                  <div className="mt-2 text-sm text-red-700">
-                    <p>{planError}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {troubleshootingPlan && (
-            <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden mt-6">
-              <div className="bg-blue-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
-                <h3 className="text-sm font-bold text-blue-900 flex items-center">
-                  <Sparkles className="h-4 w-4 mr-2 text-blue-600" />
-                  AI Troubleshooting Plan
-                </h3>
-                <button
-                  onClick={() => setTroubleshootingPlan(null)}
-                  className="text-gray-400 hover:text-gray-500"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="p-4">
-                <div className="prose prose-sm max-w-none text-gray-700 bg-gray-50 p-3 rounded-md text-sm whitespace-pre-wrap">
-                  {troubleshootingPlan}
-                </div>
-              </div>
             </div>
           )}
         </div>

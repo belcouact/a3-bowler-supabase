@@ -3,17 +3,19 @@ import { useParams } from 'react-router-dom';
 import { useApp, MindMapNodeData } from '../../context/AppContext';
 import { MindMap } from '../../components/MindMap';
 import { Sparkles, Loader2, AlertCircle, X, Lightbulb } from 'lucide-react';
+import { generateShortId } from '../../utils/idUtils';
 
 const WhyAnalysis = () => {
   const { id } = useParams();
   const { a3Cases, updateA3Case } = useApp();
   const currentCase = a3Cases.find(c => c.id === id);
 
-  // We use local state to avoid flickering but sync with context
   const [rootCause, setRootCause] = useState('');
   const [isGeneratingActions, setIsGeneratingActions] = useState(false);
   const [actionsPlan, setActionsPlan] = useState<string | null>(null);
   const [actionsError, setActionsError] = useState<string | null>(null);
+  const [isGeneratingWhy, setIsGeneratingWhy] = useState(false);
+  const [whyError, setWhyError] = useState<string | null>(null);
 
   useEffect(() => {
     if (currentCase) {
@@ -99,6 +101,163 @@ const WhyAnalysis = () => {
               rootCause: newVal
           });
       }
+  };
+
+  const handleGenerateWhyAnalysis = async () => {
+    if (!currentCase) return;
+
+    const problem = currentCase.problemStatement || '';
+    const observations = currentCase.dataAnalysisObservations || '';
+
+    if (!problem.trim()) return;
+
+    setIsGeneratingWhy(true);
+    setWhyError(null);
+
+    try {
+      const prompt = `
+You are an expert in A3 Problem Solving, Lean, and operational excellence.
+
+You will receive:
+- A3 Problem Statement
+- Key observations and evidence from data analysis
+
+Your task:
+- Build a concise 5-Whys style cause tree for this problem that reflects typical industrial best practice.
+
+Guidance:
+- Focus on clear cause-and-effect logic.
+- Avoid repeating the same cause text at the same level.
+- When several detailed sub-causes share the same higher-level idea, represent that idea once as a parent "cause" node and place the detailed variations under "children".
+
+Response requirements:
+- Always respond in English.
+- Return JSON ONLY with this exact structure:
+{
+  "whyTree": [
+    {
+      "cause": "first-level cause text",
+      "children": [
+        {
+          "cause": "second-level cause text",
+          "children": [
+            {
+              "cause": "third-level cause text"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+Problem Statement:
+${problem}
+
+Key Observations and Evidence:
+${observations || '(none provided)'}
+`;
+
+      const messages = [
+        {
+          role: 'system',
+          content:
+            'You are an A3 Problem Solving coach that outputs strictly JSON in the requested schema.',
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ];
+
+      const response = await fetch('https://multi-model-worker.study-llm.me/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'deepseek',
+          messages,
+          stream: false
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to generate why analysis');
+
+      const data = await response.json();
+      const rawContent = data.choices?.[0]?.message?.content || '{}';
+      const cleanContent = rawContent.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+      let parsed: any;
+      try {
+        parsed = JSON.parse(cleanContent);
+      } catch {
+        parsed = {};
+      }
+
+      const rawTree = Array.isArray(parsed.whyTree) ? parsed.whyTree : [];
+
+      if (rawTree.length === 0) {
+        setWhyError('AI did not return a valid why tree. Please try again.');
+        return;
+      }
+
+      const nodes: MindMapNodeData[] = [];
+      const rootId = generateShortId();
+
+      nodes.push({
+        id: rootId,
+        text: problem,
+        x: 50,
+        y: 200,
+        width: 260,
+        height: 100,
+        parentId: null,
+        type: 'root',
+      });
+
+      const addChildren = (
+        tree: any[],
+        parentId: string,
+        depth: number,
+        startY: number,
+      ): number => {
+        let currentY = startY;
+        const stepY = 120;
+        const stepX = 220;
+        tree.forEach(node => {
+          if (!node || typeof node.cause !== 'string' || !node.cause.trim()) {
+            return;
+          }
+          const id = generateShortId();
+          nodes.push({
+            id,
+            text: node.cause.trim(),
+            x: 50 + stepX * depth,
+            y: currentY,
+            parentId,
+            type: 'child',
+          });
+          if (Array.isArray(node.children) && node.children.length > 0) {
+            currentY = addChildren(node.children, id, depth + 1, currentY + stepY);
+          } else {
+            currentY += stepY;
+          }
+        });
+        return currentY;
+      };
+
+      addChildren(rawTree, rootId, 1, 260);
+
+      updateA3Case({
+        ...currentCase,
+        mindMapNodes: nodes,
+      });
+    } catch (err) {
+      setWhyError('Failed to generate why analysis. Please try again.');
+    } finally {
+      setIsGeneratingWhy(false);
+    }
   };
 
   const handleGenerateActions = async () => {
@@ -194,6 +353,48 @@ ${root}`
         <p className="text-gray-500 mb-4">
             Interactive Root Cause Analysis. Start with the problem and drill down by adding "Why" nodes.
         </p>
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs text-gray-500 mr-4">
+            Use AI to create an initial 5 Whys cause chain directly in the canvas.
+          </p>
+          <button
+            type="button"
+            onClick={handleGenerateWhyAnalysis}
+            disabled={
+              isGeneratingWhy ||
+              !currentCase.problemStatement ||
+              !(currentCase.dataAnalysisObservations || currentCase.mindMapNodes?.length)
+            }
+            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isGeneratingWhy ? (
+              <>
+                <Loader2 className="animate-spin -ml-0.5 mr-2 h-3 w-3" />
+                <span className="hidden sm:inline">Analyzing whys...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="-ml-0.5 mr-0 sm:mr-2 h-3 w-3" />
+                <span className="hidden sm:inline">AI Why Analysis</span>
+              </>
+            )}
+          </button>
+        </div>
+        {whyError && (
+          <div className="mb-3 rounded-md bg-red-50 p-3">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <AlertCircle className="h-4 w-4 text-red-400" />
+              </div>
+              <div className="ml-2 text-xs text-red-700">
+                {whyError}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col">

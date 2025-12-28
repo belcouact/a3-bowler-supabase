@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useApp, DataAnalysisImage } from '../../context/AppContext';
 import { useState, useEffect, useRef } from 'react';
 import ImageCanvas from '../../components/ImageCanvas';
-import { Sparkles, Loader2, AlertCircle, BarChart3 } from 'lucide-react';
+import { Sparkles, Loader2, AlertCircle, BarChart3, Route, X } from 'lucide-react';
 
 const DataAnalysis = () => {
   const { id } = useParams();
@@ -17,6 +17,9 @@ const DataAnalysis = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<string | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
+  const [troubleshootingPlan, setTroubleshootingPlan] = useState<string | null>(null);
+  const [planError, setPlanError] = useState<string | null>(null);
 
   // Sync state with context
   useEffect(() => {
@@ -126,6 +129,75 @@ ${observations}`
     }
   };
 
+  const handleGeneratePlan = async () => {
+    if (!currentCase?.problemStatement) return;
+    const observations = textareaRef.current?.value || currentCase.dataAnalysisObservations || '';
+
+    setIsGeneratingPlan(true);
+    setPlanError(null);
+    setTroubleshootingPlan(null);
+
+    try {
+      const messages = [
+        {
+          role: 'system',
+          content: `You are an expert troubleshooting coach, skilled in many areas.
+          
+The user is working on an A3 Problem Solving form.
+
+You will receive:
+- A single Problem Statement
+- Key observations from the data analysis section
+
+Your task:
+- Generate a practical troubleshooting plan to address this problem.
+- Use the evidence to suggest where to focus first.
+- Respond in English by default, even if the inputs are in another language.
+
+Structure the response as clear sections with markdown headings:
+1. Immediate Checks
+2. Data Collection
+3. Hypotheses to Test
+
+For each bullet, be specific and actionable, but concise.`
+        },
+        {
+          role: 'user',
+          content: `Problem Statement:
+${currentCase.problemStatement}
+
+Key Observations from Data:
+${observations}`
+        }
+      ];
+
+      const response = await fetch('https://multi-model-worker.study-llm.me/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'deepseek',
+          messages,
+          stream: false
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to generate troubleshooting plan');
+
+      const data = await response.json();
+      let content = data.choices?.[0]?.message?.content || '';
+
+      content = content.replace(/^```[\s\S]*?```/g, '').trim();
+
+      setTroubleshootingPlan(content);
+    } catch (err) {
+      setPlanError('Failed to generate troubleshooting plan. Please try again.');
+    } finally {
+      setIsGeneratingPlan(false);
+    }
+  };
+
   if (!currentCase) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -142,7 +214,44 @@ ${observations}`
       <div>
         <h3 className="text-xl font-bold text-gray-900 mb-2">Data Analysis</h3>
         <p className="text-gray-500 mb-4">Visualize the data to understand the magnitude and trend of the problem.</p>
-        
+
+        <div className="mb-4 flex items-center justify-between">
+          <p className="text-xs text-gray-500 mr-4">
+            Use AI to generate a troubleshooting plan based on the problem and evidence.
+          </p>
+          <button
+            type="button"
+            onClick={handleGeneratePlan}
+            disabled={isGeneratingPlan || !currentCase.problemStatement}
+            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isGeneratingPlan ? (
+              <>
+                <Loader2 className="animate-spin -ml-0.5 mr-2 h-3 w-3" />
+                <span className="hidden sm:inline">Generating plan...</span>
+              </>
+            ) : (
+              <>
+                <Route className="-ml-0.5 mr-0 sm:mr-2 h-3 w-3" />
+                <span className="hidden sm:inline">AI Troubleshooting Plan</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {planError && (
+          <div className="mb-4 rounded-md bg-red-50 p-3">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <AlertCircle className="h-4 w-4 text-red-400" aria-hidden="true" />
+              </div>
+              <div className="ml-2 text-xs text-red-700">
+                {planError}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Evidence Canvas */}
         <ImageCanvas 
             images={images}
@@ -217,6 +326,45 @@ ${observations}`
           )}
         </div>
       </div>
+
+      {troubleshootingPlan && (
+        <div className="fixed inset-0 z-[70] overflow-y-auto">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              aria-hidden="true"
+              onClick={() => setTroubleshootingPlan(null)}
+            ></div>
+
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
+              &#8203;
+            </span>
+
+            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6">
+              <div className="absolute top-0 right-0 pt-4 pr-4">
+                <button
+                  type="button"
+                  className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  onClick={() => setTroubleshootingPlan(null)}
+                >
+                  <span className="sr-only">Close</span>
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="mt-2">
+                <h3 className="text-sm leading-6 font-semibold text-gray-900 mb-3 flex items-center">
+                  <Sparkles className="h-4 w-4 mr-2 text-blue-600" />
+                  AI Troubleshooting Plan
+                </h3>
+                <div className="prose prose-sm max-w-none text-gray-700 bg-gray-50 p-3 rounded-md text-sm whitespace-pre-wrap">
+                  {troubleshootingPlan}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
