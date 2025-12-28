@@ -114,6 +114,8 @@ const Layout = () => {
   const isAdmin = normalizedRole === 'admin';
   const isSuperAdmin = normalizedRole === 'super admin';
   const isAdminOrSuperAdmin = isAdmin || isSuperAdmin;
+  const isCommentUser = normalizedRole === 'comment user';
+  const userPlant = (user?.plant || '').trim();
   
   // Identify active module based on path
   const isMetricBowler = location.pathname.includes('/metric-bowler');
@@ -147,7 +149,7 @@ const Layout = () => {
   const [bowlerFilterValue, setBowlerFilterValue] = useState<string>('');
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const [isMobileModelMenuOpen, setIsMobileModelMenuOpen] = useState(false);
-  const [portfolioTab, setPortfolioTab] = useState<'bowler' | 'a3'>('bowler');
+  const [isA3PortfolioSidebarOpen, setIsA3PortfolioSidebarOpen] = useState(true);
   const [a3PortfolioGroupFilter, setA3PortfolioGroupFilter] = useState<string>('');
   const [groupFilter, setGroupFilter] = useState<string>('');
   const [metricFilter, setMetricFilter] = useState<string>('');
@@ -376,6 +378,23 @@ const Layout = () => {
       setGlobalRootCauseView('text');
     }
   }, [selectedGlobalA3]);
+
+  const visibleAllA3Cases = useMemo(
+    () => {
+      if (isAdminOrSuperAdmin || !userPlant) {
+        return allA3Cases;
+      }
+
+      return allA3Cases.filter(a3 => {
+        const plantValue = (a3.plant || '').toString().trim();
+        if (!plantValue) {
+          return true;
+        }
+        return plantValue === userPlant;
+      });
+    },
+    [allA3Cases, isAdminOrSuperAdmin, userPlant],
+  );
 
   const a3PortfolioStats = useMemo(() => {
     const filteredCases = a3PortfolioGroupFilter
@@ -4492,19 +4511,30 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-              <div className="w-full lg:w-1/2 border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col">
+              <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+              {isA3PortfolioSidebarOpen && (
+                <div className="w-full lg:w-1/2 border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col">
                 <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-white">
                   <div>
                     <p className="text-xs font-semibold tracking-wide text-gray-600 uppercase">
-                      A3 Portfolio (All Plants)
+                      {isAdminOrSuperAdmin || !userPlant
+                        ? 'A3 Portfolio (All Plants)'
+                        : `A3 Portfolio (${userPlant})`}
                     </p>
                     <p className="text-[11px] text-gray-500">
                       {isAllA3Loading
                         ? 'Loading cases from server...'
-                        : `${allA3Cases.length} case${allA3Cases.length === 1 ? '' : 's'} loaded`}
+                        : `${visibleAllA3Cases.length} case${visibleAllA3Cases.length === 1 ? '' : 's'} visible`}
                     </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsA3PortfolioSidebarOpen(false)}
+                    className="ml-3 inline-flex items-center rounded-full border border-gray-200 px-2 py-1 text-[11px] text-gray-600 hover:bg-gray-50"
+                    title="Collapse portfolio list"
+                  >
+                    <ChevronLeft className="w-3 h-3" />
+                  </button>
                 </div>
                 <div className="flex-1 overflow-auto bg-gray-50">
                   {allA3Error && (
@@ -4517,7 +4547,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       <Loader2 className="w-4 h-4 animate-spin text-indigo-600 mr-2" />
                       Loading A3 cases...
                     </div>
-                  ) : allA3Cases.length === 0 ? (
+                  ) : visibleAllA3Cases.length === 0 ? (
                     <div className="h-full flex items-center justify-center text-sm text-gray-500">
                       No public A3 cases found.
                     </div>
@@ -4531,7 +4561,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                         <span className="text-right">Due Date</span>
                       </div>
                       <div className="space-y-1">
-                        {allA3Cases.map(a3 => {
+                        {visibleAllA3Cases.map(a3 => {
                           const isSelected = selectedGlobalA3 && selectedGlobalA3.id === a3.id;
                           const status = (a3.status || 'Not Started').trim();
                           const statusColor =
@@ -4588,7 +4618,13 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   )}
                 </div>
               </div>
-              <div className="w-full lg:w-1/2 bg-gray-100 flex flex-col">
+              )}
+              <div
+                className={clsx(
+                  'w-full bg-gray-100 flex flex-col',
+                  isA3PortfolioSidebarOpen ? 'lg:w-1/2' : 'lg:w-full',
+                )}
+              >
                 <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-white">
                   <div>
                     <p className="text-xs font-semibold tracking-wide text-gray-600 uppercase">
@@ -4598,6 +4634,17 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       Same structure as the Report tab of A3 Analysis.
                     </p>
                   </div>
+                  {!isA3PortfolioSidebarOpen && (
+                    <button
+                      type="button"
+                      onClick={() => setIsA3PortfolioSidebarOpen(true)}
+                      className="ml-3 inline-flex items-center rounded-full border border-gray-200 px-2 py-1 text-[11px] text-gray-600 hover:bg-gray-50"
+                      title="Show portfolio list"
+                    >
+                      <ChevronRight className="w-3 h-3" />
+                      <span className="ml-1 hidden sm:inline">Portfolio</span>
+                    </button>
+                  )}
                 </div>
                 <div className="flex-1 overflow-auto p-4 bg-gray-50">
                   {!selectedGlobalA3 ? (
