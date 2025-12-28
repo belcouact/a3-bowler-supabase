@@ -204,6 +204,7 @@ const Layout = () => {
     { key: string; userId: string | null; kind: string | null; entityId: string | null }[]
   >([]);
   const [kvSelectedKeys, setKvSelectedKeys] = useState<Set<string>>(new Set());
+  const [kvFilterText, setKvFilterText] = useState('');
 
   const loadAdminUsers = async () => {
     setIsLoadingAdminUsers(true);
@@ -2214,10 +2215,27 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
 
   const handleToggleKvAll = () => {
     setKvSelectedKeys(prev => {
-      if (prev.size === kvItems.length) {
-        return new Set();
+      const filter = kvFilterText.trim().toLowerCase();
+      const visibleItems = filter
+        ? kvItems.filter(item => {
+            const key = item.key.toLowerCase();
+            const kind = (item.kind || '').toLowerCase();
+            return key.includes(filter) || kind.includes(filter);
+          })
+        : kvItems;
+
+      const visibleKeys = visibleItems.map(item => item.key);
+      const allVisibleSelected = visibleKeys.every(key => prev.has(key));
+
+      if (allVisibleSelected) {
+        const next = new Set(prev);
+        visibleKeys.forEach(key => next.delete(key));
+        return next;
       }
-      return new Set(kvItems.map(item => item.key));
+
+      const next = new Set(prev);
+      visibleKeys.forEach(key => next.add(key));
+      return next;
     });
   };
 
@@ -4166,8 +4184,8 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
             </div>
             <div className="flex-1 overflow-hidden bg-white">
               <div className="h-full flex flex-col">
-                <div className="px-6 py-3 border-b border-gray-100 flex items-center justify-between">
-                  <div>
+                <div className="px-6 py-3 border-b border-gray-100 flex items-center justify-between gap-4">
+                  <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-semibold text-gray-900">
                       KV records
                     </h3>
@@ -4175,6 +4193,26 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       Total: {kvItems.length} item{kvItems.length === 1 ? '' : 's'}. Selected:{' '}
                       {kvSelectedKeys.size}.
                     </p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={kvFilterText}
+                        onChange={e => setKvFilterText(e.target.value)}
+                        className="w-56 max-w-full border border-gray-300 rounded-md px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                        placeholder="Filter by key or type (e.g. audit)"
+                      />
+                      <span className="text-[11px] text-gray-500">
+                        Visible:{" "}
+                        {kvFilterText.trim()
+                          ? kvItems.filter(item => {
+                              const filter = kvFilterText.trim().toLowerCase();
+                              const key = item.key.toLowerCase();
+                              const kind = (item.kind || "").toLowerCase();
+                              return key.includes(filter) || kind.includes(filter);
+                            }).length
+                          : kvItems.length}
+                      </span>
+                    </div>
                     {kvError && (
                       <p className="mt-1 text-xs text-red-500">
                         {kvError}
@@ -4220,7 +4258,25 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                             <input
                               type="checkbox"
                               className="h-3.5 w-3.5 rounded border-gray-300 text-red-600 focus:ring-red-500"
-                              checked={kvItems.length > 0 && kvSelectedKeys.size === kvItems.length}
+                              checked={
+                                (kvFilterText.trim()
+                                  ? kvItems.filter(item => {
+                                      const filter = kvFilterText.trim().toLowerCase();
+                                      const key = item.key.toLowerCase();
+                                      const kind = (item.kind || "").toLowerCase();
+                                      return key.includes(filter) || kind.includes(filter);
+                                    })
+                                  : kvItems
+                                ).every(item => kvSelectedKeys.has(item.key)) &&
+                                (kvFilterText.trim()
+                                  ? kvItems.filter(item => {
+                                      const filter = kvFilterText.trim().toLowerCase();
+                                      const key = item.key.toLowerCase();
+                                      const kind = (item.kind || "").toLowerCase();
+                                      return key.includes(filter) || kind.includes(filter);
+                                    }).length > 0
+                                  : kvItems.length > 0)
+                              }
                               onChange={handleToggleKvAll}
                             />
                           </th>
@@ -4239,7 +4295,15 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
-                        {kvItems.map(item => {
+                        {(kvFilterText.trim()
+                          ? kvItems.filter(item => {
+                              const filter = kvFilterText.trim().toLowerCase();
+                              const key = item.key.toLowerCase();
+                              const kind = (item.kind || "").toLowerCase();
+                              return key.includes(filter) || kind.includes(filter);
+                            })
+                          : kvItems
+                        ).map(item => {
                           const isSelected = kvSelectedKeys.has(item.key);
                           return (
                             <tr
