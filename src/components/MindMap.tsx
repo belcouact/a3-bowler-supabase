@@ -534,7 +534,7 @@ export const MindMap = ({ initialNodes, onChange, autoHeight, initialScale, fixe
         <div 
           ref={containerRef}
           className={clsx(
-            "w-full bg-slate-50 relative overflow-hidden border border-slate-200 rounded-lg cursor-grab active:cursor-grabbing resize-y",
+            "w-full bg-slate-50 relative overflow-hidden border border-slate-200 rounded-lg cursor-grab active:cursor-grabbing",
             !autoHeight && "h-[600px]"
           )}
           onMouseDown={handleContainerMouseDown}
