@@ -193,7 +193,11 @@ const Summary = () => {
                     5 Whys Mindmap Snapshot:
                   </h5>
                   <div className="pointer-events-none">
-                    <MindMap initialNodes={currentCase.mindMapNodes} autoHeight />
+                    <MindMap
+                      initialNodes={currentCase.mindMapNodes}
+                      initialScale={currentCase.mindMapScale}
+                      fixedHeight={currentCase.mindMapCanvasHeight}
+                    />
                   </div>
                 </div>
               )

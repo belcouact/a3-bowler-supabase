@@ -242,9 +242,12 @@ interface MindMapProps {
   initialNodes?: MindMapNodeData[];
   onChange?: (nodes: MindMapNodeData[]) => void;
   autoHeight?: boolean;
+  initialScale?: number;
+  fixedHeight?: number;
+  onViewChange?: (view: { scale: number; height: number }) => void;
 }
 
-export const MindMap = ({ initialNodes, onChange, autoHeight }: MindMapProps) => {
+export const MindMap = ({ initialNodes, onChange, autoHeight, initialScale, fixedHeight, onViewChange }: MindMapProps) => {
   const [nodes, setNodes] = useState<Node[]>(
     initialNodes && initialNodes.length > 0
       ? initialNodes
@@ -262,7 +265,7 @@ export const MindMap = ({ initialNodes, onChange, autoHeight }: MindMapProps) =>
         ]
   );
   
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState(initialScale ?? 1);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
@@ -289,7 +292,32 @@ export const MindMap = ({ initialNodes, onChange, autoHeight }: MindMapProps) =>
     setContainerHeight(Math.max(300, height));
   }, [nodes, autoHeight]);
 
-  // Sync with external updates
+  useEffect(() => {
+    if (!onViewChange) return;
+    if (!containerRef.current) return;
+    const height = containerRef.current.clientHeight;
+    onViewChange({ scale, height });
+  }, [scale, onViewChange]);
+
+  useEffect(() => {
+    if (!onViewChange) return;
+    if (!containerRef.current) return;
+    if (autoHeight) return;
+    const el = containerRef.current;
+    let previousHeight = el.clientHeight;
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const h = entry.contentRect.height;
+        if (Math.abs(h - previousHeight) > 2) {
+          previousHeight = h;
+          onViewChange({ scale, height: h });
+        }
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [autoHeight, onViewChange, scale]);
+
   useEffect(() => {
     if (initialNodes && initialNodes.length > 0 && draggingId === null) {
         setNodes(prev => {
@@ -303,8 +331,13 @@ export const MindMap = ({ initialNodes, onChange, autoHeight }: MindMapProps) =>
             }
             return initialNodes;
         });
+        if (initialScale !== undefined) {
+          setScale(initialScale);
+        } else {
+          setScale(1);
+        }
     }
-  }, [initialNodes, draggingId]); 
+  }, [initialNodes, draggingId, initialScale]); 
 
   const handleMouseDown = (e: ReactMouseEvent, id: string) => {
     e.stopPropagation();
@@ -473,7 +506,13 @@ export const MindMap = ({ initialNodes, onChange, autoHeight }: MindMapProps) =>
             "w-full bg-slate-50 relative overflow-hidden border border-slate-200 rounded-lg cursor-grab active:cursor-grabbing resize-y",
             !autoHeight && "h-[600px]"
           )}
-          style={autoHeight ? { height: containerHeight } : undefined}
+          style={
+            autoHeight
+              ? { height: containerHeight }
+              : fixedHeight
+              ? { height: fixedHeight }
+              : undefined
+          }
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}

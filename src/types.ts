@@ -117,6 +117,8 @@ export interface A3Case {
   results?: string;
   mindMapNodes?: MindMapNodeData[];
   mindMapText?: string;
+  mindMapScale?: number;
+  mindMapCanvasHeight?: number;
   rootCause?: string;
   actionPlanTasks?: ActionPlanTaskData[];
   dataAnalysisObservations?: string;

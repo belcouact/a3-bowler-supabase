@@ -61,21 +61,33 @@ const WhyAnalysis = () => {
 
   const handleNodesChange = useCallback((newNodes: MindMapNodeData[]) => {
       if (!currentCase) return;
-      
-      // Optimization: Compare JSON string to avoid unnecessary context updates
-      // This is crucial because context update triggers re-render of this component, 
-      // which passes new nodes to MindMap, which might trigger another onChange if not careful.
       const currentNodesJson = JSON.stringify(currentCase.mindMapNodes);
       const newNodesJson = JSON.stringify(newNodes);
 
       if (currentNodesJson !== newNodesJson) {
-          // Update context
           updateA3Case({
               ...currentCase,
               mindMapNodes: newNodes
           });
       }
   }, [currentCase, updateA3Case]);
+
+  const handleViewChange = useCallback(
+    (view: { scale: number; height: number }) => {
+      if (!currentCase) return;
+      const nextScale = view.scale;
+      const nextHeight = view.height;
+      const prevScale = currentCase.mindMapScale ?? 1;
+      const prevHeight = currentCase.mindMapCanvasHeight;
+      if (prevScale === nextScale && prevHeight === nextHeight) return;
+      updateA3Case({
+        ...currentCase,
+        mindMapScale: nextScale,
+        mindMapCanvasHeight: nextHeight,
+      });
+    },
+    [currentCase, updateA3Case]
+  );
 
   const handleRootCauseChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const newVal = e.target.value;
@@ -185,8 +197,13 @@ ${root}`
       </div>
 
       <div className="flex flex-col">
-         {/* MindMap container is resizable by itself via CSS in MindMap.tsx (resize-y) */}
-         <MindMap initialNodes={currentCase.mindMapNodes} onChange={handleNodesChange} />
+         <MindMap
+           initialNodes={currentCase.mindMapNodes}
+           onChange={handleNodesChange}
+           initialScale={currentCase.mindMapScale}
+           fixedHeight={currentCase.mindMapCanvasHeight}
+           onViewChange={handleViewChange}
+         />
       </div>
 
       {/* Conversion Section Removed */}
