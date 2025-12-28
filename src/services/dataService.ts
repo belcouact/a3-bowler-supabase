@@ -101,6 +101,46 @@ export const dataService = {
     return response.json();
   },
 
+  async listKvItems() {
+    const response = await fetch(`${API_BASE_URL}/admin/kv-list`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to load KV items');
+    }
+
+    return response.json();
+  },
+
+  async deleteKvItems(keys: string[]) {
+    const response = await fetch(`${API_BASE_URL}/admin/kv-delete`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ keys }),
+    });
+
+    if (!response.ok) {
+      let message = 'Failed to delete KV items';
+      try {
+        const data = await response.json();
+        if (data && typeof data.error === 'string') {
+          message = data.error;
+        }
+      } catch (e) {
+        void e;
+      }
+      throw new Error(message);
+    }
+
+    return response.json();
+  },
+
   async scheduleEmail(options: {
     userId?: string;
     recipients: string[];

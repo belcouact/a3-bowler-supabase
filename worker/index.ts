@@ -301,6 +301,77 @@ export default {
       }
     }
 
+    if (request.method === 'GET' && url.pathname === '/admin/kv-list') {
+      try {
+        const items: any[] = [];
+        let cursor: string | undefined = undefined;
+        let listComplete = false;
+
+        while (!listComplete) {
+          const list: any = await env.BOWLER_DATA.list({ prefix: 'user:', cursor });
+          cursor = list.cursor;
+          listComplete = list.list_complete;
+
+          for (const key of list.keys) {
+            const name = key.name as string;
+            const parts = name.split(':');
+            let userId: string | null = null;
+            let kind: string | null = null;
+            let entityId: string | null = null;
+
+            if (parts.length >= 3 && parts[0] === 'user') {
+              userId = parts[1] || null;
+              kind = parts[2] || null;
+              if (parts.length >= 4) {
+                entityId = parts[3] || null;
+              }
+            }
+
+            items.push({
+              key: name,
+              userId,
+              kind,
+              entityId,
+            });
+          }
+        }
+
+        return new Response(JSON.stringify({ success: true, items }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    if (request.method === 'POST' && url.pathname === '/admin/kv-delete') {
+      try {
+        const body = await request.json() as { keys?: string[] };
+        const keys = Array.isArray(body.keys) ? body.keys : [];
+        if (keys.length === 0) {
+          return new Response(JSON.stringify({ success: false, error: 'No keys provided' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        const uniqueKeys = Array.from(new Set(keys));
+        await Promise.all(uniqueKeys.map(name => env.BOWLER_DATA.delete(name)));
+
+        return new Response(JSON.stringify({ success: true, deleted: uniqueKeys.length }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     if (request.method === 'GET' && url.pathname === '/all-a3') {
       try {
         const allA3Cases: any[] = [];
