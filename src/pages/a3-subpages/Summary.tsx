@@ -37,23 +37,17 @@ const Summary = () => {
       });
 
       const imgData = canvas.toDataURL('image/png');
+      const pxToMm = 0.264583;
+      const pageWidth = canvas.width * pxToMm;
+      const pageHeight = canvas.height * pxToMm;
+
       const pdf = new JsPDF({
-        orientation: 'landscape',
+        orientation: pageWidth >= pageHeight ? 'landscape' : 'portrait',
         unit: 'mm',
-        format: 'a4',
+        format: [pageWidth, pageHeight],
       });
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgProps = pdf.getImageProperties(imgData);
-      
-      const ratio = Math.min((pdfWidth - 20) / imgProps.width, (pdfHeight - 20) / imgProps.height);
-      const imgWidth = imgProps.width * ratio;
-      const imgHeight = imgProps.height * ratio;
-      const x = (pdfWidth - imgWidth) / 2;
-      const y = (pdfHeight - imgHeight) / 2;
-
-      pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+      pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
       pdf.save(`A3-${currentCase.title.replace(/[^a-z0-9]/gi, '_')}.pdf`);
       toast.success('PDF exported successfully!');
     } catch (error) {
@@ -110,15 +104,12 @@ const Summary = () => {
             <div className="mb-4">
               <h5 className="text-xs font-semibold text-gray-600 mb-2">Evidence</h5>
               <div
-                className="relative w-full bg-gray-50 border border-gray-200 rounded overflow-hidden"
+                className="relative w-full bg-white border-2 border-dashed border-gray-300 rounded-lg overflow-hidden"
                 style={{
                   height:
-                    Math.max(
-                      150,
-                      ...currentCase.dataAnalysisImages.map(
-                        img => (img.y + img.height) * 0.5
-                      )
-                    ) + 20,
+                    currentCase.dataAnalysisCanvasHeight && currentCase.dataAnalysisCanvasHeight > 0
+                      ? currentCase.dataAnalysisCanvasHeight
+                      : 500,
                 }}
               >
                 <div className="w-full h-full relative">
@@ -127,10 +118,10 @@ const Summary = () => {
                       key={img.id}
                       style={{
                         position: 'absolute',
-                        left: img.x * 0.5,
-                        top: img.y * 0.5,
-                        width: img.width * 0.5,
-                        height: img.height * 0.5,
+                        left: img.x,
+                        top: img.y,
+                        width: img.width,
+                        height: img.height,
                       }}
                     >
                       <img
@@ -140,9 +131,6 @@ const Summary = () => {
                       />
                     </div>
                   ))}
-                </div>
-                <div className="absolute bottom-1 right-1 text-[10px] text-gray-400">
-                  * Scaled (50%)
                 </div>
               </div>
             </div>
@@ -266,15 +254,12 @@ const Summary = () => {
             <div className="mb-4">
               <h5 className="text-xs font-semibold text-gray-600 mb-2">Result Evidence</h5>
               <div
-                className="relative w-full bg-gray-50 border border-gray-200 rounded overflow-hidden"
+                className="relative w-full bg-white border-2 border-dashed border-gray-300 rounded-lg overflow-hidden"
                 style={{
                   height:
-                    Math.max(
-                      150,
-                      ...currentCase.resultImages.map(
-                        img => (img.y + img.height) * 0.5
-                      )
-                    ) + 20,
+                    currentCase.resultCanvasHeight && currentCase.resultCanvasHeight > 0
+                      ? currentCase.resultCanvasHeight
+                      : 500,
                 }}
               >
                 <div className="w-full h-full relative">
@@ -283,10 +268,10 @@ const Summary = () => {
                       key={img.id}
                       style={{
                         position: 'absolute',
-                        left: img.x * 0.5,
-                        top: img.y * 0.5,
-                        width: img.width * 0.5,
-                        height: img.height * 0.5,
+                        left: img.x,
+                        top: img.y,
+                        width: img.width,
+                        height: img.height,
                       }}
                     >
                       <img
@@ -296,9 +281,6 @@ const Summary = () => {
                       />
                     </div>
                   ))}
-                </div>
-                <div className="absolute bottom-1 right-1 text-[10px] text-gray-400">
-                  * Scaled (50%)
                 </div>
               </div>
             </div>
