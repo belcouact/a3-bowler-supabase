@@ -268,6 +268,9 @@ export const MindMap = ({ initialNodes, onChange, autoHeight, initialScale, fixe
   const [scale, setScale] = useState(initialScale ?? 1);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const panStartRef = useRef({ x: 0, y: 0 });
+  const panSnapshotRef = useRef<Node[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const onChangeRef = useRef(onChange);
   const [containerHeight, setContainerHeight] = useState(600);
@@ -356,7 +359,29 @@ export const MindMap = ({ initialNodes, onChange, autoHeight, initialScale, fixe
     setDraggingId(id);
   };
 
+  const handleContainerMouseDown = (e: ReactMouseEvent) => {
+    if (e.button !== 0) return;
+    if (draggingId) return;
+    setIsPanning(true);
+    panStartRef.current = { x: e.clientX, y: e.clientY };
+    panSnapshotRef.current = nodes;
+  };
+
   const handleMouseMove = (e: ReactMouseEvent) => {
+    if (isPanning) {
+      const dx = (e.clientX - panStartRef.current.x) / scale;
+      const dy = (e.clientY - panStartRef.current.y) / scale;
+      const base = panSnapshotRef.current;
+      setNodes(
+        base.map(node => ({
+          ...node,
+          x: node.x + dx,
+          y: node.y + dy
+        }))
+      );
+      return;
+    }
+
     if (!draggingId || !containerRef.current) return;
 
     const rect = containerRef.current.getBoundingClientRect();
@@ -377,6 +402,7 @@ export const MindMap = ({ initialNodes, onChange, autoHeight, initialScale, fixe
 
   const handleMouseUp = () => {
     setDraggingId(null);
+    setIsPanning(false);
   };
 
   const addNode = (parentId: string, direction: 'right' | 'bottom') => {
@@ -506,6 +532,7 @@ export const MindMap = ({ initialNodes, onChange, autoHeight, initialScale, fixe
             "w-full bg-slate-50 relative overflow-hidden border border-slate-200 rounded-lg cursor-grab active:cursor-grabbing resize-y",
             !autoHeight && "h-[600px]"
           )}
+          onMouseDown={handleContainerMouseDown}
           style={
             autoHeight
               ? { height: containerHeight }
