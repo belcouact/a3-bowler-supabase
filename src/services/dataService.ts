@@ -85,6 +85,25 @@ export const dataService = {
     return response.json();
   },
 
+  async loadA3Detail(userId: string, a3Id: string) {
+    const url = new URL(`${API_BASE_URL}/a3-detail`);
+    url.searchParams.set('userId', userId);
+    url.searchParams.set('a3Id', a3Id);
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to load A3 detail');
+    }
+
+    return response.json();
+  },
+
   async consolidateBowlers(tags: string[]) {
     const response = await fetch(`${API_BASE_URL}/consolidate`, {
       method: 'POST',

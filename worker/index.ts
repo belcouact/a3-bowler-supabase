@@ -118,21 +118,21 @@ export default {
 
         // Save A3 Cases
         if (a3Cases && Array.isArray(a3Cases)) {
-           // 1. Get all existing A3 keys for this user
-           const existingList = await env.BOWLER_DATA.list({ prefix: `user:${userId}:a3:` });
-           const existingKeys = new Set(existingList.keys.map((k: any) => k.name));
-           
-           // 2. Identify keys to keep
-           const keysToKeep = new Set(a3Cases.map(a => `user:${userId}:a3:${a.id}`));
-           
-           // 3. Delete keys that are not in the payload
-           for (const key of existingKeys) {
-             if (!keysToKeep.has(key as string)) {
-               await env.BOWLER_DATA.delete(key as string);
-             }
-           }
+          // 1. Get all existing A3 keys for this user
+          const existingList = await env.BOWLER_DATA.list({ prefix: `user:${userId}:a3:` });
+          const existingKeys = new Set(existingList.keys.map((k: any) => k.name));
 
-          // 4. Update/Create items
+          // 2. Identify keys to keep
+          const keysToKeep = new Set(a3Cases.map(a => `user:${userId}:a3:${a.id}`));
+
+          // 3. Delete keys that are not in the payload
+          for (const key of existingKeys) {
+            if (!keysToKeep.has(key as string)) {
+              await env.BOWLER_DATA.delete(key as string);
+            }
+          }
+
+          // 4. Update/Create items (store full record; API can choose to omit heavy fields)
           for (const a3 of a3Cases) {
             const a3ToSave = { ...a3, userId: userId };
             await env.BOWLER_DATA.put(`user:${userId}:a3:${a3.id}`, JSON.stringify(a3ToSave));
@@ -144,6 +144,57 @@ export default {
             message: 'Data saved successfully',
             debug_userId: userId // Echo back userId for verification
         }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    if (request.method === 'GET' && url.pathname === '/a3-detail') {
+      const userId = url.searchParams.get('userId');
+      const a3Id = url.searchParams.get('a3Id');
+
+      if (!userId || !a3Id) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'userId and a3Id are required' }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
+        );
+      }
+
+      try {
+        const key = `user:${userId}:a3:${a3Id}`;
+        const raw = await env.BOWLER_DATA.get(key, 'json' as any);
+
+        if (!raw || typeof raw !== 'object') {
+          return new Response(JSON.stringify({ success: true, dataAnalysisImages: [], resultImages: [] }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        const record = raw as any;
+        const detail = {
+          dataAnalysisImages: Array.isArray(record.dataAnalysisImages)
+            ? record.dataAnalysisImages
+            : undefined,
+          dataAnalysisCanvasHeight:
+            typeof record.dataAnalysisCanvasHeight === 'number'
+              ? record.dataAnalysisCanvasHeight
+              : undefined,
+          resultImages: Array.isArray(record.resultImages) ? record.resultImages : undefined,
+          resultCanvasHeight:
+            typeof record.resultCanvasHeight === 'number'
+              ? record.resultCanvasHeight
+              : undefined,
+        };
+
+        return new Response(JSON.stringify({ success: true, ...detail }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } catch (err: any) {
@@ -585,16 +636,24 @@ export default {
         for (let i = 0; i < a3Keys.length; i += batchSize) {
           const slice = a3Keys.slice(i, i + batchSize);
           const batch = await Promise.all(
-            slice.map(name => env.BOWLER_DATA.get(name, 'json' as any))
+            slice.map(name => env.BOWLER_DATA.get(name, 'json' as any)),
           );
           for (const data of batch) {
             if (data && typeof data === 'object') {
               const record: any = data;
-              if (record.userId === userId || record.userAccountId === userId) {
-                a3Cases.push(record);
-              } else {
-                a3Cases.push(record);
+              if (record.userId !== userId && record.userAccountId !== userId) {
+                continue;
               }
+
+              const {
+                dataAnalysisImages: _dataAnalysisImages,
+                dataAnalysisCanvasHeight: _dataAnalysisCanvasHeight,
+                resultImages: _resultImages,
+                resultCanvasHeight: _resultCanvasHeight,
+                ...meta
+              } = record;
+
+              a3Cases.push(meta);
             }
           }
         }

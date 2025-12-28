@@ -3,10 +3,13 @@ import { useParams } from 'react-router-dom';
 import { useApp, DataAnalysisImage } from '../../context/AppContext';
 import ImageCanvas from '../../components/ImageCanvas';
 import { Loader2 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { dataService } from '../../services/dataService';
 
 const Result = () => {
   const { id } = useParams();
   const { a3Cases, updateA3Case } = useApp();
+  const { user } = useAuth();
   const currentCase = a3Cases.find(c => c.id === id);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -16,19 +19,74 @@ const Result = () => {
 
   useEffect(() => {
     if (currentCase) {
-        if (currentCase.resultImages && JSON.stringify(currentCase.resultImages) !== JSON.stringify(images)) {
-             setImages(currentCase.resultImages || []);
-        }
-        if (currentCase.resultCanvasHeight && currentCase.resultCanvasHeight !== canvasHeight) {
-            setCanvasHeight(currentCase.resultCanvasHeight);
-        }
+      if (
+        currentCase.resultImages &&
+        JSON.stringify(currentCase.resultImages) !== JSON.stringify(images)
+      ) {
+        setImages(currentCase.resultImages || []);
+      }
+      if (currentCase.resultCanvasHeight && currentCase.resultCanvasHeight !== canvasHeight) {
+        setCanvasHeight(currentCase.resultCanvasHeight);
+      }
 
-        const newVal = currentCase.results || '';
-        if (textareaRef.current && textareaRef.current.value !== newVal) {
-            textareaRef.current.value = newVal;
-        }
+      const newVal = currentCase.results || '';
+      if (textareaRef.current && textareaRef.current.value !== newVal) {
+        textareaRef.current.value = newVal;
+      }
     }
   }, [currentCase?.id]); // Only re-sync on case switch
+
+  // Lazy-load heavy result detail when needed
+  useEffect(() => {
+    if (!currentCase || !user?.username) {
+      return;
+    }
+
+    const alreadyHasImages =
+      Array.isArray(currentCase.resultImages) && currentCase.resultImages.length > 0;
+
+    if (alreadyHasImages) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadDetail = async () => {
+      try {
+        const detail = await dataService.loadA3Detail(user.username as string, currentCase.id);
+        if (!detail || !detail.success || cancelled) {
+          return;
+        }
+
+        const updatedCase = { ...currentCase };
+        let changed = false;
+
+        if (Array.isArray(detail.resultImages)) {
+          setImages(detail.resultImages);
+          (updatedCase as any).resultImages = detail.resultImages;
+          changed = true;
+        }
+
+        if (typeof detail.resultCanvasHeight === 'number') {
+          setCanvasHeight(detail.resultCanvasHeight);
+          (updatedCase as any).resultCanvasHeight = detail.resultCanvasHeight;
+          changed = true;
+        }
+
+        if (changed) {
+          updateA3Case(updatedCase);
+        }
+      } catch {
+        // Ignore detail load errors; user can still work with local state
+      }
+    };
+
+    void loadDetail();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentCase?.id, user?.username, updateA3Case]);
 
   const saveImages = (newImages: DataAnalysisImage[]) => {
       setImages(newImages);
