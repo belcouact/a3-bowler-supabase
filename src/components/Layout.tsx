@@ -114,7 +114,6 @@ const Layout = () => {
   const isAdmin = normalizedRole === 'admin';
   const isSuperAdmin = normalizedRole === 'super admin';
   const isAdminOrSuperAdmin = isAdmin || isSuperAdmin;
-  const isCommentUser = normalizedRole === 'comment user';
   const userPlant = (user?.plant || '').trim();
   
   // Identify active module based on path
@@ -150,6 +149,7 @@ const Layout = () => {
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const [isMobileModelMenuOpen, setIsMobileModelMenuOpen] = useState(false);
   const [isA3PortfolioSidebarOpen, setIsA3PortfolioSidebarOpen] = useState(true);
+  const [portfolioTab, setPortfolioTab] = useState<'bowler' | 'a3'>('bowler');
   const [a3PortfolioGroupFilter, setA3PortfolioGroupFilter] = useState<string>('');
   const [groupFilter, setGroupFilter] = useState<string>('');
   const [metricFilter, setMetricFilter] = useState<string>('');
@@ -2275,7 +2275,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
             </button>
             <button
               onClick={handleOpenAllA3Modal}
-              className="p-2 bg-slate-700 text-white rounded-md shadow-sm hover:bg-slate-800 transition-colors"
+              className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
               title="View all A3 cases (all accounts)"
             >
               <FileText className="w-4 h-4" />
@@ -4553,10 +4553,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                     </div>
                   ) : (
                     <div className="p-3 space-y-2">
-                      <div className="hidden md:grid grid-cols-6 gap-2 text-[11px] font-semibold text-gray-500 px-2 py-1">
+                      <div className="hidden md:grid grid-cols-5 gap-2 text-[11px] font-semibold text-gray-500 px-2 py-1">
                         <span className="col-span-2">A3 Title</span>
                         <span>Owner</span>
-                        <span>Champion</span>
                         <span>Plant</span>
                         <span className="text-right">Due Date</span>
                       </div>
@@ -4580,7 +4579,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 isSelected ? 'border-blue-400 bg-blue-50/60' : 'border-gray-100',
                               )}
                             >
-                              <div className="flex flex-col md:grid md:grid-cols-6 md:gap-2 md:items-center">
+                              <div className="flex flex-col md:grid md:grid-cols-5 md:gap-2 md:items-center">
                                 <div className="md:col-span-2">
                                   <div className="flex items-center gap-2">
                                     <span className="text-[11px] inline-flex items-center rounded-full border px-1.5 py-0.5 font-medium bg-white text-gray-600">
@@ -4599,9 +4598,6 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 </div>
                                 <div className="mt-2 md:mt-0 text-[11px] text-gray-700">
                                   {a3.owner || 'Unassigned'}
-                                </div>
-                                <div className="mt-1 md:mt-0 text-[11px] text-gray-700">
-                                  {'—'}
                                 </div>
                                 <div className="mt-1 md:mt-0 text-[11px] text-gray-700">
                                   {a3.plant || '—'}
