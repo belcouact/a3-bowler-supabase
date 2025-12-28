@@ -3,6 +3,7 @@ import { X, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { useToast } from '../context/ToastContext';
+import { dataService } from '../services/dataService';
 import { Bowler, A3Case } from '../types';
 
 interface ConsolidateModalProps {
