@@ -215,10 +215,6 @@ ${observations}`
         <h3 className="text-xl font-bold text-gray-900 mb-2">Data Analysis</h3>
         <p className="text-gray-500 mb-4">Visualize the data to understand the magnitude and trend of the problem.</p>
 
-        <p className="mb-4 text-xs text-gray-500">
-          Use AI to generate a troubleshooting plan and visualize evidence to support the analysis.
-        </p>
-
         {planError && (
           <div className="mb-4 rounded-md bg-red-50 p-3">
             <div className="flex">

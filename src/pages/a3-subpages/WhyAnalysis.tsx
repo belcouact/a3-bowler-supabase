@@ -389,16 +389,15 @@ ${root}`
             </div>
           </div>
         )}
-      </div>
-
-      <div className="flex flex-col">
-         <MindMap
-           initialNodes={currentCase.mindMapNodes}
-           onChange={handleNodesChange}
-           initialScale={currentCase.mindMapScale}
-           fixedHeight={currentCase.mindMapCanvasHeight}
-           onViewChange={handleViewChange}
-         />
+        <div className="mt-2 flex flex-col">
+          <MindMap
+            initialNodes={currentCase.mindMapNodes}
+            onChange={handleNodesChange}
+            initialScale={currentCase.mindMapScale}
+            fixedHeight={currentCase.mindMapCanvasHeight}
+            onViewChange={handleViewChange}
+          />
+        </div>
       </div>
 
       {/* Conversion Section Removed */}

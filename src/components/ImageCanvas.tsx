@@ -211,8 +211,8 @@ const ImageCanvas = ({ images, onImagesChange, height, onHeightChange, label = "
             <div className="flex space-x-2">
                 {leftControls}
                 <label className="cursor-pointer inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
-                    <Upload className="h-4 w-4 mr-1" />
-                    Upload Image
+                    <Upload className="h-4 w-4 mr-0 sm:mr-1" />
+                    <span className="hidden sm:inline">Upload Image</span>
                     <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} />
                 </label>
             </div>
