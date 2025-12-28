@@ -104,6 +104,44 @@ export const dataService = {
     return response.json();
   },
 
+  async uploadA3Image(userId: string, a3Id: string, file: Blob) {
+    const imageId =
+      (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    const url = new URL(`${API_BASE_URL}/a3-image`);
+    url.searchParams.set('userId', userId);
+    url.searchParams.set('a3Id', a3Id);
+    url.searchParams.set('imageId', imageId);
+
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': (file as any).type || 'image/webp',
+      },
+      body: file,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to upload A3 image');
+    }
+
+    const result = await response.json();
+
+    return {
+      imageId: result.imageId || imageId,
+      key: result.key as string | undefined,
+      url:
+        result.url ||
+        `${API_BASE_URL}/a3-image?userId=${encodeURIComponent(
+          userId,
+        )}&a3Id=${encodeURIComponent(a3Id)}&imageId=${encodeURIComponent(
+          imageId,
+        )}`,
+    };
+  },
+
   async consolidateBowlers(tags: string[]) {
     const response = await fetch(`${API_BASE_URL}/consolidate`, {
       method: 'POST',

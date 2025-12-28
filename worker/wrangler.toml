@@ -10,3 +10,8 @@ routes = [
 binding = "BOWLER_DATA"
 id = "16589ade07c44137ac0d25ff0d6ef12f"
 preview_id = "16589ade07c44137ac0d25ff0d6ef12f"
+
+[[r2_buckets]]
+binding = "A3_IMAGES"
+bucket_name = "a3-bowler"
+preview_bucket_name = "a3-bowler"

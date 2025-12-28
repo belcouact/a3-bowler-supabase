@@ -17,6 +17,23 @@ const Result = () => {
   const [images, setImages] = useState<DataAnalysisImage[]>([]);
   const [canvasHeight, setCanvasHeight] = useState(500);
 
+  const uploadImage = async (file: Blob) => {
+    if (!currentCase) {
+      return URL.createObjectURL(file);
+    }
+    if (!user?.username) {
+      return URL.createObjectURL(file);
+    }
+
+    const result = await dataService.uploadA3Image(
+      user.username as string,
+      currentCase.id,
+      file,
+    );
+
+    return result.url;
+  };
+
   useEffect(() => {
     if (currentCase) {
       if (
@@ -128,13 +145,13 @@ const Result = () => {
         <h3 className="text-xl font-bold text-gray-900 mb-2">Results & Follow-up</h3>
         <p className="text-gray-500 mb-4">Document the results achieved after implementing the action plan.</p>
         
-        {/* Evidence Canvas */}
         <ImageCanvas 
-            images={images}
-            onImagesChange={saveImages}
-            height={canvasHeight}
-            onHeightChange={saveCanvasHeight}
-            label="Result Evidence (Paste or Upload Images)"
+          images={images}
+          onImagesChange={saveImages}
+          height={canvasHeight}
+          onHeightChange={saveCanvasHeight}
+          label="Result Evidence (Paste or Upload Images)"
+          onUploadImage={uploadImage}
         />
 
         <div className="space-y-4 mt-6">

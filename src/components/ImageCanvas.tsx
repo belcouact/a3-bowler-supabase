@@ -10,9 +10,10 @@ interface ImageCanvasProps {
   onHeightChange: (height: number) => void;
   label?: string;
   leftControls?: ReactNode;
+  onUploadImage?: (file: Blob) => Promise<string>;
 }
 
-const ImageCanvas = ({ images, onImagesChange, height, onHeightChange, label = "Evidence Canvas (Paste or Upload Images)", leftControls }: ImageCanvasProps) => {
+const ImageCanvas = ({ images, onImagesChange, height, onHeightChange, label = "Evidence Canvas (Paste or Upload Images)", leftControls, onUploadImage }: ImageCanvasProps) => {
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -39,26 +40,42 @@ const ImageCanvas = ({ images, onImagesChange, height, onHeightChange, label = "
           if (items[i].type.indexOf('image') !== -1) {
               const blob = items[i].getAsFile();
               if (blob) {
-                  const reader = new FileReader();
-                  reader.onload = (event) => {
-                      const src = event.target?.result as string;
-                      const newImage: DataAnalysisImage = {
-                          id: generateShortId(),
-                          src,
-                          x: 50,
-                          y: 50,
-                          width: 200,
-                          height: 200
+                  if (onUploadImage) {
+                      (async () => {
+                          const src = await onUploadImage(blob);
+                          const newImage: DataAnalysisImage = {
+                              id: generateShortId(),
+                              src,
+                              x: 50,
+                              y: 50,
+                              width: 200,
+                              height: 200
+                          };
+                          const updated = [...imagesRef.current, newImage];
+                          onImagesChange(updated);
+                      })();
+                  } else {
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                          const src = event.target?.result as string;
+                          const newImage: DataAnalysisImage = {
+                              id: generateShortId(),
+                              src,
+                              x: 50,
+                              y: 50,
+                              width: 200,
+                              height: 200
+                          };
+                          
+                          const updated = [...imagesRef.current, newImage];
+                          onImagesChange(updated);
                       };
-                      
-                      const updated = [...imagesRef.current, newImage];
-                      onImagesChange(updated);
-                  };
-                  reader.readAsDataURL(blob);
+                      reader.readAsDataURL(blob);
+                  }
               }
           }
       }
-  }, [onImagesChange]);
+  }, [onImagesChange, onUploadImage]);
 
   useEffect(() => {
       document.addEventListener('paste', handlePasteWithRef as any);
@@ -70,21 +87,37 @@ const ImageCanvas = ({ images, onImagesChange, height, onHeightChange, label = "
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-              const src = event.target?.result as string;
-              const newImage: DataAnalysisImage = {
-                  id: generateShortId(),
-                  src,
-                  x: 50,
-                  y: 50,
-                  width: 200,
-                  height: 200
+          if (onUploadImage) {
+              (async () => {
+                  const src = await onUploadImage(file);
+                  const newImage: DataAnalysisImage = {
+                      id: generateShortId(),
+                      src,
+                      x: 50,
+                      y: 50,
+                      width: 200,
+                      height: 200
+                  };
+                  const updated = [...images, newImage];
+                  onImagesChange(updated);
+              })();
+          } else {
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                  const src = event.target?.result as string;
+                  const newImage: DataAnalysisImage = {
+                      id: generateShortId(),
+                      src,
+                      x: 50,
+                      y: 50,
+                      width: 200,
+                      height: 200
+                  };
+                  const updated = [...images, newImage];
+                  onImagesChange(updated);
               };
-              const updated = [...images, newImage];
-              onImagesChange(updated);
-          };
-          reader.readAsDataURL(file);
+              reader.readAsDataURL(file);
+          }
       }
   };
 

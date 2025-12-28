@@ -24,6 +24,23 @@ const DataAnalysis = () => {
   const [troubleshootingPlan, setTroubleshootingPlan] = useState<string | null>(null);
   const [planError, setPlanError] = useState<string | null>(null);
 
+  const uploadImage = async (file: Blob) => {
+    if (!currentCase) {
+      return URL.createObjectURL(file);
+    }
+    if (!user?.username) {
+      return URL.createObjectURL(file);
+    }
+
+    const result = await dataService.uploadA3Image(
+      user.username as string,
+      currentCase.id,
+      file,
+    );
+
+    return result.url;
+  };
+
   // Sync state with context (local cache or previously loaded detail)
   useEffect(() => {
     if (currentCase) {
@@ -292,7 +309,7 @@ For each bullet, be specific and actionable, but concise.`
         )}
 
         {/* Evidence Canvas */}
-        <ImageCanvas 
+        <ImageCanvas
           images={images}
           onImagesChange={saveImages}
           height={canvasHeight}
@@ -317,6 +334,7 @@ For each bullet, be specific and actionable, but concise.`
               )}
             </button>
           }
+          onUploadImage={uploadImage}
         />
         
         <div className="mt-6">
