@@ -1,32 +1,5 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { authService, User } from '../services/authService';
-import { dataService } from '../services/dataService';
-import { generateShortId } from '../utils/idUtils';
-
-interface AuditLogEntry {
-  id: string;
-  type: string;
-  username?: string;
-  timestamp: string;
-  summary: string;
-  details?: any;
-}
-
-const appendAuditLog = (entry: AuditLogEntry) => {
-  try {
-    const raw = localStorage.getItem('audit_logs');
-    const logs: AuditLogEntry[] = raw ? JSON.parse(raw) : [];
-    const next = [entry, ...logs];
-    const trimmed = next.slice(0, 500);
-    localStorage.setItem('audit_logs', JSON.stringify(trimmed));
-  } catch (error) {
-    console.error('Failed to append audit log', error);
-  }
-
-  dataService.appendAuditLog(entry).catch(error => {
-    console.error('Failed to persist audit log to backend', error);
-  });
-};
 
 const updateUserAccounts = (user: User) => {
   try {
@@ -98,19 +71,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(userProfile);
       localStorage.setItem('user', JSON.stringify(userProfile));
       updateUserAccounts(userProfile);
-      appendAuditLog({
-        id: generateShortId(),
-        type: 'login',
-        username: userProfile.username,
-        timestamp: new Date().toISOString(),
-        summary: 'User login',
-        details: {
-          role: userProfile.role,
-          country: (userProfile as any).country,
-          plant: (userProfile as any).plant,
-          team: (userProfile as any).team,
-        },
-      });
     } finally {
       setIsLoading(false);
     }

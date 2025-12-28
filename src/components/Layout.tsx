@@ -12,7 +12,6 @@ import { useToast } from '../context/ToastContext';
 import { getBowlerStatusColor, computeGroupPerformanceTableData } from '../utils/metricUtils';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { diffDays, addDays, formatDate, getMonthName } from '../utils/dateUtils';
-import { generateShortId } from '../utils/idUtils';
 
 const A3CaseModal = lazy(() => import('./A3CaseModal'));
 const BowlerModal = lazy(() => import('./BowlerModal'));
@@ -335,27 +334,6 @@ const Layout = () => {
       });
       toast.success('User account updated');
       await loadAdminUsers();
-
-      if (user?.username) {
-        dataService.appendAuditLog({
-          id: generateShortId(),
-          type: 'user_admin_updated',
-          username: user.username,
-          timestamp: new Date().toISOString(),
-          summary: `Updated user account "${editingAdminAccount.username}"`,
-          details: {
-            target: editingAdminAccount.username,
-            role: desiredRole || undefined,
-            country: editAdminForm.country || undefined,
-            plant: editAdminForm.plant || undefined,
-            team: editAdminForm.team || undefined,
-            isPublicProfile: editAdminForm.isPublicProfile,
-          },
-        }).catch(error => {
-          console.error('Failed to persist admin user update audit log', error);
-        });
-      }
-
       setEditingAdminAccount(null);
     } catch (error: any) {
       console.error('Failed to update user account', error);

@@ -2,10 +2,8 @@ import React, { useState } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
-import { dataService } from '../services/dataService';
 import { useToast } from '../context/ToastContext';
 import { Bowler, A3Case } from '../types';
-import { generateShortId } from '../utils/idUtils';
 
 interface ConsolidateModalProps {
   isOpen: boolean;
@@ -110,25 +108,6 @@ export const ConsolidateModal: React.FC<ConsolidateModalProps> = ({ isOpen, onCl
             if (updatedA3Count > 0) parts.push(`${updatedA3Count} A3s updated`);
             
             toast.success(`Successfully consolidated: ${parts.join(', ')}.`);
-
-            if (user?.username) {
-              dataService.appendAuditLog({
-                id: generateShortId(),
-                type: 'consolidate_run',
-                username: user.username,
-                timestamp: new Date().toISOString(),
-                summary: `Consolidated data for tags: ${tags.join(', ')}`,
-                details: {
-                  tags,
-                  addedBowlersCount,
-                  updatedBowlersCount,
-                  addedA3Count,
-                  updatedA3Count,
-                },
-              }).catch(error => {
-                console.error('Failed to persist consolidation audit log', error);
-              });
-            }
         } else {
             toast.info('No new or updated items found with these tags.');
         }

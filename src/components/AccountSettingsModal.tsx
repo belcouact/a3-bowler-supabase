@@ -2,14 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { X, Lock, CreditCard, Check, RefreshCw, Repeat, Clock3 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
-import { useToast } from '../context/ToastContext';
 import { dataService } from '../services/dataService';
+import { useToast } from '../context/ToastContext';
 import { useApp } from '../context/AppContext';
 import { EmailScheduleFrequency, GroupPerformanceRow } from '../types';
 import { generateAIContext, generateComprehensiveSummary } from '../services/aiService';
 import { computeGroupPerformanceTableData } from '../utils/metricUtils';
-import { generateShortId } from '../utils/idUtils';
-
 interface AccountSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -359,20 +357,6 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      if (user?.username) {
-        dataService.appendAuditLog({
-          id: generateShortId(),
-          type: 'password_changed',
-          username: user.username,
-          timestamp: new Date().toISOString(),
-          summary: 'User changed password',
-          details: {
-            target: user.username,
-          },
-        }).catch(error => {
-          console.error('Failed to persist password change audit log', error);
-        });
-      }
     } catch (error: any) {
       toast.error(error.message || 'Failed to update password');
     } finally {
@@ -402,25 +386,6 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
       } catch (error) {
         console.warn('Background refresh failed:', error);
         // We don't show an error toast here because the update was successful
-      }
-      if (user?.username) {
-        dataService.appendAuditLog({
-          id: generateShortId(),
-          type: 'profile_updated',
-          username: user.username,
-          timestamp: new Date().toISOString(),
-          summary: 'Updated own profile',
-          details: {
-            target: user.username,
-            role,
-            country,
-            plant,
-            team,
-            isPublic,
-          },
-        }).catch(error => {
-          console.error('Failed to persist profile update audit log', error);
-        });
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to update profile');
