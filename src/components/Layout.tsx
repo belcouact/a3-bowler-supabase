@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Bot, Inbox, Users, Activity, X, Calendar } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Bot, Inbox, Users, X, Calendar } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
 import { Bowler, Metric, AIModelKey, GroupPerformanceRow } from '../types';
@@ -74,15 +74,6 @@ interface AdminAccount {
   isPublicProfile?: boolean;
   createdAt?: string;
   lastLoginAt?: string;
-}
-
-interface AuditLogEntry {
-  id: string;
-  type: string;
-  username?: string;
-  timestamp: string;
-  summary: string;
-  details?: any;
 }
 
 const Layout = () => {
@@ -171,17 +162,11 @@ const Layout = () => {
   const [a3TimelineSidebarDragStartX, setA3TimelineSidebarDragStartX] = useState(0);
   const [a3TimelineSidebarStartWidth, setA3TimelineSidebarStartWidth] = useState(260);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
-  const [adminTab, setAdminTab] = useState<'users' | 'audit'>('users');
   const [adminAccounts, setAdminAccounts] = useState<AdminAccount[]>([]);
-  const [adminAuditLogs, setAdminAuditLogs] = useState<AuditLogEntry[]>([]);
   const [isLoadingAdminUsers, setIsLoadingAdminUsers] = useState(false);
   const [adminUsersError, setAdminUsersError] = useState<string | null>(null);
   const [adminSortKey, setAdminSortKey] = useState<AdminSortKey>('username');
   const [adminSortDirection, setAdminSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [auditActionFilter, setAuditActionFilter] = useState<string>('All');
-  const [auditUserFilter, setAuditUserFilter] = useState<string>('All');
-  const [auditFromDate, setAuditFromDate] = useState<string>('');
-  const [auditToDate, setAuditToDate] = useState<string>('');
   const [editingAdminAccount, setEditingAdminAccount] = useState<AdminAccount | null>(null);
   const [isSavingAdminAccount, setIsSavingAdminAccount] = useState(false);
   const [editAdminForm, setEditAdminForm] = useState<{
@@ -245,24 +230,6 @@ const Layout = () => {
       }
     } finally {
       setIsLoadingAdminUsers(false);
-    }
-  };
-
-  const loadAdminAuditLogs = async () => {
-    try {
-      const response = await dataService.loadAuditLogs();
-      const logs = (response as any).logs || response || [];
-      setAdminAuditLogs(logs as AuditLogEntry[]);
-    } catch (error) {
-      console.error('Failed to load audit logs from backend', error);
-      try {
-        const rawLogs = localStorage.getItem('audit_logs');
-        const parsedLogs: AuditLogEntry[] = rawLogs ? JSON.parse(rawLogs) : [];
-        setAdminAuditLogs(parsedLogs);
-      } catch (fallbackError) {
-        console.error('Failed to load audit logs from local storage', fallbackError);
-        setAdminAuditLogs([]);
-      }
     }
   };
 
@@ -403,84 +370,7 @@ const Layout = () => {
       return;
     }
     loadAdminUsers();
-    loadAdminAuditLogs();
   }, [isAdminPanelOpen]);
-
-  const filteredAuditLogs = useMemo(() => {
-    let logs = adminAuditLogs;
-    if (auditActionFilter !== 'All') {
-      logs = logs.filter(entry => entry.type === auditActionFilter);
-    }
-    if (auditUserFilter !== 'All') {
-      logs = logs.filter(entry => entry.username === auditUserFilter);
-    }
-    if (auditFromDate) {
-      const from = new Date(`${auditFromDate}T00:00:00`);
-      logs = logs.filter(entry => {
-        const ts = new Date(entry.timestamp);
-        return !isNaN(ts.getTime()) && ts >= from;
-      });
-    }
-    if (auditToDate) {
-      const to = new Date(`${auditToDate}T23:59:59.999`);
-      logs = logs.filter(entry => {
-        const ts = new Date(entry.timestamp);
-        return !isNaN(ts.getTime()) && ts <= to;
-      });
-    }
-    return logs;
-  }, [adminAuditLogs, auditActionFilter, auditUserFilter, auditFromDate, auditToDate]);
-
-  const auditActions = useMemo(
-    () => Array.from(new Set(adminAuditLogs.map(entry => entry.type))).filter(Boolean),
-    [adminAuditLogs],
-  );
-
-  const auditUsers = useMemo(
-    () => Array.from(new Set(adminAuditLogs.map(entry => entry.username).filter(Boolean))) as string[],
-    [adminAuditLogs],
-  );
-
-  const handleExportAuditCsv = () => {
-    if (!filteredAuditLogs.length) {
-      return;
-    }
-    const header = ['Time', 'User', 'Action', 'Details', 'Target'];
-    const rows = filteredAuditLogs.map(entry => {
-      const time = new Date(entry.timestamp).toLocaleString();
-      const userName = entry.username || '';
-      const action = entry.type || '';
-      const detailsText =
-        entry.summary ||
-        (entry.details ? JSON.stringify(entry.details) : '');
-      const target =
-        (entry.details && (entry.details as any).target) ||
-        '';
-      return [time, userName, action, detailsText, target];
-    });
-    const csv = [header, ...rows]
-      .map(row =>
-        row
-          .map(cell => {
-            const value = cell ?? '';
-            if (/[",\n]/.test(value)) {
-              return `"${value.replace(/"/g, '""')}"`;
-            }
-            return value;
-          })
-          .join(','),
-      )
-      .join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'audit_logs.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
 
   const a3PortfolioStats = useMemo(() => {
     const filteredCases = a3PortfolioGroupFilter
@@ -2302,14 +2192,13 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
               <Download className="w-4 h-4" />
             </button>
             {isSuperAdmin && (
-              <button
-                onClick={() => {
-                  setAdminTab('users');
-                  setIsAdminPanelOpen(true);
-                }}
-                className="p-2 rounded-md bg-orange-500 text-white shadow-sm hover:bg-orange-600 transition-colors"
-                title="User management & audit logs"
-              >
+            <button
+              onClick={() => {
+                setIsAdminPanelOpen(true);
+              }}
+              className="p-2 rounded-md bg-orange-500 text-white shadow-sm hover:bg-orange-600 transition-colors"
+              title="User management"
+            >
                 <Users className="w-4 h-4" />
               </button>
             )}
@@ -2393,14 +2282,13 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   {isAdminOrSuperAdmin && (
                     <button
                       onClick={() => {
-                        setAdminTab('users');
                         setIsAdminPanelOpen(true);
                         setIsMobileMenuOpen(false);
                       }}
                       className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-slate-700"
                     >
                       <Users className="w-4 h-4 mr-3" />
-                      User Mgmt & Logs
+                      User Mgmt
                     </button>
                   )}
                   <button
@@ -4085,7 +3973,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                     Admin Center
                   </h2>
                   <p className="text-xs text-gray-500">
-                    Manage all registered users and review activity on this device.
+                    Manage all registered users.
                   </p>
                 </div>
               </div>
@@ -4098,352 +3986,211 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
             </div>
             <div className="px-6 pt-3 border-b border-gray-200 bg-white">
               <div className="flex space-x-2 text-sm">
-                <button
-                  onClick={() => setAdminTab('users')}
-                  className={clsx(
-                    'inline-flex items-center gap-1 border-b-2 px-2 py-1 rounded-t-md transition-colors',
-                    adminTab === 'users'
-                      ? 'border-slate-700 text-slate-900 bg-slate-50'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200 hover:bg-gray-50',
-                  )}
-                >
+                <div className="inline-flex items-center gap-1 border-b-2 px-2 py-1 rounded-t-md border-slate-700 text-slate-900 bg-slate-50">
                   <UserIcon className="w-4 h-4" />
                   <span>User Mgmt</span>
-                </button>
-                <button
-                  onClick={() => setAdminTab('audit')}
-                  className={clsx(
-                    'inline-flex items-center gap-1 border-b-2 px-2 py-1 rounded-t-md transition-colors',
-                    adminTab === 'audit'
-                      ? 'border-slate-700 text-slate-900 bg-slate-50'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200 hover:bg-gray-50',
-                  )}
-                >
-                  <Activity className="w-4 h-4" />
-                  <span>Audit Logs</span>
-                </button>
+                </div>
               </div>
             </div>
             <div className="flex-1 overflow-hidden bg-white">
-              {adminTab === 'users' ? (
-                <div className="h-full flex flex-col">
-                  <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900">All registered accounts</h3>
-                      <p className="text-xs text-gray-500">
-                        Loaded from the login service, with local last-login where available.
-                      </p>
-                    </div>
-                    <button
-                      onClick={loadAdminUsers}
-                      className="text-xs px-3 py-1.5 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
-                    >
-                      Refresh
-                    </button>
+              <div className="h-full flex flex-col">
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900">All registered accounts</h3>
+                    <p className="text-xs text-gray-500">
+                      Loaded from the login service, with local last-login where available.
+                    </p>
                   </div>
-                  <div className="flex-1 overflow-auto px-6 py-4">
-                    {adminUsersError && (
-                      <p className="mb-2 text-xs text-red-500">
-                        {adminUsersError}
-                      </p>
-                    )}
-                    {isLoadingAdminUsers ? (
-                      <p className="text-sm text-gray-500">Loading users...</p>
-                    ) : adminAccounts.length === 0 ? (
-                      <p className="text-sm text-gray-500">
-                        No accounts have been recorded yet.
-                      </p>
-                    ) : (
-                      <table className="min-w-full border border-gray-200 text-xs">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
-                              <button
-                                type="button"
-                                onClick={() => handleAdminSort('username')}
-                                className="inline-flex items-center gap-1"
-                              >
-                                <span>Username</span>
-                                {adminSortKey === 'username' && (
-                                  <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
-                                )}
-                              </button>
+                  <button
+                    onClick={loadAdminUsers}
+                    className="text-xs px-3 py-1.5 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+                  >
+                    Refresh
+                  </button>
+                </div>
+                <div className="flex-1 overflow-auto px-6 py-4">
+                  {adminUsersError && (
+                    <p className="mb-2 text-xs text-red-500">
+                      {adminUsersError}
+                    </p>
+                  )}
+                  {isLoadingAdminUsers ? (
+                    <p className="text-sm text-gray-500">Loading users...</p>
+                  ) : adminAccounts.length === 0 ? (
+                    <p className="text-sm text-gray-500">
+                      No accounts have been recorded yet.
+                    </p>
+                  ) : (
+                    <table className="min-w-full border border-gray-200 text-xs">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
+                            <button
+                              type="button"
+                              onClick={() => handleAdminSort('username')}
+                              className="inline-flex items-center gap-1"
+                            >
+                              <span>Username</span>
+                              {adminSortKey === 'username' && (
+                                <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
+                              )}
+                            </button>
+                          </th>
+                          <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
+                            <button
+                              type="button"
+                              onClick={() => handleAdminSort('email')}
+                              className="inline-flex items-center gap-1"
+                            >
+                              <span>Email</span>
+                              {adminSortKey === 'email' && (
+                                <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
+                              )}
+                            </button>
+                          </th>
+                          <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
+                            <button
+                              type="button"
+                              onClick={() => handleAdminSort('role')}
+                              className="inline-flex items-center gap-1"
+                            >
+                              <span>Role</span>
+                              {adminSortKey === 'role' && (
+                                <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
+                              )}
+                            </button>
+                          </th>
+                          <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
+                            <button
+                              type="button"
+                              onClick={() => handleAdminSort('country')}
+                              className="inline-flex items-center gap-1"
+                            >
+                              <span>Country</span>
+                              {adminSortKey === 'country' && (
+                                <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
+                              )}
+                            </button>
+                          </th>
+                          <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
+                            <button
+                              type="button"
+                              onClick={() => handleAdminSort('plant')}
+                              className="inline-flex items-center gap-1"
+                            >
+                              <span>Plant/Office</span>
+                              {adminSortKey === 'plant' && (
+                                <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
+                              )}
+                            </button>
+                          </th>
+                          <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
+                            <button
+                              type="button"
+                              onClick={() => handleAdminSort('team')}
+                              className="inline-flex items-center gap-1"
+                            >
+                              <span>Team</span>
+                              {adminSortKey === 'team' && (
+                                <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
+                              )}
+                            </button>
+                          </th>
+                          <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
+                            <button
+                              type="button"
+                              onClick={() => handleAdminSort('visibility')}
+                              className="inline-flex items-center gap-1"
+                            >
+                              <span>Visibility</span>
+                              {adminSortKey === 'visibility' && (
+                                <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
+                              )}
+                            </button>
+                          </th>
+                          <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200 whitespace-nowrap">
+                            <button
+                              type="button"
+                              onClick={() => handleAdminSort('createdAt')}
+                              className="inline-flex items-center gap-1"
+                            >
+                              <span>Created At</span>
+                              {adminSortKey === 'createdAt' && (
+                                <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
+                              )}
+                            </button>
+                          </th>
+                          <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200 whitespace-nowrap">
+                            <button
+                              type="button"
+                              onClick={() => handleAdminSort('lastLoginAt')}
+                              className="inline-flex items-center gap-1"
+                            >
+                              <span>Last Login</span>
+                              {adminSortKey === 'lastLoginAt' && (
+                                <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
+                              )}
+                            </button>
+                          </th>
+                          {isSuperAdmin && (
+                            <th className="px-3 py-2 text-right font-semibold text-gray-600 border-b border-gray-200 whitespace-nowrap">
+                              Edit
                             </th>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
-                              <button
-                                type="button"
-                                onClick={() => handleAdminSort('email')}
-                                className="inline-flex items-center gap-1"
-                              >
-                                <span>Email</span>
-                                {adminSortKey === 'email' && (
-                                  <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
-                                )}
-                              </button>
-                            </th>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
-                              <button
-                                type="button"
-                                onClick={() => handleAdminSort('role')}
-                                className="inline-flex items-center gap-1"
-                              >
-                                <span>Role</span>
-                                {adminSortKey === 'role' && (
-                                  <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
-                                )}
-                              </button>
-                            </th>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
-                              <button
-                                type="button"
-                                onClick={() => handleAdminSort('country')}
-                                className="inline-flex items-center gap-1"
-                              >
-                                <span>Country</span>
-                                {adminSortKey === 'country' && (
-                                  <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
-                                )}
-                              </button>
-                            </th>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
-                              <button
-                                type="button"
-                                onClick={() => handleAdminSort('plant')}
-                                className="inline-flex items-center gap-1"
-                              >
-                                <span>Plant/Office</span>
-                                {adminSortKey === 'plant' && (
-                                  <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
-                                )}
-                              </button>
-                            </th>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
-                              <button
-                                type="button"
-                                onClick={() => handleAdminSort('team')}
-                                className="inline-flex items-center gap-1"
-                              >
-                                <span>Team</span>
-                                {adminSortKey === 'team' && (
-                                  <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
-                                )}
-                              </button>
-                            </th>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
-                              <button
-                                type="button"
-                                onClick={() => handleAdminSort('visibility')}
-                                className="inline-flex items-center gap-1"
-                              >
-                                <span>Visibility</span>
-                                {adminSortKey === 'visibility' && (
-                                  <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
-                                )}
-                              </button>
-                            </th>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200 whitespace-nowrap">
-                              <button
-                                type="button"
-                                onClick={() => handleAdminSort('createdAt')}
-                                className="inline-flex items-center gap-1"
-                              >
-                                <span>Created At</span>
-                                {adminSortKey === 'createdAt' && (
-                                  <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
-                                )}
-                              </button>
-                            </th>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200 whitespace-nowrap">
-                              <button
-                                type="button"
-                                onClick={() => handleAdminSort('lastLoginAt')}
-                                className="inline-flex items-center gap-1"
-                              >
-                                <span>Last Login</span>
-                                {adminSortKey === 'lastLoginAt' && (
-                                  <span>{adminSortDirection === 'asc' ? '▲' : '▼'}</span>
-                                )}
-                              </button>
-                            </th>
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {sortedAdminAccounts.map(account => (
+                          <tr key={account.username}>
+                            <td className="px-3 py-2 text-gray-900 font-medium">
+                              {account.username}
+                            </td>
+                            <td className="px-3 py-2 text-gray-700">
+                              {account.email || '—'}
+                            </td>
+                            <td className="px-3 py-2 text-gray-700">
+                              {account.role || '—'}
+                            </td>
+                            <td className="px-3 py-2 text-gray-700">
+                              {account.country || '—'}
+                            </td>
+                            <td className="px-3 py-2 text-gray-700">
+                              {account.plant || '—'}
+                            </td>
+                            <td className="px-3 py-2 text-gray-700">
+                              {account.team || '—'}
+                            </td>
+                            <td className="px-3 py-2 text-gray-700">
+                              {account.isPublicProfile === false ? 'Private' : 'Public'}
+                            </td>
+                            <td className="px-3 py-2 text-gray-700">
+                              {account.createdAt
+                                ? new Date(account.createdAt).toLocaleString()
+                                : '—'}
+                            </td>
+                            <td className="px-3 py-2 text-gray-700">
+                              {account.lastLoginAt
+                                ? new Date(account.lastLoginAt).toLocaleString()
+                                : '—'}
+                            </td>
                             {isSuperAdmin && (
-                              <th className="px-3 py-2 text-right font-semibold text-gray-600 border-b border-gray-200 whitespace-nowrap">
-                                Edit
-                              </th>
+                              <td className="px-3 py-2 text-right">
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenEditAdminAccount(account)}
+                                  className="px-2 py-1 text-xs rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                                >
+                                  Edit
+                                </button>
+                              </td>
                             )}
                           </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                          {sortedAdminAccounts.map(account => (
-                            <tr key={account.username}>
-                              <td className="px-3 py-2 text-gray-900 font-medium">
-                                {account.username}
-                              </td>
-                              <td className="px-3 py-2 text-gray-700">
-                                {account.email || '—'}
-                              </td>
-                              <td className="px-3 py-2 text-gray-700">
-                                {account.role || '—'}
-                              </td>
-                              <td className="px-3 py-2 text-gray-700">
-                                {account.country || '—'}
-                              </td>
-                              <td className="px-3 py-2 text-gray-700">
-                                {account.plant || '—'}
-                              </td>
-                              <td className="px-3 py-2 text-gray-700">
-                                {account.team || '—'}
-                              </td>
-                              <td className="px-3 py-2 text-gray-700">
-                                {account.isPublicProfile === false ? 'Private' : 'Public'}
-                              </td>
-                              <td className="px-3 py-2 text-gray-700">
-                                {account.createdAt
-                                  ? new Date(account.createdAt).toLocaleString()
-                                  : '—'}
-                              </td>
-                              <td className="px-3 py-2 text-gray-700">
-                                {account.lastLoginAt
-                                  ? new Date(account.lastLoginAt).toLocaleString()
-                                  : '—'}
-                              </td>
-                              {isSuperAdmin && (
-                                <td className="px-3 py-2 text-right">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleOpenEditAdminAccount(account)}
-                                    className="px-2 py-1 text-xs rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-                                  >
-                                    Edit
-                                  </button>
-                                </td>
-                              )}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    )}
-                  </div>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
-              ) : (
-                <div className="h-full flex flex-col">
-                  <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900">View system audit logs tracking user actions.</h3>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={loadAdminAuditLogs}
-                        className="text-xs px-3 py-1.5 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
-                      >
-                        Refresh
-                      </button>
-                      <button
-                        onClick={handleExportAuditCsv}
-                        className="text-xs px-3 py-1.5 rounded-md border border-blue-500 text-blue-600 hover:bg-blue-50 transition-colors"
-                      >
-                        Export CSV
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="px-6 py-3 border-b border-gray-100 bg-white">
-                    <div className="flex flex-wrap items-center gap-3 text-xs">
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-500">Action</span>
-                        <select
-                          value={auditActionFilter}
-                          onChange={(e) => setAuditActionFilter(e.target.value)}
-                          className="border border-gray-300 rounded-md px-2 py-1 text-gray-700"
-                        >
-                          <option>All</option>
-                          {auditActions.map(action => (
-                            <option key={action} value={action}>{action}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-500">User</span>
-                        <select
-                          value={auditUserFilter}
-                          onChange={(e) => setAuditUserFilter(e.target.value)}
-                          className="border border-gray-300 rounded-md px-2 py-1 text-gray-700"
-                        >
-                          <option>All</option>
-                          {auditUsers.map(u => (
-                            <option key={u} value={u}>{u}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-500">From</span>
-                        <input
-                          type="date"
-                          value={auditFromDate}
-                          onChange={(e) => setAuditFromDate(e.target.value)}
-                          className="border border-gray-300 rounded-md px-2 py-1 text-gray-700"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-500">To</span>
-                        <input
-                          type="date"
-                          value={auditToDate}
-                          onChange={(e) => setAuditToDate(e.target.value)}
-                          className="border border-gray-300 rounded-md px-2 py-1 text-gray-700"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex-1 overflow-auto px-6 py-4">
-                    {filteredAuditLogs.length === 0 ? (
-                      <p className="text-sm text-gray-500">
-                        No audit entries recorded yet.
-                      </p>
-                    ) : (
-                      <table className="min-w-full border border-gray-200 text-xs">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">Time</th>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">User</th>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">Action</th>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">Details</th>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">Target</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                          {filteredAuditLogs.map(entry => {
-                            const time = new Date(entry.timestamp).toLocaleString();
-                            const userName = entry.username || '—';
-                            const action = entry.type || '—';
-                            const detailsText =
-                              entry.summary ||
-                              (entry.details ? JSON.stringify(entry.details) : '—');
-                            const target =
-                              (entry.details && (entry.details as any).target) ||
-                              '—';
-                            return (
-                              <tr key={entry.id}>
-                                <td className="px-3 py-2 text-gray-700">{time}</td>
-                                <td className="px-3 py-2 text-gray-700">{userName}</td>
-                                <td className="px-3 py-2">
-                                  <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-700">
-                                    {action}
-                                  </span>
-                                </td>
-                                <td className="px-3 py-2 text-gray-700">{detailsText}</td>
-                                <td className="px-3 py-2 text-blue-600">
-                                  {target}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    )}
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           </div>
         </div>

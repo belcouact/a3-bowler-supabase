@@ -175,10 +175,7 @@ Keep your answers specific, practical, and focused on this A3 only.`,
       <div>
         <h3 className="text-xl font-bold text-gray-900 flex items-center">
           <Sparkles className="h-5 w-5 text-indigo-500 mr-2" />
-          AI Coach for {' '}
-          <span className="font-semibold text-gray-900">
-            {currentCase.title || 'Untitled A3'}
-          </span>
+          AI Coach
         </h3>
       </div>
 
