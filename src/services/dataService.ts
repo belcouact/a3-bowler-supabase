@@ -70,6 +70,21 @@ export const dataService = {
     }
   },
 
+  async loadAllA3Cases() {
+    const response = await fetch(`${API_BASE_URL}/all-a3`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to load global A3 cases');
+    }
+
+    return response.json();
+  },
+
   async consolidateBowlers(tags: string[]) {
     const response = await fetch(`${API_BASE_URL}/consolidate`, {
       method: 'POST',

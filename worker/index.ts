@@ -290,9 +290,109 @@ export default {
         allA3Cases.sort(sortFn);
 
         return new Response(JSON.stringify({ success: true, bowlers: allBowlers, a3Cases: allA3Cases }), {
-             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
 
+      } catch (err: any) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    if (request.method === 'GET' && url.pathname === '/all-a3') {
+      try {
+        const allA3Cases: any[] = [];
+        let cursor: string | undefined = undefined;
+        let listComplete = false;
+        const profileCache = new Map<string, { isPublic: boolean; plant?: string }>();
+
+        const resolveProfile = async (
+          userKey: string | undefined | null,
+        ): Promise<{ isPublic: boolean; plant?: string }> => {
+          if (!userKey) {
+            return { isPublic: false };
+          }
+          if (profileCache.has(userKey)) {
+            return profileCache.get(userKey) as { isPublic: boolean; plant?: string };
+          }
+          try {
+            const encodedUsername = encodeURIComponent(userKey).replace(/%40/g, '@');
+            const res = await fetch(`https://login.study-llm.me/user/${encodedUsername}`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            });
+            if (!res.ok) {
+              const fallback = { isPublic: false as const };
+              profileCache.set(userKey, fallback);
+              return fallback;
+            }
+            const data = (await res.json()) as any;
+            const profile = data && data.user && data.user.profile ? data.user.profile : {};
+            const isPublic =
+              typeof profile.isPublic === 'boolean' ? profile.isPublic : true;
+            const plant =
+              typeof profile.plant === 'string' && profile.plant.trim().length > 0
+                ? profile.plant.trim()
+                : undefined;
+            const result = { isPublic, plant };
+            profileCache.set(userKey, result);
+            return result;
+          } catch {
+            const fallback = { isPublic: false as const };
+            profileCache.set(userKey, fallback);
+            return fallback;
+          }
+        };
+
+        while (!listComplete) {
+          const list: any = await env.BOWLER_DATA.list({ prefix: 'user:', cursor });
+          cursor = list.cursor;
+          listComplete = list.list_complete;
+
+          const a3Keys = list.keys.filter((k: any) => k.name.includes(':a3:'));
+
+          if (a3Keys.length > 0) {
+            const batchPromises = a3Keys.map((key: any) =>
+              env.BOWLER_DATA.get(key.name, 'json' as any),
+            );
+            const batchResults = await Promise.all(batchPromises);
+
+            for (const data of batchResults) {
+              if (data && typeof data === 'object') {
+                const a3 = data as any;
+                const userKey = a3.userId || a3.userAccountId;
+                const profile = await resolveProfile(userKey);
+                if (!profile.isPublic) {
+                  continue;
+                }
+                const enriched = {
+                  ...a3,
+                  plant: profile.plant,
+                };
+                allA3Cases.push(enriched);
+              }
+            }
+          }
+        }
+
+        allA3Cases.sort((a: any, b: any) => {
+          const userA = (a.userId || a.userAccountId || '') as string;
+          const userB = (b.userId || b.userAccountId || '') as string;
+          if (userA !== userB) {
+            return userA.localeCompare(userB);
+          }
+          const startA = a.startDate ? new Date(a.startDate).getTime() : 0;
+          const startB = b.startDate ? new Date(b.startDate).getTime() : 0;
+          return startA - startB;
+        });
+
+        return new Response(JSON.stringify({ success: true, a3Cases: allA3Cases }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       } catch (err: any) {
         return new Response(JSON.stringify({ success: false, error: err.message }), {
           status: 500,

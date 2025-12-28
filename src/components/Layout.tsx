@@ -12,6 +12,7 @@ import { useToast } from '../context/ToastContext';
 import { getBowlerStatusColor, computeGroupPerformanceTableData } from '../utils/metricUtils';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { diffDays, addDays, formatDate, getMonthName } from '../utils/dateUtils';
+import { MindMap } from './MindMap';
 
 const A3CaseModal = lazy(() => import('./A3CaseModal'));
 const BowlerModal = lazy(() => import('./BowlerModal'));
@@ -73,6 +74,12 @@ interface AdminAccount {
   isPublicProfile?: boolean;
   createdAt?: string;
   lastLoginAt?: string;
+}
+
+interface GlobalA3Case extends A3Case {
+  plant?: string;
+  userId?: string;
+  userAccountId?: string;
 }
 
 const Layout = () => {
@@ -181,6 +188,12 @@ const Layout = () => {
     team: '',
     isPublicProfile: true,
   });
+  const [isAllA3ModalOpen, setIsAllA3ModalOpen] = useState(false);
+  const [isAllA3Loading, setIsAllA3Loading] = useState(false);
+  const [allA3Error, setAllA3Error] = useState<string | null>(null);
+  const [allA3Cases, setAllA3Cases] = useState<GlobalA3Case[]>([]);
+  const [selectedGlobalA3, setSelectedGlobalA3] = useState<GlobalA3Case | null>(null);
+  const [globalRootCauseView, setGlobalRootCauseView] = useState<'text' | 'mindmap'>('text');
 
   const loadAdminUsers = async () => {
     setIsLoadingAdminUsers(true);
@@ -351,6 +364,18 @@ const Layout = () => {
     }
     loadAdminUsers();
   }, [isAdminPanelOpen]);
+
+  useEffect(() => {
+    if (!selectedGlobalA3) {
+      setGlobalRootCauseView('text');
+      return;
+    }
+    if (selectedGlobalA3.mindMapNodes && selectedGlobalA3.mindMapNodes.length > 0) {
+      setGlobalRootCauseView('mindmap');
+    } else {
+      setGlobalRootCauseView('text');
+    }
+  }, [selectedGlobalA3]);
 
   const a3PortfolioStats = useMemo(() => {
     const filteredCases = a3PortfolioGroupFilter
@@ -2076,6 +2101,32 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
     { path: '/portfolio', label: 'Integrated View', icon: Layers },
   ];
 
+  const handleOpenAllA3Modal = async () => {
+    setIsAllA3ModalOpen(true);
+    setIsAllA3Loading(true);
+    setAllA3Error(null);
+    try {
+      const response = await dataService.loadAllA3Cases();
+      if (!response || response.success === false) {
+        throw new Error((response && response.error) || 'Failed to load A3 cases');
+      }
+      const cases = (response.a3Cases || []) as GlobalA3Case[];
+      setAllA3Cases(cases);
+      if (cases.length > 0) {
+        setSelectedGlobalA3(cases[0]);
+      } else {
+        setSelectedGlobalA3(null);
+      }
+    } catch (error: any) {
+      console.error('Failed to load global A3 cases', error);
+      setAllA3Error(error?.message || 'Failed to load A3 cases from server.');
+      setAllA3Cases([]);
+      setSelectedGlobalA3(null);
+    } finally {
+      setIsAllA3Loading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Top Bar */}
@@ -2204,6 +2255,13 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
               <Inbox className="w-4 h-4" />
             </button>
             <button
+              onClick={handleOpenAllA3Modal}
+              className="p-2 bg-slate-700 text-white rounded-md shadow-sm hover:bg-slate-800 transition-colors"
+              title="View all A3 cases (all accounts)"
+            >
+              <FileText className="w-4 h-4" />
+            </button>
+            <button
               onClick={() => setIsEmailSettingsOpen(true)}
               className="p-2 bg-rose-600 text-white rounded-md shadow-sm hover:bg-rose-700 transition-colors"
               title="Email settings"
@@ -2280,6 +2338,17 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   >
                     <Inbox className="w-4 h-4 mr-3" />
                     Consolidate
+                  </button>
+
+                  <button
+                    onClick={async () => {
+                      setIsMobileMenuOpen(false);
+                      await handleOpenAllA3Modal();
+                    }}
+                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-slate-700"
+                  >
+                    <FileText className="w-4 h-4 mr-3" />
+                    All A3 Cases
                   </button>
 
                   <button
@@ -4393,6 +4462,364 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
           onClose={() => setIsConsolidateModalOpen(false)}
         />
       </Suspense>
+
+      {isAllA3ModalOpen && (
+        <div className="fixed inset-0 z-[140] bg-gray-900/80 flex flex-col">
+          <div className="flex-1 bg-white flex flex-col w-full h-full rounded-none shadow-2xl overflow-hidden print-summary-root">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-700 text-white text-sm font-semibold">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-semibold text-gray-900">
+                    All A3 Cases (Global)
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    Public A3 cases loaded from all accounts in the workspace.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setIsAllA3ModalOpen(false);
+                  setSelectedGlobalA3(null);
+                  setAllA3Cases([]);
+                  setAllA3Error(null);
+                }}
+                className="rounded-full p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+              <div className="w-full lg:w-1/2 border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col">
+                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-white">
+                  <div>
+                    <p className="text-xs font-semibold tracking-wide text-gray-600 uppercase">
+                      A3 Portfolio (All Plants)
+                    </p>
+                    <p className="text-[11px] text-gray-500">
+                      {isAllA3Loading
+                        ? 'Loading cases from server...'
+                        : `${allA3Cases.length} case${allA3Cases.length === 1 ? '' : 's'} loaded`}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-auto bg-gray-50">
+                  {allA3Error && (
+                    <div className="m-4 rounded-md bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-700">
+                      {allA3Error}
+                    </div>
+                  )}
+                  {isAllA3Loading ? (
+                    <div className="h-full flex items-center justify-center text-sm text-gray-500">
+                      <Loader2 className="w-4 h-4 animate-spin text-indigo-600 mr-2" />
+                      Loading A3 cases...
+                    </div>
+                  ) : allA3Cases.length === 0 ? (
+                    <div className="h-full flex items-center justify-center text-sm text-gray-500">
+                      No public A3 cases found.
+                    </div>
+                  ) : (
+                    <div className="p-3 space-y-2">
+                      <div className="hidden md:grid grid-cols-6 gap-2 text-[11px] font-semibold text-gray-500 px-2 py-1">
+                        <span className="col-span-2">A3 Title</span>
+                        <span>Owner</span>
+                        <span>Champion</span>
+                        <span>Plant</span>
+                        <span className="text-right">Due Date</span>
+                      </div>
+                      <div className="space-y-1">
+                        {allA3Cases.map(a3 => {
+                          const isSelected = selectedGlobalA3 && selectedGlobalA3.id === a3.id;
+                          const status = (a3.status || 'Not Started').trim();
+                          const statusColor =
+                            status === 'Completed'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : status === 'In Progress'
+                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              : 'bg-gray-50 text-gray-600 border-gray-200';
+                          return (
+                            <button
+                              key={`${a3.userId || a3.userAccountId || 'user'}:${a3.id}`}
+                              type="button"
+                              onClick={() => setSelectedGlobalA3(a3)}
+                              className={clsx(
+                                'w-full text-left rounded-md border px-3 py-2 bg-white hover:bg-blue-50/40 transition-colors',
+                                isSelected ? 'border-blue-400 bg-blue-50/60' : 'border-gray-100',
+                              )}
+                            >
+                              <div className="flex flex-col md:grid md:grid-cols-6 md:gap-2 md:items-center">
+                                <div className="md:col-span-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[11px] inline-flex items-center rounded-full border px-1.5 py-0.5 font-medium bg-white text-gray-600">
+                                      {a3.group || 'Ungrouped'}
+                                    </span>
+                                    <span className={clsx('inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium', statusColor)}>
+                                      {status || 'Not Started'}
+                                    </span>
+                                  </div>
+                                  <div className="mt-1 text-xs font-semibold text-indigo-700 underline decoration-dotted underline-offset-2">
+                                    {a3.title || 'Untitled A3'}
+                                  </div>
+                                  <div className="mt-0.5 text-[11px] text-gray-500 line-clamp-2">
+                                    {a3.problemStatement || a3.description || 'No problem statement recorded.'}
+                                  </div>
+                                </div>
+                                <div className="mt-2 md:mt-0 text-[11px] text-gray-700">
+                                  {a3.owner || 'Unassigned'}
+                                </div>
+                                <div className="mt-1 md:mt-0 text-[11px] text-gray-700">
+                                  {'—'}
+                                </div>
+                                <div className="mt-1 md:mt-0 text-[11px] text-gray-700">
+                                  {a3.plant || '—'}
+                                </div>
+                                <div className="mt-1 md:mt-0 text-[11px] text-gray-700 md:text-right">
+                                  {a3.endDate || '—'}
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="w-full lg:w-1/2 bg-gray-100 flex flex-col">
+                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-white">
+                  <div>
+                    <p className="text-xs font-semibold tracking-wide text-gray-600 uppercase">
+                      A3 Report Preview
+                    </p>
+                    <p className="text-[11px] text-gray-500">
+                      Same structure as the Report tab of A3 Analysis.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-auto p-4 bg-gray-50">
+                  {!selectedGlobalA3 ? (
+                    <div className="h-full flex items-center justify-center text-sm text-gray-500">
+                      Select an A3 case from the list to view details.
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="space-y-1">
+                        <h3 className="text-lg font-bold text-gray-900">
+                          {selectedGlobalA3.title || 'A3 Problem Solving Report'}
+                        </h3>
+                        <div className="text-xs text-gray-500 space-x-3">
+                          <span>
+                            Owner:{' '}
+                            <span className="font-medium text-gray-700">
+                              {selectedGlobalA3.owner || 'Unassigned'}
+                            </span>
+                          </span>
+                          <span>
+                            Group:{' '}
+                            <span className="font-medium text-gray-700">
+                              {selectedGlobalA3.group || 'Ungrouped'}
+                            </span>
+                          </span>
+                          <span>
+                            Plant:{' '}
+                            <span className="font-medium text-gray-700">
+                              {selectedGlobalA3.plant || '—'}
+                            </span>
+                          </span>
+                          <span>
+                            Status:{' '}
+                            <span className="font-medium text-gray-700">
+                              {selectedGlobalA3.status || 'In Progress'}
+                            </span>
+                          </span>
+                          <span>
+                            Due:{' '}
+                            <span className="font-medium text-gray-700">
+                              {selectedGlobalA3.endDate || '—'}
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">
+                            1. Problem Statement
+                          </h4>
+                          <div className="text-sm text-gray-600 space-y-2">
+                            <p>
+                              <span className="font-medium text-gray-900">Problem:</span>{' '}
+                              {selectedGlobalA3.problemStatement || 'Not defined'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">
+                            2. Data Analysis
+                          </h4>
+                          <p className="text-xs text-gray-500 mt-2">
+                            <span className="font-semibold block mb-1">Observation:</span>
+                            {selectedGlobalA3.dataAnalysisObservations ||
+                              'No data observations recorded.'}
+                          </p>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                          <div className="flex items-center justify-between mb-2 border-b pb-1">
+                            <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
+                              3. Root Cause Analysis (5 Whys)
+                            </h4>
+                            {selectedGlobalA3.mindMapNodes &&
+                              selectedGlobalA3.mindMapNodes.length > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setGlobalRootCauseView(
+                                      globalRootCauseView === 'text' ? 'mindmap' : 'text',
+                                    )
+                                  }
+                                  className="px-2 py-1 rounded-md text-[11px] font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                                >
+                                  {globalRootCauseView === 'text'
+                                    ? 'Show mindmap snapshot'
+                                    : 'Show text summary'}
+                                </button>
+                              )}
+                          </div>
+                          <div className="text-sm text-gray-600 space-y-4">
+                            {globalRootCauseView === 'text' ? (
+                              <>
+                                {selectedGlobalA3.mindMapText && (
+                                  <div className="bg-gray-50 p-3 rounded border border-gray-100">
+                                    <h5 className="text-xs font-semibold text-gray-500 mb-1">
+                                      5 Whys Analysis:
+                                    </h5>
+                                    <p className="whitespace-pre-wrap font-mono text-xs">
+                                      {selectedGlobalA3.mindMapText}
+                                    </p>
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              selectedGlobalA3.mindMapNodes &&
+                              selectedGlobalA3.mindMapNodes.length > 0 && (
+                                <div className="bg-gray-50 p-3 rounded border border-gray-100">
+                                  <h5 className="text-xs font-semibold text-gray-500 mb-2">
+                                    5 Whys Mindmap Snapshot:
+                                  </h5>
+                                  <div className="pointer-events-none">
+                                    <MindMap
+                                      initialNodes={selectedGlobalA3.mindMapNodes}
+                                      initialScale={selectedGlobalA3.mindMapScale}
+                                      fixedHeight={selectedGlobalA3.mindMapCanvasHeight}
+                                    />
+                                  </div>
+                                </div>
+                              )
+                            )}
+                            <div>
+                              <h5 className="text-xs font-semibold text-gray-500 mb-1">
+                                Identified Root Cause:
+                              </h5>
+                              {selectedGlobalA3.rootCause ? (
+                                <p className="whitespace-pre-wrap">
+                                  {selectedGlobalA3.rootCause}
+                                </p>
+                              ) : (
+                                <p className="italic text-gray-500">
+                                  Root cause not identified yet.
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">
+                            4. Action Plan
+                          </h4>
+                          <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                                    Task
+                                  </th>
+                                  <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                                    Description
+                                  </th>
+                                  <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                                    Owner
+                                  </th>
+                                  <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                                    End Date
+                                  </th>
+                                  <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                                    Status
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="bg-white divide-y divide-gray-200">
+                                {selectedGlobalA3.actionPlanTasks &&
+                                selectedGlobalA3.actionPlanTasks.length > 0 ? (
+                                  selectedGlobalA3.actionPlanTasks.map(task => (
+                                    <tr key={task.id}>
+                                      <td className="px-2 py-1 text-xs text-gray-900">
+                                        {task.name}
+                                      </td>
+                                      <td className="px-2 py-1 text-xs text-gray-500">
+                                        {task.description || ''}
+                                      </td>
+                                      <td className="px-2 py-1 text-xs text-gray-500">
+                                        {task.owner}
+                                      </td>
+                                      <td className="px-2 py-1 text-xs text-gray-500">
+                                        {task.endDate || ''}
+                                      </td>
+                                      <td className="px-2 py-1 text-xs text-gray-600">
+                                        {task.status}
+                                      </td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td
+                                      colSpan={5}
+                                      className="px-2 py-4 text-xs text-center text-gray-500"
+                                    >
+                                      No actions defined.
+                                    </td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">
+                            5. Results & Follow-up
+                          </h4>
+                          <div className="text-sm text-gray-600 space-y-2">
+                            <p>
+                              <span className="font-medium text-gray-900">Outcome:</span>{' '}
+                              {selectedGlobalA3.results || 'No results recorded yet.'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Suspense fallback={null}>
         <MindmapModal
