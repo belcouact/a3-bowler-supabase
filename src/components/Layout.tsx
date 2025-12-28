@@ -2275,7 +2275,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
             </button>
             <button
               onClick={handleOpenAllA3Modal}
-              className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+              className="p-2 rounded-md bg-blue-50 text-blue-700 shadow-sm hover:bg-blue-100 hover:text-blue-800 transition-colors"
               title="View all A3 cases (all accounts)"
             >
               <FileText className="w-4 h-4" />
