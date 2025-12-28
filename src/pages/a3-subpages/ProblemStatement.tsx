@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import type { ChangeEvent } from 'react';
 import { useParams } from 'react-router-dom';
 import { Sparkles, Loader2, CheckCircle, AlertCircle, X, ClipboardList } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -17,16 +18,23 @@ const ProblemStatement = () => {
   const [isAssessing, setIsAssessing] = useState(false);
   const [assessmentResult, setAssessmentResult] = useState<AssessmentResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isContextOpen, setIsContextOpen] = useState(false);
+  const [problemContext, setProblemContext] = useState('');
 
   useEffect(() => {
     if (currentCase && textareaRef.current) {
       const newVal = currentCase.problemStatement || '';
-      // Only update if the value is different to avoid cursor jumping if active
       if (textareaRef.current.value !== newVal) {
           textareaRef.current.value = newVal;
       }
     }
   }, [currentCase?.problemStatement]);
+
+  useEffect(() => {
+    if (currentCase) {
+      setProblemContext(currentCase.problemContext || '');
+    }
+  }, [currentCase?.problemContext]);
 
   const handleAssess = async () => {
     if (!currentCase?.problemStatement) return;
@@ -36,6 +44,7 @@ const ProblemStatement = () => {
     setAssessmentResult(null);
 
     try {
+      const contextText = (currentCase.problemContext || '').trim();
       const messages = [
         {
           role: 'system',
@@ -59,7 +68,9 @@ const ProblemStatement = () => {
         },
         {
           role: 'user',
-          content: `Problem Statement: "${currentCase.problemStatement}"`
+          content:
+            `Problem Statement:\n${currentCase.problemStatement}` +
+            (contextText ? `\n\nAdditional Context:\n${contextText}` : '')
         }
       ];
 
@@ -110,6 +121,13 @@ const ProblemStatement = () => {
     }
   };
 
+  const handleContextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    if (!currentCase) return;
+    const newValue = e.target.value;
+    setProblemContext(newValue);
+    updateA3Case({ ...currentCase, problemContext: newValue });
+  };
+
   if (!currentCase) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -134,6 +152,13 @@ const ProblemStatement = () => {
                 What is the problem?
               </label>
               <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setIsContextOpen(prev => !prev)}
+                  className="inline-flex items-center px-3 py-1.5 border border-gray-200 text-xs font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  {isContextOpen ? 'Hide context' : 'Add context'}
+                </button>
                 <button
                   onClick={handleAssess}
                   disabled={isAssessing || !currentCase.problemStatement}
@@ -162,6 +187,21 @@ const ProblemStatement = () => {
               defaultValue={currentCase.problemStatement || ''}
               onBlur={handleBlur}
             />
+            {isContextOpen && (
+              <div className="mt-3">
+                <label htmlFor="problemContext" className="block text-xs font-medium text-gray-700 mb-1">
+                  Additional context (optional)
+                </label>
+                <textarea
+                  id="problemContext"
+                  rows={4}
+                  className="w-full rounded-md border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-xs p-2 border"
+                  placeholder="Add background, constraints, or any context that helps AI understand the problem."
+                  value={problemContext}
+                  onChange={handleContextChange}
+                />
+              </div>
+            )}
           </div>
 
           {error && (

@@ -273,7 +273,8 @@ export const MindMap = ({ initialNodes, onChange, autoHeight, initialScale, fixe
   const panSnapshotRef = useRef<Node[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const onChangeRef = useRef(onChange);
-  const [containerHeight, setContainerHeight] = useState(600);
+  const [containerHeight, setContainerHeight] = useState(fixedHeight ?? 600);
+  const canvasResizeStartRef = useRef({ h: 0, y: 0 });
 
   // Update ref when onChange prop changes to avoid effect dependency
   useEffect(() => {
@@ -296,6 +297,13 @@ export const MindMap = ({ initialNodes, onChange, autoHeight, initialScale, fixe
   }, [nodes, autoHeight]);
 
   useEffect(() => {
+    if (autoHeight) return;
+    if (fixedHeight && fixedHeight !== containerHeight) {
+      setContainerHeight(fixedHeight);
+    }
+  }, [fixedHeight, autoHeight, containerHeight]);
+
+  useEffect(() => {
     if (initialNodes && initialNodes.length > 0 && draggingId === null) {
         setNodes(prev => {
             // Optimization: check reference equality first
@@ -315,6 +323,29 @@ export const MindMap = ({ initialNodes, onChange, autoHeight, initialScale, fixe
         }
     }
   }, [initialNodes, draggingId, initialScale]); 
+
+  const handleCanvasResizeStart = (e: ReactMouseEvent) => {
+    if (autoHeight || !containerRef.current) return;
+    e.stopPropagation();
+    canvasResizeStartRef.current = {
+      h: containerRef.current.clientHeight,
+      y: e.clientY
+    };
+    const handleMove = (event: MouseEvent) => {
+      const dy = event.clientY - canvasResizeStartRef.current.y;
+      const nextHeight = Math.max(300, canvasResizeStartRef.current.h + dy);
+      setContainerHeight(nextHeight);
+    };
+    const handleUp = () => {
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mouseup', handleUp);
+      if (onViewChange && containerRef.current) {
+        onViewChange({ scale, height: containerRef.current.clientHeight });
+      }
+    };
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', handleUp);
+  };
 
   const handleMouseDown = (e: ReactMouseEvent, id: string) => {
     e.stopPropagation();
@@ -507,13 +538,7 @@ export const MindMap = ({ initialNodes, onChange, autoHeight, initialScale, fixe
             !autoHeight && "h-[600px]"
           )}
           onMouseDown={handleContainerMouseDown}
-          style={
-            autoHeight
-              ? { height: containerHeight }
-              : fixedHeight
-              ? { height: fixedHeight }
-              : undefined
-          }
+          style={{ height: containerHeight }}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
@@ -571,6 +596,15 @@ export const MindMap = ({ initialNodes, onChange, autoHeight, initialScale, fixe
                 ))}
               </div>
           </div>
+
+          {!autoHeight && (
+            <div
+              className="absolute bottom-0 left-0 right-0 h-4 bg-slate-100 hover:bg-slate-200 cursor-s-resize flex items-center justify-center border-t border-slate-200 z-30"
+              onMouseDown={handleCanvasResizeStart}
+            >
+              <div className="w-10 h-1 bg-slate-400 rounded-full" />
+            </div>
+          )}
         </div>
     </div>
   );

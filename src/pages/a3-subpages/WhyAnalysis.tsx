@@ -108,6 +108,7 @@ const WhyAnalysis = () => {
 
     const problem = currentCase.problemStatement || '';
     const observations = currentCase.dataAnalysisObservations || '';
+    const contextText = currentCase.problemContext || '';
 
     if (!problem.trim()) return;
 
@@ -153,6 +154,8 @@ Response requirements:
 
 Problem Statement:
 ${problem}
+
+${contextText ? `Additional Context:\n${contextText}\n\n` : ''}
 
 Key Observations and Evidence:
 ${observations || '(none provided)'}
@@ -264,6 +267,7 @@ ${observations || '(none provided)'}
     if (!currentCase) return;
 
     const problem = currentCase.problemStatement || '';
+    const contextText = currentCase.problemContext || '';
     const observations = currentCase.dataAnalysisObservations || '';
     const root = rootCause || currentCase.rootCause || '';
 
@@ -296,14 +300,10 @@ Under each heading, list concise, actionable bullet points. Focus on actions tha
         },
         {
           role: 'user',
-          content: `Problem Statement:
-${problem}
-
-Key Observations from Data:
-${observations}
-
-Identified Root Cause:
-${root}`
+          content:
+            `Problem Statement:\n${problem}` +
+            (contextText ? `\n\nAdditional Context:\n${contextText}` : '') +
+            `\n\nKey Observations from Data:\n${observations}\n\nIdentified Root Cause:\n${root}`
         }
       ];
 

@@ -71,6 +71,7 @@ const DataAnalysis = () => {
     setAnalysisResult(null);
 
     try {
+      const contextText = (currentCase.problemContext || '').trim();
       const messages = [
         {
           role: 'system',
@@ -96,10 +97,10 @@ Structure the answer with clear markdown headings:
         },
         {
           role: 'user',
-          content: `Problem Statement: "${currentCase.problemStatement}"
-
-Key Observations from Data:
-${observations}`
+          content:
+            `Problem Statement:\n${currentCase.problemStatement}` +
+            (contextText ? `\n\nAdditional Context:\n${contextText}` : '') +
+            `\n\nKey Observations from Data:\n${observations}`
         }
       ];
 
@@ -138,6 +139,7 @@ ${observations}`
     setTroubleshootingPlan(null);
 
     try {
+      const contextText = (currentCase.problemContext || '').trim();
       const messages = [
         {
           role: 'system',
@@ -163,11 +165,10 @@ For each bullet, be specific and actionable, but concise.`
         },
         {
           role: 'user',
-          content: `Problem Statement:
-${currentCase.problemStatement}
-
-Key Observations from Data:
-${observations}`
+          content:
+            `Problem Statement:\n${currentCase.problemStatement}` +
+            (contextText ? `\n\nAdditional Context:\n${contextText}` : '') +
+            `\n\nKey Observations from Data:\n${observations}`
         }
       ];
 

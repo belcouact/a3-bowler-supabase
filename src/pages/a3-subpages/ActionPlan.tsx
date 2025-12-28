@@ -403,6 +403,7 @@ const ActionPlan = () => {
     const problem = currentCase.problemStatement || '';
     const observations = currentCase.dataAnalysisObservations || '';
     const root = currentCase.rootCause || '';
+    const contextText = currentCase.problemContext || '';
 
     if (!problem.trim() || !observations.trim() || !root.trim()) {
       setAiError('To generate an action plan, fill in Problem Statement, Key Observations from Data, and Identified Root Cause.');
@@ -448,14 +449,10 @@ Return JSON ONLY with this structure:
         },
         {
           role: 'user',
-          content: `Problem Statement:
-${problem}
-
-Key Observations from Data:
-${observations}
-
-Identified Root Cause:
-${root}`
+          content:
+            `Problem Statement:\n${problem}` +
+            (contextText ? `\n\nAdditional Context:\n${contextText}` : '') +
+            `\n\nKey Observations from Data:\n${observations}\n\nIdentified Root Cause:\n${root}`
         }
       ];
 

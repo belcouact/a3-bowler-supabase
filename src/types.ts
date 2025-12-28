@@ -114,6 +114,7 @@ export interface A3Case {
   endDate?: string;
   status?: string;
   problemStatement?: string;
+  problemContext?: string;
   results?: string;
   mindMapNodes?: MindMapNodeData[];
   mindMapText?: string;
