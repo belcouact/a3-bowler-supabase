@@ -180,6 +180,38 @@ export default {
         const allA3Cases: any[] = [];
         let cursor: string | undefined = undefined;
         let listComplete = false;
+        const visibilityCache = new Map<string, boolean>();
+
+        const resolveIsPublic = async (userKey: string | undefined | null): Promise<boolean> => {
+          if (!userKey) {
+            return false;
+          }
+          if (visibilityCache.has(userKey)) {
+            return visibilityCache.get(userKey) as boolean;
+          }
+          try {
+            const encodedUsername = encodeURIComponent(userKey).replace(/%40/g, '@');
+            const res = await fetch(`https://login.study-llm.me/user/${encodedUsername}`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            });
+            if (!res.ok) {
+              visibilityCache.set(userKey, false);
+              return false;
+            }
+            const data = await res.json() as any;
+            const profile = data && data.user && data.user.profile ? data.user.profile : {};
+            const isPublic =
+              typeof profile.isPublic === 'boolean' ? profile.isPublic : true;
+            visibilityCache.set(userKey, isPublic);
+            return isPublic;
+          } catch {
+            visibilityCache.set(userKey, false);
+            return false;
+          }
+        };
         
         while (!listComplete) {
             const list: any = await env.BOWLER_DATA.list({ prefix: 'user:', cursor });
@@ -195,6 +227,11 @@ export default {
                  for (const data of batchResults) {
                     if (data && typeof data === 'object') {
                         const bowler = data as any;
+                        const userKey = bowler.userId || bowler.userAccountId;
+                        const isPublic = await resolveIsPublic(userKey);
+                        if (!isPublic) {
+                          continue;
+                        }
                         if (bowler.tag) {
                             const bowlerTags = String(bowler.tag)
                               .split(',')
@@ -219,6 +256,11 @@ export default {
                  for (const data of batchResults) {
                     if (data && typeof data === 'object') {
                         const a3 = data as any;
+                        const userKey = a3.userId || a3.userAccountId;
+                        const isPublic = await resolveIsPublic(userKey);
+                        if (!isPublic) {
+                          continue;
+                        }
                         if (a3.tag) {
                             const a3Tags = String(a3.tag)
                               .split(',')
