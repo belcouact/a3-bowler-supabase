@@ -196,18 +196,20 @@ const Layout = () => {
       const mergedAccounts: AdminAccount[] = (apiUsers as any[]).map(user => {
         const profile = user.profile || {};
         const local = localMap.get(user.username);
-        const profileIsPublic = typeof profile.isPublic === 'boolean' ? profile.isPublic : undefined;
+        const profileIsPublic =
+          typeof profile.isPublic === 'boolean'
+            ? profile.isPublic
+            : local && typeof local.isPublicProfile === 'boolean'
+              ? local.isPublicProfile
+              : undefined;
         return {
           username: user.username,
-          email: (local && local.email) || profile.email,
-          role: (local && local.role) || user.role,
-          country: (local && local.country) || profile.country,
-          plant: (local && local.plant) || profile.plant,
-          team: (local && local.team) || profile.team,
-          isPublicProfile:
-            local && typeof local.isPublicProfile === 'boolean'
-              ? local.isPublicProfile
-              : profileIsPublic,
+          email: profile.email || (local && local.email),
+          role: user.role || (local && local.role),
+          country: profile.country || (local && local.country),
+          plant: profile.plant || (local && local.plant),
+          team: profile.team || (local && local.team),
+          isPublicProfile: profileIsPublic,
           createdAt: user.createdAt ? new Date(user.createdAt).toISOString() : undefined,
           lastLoginAt:
             (local && local.lastLoginAt) ||
