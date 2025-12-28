@@ -361,6 +361,20 @@ export default {
             );
             const batchResults = await Promise.all(batchPromises);
 
+            const userKeys: string[] = [];
+            for (const data of batchResults) {
+              if (data && typeof data === 'object') {
+                const a3 = data as any;
+                const userKey = (a3.userId || a3.userAccountId) as string | undefined;
+                if (userKey) {
+                  userKeys.push(userKey);
+                }
+              }
+            }
+
+            const uniqueUserKeys = Array.from(new Set(userKeys));
+            await Promise.all(uniqueUserKeys.map(userKey => resolveProfile(userKey)));
+
             for (const data of batchResults) {
               if (data && typeof data === 'object') {
                 const a3 = data as any;

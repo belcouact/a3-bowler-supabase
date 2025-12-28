@@ -196,6 +196,7 @@ const Layout = () => {
   const [allA3Cases, setAllA3Cases] = useState<GlobalA3Case[]>([]);
   const [selectedGlobalA3, setSelectedGlobalA3] = useState<GlobalA3Case | null>(null);
   const [globalRootCauseView, setGlobalRootCauseView] = useState<'text' | 'mindmap'>('text');
+  const [lastAllA3LoadedAt, setLastAllA3LoadedAt] = useState<number | null>(null);
 
   const loadAdminUsers = async () => {
     setIsLoadingAdminUsers(true);
@@ -2122,6 +2123,18 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
 
   const handleOpenAllA3Modal = async () => {
     setIsAllA3ModalOpen(true);
+
+    const now = Date.now();
+    if (
+      allA3Cases.length > 0 &&
+      !allA3Error &&
+      lastAllA3LoadedAt &&
+      now - lastAllA3LoadedAt < 5 * 60 * 1000
+    ) {
+      setIsAllA3Loading(false);
+      return;
+    }
+
     setIsAllA3Loading(true);
     setAllA3Error(null);
     try {
@@ -2131,6 +2144,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
       }
       const cases = (response.a3Cases || []) as GlobalA3Case[];
       setAllA3Cases(cases);
+      setLastAllA3LoadedAt(Date.now());
       if (cases.length > 0) {
         setSelectedGlobalA3(cases[0]);
       } else {
