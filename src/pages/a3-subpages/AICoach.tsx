@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { Bot, Loader2, Send, AlertTriangle } from 'lucide-react';
+import { Loader2, Send, AlertTriangle } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer';
 
@@ -8,6 +8,8 @@ interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
 }
+
+const aiCoachMemory: Record<string, Message[]> = {};
 
 const AICoach = () => {
   const { id } = useParams();
@@ -24,6 +26,34 @@ const AICoach = () => {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+
+  useEffect(() => {
+    if (!currentCase) return;
+    const key = currentCase.id;
+    const stored = aiCoachMemory[key];
+    if (stored && stored.length > 0) {
+      setMessages(stored);
+      return;
+    }
+    const titleText = currentCase.title || 'this A3';
+    const intro: Message = {
+      role: 'assistant',
+      content:
+        `I am your AI coach focusing specifically on this A3: **${titleText}**.\n\n` +
+        `I already know the problem statement, analysis, and plan that you have entered.\n` +
+        `Ask me anything to help you think through root causes, risks, action plans, or follow-up.\n\n` +
+        `Examples:\n` +
+        `- "What are the top risks or uncertainties in this A3?"\n` +
+        `- "How can we strengthen the action plan using industry best practices?"\n` +
+        `- "What should we watch in the data to confirm this A3 is working?"`,
+    };
+    setMessages([intro]);
+  }, [currentCase]);
+
+  useEffect(() => {
+    if (!currentCase) return;
+    aiCoachMemory[currentCase.id] = messages;
+  }, [currentCase, messages]);
 
   const buildContext = (history: Message[]) => {
     if (!currentCase) return '';
@@ -174,19 +204,6 @@ Keep your answers specific, practical, and focused on this A3 only.`,
     <div className="flex flex-col h-full min-h-[480px] space-y-4">
       <div className="flex-1 flex flex-col rounded-lg border border-gray-200 bg-gray-50 overflow-hidden">
         <div className="flex-1 p-4 overflow-y-auto">
-          {messages.length === 0 && !isLoading && (
-            <div className="text-center text-gray-500 mt-6">
-              <Bot className="w-10 h-10 mx-auto mb-3 text-gray-300" />
-              <p className="text-sm">
-                I know the problem statement, analysis, and plan for this A3.
-              </p>
-              <p className="text-xs mt-2">
-                Try asking: &quot;What are the top risks or uncertainties here?&quot; or
-                &quot;Which actions should we prioritize?&quot;
-              </p>
-            </div>
-          )}
-
           {messages.map((msg, idx) => (
             <div
               key={idx}

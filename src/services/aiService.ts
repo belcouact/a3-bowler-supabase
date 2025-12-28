@@ -314,7 +314,7 @@ export const generateA3PlanFromMetric = async (
   }
 
   const prompt = `
-You are an expert in A3 Problem Solving and root cause analysis.
+You are an expert in A3 Problem Solving, Lean, and operational excellence.
 
 You will receive the history of one performance metric.
 
@@ -322,7 +322,7 @@ Your tasks:
 1) Write a clear, formal A3 Problem Statement in English only. It must describe the gap from target, where and when it occurs, and the impact. Do not include any solutions or suggestions in this field.
 2) Build a concise 5-Whys style cause tree for this problem.
 3) Identify the most likely root causes from that tree.
-4) Propose a practical action plan based on the root causes.
+4) Propose a practical, multi-step action plan based on the root causes that reflects industrial best practice (for example: robust problem clarification, detailed root cause analysis, countermeasures, pilot/experiments, standardization, training, and follow-up monitoring).
 
 Metric Context:
 - Name: "${metric.name}"
@@ -338,6 +338,8 @@ Response requirements:
 - Make the cause tree logically streamlined: do NOT repeat the same cause text at the same level, and avoid creating multiple nodes that say essentially the same thing.
 - When several detailed sub-causes share the same higher-level idea, represent that idea once as a single parent "cause" node and place the detailed variations under "children" instead of duplicating the parent text.
 - Remove or merge any redundant nodes so that each "cause" string is distinct and adds new information.
+- The action plan must include multiple tasks that cover diagnosis, countermeasures, piloting, standardization, and follow-up (including how to monitor the metric over the next 2–3 months).
+- Actions should be specific enough that a real team could execute them in a manufacturing or service environment (avoid generic phrases such as "optimize process" without concrete steps).
 - Return JSON ONLY with this exact structure:
 {
   "problemStatement": "single formal problem statement string",
@@ -363,9 +365,9 @@ Response requirements:
   "actions": [
     {
       "name": "short action title",
-      "description": "detailed what/how that a team can execute",
-      "owner": "role or function (for example: Production Supervisor)",
-      "group": "theme or workstream name (for example: Standard Work, Training)"
+      "description": "detailed what/how that a team can execute, including references to industrial best practice where appropriate",
+      "owner": "role or function (for example: Production Supervisor, Process Engineer, Quality Manager, Service Team Lead)",
+      "group": "theme or workstream name (for example: Standard Work, Training, Equipment Reliability, Scheduling, Visual Management)"
     }
   ]
 }
