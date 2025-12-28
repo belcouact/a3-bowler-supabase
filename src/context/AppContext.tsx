@@ -18,31 +18,6 @@ import {
 } from '../types';
 import { getBowlerStatusColor } from '../utils/metricUtils';
 
-interface AuditLogEntry {
-  id: string;
-  type: string;
-  username?: string;
-  timestamp: string;
-  summary: string;
-  details?: any;
-}
-
-const appendAuditLog = (entry: AuditLogEntry) => {
-  try {
-    const raw = localStorage.getItem('audit_logs');
-    const logs: AuditLogEntry[] = raw ? JSON.parse(raw) : [];
-    const next = [entry, ...logs];
-    const trimmed = next.slice(0, 500);
-    localStorage.setItem('audit_logs', JSON.stringify(trimmed));
-  } catch (error) {
-    console.error('Failed to append audit log', error);
-  }
-
-  dataService.appendAuditLog(entry).catch(error => {
-    console.error('Failed to persist audit log to backend', error);
-  });
-};
-
 export type {
   Bowler,
   A3Case,
@@ -448,18 +423,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       saveToLocalCache(newBowlers, a3Cases, dashboardMarkdown, dashboardTitle);
       return newBowlers;
     });
-    if (user?.username) {
-      appendAuditLog({
-        id: generateShortId(),
-        type: 'metric_bowler_created',
-        username: user.username,
-        timestamp: new Date().toISOString(),
-        summary: newBowler.name ? `Created metric bowler "${newBowler.name}"` : 'Created metric bowler',
-        details: {
-          bowlerId: newBowler.id,
-        },
-      });
-    }
   };
 
   const updateBowler = (bowler: Bowler) => {
@@ -484,19 +447,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       saveToLocalCache(bowlers, newA3Cases, dashboardMarkdown, dashboardTitle);
       return newA3Cases;
     });
-    if (user?.username) {
-      appendAuditLog({
-        id: generateShortId(),
-        type: 'a3_created',
-        username: user.username,
-        timestamp: new Date().toISOString(),
-        summary: newCase.title ? `Created A3 "${newCase.title}"` : 'Created A3',
-        details: {
-          a3Id: newCase.id,
-          status: (newCase as any).status,
-        },
-      });
-    }
     return newCase;
   };
 
@@ -506,19 +456,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       saveToLocalCache(bowlers, newA3Cases, dashboardMarkdown, dashboardTitle);
       return newA3Cases;
     });
-    if (user?.username) {
-      appendAuditLog({
-        id: generateShortId(),
-        type: 'a3_updated',
-        username: user.username,
-        timestamp: new Date().toISOString(),
-        summary: updatedCase.title ? `Updated A3 "${updatedCase.title}"` : 'Updated A3',
-        details: {
-          a3Id: updatedCase.id,
-          status: (updatedCase as any).status,
-        },
-      });
-    }
   };
 
   const deleteBowler = (id: string) => {
