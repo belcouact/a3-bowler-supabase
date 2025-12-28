@@ -207,12 +207,14 @@ ${observations || '(none provided)'}
 
       const nodes: MindMapNodeData[] = [];
       const rootId = generateShortId();
+      const rootX = 50;
+      const rootY = 200;
 
       nodes.push({
         id: rootId,
         text: problem,
-        x: 50,
-        y: 200,
+        x: rootX,
+        y: rootY,
         width: 260,
         height: 100,
         parentId: null,
@@ -222,12 +224,11 @@ ${observations || '(none provided)'}
       const addChildren = (
         tree: any[],
         parentId: string,
-        depth: number,
+        parentX: number,
         startY: number,
       ): number => {
         let currentY = startY;
         const stepY = 120;
-        const stepX = 220;
         tree.forEach(node => {
           if (!node || typeof node.cause !== 'string' || !node.cause.trim()) {
             return;
@@ -236,13 +237,13 @@ ${observations || '(none provided)'}
           nodes.push({
             id,
             text: node.cause.trim(),
-            x: 50 + stepX * depth,
+            x: parentX,
             y: currentY,
             parentId,
             type: 'child',
           });
           if (Array.isArray(node.children) && node.children.length > 0) {
-            currentY = addChildren(node.children, id, depth + 1, currentY + stepY);
+            currentY = addChildren(node.children, id, parentX, currentY + stepY);
           } else {
             currentY += stepY;
           }
@@ -250,7 +251,7 @@ ${observations || '(none provided)'}
         return currentY;
       };
 
-      addChildren(rawTree, rootId, 1, 260);
+      addChildren(rawTree, rootId, rootX, rootY + 120);
 
       updateA3Case({
         ...currentCase,
