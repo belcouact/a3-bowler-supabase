@@ -21,6 +21,10 @@ export interface A3FromMetricPlan {
     description?: string;
     owner?: string;
     group?: string;
+    startDate?: string;
+    endDate?: string;
+    status?: 'Not Started' | 'In Progress' | 'Completed';
+    progress?: number;
   }[];
 }
 
@@ -291,6 +295,7 @@ export const generateA3PlanFromMetric = async (
   metric: Metric,
   model: AIModelKey,
 ): Promise<A3FromMetricPlan> => {
+  const today = new Date().toISOString().slice(0, 10);
   const months = Object.keys(metric.monthlyData || {}).sort();
   const dataPoints: { month: string; actual: string; target: string }[] = [];
   months.forEach(month => {
@@ -322,7 +327,7 @@ Your tasks:
 1) Write a clear, formal A3 Problem Statement in English only. It must describe the gap from target, where and when it occurs, and the impact. Do not include any solutions or suggestions in this field.
 2) Build a concise 5-Whys style cause tree for this problem.
 3) Identify the most likely root causes from that tree.
-4) Propose a practical, multi-step action plan based on the root causes that reflects industrial best practice (for example: robust problem clarification, detailed root cause analysis, countermeasures, pilot/experiments, standardization, training, and follow-up monitoring).
+4) Propose a practical, time-phased action plan based on the root causes that reflects industrial best practice (for example: robust problem clarification, detailed root cause analysis, countermeasures, pilot/experiments, standardization, training, and follow-up monitoring). The plan should be realistic for an operational team to execute.
 
 Metric Context:
 - Name: "${metric.name}"
@@ -339,7 +344,8 @@ Response requirements:
 - When several detailed sub-causes share the same higher-level idea, represent that idea once as a single parent "cause" node and place the detailed variations under "children" instead of duplicating the parent text.
 - Remove or merge any redundant nodes so that each "cause" string is distinct and adds new information.
 - The action plan must include multiple tasks that cover diagnosis, countermeasures, piloting, standardization, and follow-up (including how to monitor the metric over the next 2–3 months).
-- Actions should be specific enough that a real team could execute them in a manufacturing or service environment (avoid generic phrases such as "optimize process" without concrete steps).
+- Use ${today} as today's date when planning the timeline for the action plan.
+- Each task should describe what to do, how to do it, and who should own it so that a real team can execute it in a manufacturing or service environment (avoid generic phrases such as "optimize process" without concrete steps).
 - Return JSON ONLY with this exact structure:
 {
   "problemStatement": "single formal problem statement string",
@@ -362,12 +368,16 @@ Response requirements:
     "root cause sentence 1",
     "root cause sentence 2"
   ],
-  "actions": [
+  "tasks": [
     {
       "name": "short action title",
-      "description": "detailed what/how that a team can execute, including references to industrial best practice where appropriate",
-      "owner": "role or function (for example: Production Supervisor, Process Engineer, Quality Manager, Service Team Lead)",
-      "group": "theme or workstream name (for example: Standard Work, Training, Equipment Reliability, Scheduling, Visual Management)"
+      "description": "detailed what/how so a team can execute",
+      "owner": "role or function (e.g. Production Supervisor)",
+      "group": "theme or workstream name",
+      "startDate": "YYYY-MM-DD",
+      "endDate": "YYYY-MM-DD",
+      "status": "Not Started" | "In Progress" | "Completed",
+      "progress": number
     }
   ]
 }
@@ -434,15 +444,51 @@ Response requirements:
           .filter((r: string) => r)
       : [];
 
-    const actionsArray = Array.isArray(parsed.actions) ? parsed.actions : [];
+    const actionsArray = Array.isArray(parsed.tasks)
+      ? parsed.tasks
+      : Array.isArray(parsed.actions)
+      ? parsed.actions
+      : [];
     const actions = actionsArray
-      .map((a: any) => ({
-        name: typeof a.name === 'string' ? a.name.trim() : '',
-        description: typeof a.description === 'string' ? a.description.trim() : '',
-        owner: typeof a.owner === 'string' ? a.owner.trim() : '',
-        group: typeof a.group === 'string' ? a.group.trim() : '',
-      }))
-      .filter((a: { name: string }) => a.name);
+      .map((a: any) => {
+        const name = typeof a.name === 'string' ? a.name.trim() : '';
+        if (!name) {
+          return null;
+        }
+        const description =
+          typeof a.description === 'string' ? a.description.trim() : '';
+        const owner = typeof a.owner === 'string' ? a.owner.trim() : '';
+        const group = typeof a.group === 'string' ? a.group.trim() : '';
+        const startDate =
+          typeof a.startDate === 'string' ? a.startDate.trim() : undefined;
+        const endDate =
+          typeof a.endDate === 'string' ? a.endDate.trim() : undefined;
+        const rawStatus =
+          typeof a.status === 'string' ? a.status.trim() : undefined;
+        const status =
+          rawStatus === 'Not Started' ||
+          rawStatus === 'In Progress' ||
+          rawStatus === 'Completed'
+            ? rawStatus
+            : undefined;
+        const rawProgress =
+          typeof a.progress === 'number' ? a.progress : undefined;
+        const progress =
+          typeof rawProgress === 'number' && isFinite(rawProgress)
+            ? rawProgress
+            : undefined;
+        return {
+          name,
+          description,
+          owner,
+          group,
+          startDate,
+          endDate,
+          status,
+          progress,
+        };
+      })
+      .filter((a: any) => a && a.name);
 
     return {
       problemStatement,

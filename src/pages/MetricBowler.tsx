@@ -276,18 +276,42 @@ const MetricBowler = () => {
         const descriptionText = a.description || '';
         const ownerText = a.owner || owner;
         const groupText = a.group || undefined;
-        const start = addDays(baseDate, index * 7);
-        const end = addDays(start, 7);
+        let startDateStr: string | undefined;
+        let endDateStr: string | undefined;
+        if (a.startDate && !Number.isNaN(Date.parse(a.startDate))) {
+          startDateStr = a.startDate;
+        }
+        if (a.endDate && !Number.isNaN(Date.parse(a.endDate))) {
+          endDateStr = a.endDate;
+        }
+        if (!startDateStr) {
+          const start = addDays(baseDate, index * 7);
+          startDateStr = formatDate(start);
+        }
+        if (!endDateStr) {
+          const startDateObj = new Date(startDateStr);
+          const end = addDays(startDateObj, 7);
+          endDateStr = formatDate(end);
+        }
+        const rawStatus = a.status;
+        const status: 'Not Started' | 'In Progress' | 'Completed' =
+          rawStatus === 'In Progress' || rawStatus === 'Completed'
+            ? rawStatus
+            : 'Not Started';
+        const progress =
+          typeof a.progress === 'number' && isFinite(a.progress) && a.progress >= 0 && a.progress <= 100
+            ? a.progress
+            : 0;
         actions.push({
           id: generateShortId(),
           name,
           description: descriptionText,
           owner: ownerText,
           group: groupText,
-          startDate: formatDate(start),
-          endDate: formatDate(end),
-          status: 'Not Started',
-          progress: 0,
+          startDate: startDateStr,
+          endDate: endDateStr,
+          status,
+          progress,
         });
       });
 
