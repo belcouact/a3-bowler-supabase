@@ -459,8 +459,17 @@ export default {
                 if (!profile.isPublic) {
                   continue;
                 }
+
+                const {
+                  dataAnalysisImages: _dataAnalysisImages,
+                  dataAnalysisCanvasHeight: _dataAnalysisCanvasHeight,
+                  resultImages: _resultImages,
+                  resultCanvasHeight: _resultCanvasHeight,
+                  ...rest
+                } = a3 as any;
+
                 const enriched = {
-                  ...a3,
+                  ...rest,
                   plant: profile.plant,
                 };
                 allA3Cases.push(enriched);
