@@ -177,7 +177,13 @@ const Summary = () => {
                     Task
                   </th>
                   <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                    Description
+                  </th>
+                  <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase">
                     Owner
+                  </th>
+                  <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                    End Date
                   </th>
                   <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase">
                     Status
@@ -189,14 +195,20 @@ const Summary = () => {
                   currentCase.actionPlanTasks.map(task => (
                     <tr key={task.id}>
                       <td className="px-2 py-1 text-xs text-gray-900">{task.name}</td>
+                      <td className="px-2 py-1 text-xs text-gray-500">
+                        {task.description || ''}
+                      </td>
                       <td className="px-2 py-1 text-xs text-gray-500">{task.owner}</td>
+                      <td className="px-2 py-1 text-xs text-gray-500">
+                        {task.endDate || ''}
+                      </td>
                       <td className="px-2 py-1 text-xs text-gray-600">{task.status}</td>
                     </tr>
                   ))
                 ) : (
                   <tr>
                     <td
-                      colSpan={3}
+                      colSpan={5}
                       className="px-2 py-4 text-xs text-center text-gray-500"
                     >
                       No actions defined.
