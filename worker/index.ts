@@ -308,7 +308,7 @@ export default {
         let listComplete = false;
 
         while (!listComplete) {
-          const list: any = await env.BOWLER_DATA.list({ prefix: 'user:', cursor });
+          const list: any = await env.BOWLER_DATA.list({ cursor });
           cursor = list.cursor;
           listComplete = list.list_complete;
 
@@ -324,6 +324,11 @@ export default {
               kind = parts[2] || null;
               if (parts.length >= 4) {
                 entityId = parts[3] || null;
+              }
+            } else if (parts.length >= 1) {
+              kind = parts[0] || null;
+              if (parts.length >= 2) {
+                entityId = parts[1] || null;
               }
             }
 
