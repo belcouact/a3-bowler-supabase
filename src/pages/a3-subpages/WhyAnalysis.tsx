@@ -224,11 +224,12 @@ ${observations || '(none provided)'}
       const addChildren = (
         tree: any[],
         parentId: string,
-        parentX: number,
+        depth: number,
         startY: number,
       ): number => {
         let currentY = startY;
         const stepY = 120;
+        const stepX = 260;
         tree.forEach(node => {
           if (!node || typeof node.cause !== 'string' || !node.cause.trim()) {
             return;
@@ -237,13 +238,13 @@ ${observations || '(none provided)'}
           nodes.push({
             id,
             text: node.cause.trim(),
-            x: parentX,
+            x: rootX + stepX * depth,
             y: currentY,
             parentId,
             type: 'child',
           });
           if (Array.isArray(node.children) && node.children.length > 0) {
-            currentY = addChildren(node.children, id, parentX, currentY + stepY);
+            currentY = addChildren(node.children, id, depth + 1, currentY + stepY);
           } else {
             currentY += stepY;
           }
@@ -251,7 +252,7 @@ ${observations || '(none provided)'}
         return currentY;
       };
 
-      addChildren(rawTree, rootId, rootX, rootY + 120);
+      addChildren(rawTree, rootId, 1, rootY + 120);
 
       updateA3Case({
         ...currentCase,
