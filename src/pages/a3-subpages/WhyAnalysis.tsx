@@ -395,7 +395,7 @@ Under each heading, list concise, actionable bullet points. Focus on actions tha
             initialNodes={currentCase.mindMapNodes}
             onChange={handleNodesChange}
             initialScale={currentCase.mindMapScale}
-            fixedHeight={currentCase.mindMapCanvasHeight}
+            fixedHeight={currentCase.mindMapCanvasHeight ?? 750}
             onViewChange={handleViewChange}
           />
         </div>
