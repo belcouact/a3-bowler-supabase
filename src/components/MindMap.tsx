@@ -296,32 +296,6 @@ export const MindMap = ({ initialNodes, onChange, autoHeight, initialScale, fixe
   }, [nodes, autoHeight]);
 
   useEffect(() => {
-    if (!onViewChange) return;
-    if (!containerRef.current) return;
-    const height = containerRef.current.clientHeight;
-    onViewChange({ scale, height });
-  }, [scale, onViewChange]);
-
-  useEffect(() => {
-    if (!onViewChange) return;
-    if (!containerRef.current) return;
-    if (autoHeight) return;
-    const el = containerRef.current;
-    let previousHeight = el.clientHeight;
-    const observer = new ResizeObserver(entries => {
-      for (const entry of entries) {
-        const h = entry.contentRect.height;
-        if (Math.abs(h - previousHeight) > 2) {
-          previousHeight = h;
-          onViewChange({ scale, height: h });
-        }
-      }
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [autoHeight, onViewChange, scale]);
-
-  useEffect(() => {
     if (initialNodes && initialNodes.length > 0 && draggingId === null) {
         setNodes(prev => {
             // Optimization: check reference equality first
@@ -546,7 +520,13 @@ export const MindMap = ({ initialNodes, onChange, autoHeight, initialScale, fixe
         >
           <div className="absolute top-4 right-4 z-20 flex items-center bg-white/80 rounded-md p-1 shadow backdrop-blur-sm border border-slate-200">
                 <button 
-                    onClick={() => setScale(Math.max(0.5, scale - 0.1))}  
+                    onClick={() => {
+                      const next = Math.max(0.5, scale - 0.1);
+                      setScale(next);
+                      if (onViewChange && containerRef.current) {
+                        onViewChange({ scale: next, height: containerRef.current.clientHeight });
+                      }
+                    }}  
                     className="p-1 hover:bg-gray-100 rounded"
                     title="Zoom Out"
                 >
@@ -554,7 +534,13 @@ export const MindMap = ({ initialNodes, onChange, autoHeight, initialScale, fixe
                 </button>
                 <span className="text-xs text-gray-500 w-12 text-center select-none">{Math.round(scale * 100)}%</span>
                 <button 
-                    onClick={() => setScale(Math.min(2, scale + 0.1))} 
+                    onClick={() => {
+                      const next = Math.min(2, scale + 0.1);
+                      setScale(next);
+                      if (onViewChange && containerRef.current) {
+                        onViewChange({ scale: next, height: containerRef.current.clientHeight });
+                      }
+                    }} 
                     className="p-1 hover:bg-gray-100 rounded"
                     title="Zoom In"
                 >

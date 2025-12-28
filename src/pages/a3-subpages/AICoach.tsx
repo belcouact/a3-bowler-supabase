@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { Bot, Loader2, Send, AlertTriangle, Sparkles } from 'lucide-react';
+import { Bot, Loader2, Send, AlertTriangle } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer';
 
@@ -172,13 +172,6 @@ Keep your answers specific, practical, and focused on this A3 only.`,
 
   return (
     <div className="flex flex-col h-full min-h-[480px] space-y-4">
-      <div>
-        <h3 className="text-xl font-bold text-gray-900 flex items-center">
-          <Sparkles className="h-5 w-5 text-indigo-500 mr-2" />
-          AI Coach
-        </h3>
-      </div>
-
       <div className="flex-1 flex flex-col rounded-lg border border-gray-200 bg-gray-50 overflow-hidden">
         <div className="flex-1 p-4 overflow-y-auto">
           {messages.length === 0 && !isLoading && (
