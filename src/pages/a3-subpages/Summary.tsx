@@ -1,8 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import { useState, useRef } from 'react';
-import { Download, Loader2 } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { Loader2, Printer } from 'lucide-react';
 import { MindMap } from '../../components/MindMap';
 
 const Summary = () => {
@@ -10,51 +9,15 @@ const Summary = () => {
   const { a3Cases } = useApp();
   const currentCase = a3Cases.find(c => c.id === id);
   const contentRef = useRef<HTMLDivElement>(null);
-  const [isExporting, setIsExporting] = useState(false);
   const [rootCauseView, setRootCauseView] = useState<'text' | 'mindmap'>(() =>
     currentCase && currentCase.mindMapNodes && currentCase.mindMapNodes.length > 0
       ? 'mindmap'
       : 'text'
   );
-  const toast = useToast();
-
-  const handleExportPDF = async () => {
-    if (!contentRef.current || !currentCase) return;
-
-    try {
-      setIsExporting(true);
-      const [{ default: html2canvas }, { default: JsPDF }] = await Promise.all([
-        import('html2canvas'),
-        import('jspdf'),
-      ]);
-
-      const canvas = await html2canvas(contentRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        ignoreElements: (element) => element.classList.contains('export-ignore'),
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pxToMm = 0.264583;
-      const pageWidth = canvas.width * pxToMm;
-      const pageHeight = canvas.height * pxToMm;
-
-      const pdf = new JsPDF({
-        orientation: pageWidth >= pageHeight ? 'landscape' : 'portrait',
-        unit: 'mm',
-        format: [pageWidth, pageHeight],
-      });
-
-      pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
-      pdf.save(`A3-${currentCase.title.replace(/[^a-z0-9]/gi, '_')}.pdf`);
-      toast.success('PDF exported successfully!');
-    } catch (error) {
-      console.error('Export failed:', error);
-      toast.error('Failed to export PDF.');
-    } finally {
-      setIsExporting(false);
+  const handlePrintToPDF = () => {
+    if (!currentCase) return;
+    if (typeof window !== 'undefined') {
+      window.print();
     }
   };
 
@@ -70,16 +33,15 @@ const Summary = () => {
   }
 
   return (
-    <div className="space-y-6" ref={contentRef}>
+    <div className="space-y-6 print-summary-root" ref={contentRef}>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xl font-bold text-gray-900">A3 Problem Solving Report</h3>
         <button 
-          onClick={handleExportPDF}
-          disabled={isExporting}
-          className="export-ignore px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium flex items-center disabled:opacity-50"
+          onClick={handlePrintToPDF}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium flex items-center print:hidden"
         >
-          {isExporting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Download className="w-4 h-4 mr-2" />}
-          {isExporting ? 'Exporting...' : 'Export PDF'}
+          <Printer className="w-4 h-4 mr-2" />
+          Print to PDF
         </button>
       </div>
       

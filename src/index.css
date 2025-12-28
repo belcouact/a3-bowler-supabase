@@ -66,3 +66,33 @@ html {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+@media print {
+  @page {
+    size: A4 landscape;
+  }
+
+  body {
+    margin: 0;
+  }
+
+  #root {
+    transform: scale(0.8);
+    transform-origin: top left;
+    width: 125%;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .print-summary-root,
+  .print-summary-root * {
+    visibility: visible;
+  }
+
+  .print-summary-root {
+    position: absolute;
+    inset: 0;
+  }
+}
