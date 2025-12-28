@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, ReactNode } from 'react';
 import { Upload, X } from 'lucide-react';
 import { DataAnalysisImage } from '../context/AppContext';
 import { generateShortId } from '../utils/idUtils';
@@ -9,9 +9,10 @@ interface ImageCanvasProps {
   height: number;
   onHeightChange: (height: number) => void;
   label?: string;
+  leftControls?: ReactNode;
 }
 
-const ImageCanvas = ({ images, onImagesChange, height, onHeightChange, label = "Evidence Canvas (Paste or Upload Images)" }: ImageCanvasProps) => {
+const ImageCanvas = ({ images, onImagesChange, height, onHeightChange, label = "Evidence Canvas (Paste or Upload Images)", leftControls }: ImageCanvasProps) => {
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -208,6 +209,7 @@ const ImageCanvas = ({ images, onImagesChange, height, onHeightChange, label = "
                 {label}
             </label>
             <div className="flex space-x-2">
+                {leftControls}
                 <label className="cursor-pointer inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
                     <Upload className="h-4 w-4 mr-1" />
                     Upload Image

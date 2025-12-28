@@ -350,15 +350,9 @@ ${root}`
     <div className="space-y-6 w-full flex flex-col">
       <div>
         <h3 className="text-xl font-bold text-gray-900 mb-2">5 Whys Analysis</h3>
-        <p className="text-gray-500 mb-4">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-gray-500 mr-4">
             Interactive Root Cause Analysis. Start with the problem and drill down by adding "Why" nodes.
-        </p>
-      </div>
-
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-xs text-gray-500 mr-4">
-            Use AI to create an initial 5 Whys cause chain directly in the canvas.
           </p>
           <button
             type="button"

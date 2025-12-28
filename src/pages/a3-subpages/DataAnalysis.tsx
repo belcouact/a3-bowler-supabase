@@ -215,29 +215,9 @@ ${observations}`
         <h3 className="text-xl font-bold text-gray-900 mb-2">Data Analysis</h3>
         <p className="text-gray-500 mb-4">Visualize the data to understand the magnitude and trend of the problem.</p>
 
-        <div className="mb-4 flex items-center justify-between">
-          <p className="text-xs text-gray-500 mr-4">
-            Use AI to generate a troubleshooting plan based on the problem and evidence.
-          </p>
-          <button
-            type="button"
-            onClick={handleGeneratePlan}
-            disabled={isGeneratingPlan || !currentCase.problemStatement}
-            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isGeneratingPlan ? (
-              <>
-                <Loader2 className="animate-spin -ml-0.5 mr-2 h-3 w-3" />
-                <span className="hidden sm:inline">Generating plan...</span>
-              </>
-            ) : (
-              <>
-                <Route className="-ml-0.5 mr-0 sm:mr-2 h-3 w-3" />
-                <span className="hidden sm:inline">AI Troubleshooting Plan</span>
-              </>
-            )}
-          </button>
-        </div>
+        <p className="mb-4 text-xs text-gray-500">
+          Use AI to generate a troubleshooting plan and visualize evidence to support the analysis.
+        </p>
 
         {planError && (
           <div className="mb-4 rounded-md bg-red-50 p-3">
@@ -254,10 +234,30 @@ ${observations}`
 
         {/* Evidence Canvas */}
         <ImageCanvas 
-            images={images}
-            onImagesChange={saveImages}
-            height={canvasHeight}
-            onHeightChange={saveCanvasHeight}
+          images={images}
+          onImagesChange={saveImages}
+          height={canvasHeight}
+          onHeightChange={saveCanvasHeight}
+          leftControls={
+            <button
+              type="button"
+              onClick={handleGeneratePlan}
+              disabled={isGeneratingPlan || !currentCase.problemStatement}
+              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isGeneratingPlan ? (
+                <>
+                  <Loader2 className="animate-spin -ml-0.5 mr-2 h-3 w-3" />
+                  <span className="hidden sm:inline">Generating plan...</span>
+                </>
+              ) : (
+                <>
+                  <Route className="-ml-0.5 mr-0 sm:mr-2 h-3 w-3" />
+                  <span className="hidden sm:inline">AI Troubleshooting Plan</span>
+                </>
+              )}
+            </button>
+          }
         />
         
         <div className="mt-6">
