@@ -380,6 +380,12 @@ const Layout = () => {
     }
   }, [selectedGlobalA3]);
 
+  useEffect(() => {
+    if (!isAllA3Loading && visibleAllA3Cases.length === 0 && selectedGlobalA3) {
+      setSelectedGlobalA3(null);
+    }
+  }, [isAllA3Loading, visibleAllA3Cases.length, selectedGlobalA3]);
+
   const visibleAllA3Cases = useMemo(
     () => {
       if (isAdminOrSuperAdmin || !userPlant) {
@@ -4501,20 +4507,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
       {isAllA3ModalOpen && (
         <div className="fixed inset-0 z-[140] bg-gray-900/80 flex flex-col">
           <div className="flex-1 bg-white flex flex-col w-full h-full rounded-none shadow-2xl overflow-hidden print-summary-root">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-700 text-white text-sm font-semibold">
-                  <FileText className="w-4 h-4" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-semibold text-gray-900">
-                    All A3 Cases (Global)
-                  </h2>
-                  <p className="text-xs text-gray-500">
-                    Public A3 cases loaded from all accounts in the workspace.
-                  </p>
-                </div>
-              </div>
+            <div className="flex items-center justify-end px-4 py-3 border-b border-gray-200 bg-gray-50">
               <button
                 onClick={() => {
                   setIsAllA3ModalOpen(false);
@@ -4725,6 +4718,23 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                             {selectedGlobalA3.dataAnalysisObservations ||
                               'No data observations recorded.'}
                           </p>
+                          {Array.isArray(selectedGlobalA3.dataAnalysisImages) &&
+                            selectedGlobalA3.dataAnalysisImages.length > 0 && (
+                              <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                {selectedGlobalA3.dataAnalysisImages.map(image => (
+                                  <div
+                                    key={image.id}
+                                    className="border border-gray-200 rounded-md overflow-hidden bg-gray-50"
+                                  >
+                                    <img
+                                      src={image.src}
+                                      alt="Data analysis evidence"
+                                      className="w-full h-24 object-contain bg-white"
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                         </div>
 
                         <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
