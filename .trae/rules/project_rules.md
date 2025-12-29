@@ -3,7 +3,7 @@
 ## Tech Stack
 - **Frontend:** React, TypeScript, Tailwind CSS
 - **Backend:** Cloudflare Workers (Serverless)
-- **Database:** Cloudflare KV
+- **Database:** Supabase PostgreSQL & Bucket
 
 ## Project Directory Structure
 

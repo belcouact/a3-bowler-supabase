@@ -182,7 +182,7 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                 </li>
                 <li className="flex items-center">
                   <div className="w-2 h-2 rounded-full bg-emerald-500 mr-2"></div>
-                  <span>Storage: Cloudflare KV for persisting user data</span>
+                  <span>Storage: Supabase PostgreSQL &amp; Storage bucket (a3-bowler/images)</span>
                 </li>
               </ul>
             </div>
