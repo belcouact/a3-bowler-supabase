@@ -3,7 +3,72 @@
 export interface Env {
   EMAIL_JOBS: KVNamespace;
   RESEND_API_KEY: string;
+  SUPABASE_SERVICE_KEY: string;
+  SUPABASE_URL?: string;
 }
+
+const SUPABASE_PROJECT_ID = 'sellervptovbxfzkldtz';
+
+const getSupabaseRestUrl = (env: Env) => {
+  const base =
+    env.SUPABASE_URL && env.SUPABASE_URL.trim().length > 0
+      ? env.SUPABASE_URL.trim()
+      : `https://${SUPABASE_PROJECT_ID}.supabase.co`;
+  return `${base}/rest/v1`;
+};
+
+const getSupabaseHeaders = (env: Env, contentType?: string): Record<string, string> => {
+  const key = env.SUPABASE_SERVICE_KEY;
+  if (!key) {
+    throw new Error('SUPABASE_SERVICE_KEY is not configured');
+  }
+  const headers: Record<string, string> = {
+    apikey: key,
+    Authorization: `Bearer ${key}`,
+  };
+  if (contentType) {
+    headers['Content-Type'] = contentType;
+  }
+  return headers;
+};
+
+const mapJobToRow = (job: ScheduledEmailJob) => ({
+  id: job.id,
+  user_id: job.userId,
+  recipients: job.recipients,
+  subject: job.subject,
+  body: job.body,
+  body_html: job.bodyHtml ?? null,
+  send_at: job.sendAt,
+  sent: job.sent,
+  mode: job.mode ?? null,
+  ai_model: job.aiModel ?? null,
+  from_name: job.fromName ?? null,
+  recurring: job.recurring === true,
+});
+
+const mapRowToJob = (row: any): ScheduledEmailJob => ({
+  id: row.id,
+  userId: row.user_id ?? null,
+  recipients: Array.isArray(row.recipients) ? row.recipients : [],
+  subject: row.subject || '',
+  body: row.body || '',
+  bodyHtml: row.body_html ?? undefined,
+  sendAt:
+    typeof row.send_at === 'number'
+      ? row.send_at
+      : Date.parse(row.send_at || ''),
+  sent: !!row.sent,
+  mode:
+    row.mode === 'autoSummary'
+      ? 'autoSummary'
+      : row.mode === 'manual'
+      ? 'manual'
+      : undefined,
+  aiModel: row.ai_model ?? undefined,
+  fromName: row.from_name ?? undefined,
+  recurring: row.recurring === true,
+});
 
 interface ScheduledEmailJob {
   id: string;
@@ -1213,7 +1278,27 @@ export default {
             recurring: recurring === true,
           };
 
-          await env.EMAIL_JOBS.put(`email:${id}`, JSON.stringify(job));
+          const tableUrl = new URL(`${getSupabaseRestUrl(env)}/scheduled_emails`);
+          tableUrl.searchParams.set('on_conflict', 'id');
+
+          const insertResponse = await fetch(tableUrl.toString(), {
+            method: 'POST',
+            headers: {
+              ...getSupabaseHeaders(env, 'application/json'),
+              Prefer: 'resolution=merge-duplicates',
+            },
+            body: JSON.stringify([mapJobToRow(job)]),
+          });
+
+          if (!insertResponse.ok) {
+            return new Response(
+              JSON.stringify({ success: false, error: 'Failed to store scheduled email' }),
+              {
+                status: 500,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              },
+            );
+          }
 
           return new Response(JSON.stringify({ success: true, id }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -1297,8 +1382,6 @@ export default {
             );
           }
 
-          let cursor: string | undefined = undefined;
-          let done = false;
           const jobs: {
             id: string;
             subject: string;
@@ -1308,41 +1391,49 @@ export default {
             recurring?: boolean;
           }[] = [];
 
-          while (!done) {
-            const list: any = await env.EMAIL_JOBS.list({ prefix: 'email:', cursor });
-            cursor = list.cursor;
-            done = list.list_complete;
+          const restUrl = new URL(`${getSupabaseRestUrl(env)}/scheduled_emails`);
+          restUrl.searchParams.set('user_id', `eq.${userId}`);
+          restUrl.searchParams.set('sent', 'eq.false');
+          restUrl.searchParams.set('select', 'id,subject,send_at,mode,recipients,recurring');
 
-            for (const key of list.keys) {
-              const value = await env.EMAIL_JOBS.get(key.name);
-              if (!value) {
-                continue;
-              }
+          const res = await fetch(restUrl.toString(), {
+            method: 'GET',
+            headers: getSupabaseHeaders(env),
+          });
 
-              let job: ScheduledEmailJob;
-              try {
-                job = JSON.parse(value) as ScheduledEmailJob;
-              } catch {
-                continue;
-              }
-
-              if (job.userId !== userId) {
-                continue;
-              }
-              if (job.sent) {
-                continue;
-              }
-
-              jobs.push({
-                id: job.id,
-                subject: job.subject,
-                sendAt: job.sendAt,
-                mode: job.mode,
-                recipients: job.recipients,
-                recurring: job.recurring === true,
-              });
-            }
+          if (!res.ok) {
+            return new Response(
+              JSON.stringify({ success: false, error: 'Failed to load scheduled emails' }),
+              {
+                status: 500,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              },
+            );
           }
+
+          const rows = (await res.json()) as any[];
+
+          rows.forEach(row => {
+            const sendAtRaw = row.send_at;
+            const sendAt =
+              typeof sendAtRaw === 'number'
+                ? sendAtRaw
+                : Date.parse(sendAtRaw || '');
+
+            jobs.push({
+              id: row.id,
+              subject: row.subject || '',
+              sendAt,
+              mode:
+                row.mode === 'autoSummary'
+                  ? 'autoSummary'
+                  : row.mode === 'manual'
+                  ? 'manual'
+                  : undefined,
+              recipients: Array.isArray(row.recipients) ? row.recipients : [],
+              recurring: row.recurring === true,
+            });
+          });
 
           jobs.sort((a, b) => {
             if (a.sendAt === b.sendAt) {
@@ -1382,21 +1473,18 @@ export default {
             );
           }
 
-          const key = `email:${id}`;
-          const value = await env.EMAIL_JOBS.get(key);
+          const selectUrl = new URL(`${getSupabaseRestUrl(env)}/scheduled_emails`);
+          selectUrl.searchParams.set('id', `eq.${id}`);
+          selectUrl.searchParams.set('select', 'id,user_id');
 
-          if (!value) {
-            return new Response(JSON.stringify({ success: true, cancelled: false }), {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
-          }
+          const selectResponse = await fetch(selectUrl.toString(), {
+            method: 'GET',
+            headers: getSupabaseHeaders(env),
+          });
 
-          let job: ScheduledEmailJob;
-          try {
-            job = JSON.parse(value) as ScheduledEmailJob;
-          } catch {
+          if (!selectResponse.ok) {
             return new Response(
-              JSON.stringify({ success: false, error: 'Failed to parse scheduled email job' }),
+              JSON.stringify({ success: false, error: 'Failed to load scheduled email' }),
               {
                 status: 500,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -1404,7 +1492,19 @@ export default {
             );
           }
 
-          if (job.userId !== userId) {
+          const rows = (await selectResponse.json()) as any[];
+
+          if (!rows || rows.length === 0) {
+            return new Response(JSON.stringify({ success: true, cancelled: false }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          const row = rows[0] as any;
+
+          const rowUserId =
+            typeof row.user_id === 'string' ? row.user_id.trim() : '';
+          if (rowUserId !== userId) {
             return new Response(
               JSON.stringify({ success: false, error: 'Forbidden to cancel this scheduled email' }),
               {
@@ -1414,7 +1514,24 @@ export default {
             );
           }
 
-          await env.EMAIL_JOBS.delete(key);
+          const deleteUrl = new URL(`${getSupabaseRestUrl(env)}/scheduled_emails`);
+          deleteUrl.searchParams.set('id', `eq.${id}`);
+          deleteUrl.searchParams.set('user_id', `eq.${userId}`);
+
+          const deleteResponse = await fetch(deleteUrl.toString(), {
+            method: 'DELETE',
+            headers: getSupabaseHeaders(env),
+          });
+
+          if (!deleteResponse.ok) {
+            return new Response(
+              JSON.stringify({ success: false, error: 'Failed to cancel scheduled email' }),
+              {
+                status: 500,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              },
+            );
+          }
 
           return new Response(JSON.stringify({ success: true, cancelled: true }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -1438,100 +1555,114 @@ export default {
 
   async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
     const now = Date.now();
-    let cursor: string | undefined = undefined;
-    let done = false;
+    const restUrl = new URL(`${getSupabaseRestUrl(env)}/scheduled_emails`);
+    restUrl.searchParams.set('sent', 'eq.false');
+    restUrl.searchParams.set('send_at', `lte.${now}`);
+    restUrl.searchParams.set('select', '*');
 
-    while (!done) {
-      const list: any = await env.EMAIL_JOBS.list({ prefix: 'email:', cursor });
-      cursor = list.cursor;
-      done = list.list_complete;
+    const response = await fetch(restUrl.toString(), {
+      method: 'GET',
+      headers: getSupabaseHeaders(env),
+    });
 
-      for (const key of list.keys) {
-        const value = await env.EMAIL_JOBS.get(key.name);
-        if (!value) {
-          continue;
-        }
+    if (!response.ok) {
+      console.error('Failed to load scheduled emails from Supabase');
+      return;
+    }
 
-        let job: ScheduledEmailJob;
-        try {
-          job = JSON.parse(value) as ScheduledEmailJob;
-        } catch {
-          continue;
-        }
+    const rows = (await response.json()) as any[];
 
-        if (job.sent) {
-          continue;
-        }
-        if (job.sendAt > now) {
-          continue;
-        }
+    rows.forEach(row => {
+      const job = mapRowToJob(row);
 
-        ctx.waitUntil(
-          (async () => {
-            try {
-              let jobToSend = job;
-              let dashboardSettingsForJob: any | null = null;
-              if (job.mode === 'autoSummary') {
-                const result = await buildAutoSummaryForJob(job);
-                jobToSend = result.jobToSend;
-                dashboardSettingsForJob = result.dashboardSettings;
-              }
-              await sendEmailWithResend(env, jobToSend);
+      if (job.sent) {
+        return;
+      }
+      if (job.sendAt > now) {
+        return;
+      }
 
-              if (job.mode === 'autoSummary' && dashboardSettingsForJob && dashboardSettingsForJob.emailSchedule) {
-                const next = computeNextSendAtFromSchedule(
-                  dashboardSettingsForJob.emailSchedule,
-                  new Date(now),
-                );
-                if (next) {
-                  job.sendAt = next.getTime();
-                  job.sent = false;
-                } else {
-                  job.sent = true;
-                }
-              } else if (job.recurring && job.userId) {
-                try {
-                  const response = await fetch(
-                    `https://bowler-worker.study-llm.me/load?userId=${encodeURIComponent(job.userId)}`,
-                    {
-                      method: 'GET',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                    },
-                  );
-                  if (response.ok) {
-                    const data = (await response.json()) as any;
-                    const dashboardSettings = data.dashboardSettings || null;
-                    const schedule =
-                      dashboardSettings && typeof dashboardSettings === 'object'
-                        ? (dashboardSettings as any).emailSchedule
-                        : null;
-                    const next = computeNextSendAtFromSchedule(schedule, new Date(now));
-                    if (next) {
-                      job.sendAt = next.getTime();
-                      job.sent = false;
-                    } else {
-                      job.sent = true;
-                    }
-                  } else {
-                    job.sent = true;
-                  }
-                } catch (e) {
-                  console.error('Failed to compute next send time for recurring manual email', e);
-                  job.sent = true;
-                }
+      ctx.waitUntil(
+        (async () => {
+          try {
+            let jobToSend = job;
+            let dashboardSettingsForJob: any | null = null;
+            if (job.mode === 'autoSummary') {
+              const result = await buildAutoSummaryForJob(job);
+              jobToSend = result.jobToSend;
+              dashboardSettingsForJob = result.dashboardSettings;
+            }
+            await sendEmailWithResend(env, jobToSend);
+
+            if (job.mode === 'autoSummary' && dashboardSettingsForJob && dashboardSettingsForJob.emailSchedule) {
+              const next = computeNextSendAtFromSchedule(
+                dashboardSettingsForJob.emailSchedule,
+                new Date(now),
+              );
+              if (next) {
+                job.sendAt = next.getTime();
+                job.sent = false;
               } else {
                 job.sent = true;
               }
-
-              await env.EMAIL_JOBS.put(key.name, JSON.stringify(job));
-            } catch (err) {
-              console.error('Failed to send scheduled email', err);
+            } else if (job.recurring && job.userId) {
+              try {
+                const bowlerResponse = await fetch(
+                  `https://bowler-worker.study-llm.me/load?userId=${encodeURIComponent(job.userId)}`,
+                  {
+                    method: 'GET',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                  },
+                );
+                if (bowlerResponse.ok) {
+                  const data = (await bowlerResponse.json()) as any;
+                  const dashboardSettings = data.dashboardSettings || null;
+                  const schedule =
+                    dashboardSettings && typeof dashboardSettings === 'object'
+                      ? (dashboardSettings as any).emailSchedule
+                      : null;
+                  const next = computeNextSendAtFromSchedule(schedule, new Date(now));
+                  if (next) {
+                    job.sendAt = next.getTime();
+                    job.sent = false;
+                  } else {
+                    job.sent = true;
+                  }
+                } else {
+                  job.sent = true;
+                }
+              } catch (e) {
+                console.error('Failed to compute next send time for recurring manual email', e);
+                job.sent = true;
+              }
+            } else {
+              job.sent = true;
             }
-          })(),
-        );
-      }
-    }
+
+            const updateUrl = new URL(`${getSupabaseRestUrl(env)}/scheduled_emails`);
+            updateUrl.searchParams.set('id', `eq.${job.id}`);
+
+            const patchBody: any = {
+              sent: job.sent,
+              send_at: job.sendAt,
+            };
+
+            const updateResponse = await fetch(updateUrl.toString(), {
+              method: 'PATCH',
+              headers: getSupabaseHeaders(env, 'application/json'),
+              body: JSON.stringify(patchBody),
+            });
+
+            if (!updateResponse.ok) {
+              console.error('Failed to update scheduled email status in Supabase');
+            }
+          } catch (err) {
+            console.error('Failed to send scheduled email', err);
+          }
+        })(),
+      );
+    });
   },
 };

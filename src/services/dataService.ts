@@ -1,3 +1,5 @@
+import { authService } from './authService';
+
 const API_BASE_URL = 'https://bowler-worker.study-llm.me';
 const EMAIL_API_BASE_URL = 'https://email-worker.study-llm.me';
 
@@ -353,18 +355,115 @@ export const dataService = {
   },
 
   async loadAllA3Cases() {
-    const response = await fetch(`${API_BASE_URL}/all-a3`, {
+    ensureSupabaseConfigured();
+
+    const a3Url = new URL(`${SUPABASE_REST_URL}/a3_cases`);
+    a3Url.searchParams.set('select', '*');
+
+    const response = await fetch(a3Url.toString(), {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getSupabaseHeaders(),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to load global A3 cases');
+      throw new Error('Failed to load global A3 cases from Supabase');
     }
 
-    return response.json();
+    const a3Json = (await response.json()) as any[];
+
+    const profileCache = new Map<string, { isPublic: boolean; plant?: string }>();
+
+    const resolveProfile = async (userKey: string) => {
+      if (!userKey) {
+        return;
+      }
+      if (profileCache.has(userKey)) {
+        return;
+      }
+      try {
+        const response = await authService.getUser(userKey);
+        const apiUser = (response as any).user || response;
+        const profile = apiUser && apiUser.profile ? apiUser.profile : {};
+        const isPublic =
+          typeof profile.isPublic === 'boolean' ? profile.isPublic : true;
+        const plant =
+          typeof profile.plant === 'string' && profile.plant.trim().length > 0
+            ? profile.plant.trim()
+            : undefined;
+        profileCache.set(userKey, { isPublic, plant });
+      } catch {
+        profileCache.set(userKey, { isPublic: false });
+      }
+    };
+
+    const userKeys: string[] = [];
+    (a3Json || []).forEach(row => {
+      const key = typeof row.user_id === 'string' ? row.user_id : null;
+      if (key && !userKeys.includes(key)) {
+        userKeys.push(key);
+      }
+    });
+
+    await Promise.all(userKeys.map(userKey => resolveProfile(userKey)));
+
+    const a3Cases = (a3Json || [])
+      .map(row => {
+        const userId = typeof row.user_id === 'string' ? row.user_id : undefined;
+        if (!userId) {
+          return null;
+        }
+        const profile = profileCache.get(userId);
+        if (!profile || !profile.isPublic) {
+          return null;
+        }
+        return {
+          id: row.id,
+          title: row.title,
+          description: row.description ?? undefined,
+          owner: row.owner ?? undefined,
+          group: row.group ?? undefined,
+          tag: row.tag ?? undefined,
+          linkedMetricIds: row.linked_metric_ids ?? undefined,
+          priority: row.priority ?? undefined,
+          startDate: row.start_date ?? undefined,
+          endDate: row.end_date ?? undefined,
+          status: row.status ?? undefined,
+          problemStatement: row.problem_statement ?? undefined,
+          problemContext: row.problem_context ?? undefined,
+          results: row.results ?? undefined,
+          mindMapNodes: row.mind_map_nodes ?? undefined,
+          mindMapText: row.mind_map_text ?? undefined,
+          mindMapScale: row.mind_map_scale ?? undefined,
+          mindMapCanvasHeight: row.mind_map_canvas_height ?? undefined,
+          rootCause: row.root_cause ?? undefined,
+          actionPlanTasks: row.action_plan_tasks ?? undefined,
+          dataAnalysisObservations: row.data_analysis_observations ?? undefined,
+          dataAnalysisImages: row.data_analysis_images ?? undefined,
+          dataAnalysisCanvasHeight: row.data_analysis_canvas_height ?? undefined,
+          resultImages: row.result_images ?? undefined,
+          resultCanvasHeight: row.result_canvas_height ?? undefined,
+          userId,
+          userAccountId: userId,
+          plant: profile.plant,
+        };
+      })
+      .filter(Boolean) as any[];
+
+    a3Cases.sort((a: any, b: any) => {
+      const userA = (a.userId || a.userAccountId || '') as string;
+      const userB = (b.userId || b.userAccountId || '') as string;
+      if (userA !== userB) {
+        return userA.localeCompare(userB);
+      }
+      const startA = a.startDate ? new Date(a.startDate).getTime() : 0;
+      const startB = b.startDate ? new Date(b.startDate).getTime() : 0;
+      return startA - startB;
+    });
+
+    return {
+      success: true,
+      a3Cases,
+    };
   },
 
   async loadA3Detail(userId: string, a3Id: string) {
@@ -468,19 +567,145 @@ export const dataService = {
   },
 
   async consolidateBowlers(tags: string[]) {
-    const response = await fetch(`${API_BASE_URL}/consolidate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ tags }),
-    });
+    ensureSupabaseConfigured();
 
-    if (!response.ok) {
-      throw new Error('Failed to consolidate bowlers');
+    const normalizedTags = (tags || [])
+      .map(t => (typeof t === 'string' ? t.trim().toLowerCase() : ''))
+      .filter(t => t.length > 0);
+
+    if (normalizedTags.length === 0) {
+      throw new Error('Tags list is required');
     }
 
-    return response.json();
+    const bowlersUrl = new URL(`${SUPABASE_REST_URL}/bowlers`);
+    bowlersUrl.searchParams.set('select', '*');
+
+    const a3Url = new URL(`${SUPABASE_REST_URL}/a3_cases`);
+    a3Url.searchParams.set('select', '*');
+
+    const [bowlersResponse, a3Response] = await Promise.all([
+      fetch(bowlersUrl.toString(), {
+        method: 'GET',
+        headers: getSupabaseHeaders(),
+      }),
+      fetch(a3Url.toString(), {
+        method: 'GET',
+        headers: getSupabaseHeaders(),
+      }),
+    ]);
+
+    if (!bowlersResponse.ok) {
+      throw new Error('Failed to load bowlers from Supabase for consolidation');
+    }
+
+    if (!a3Response.ok) {
+      throw new Error('Failed to load A3 cases from Supabase for consolidation');
+    }
+
+    const bowlersJson = (await bowlersResponse.json()) as any[];
+    const a3Json = (await a3Response.json()) as any[];
+
+    const matchesTags = (value: unknown): boolean => {
+      if (!value) {
+        return false;
+      }
+      const raw = String(value);
+      const parts = raw
+        .split(',')
+        .map(t => t.trim())
+        .filter(t => t.length > 0);
+      if (parts.length === 0) {
+        return false;
+      }
+      const lower = parts.map(t => t.toLowerCase());
+      return lower.some(t => normalizedTags.includes(t));
+    };
+
+    const bowlers = (bowlersJson || [])
+      .filter(row => matchesTags(row.tag))
+      .map(row => ({
+        id: row.id,
+        name: row.name,
+        description: row.description ?? undefined,
+        group: row.group ?? undefined,
+        champion: row.champion ?? undefined,
+        commitment: row.commitment ?? undefined,
+        tag: row.tag ?? undefined,
+        metricStartDate: row.metric_start_date ?? undefined,
+        metrics: row.metrics ?? undefined,
+        statusColor: row.status_color ?? undefined,
+        userId: row.user_id ?? undefined,
+        order: typeof row.order_index === 'number' ? row.order_index : undefined,
+      }));
+
+    const a3Cases = (a3Json || [])
+      .filter(row => matchesTags(row.tag))
+      .map(row => ({
+        id: row.id,
+        title: row.title,
+        description: row.description ?? undefined,
+        owner: row.owner ?? undefined,
+        group: row.group ?? undefined,
+        tag: row.tag ?? undefined,
+        linkedMetricIds: row.linked_metric_ids ?? undefined,
+        priority: row.priority ?? undefined,
+        startDate: row.start_date ?? undefined,
+        endDate: row.end_date ?? undefined,
+        status: row.status ?? undefined,
+        problemStatement: row.problem_statement ?? undefined,
+        problemContext: row.problem_context ?? undefined,
+        results: row.results ?? undefined,
+        mindMapNodes: row.mind_map_nodes ?? undefined,
+        mindMapText: row.mind_map_text ?? undefined,
+        mindMapScale: row.mind_map_scale ?? undefined,
+        mindMapCanvasHeight: row.mind_map_canvas_height ?? undefined,
+        rootCause: row.root_cause ?? undefined,
+        actionPlanTasks: row.action_plan_tasks ?? undefined,
+        dataAnalysisObservations: row.data_analysis_observations ?? undefined,
+        dataAnalysisImages: row.data_analysis_images ?? undefined,
+        dataAnalysisCanvasHeight: row.data_analysis_canvas_height ?? undefined,
+        resultImages: row.result_images ?? undefined,
+        resultCanvasHeight: row.result_canvas_height ?? undefined,
+        userId: row.user_id ?? undefined,
+        userAccountId: row.user_id ?? undefined,
+        order: undefined as number | undefined,
+      }));
+
+    bowlers.sort((a: any, b: any) => {
+      if (a.userId !== b.userId) {
+        return (a.userId || '').localeCompare(b.userId || '');
+      }
+      const orderA = typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER;
+      const orderB = typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER;
+      return orderA - orderB;
+    });
+
+    a3Cases.sort((a: any, b: any) => {
+      const userA = (a.userId || a.userAccountId || '') as string;
+      const userB = (b.userId || b.userAccountId || '') as string;
+      if (userA !== userB) {
+        return userA.localeCompare(userB);
+      }
+      const startA = a.startDate ? new Date(a.startDate).getTime() : 0;
+      const startB = b.startDate ? new Date(b.startDate).getTime() : 0;
+      return startA - startB;
+    });
+
+    const strippedBowlers = bowlers.map(b => {
+      const { userId: _userId, order: _order, ...rest } = b;
+      return rest;
+    });
+
+    const strippedA3Cases = a3Cases.map(a => {
+      const { userId: _userId, userAccountId: _userAccountId, order: _order, ...rest } = a;
+      return rest;
+    });
+
+    return {
+      success: true,
+      bowlers: strippedBowlers,
+      a3Cases: strippedA3Cases,
+    };
   },
 
   async listKvItems() {
