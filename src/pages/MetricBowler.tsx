@@ -237,35 +237,43 @@ const MetricBowler = () => {
         tree: { cause: string; children?: { cause: string; children?: any[] }[] }[],
         parentId: string,
         depth: number,
-        startY: number,
-      ): number => {
-        let currentY = startY;
+      ) => {
         const stepY = 120;
         const stepX = 220;
-        tree.forEach(node => {
-          if (!node.cause) {
-            return;
-          }
+        const parent = nodes.find(n => n.id === parentId);
+        if (!parent) {
+          return;
+        }
+
+        const validNodes = tree.filter(
+          node => node && typeof node.cause === 'string' && node.cause.trim().length > 0,
+        );
+
+        const count = validNodes.length;
+
+        validNodes.forEach((node, index) => {
           const id = generateShortId();
-          nodes.push({
+          const offset = count > 1 ? index - (count - 1) / 2 : 0;
+          const x = parent.x + stepX;
+          const y = parent.y + offset * stepY;
+
+          mindMapNodes.push({
             id,
-            text: node.cause,
-            x: 50 + stepX * depth,
-            y: currentY,
+            text: node.cause.trim(),
+            x,
+            y,
             parentId,
             type: 'child',
           });
+
           if (node.children && node.children.length > 0) {
-            currentY = addChildren(nodes, node.children, id, depth + 1, currentY + stepY);
-          } else {
-            currentY += stepY;
+            addChildren(nodes, node.children, id, depth + 1);
           }
         });
-        return currentY;
       };
 
       if (plan.whyTree && plan.whyTree.length > 0) {
-        addChildren(mindMapNodes, plan.whyTree as any, rootId, 1, 260);
+        addChildren(mindMapNodes, plan.whyTree as any, rootId, 1);
       }
 
       const actions: ActionPlanTaskData[] = [];

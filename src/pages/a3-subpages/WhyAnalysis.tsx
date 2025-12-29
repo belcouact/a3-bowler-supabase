@@ -221,38 +221,42 @@ ${observations || '(none provided)'}
         type: 'root',
       });
 
-      const addChildren = (
-        tree: any[],
-        parentId: string,
-        depth: number,
-        startY: number,
-      ): number => {
-        let currentY = startY;
+      const addChildren = (tree: any[], parentId: string, depth: number) => {
         const stepY = 120;
         const stepX = 260;
-        tree.forEach(node => {
-          if (!node || typeof node.cause !== 'string' || !node.cause.trim()) {
-            return;
-          }
+        const parent = nodes.find(n => n.id === parentId);
+        if (!parent) {
+          return;
+        }
+
+        const validNodes = tree.filter(
+          node => node && typeof node.cause === 'string' && node.cause.trim(),
+        );
+
+        const count = validNodes.length;
+
+        validNodes.forEach((node, index) => {
           const id = generateShortId();
+          const offset = count > 1 ? index - (count - 1) / 2 : 0;
+          const x = parent.x + stepX;
+          const y = parent.y + offset * stepY;
+
           nodes.push({
             id,
             text: node.cause.trim(),
-            x: rootX + stepX * depth,
-            y: currentY,
+            x,
+            y,
             parentId,
             type: 'child',
           });
+
           if (Array.isArray(node.children) && node.children.length > 0) {
-            currentY = addChildren(node.children, id, depth + 1, currentY + stepY);
-          } else {
-            currentY += stepY;
+            addChildren(node.children, id, depth + 1);
           }
         });
-        return currentY;
       };
 
-      addChildren(rawTree, rootId, 1, rootY + 120);
+      addChildren(rawTree, rootId, 1);
 
       updateA3Case({
         ...currentCase,
