@@ -1,5 +1,4 @@
 export interface Env {
-  A3_IMAGES: R2Bucket;
   SUPABASE_SERVICE_KEY: string;
   SUPABASE_URL?: string;
 }
@@ -110,108 +109,6 @@ export default {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
-      }
-    }
-
-    if (url.pathname === '/a3-image') {
-      const userId = url.searchParams.get('userId');
-      const a3Id = url.searchParams.get('a3Id');
-      const imageIdFromQuery = url.searchParams.get('imageId') || crypto.randomUUID();
-
-      if (!userId || !a3Id) {
-        return new Response(
-          JSON.stringify({ success: false, error: 'userId and a3Id are required' }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          },
-        );
-      }
-
-      const objectKey = `images/${encodeURIComponent(userId)}/${encodeURIComponent(
-        a3Id,
-      )}/${encodeURIComponent(imageIdFromQuery)}`;
-
-      if (request.method === 'POST') {
-        try {
-          const body = request.body;
-          if (!body) {
-            return new Response(
-              JSON.stringify({ success: false, error: 'Request body is required' }),
-              {
-                status: 400,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              },
-            );
-          }
-
-          const contentType =
-            request.headers.get('content-type') || 'image/webp';
-
-          await env.A3_IMAGES.put(objectKey, body, {
-            httpMetadata: {
-              contentType,
-            },
-          });
-
-          const imageUrl = `${url.origin}/a3-image?userId=${encodeURIComponent(
-            userId,
-          )}&a3Id=${encodeURIComponent(a3Id)}&imageId=${encodeURIComponent(
-            imageIdFromQuery,
-          )}`;
-
-          return new Response(
-            JSON.stringify({
-              success: true,
-              key: objectKey,
-              imageId: imageIdFromQuery,
-              url: imageUrl,
-            }),
-            {
-              status: 200,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            },
-          );
-        } catch (err: any) {
-          return new Response(
-            JSON.stringify({ success: false, error: err.message }),
-            {
-              status: 500,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            },
-          );
-        }
-      }
-
-      if (request.method === 'GET') {
-        try {
-          const object = await env.A3_IMAGES.get(objectKey);
-          if (!object) {
-            return new Response('Not found', {
-              status: 404,
-              headers: corsHeaders,
-            });
-          }
-
-          const headers = {
-            ...corsHeaders,
-            'Content-Type': object.httpMetadata?.contentType || 'image/webp',
-            'Cache-Control': 'public, max-age=31536000',
-          };
-
-          return new Response(object.body, {
-            status: 200,
-            headers,
-          });
-        } catch (err: any) {
-          return new Response(
-            JSON.stringify({ success: false, error: err.message }),
-            {
-              status: 500,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            },
-          );
-        }
       }
     }
 

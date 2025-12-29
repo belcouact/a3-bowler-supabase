@@ -6,7 +6,3 @@ routes = [
 	{ pattern = "bowler-worker.study-llm.me", custom_domain = true }
 ]
 
-[[r2_buckets]]
-binding = "A3_IMAGES"
-bucket_name = "a3-bowler"
-preview_bucket_name = "a3-bowler"
