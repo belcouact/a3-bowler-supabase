@@ -1,7 +1,33 @@
 export interface Env {
-  BOWLER_DATA: KVNamespace;
   A3_IMAGES: R2Bucket;
+  SUPABASE_SERVICE_KEY: string;
+  SUPABASE_URL?: string;
 }
+
+const SUPABASE_PROJECT_ID = 'sellervptovbxfzkldtz';
+
+const getSupabaseRestUrl = (env: Env) => {
+  const base =
+    env.SUPABASE_URL && env.SUPABASE_URL.trim().length > 0
+      ? env.SUPABASE_URL.trim()
+      : `https://${SUPABASE_PROJECT_ID}.supabase.co`;
+  return `${base}/rest/v1`;
+};
+
+const getSupabaseHeaders = (env: Env, contentType?: string): Record<string, string> => {
+  const key = env.SUPABASE_SERVICE_KEY;
+  if (!key) {
+    throw new Error('SUPABASE_SERVICE_KEY is not configured');
+  }
+  const headers: Record<string, string> = {
+    apikey: key,
+    Authorization: `Bearer ${key}`,
+  };
+  if (contentType) {
+    headers['Content-Type'] = contentType;
+  }
+  return headers;
+};
 
 export default {
   async fetch(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
@@ -16,143 +42,6 @@ export default {
 
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders });
-    }
-
-    if (request.method === 'POST' && url.pathname === '/save') {
-      try {
-        const data = await request.json() as {
-          bowlers: any[];
-          a3Cases: any[];
-          userId: string;
-          dashboardMarkdown?: string;
-          dashboardTitle?: string;
-          dashboardMindmaps?: any[];
-          activeMindmapId?: string;
-          dashboardSettings?: { aiModel?: string };
-        };
-        const { bowlers, a3Cases, userId, dashboardMarkdown, dashboardTitle, dashboardMindmaps, activeMindmapId, dashboardSettings } = data;
-
-        if (!userId) {
-           return new Response(JSON.stringify({ success: false, error: 'User ID is required' }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-
-        const dashboardPayload: any = {};
-        if (dashboardMarkdown !== undefined) dashboardPayload.content = dashboardMarkdown;
-        if (dashboardTitle !== undefined) dashboardPayload.title = dashboardTitle;
-
-        if (dashboardMindmaps !== undefined && Array.isArray(dashboardMindmaps)) {
-          const enrichedMindmaps = dashboardMindmaps.map((m, index) => {
-            const id =
-              typeof m.id === 'string' && m.id.length > 0
-                ? m.id
-                : (typeof (globalThis as any).crypto?.randomUUID === 'function'
-                    ? (globalThis as any).crypto.randomUUID()
-                    : `mm-${Date.now()}-${index}`);
-
-            return {
-              id,
-              title: typeof m.title === 'string' ? m.title : '',
-              description: typeof m.description === 'string' ? m.description : '',
-              markdown: typeof m.markdown === 'string' ? m.markdown : '',
-              createdAt: typeof m.createdAt === 'string' ? m.createdAt : new Date().toISOString(),
-              updatedAt: typeof m.updatedAt === 'string' ? m.updatedAt : undefined
-            };
-          });
-          dashboardPayload.mindmaps = enrichedMindmaps;
-        }
-
-        if (dashboardSettings && typeof dashboardSettings === 'object') {
-          dashboardPayload.settings = dashboardSettings;
-        }
-
-        if (activeMindmapId !== undefined) dashboardPayload.activeMindmapId = activeMindmapId;
-
-        if (Object.keys(dashboardPayload).length > 0) {
-          await env.BOWLER_DATA.put(
-            `user:${userId}:dashboard`,
-            JSON.stringify(dashboardPayload)
-          );
-        }
-
-        // Save bowlers
-        if (bowlers && Array.isArray(bowlers)) {
-          // 1. Get all existing bowler keys for this user
-          const existingList = await env.BOWLER_DATA.list({ prefix: `user:${userId}:bowler:` });
-          const existingKeys = new Set(existingList.keys.map((k: any) => k.name));
-          
-          // 2. Identify keys to keep (based on incoming payload)
-          const keysToKeep = new Set(bowlers.map(b => `user:${userId}:bowler:${b.id}`));
-          
-          // 3. Delete keys that are not in the payload
-          for (const key of existingKeys) {
-            if (!keysToKeep.has(key as string)) {
-              await env.BOWLER_DATA.delete(key as string);
-            }
-          }
-
-          // 4. Update/Create items from payload
-          for (let i = 0; i < bowlers.length; i++) {
-            const bowler = bowlers[i];
-            const bowlerToSave = { 
-                ...bowler, 
-                userId: userId,
-                // Ensure sequence is saved in the record as well (as 'order')
-                order: i 
-            };
-            
-            // Ensure metrics have default fields if missing
-            if (bowlerToSave.metrics && Array.isArray(bowlerToSave.metrics)) {
-                bowlerToSave.metrics = bowlerToSave.metrics.map((m: any) => ({
-                    ...m,
-                    targetMeetingRule: m.targetMeetingRule || 'gte',
-                    definition: m.definition || '',
-                    owner: m.owner || ''
-                }));
-            }
-
-            await env.BOWLER_DATA.put(`user:${userId}:bowler:${bowler.id}`, JSON.stringify(bowlerToSave));
-          }
-        }
-
-        // Save A3 Cases
-        if (a3Cases && Array.isArray(a3Cases)) {
-          // 1. Get all existing A3 keys for this user
-          const existingList = await env.BOWLER_DATA.list({ prefix: `user:${userId}:a3:` });
-          const existingKeys = new Set(existingList.keys.map((k: any) => k.name));
-
-          // 2. Identify keys to keep
-          const keysToKeep = new Set(a3Cases.map(a => `user:${userId}:a3:${a.id}`));
-
-          // 3. Delete keys that are not in the payload
-          for (const key of existingKeys) {
-            if (!keysToKeep.has(key as string)) {
-              await env.BOWLER_DATA.delete(key as string);
-            }
-          }
-
-          // 4. Update/Create items (store full record; API can choose to omit heavy fields)
-          for (const a3 of a3Cases) {
-            const a3ToSave = { ...a3, userId: userId };
-            await env.BOWLER_DATA.put(`user:${userId}:a3:${a3.id}`, JSON.stringify(a3ToSave));
-          }
-        }
-
-        return new Response(JSON.stringify({ 
-            success: true, 
-            message: 'Data saved successfully',
-            debug_userId: userId // Echo back userId for verification
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      } catch (err: any) {
-        return new Response(JSON.stringify({ success: false, error: err.message }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
     }
 
     if (request.method === 'GET' && url.pathname === '/a3-detail') {
@@ -170,29 +59,47 @@ export default {
       }
 
       try {
-        const key = `user:${userId}:a3:${a3Id}`;
-        const raw = await env.BOWLER_DATA.get(key, 'json' as any);
+        const trimmedUserId = userId.trim();
 
-        if (!raw || typeof raw !== 'object') {
-          return new Response(JSON.stringify({ success: true, dataAnalysisImages: [], resultImages: [] }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+        const urlA3 = new URL(`${getSupabaseRestUrl(env)}/a3_cases`);
+        urlA3.searchParams.set('user_id', `eq.${trimmedUserId}`);
+        urlA3.searchParams.set('id', `eq.${a3Id}`);
+        urlA3.searchParams.set(
+          'select',
+          [
+            'data_analysis_images',
+            'data_analysis_canvas_height',
+            'result_images',
+            'result_canvas_height',
+          ].join(','),
+        );
+
+        const response = await fetch(urlA3.toString(), {
+          method: 'GET',
+          headers: getSupabaseHeaders(env),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load A3 detail from Supabase');
         }
 
-        const record = raw as any;
+        const rows = (await response.json()) as any[];
+        const row = rows && rows.length > 0 ? rows[0] : null;
+
+        if (!row) {
+          return new Response(
+            JSON.stringify({ success: true, dataAnalysisImages: [], resultImages: [] }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            },
+          );
+        }
+
         const detail = {
-          dataAnalysisImages: Array.isArray(record.dataAnalysisImages)
-            ? record.dataAnalysisImages
-            : undefined,
-          dataAnalysisCanvasHeight:
-            typeof record.dataAnalysisCanvasHeight === 'number'
-              ? record.dataAnalysisCanvasHeight
-              : undefined,
-          resultImages: Array.isArray(record.resultImages) ? record.resultImages : undefined,
-          resultCanvasHeight:
-            typeof record.resultCanvasHeight === 'number'
-              ? record.resultCanvasHeight
-              : undefined,
+          dataAnalysisImages: row.data_analysis_images ?? [],
+          dataAnalysisCanvasHeight: row.data_analysis_canvas_height ?? undefined,
+          resultImages: row.result_images ?? [],
+          resultCanvasHeight: row.result_canvas_height ?? undefined,
         };
 
         return new Response(JSON.stringify({ success: true, ...detail }), {
@@ -332,8 +239,6 @@ export default {
 
         const allBowlers: any[] = [];
         const allA3Cases: any[] = [];
-        let cursor: string | undefined = undefined;
-        let listComplete = false;
         const visibilityCache = new Map<string, boolean>();
 
         const resolveIsPublic = async (userKey: string | undefined | null): Promise<boolean> => {
@@ -366,163 +271,146 @@ export default {
             return false;
           }
         };
-        
-        while (!listComplete) {
-            const list: any = await env.BOWLER_DATA.list({ prefix: 'user:', cursor });
-            cursor = list.cursor;
-            listComplete = list.list_complete;
-            
-            const bowlerKeys = list.keys.filter((k: any) => k.name.includes(':bowler:'));
-            
-            if (bowlerKeys.length > 0) {
-                 const batchPromises = bowlerKeys.map((key: any) => env.BOWLER_DATA.get(key.name, 'json'));
-                 const batchResults = await Promise.all(batchPromises);
-                 
-                 for (const data of batchResults) {
-                    if (data && typeof data === 'object') {
-                        const bowler = data as any;
-                        const userKey = bowler.userId || bowler.userAccountId;
-                        const isPublic = await resolveIsPublic(userKey);
-                        if (!isPublic) {
-                          continue;
-                        }
-                        if (bowler.tag) {
-                            const bowlerTags = String(bowler.tag)
-                              .split(',')
-                              .map((t: string) => t.trim())
-                              .filter((t: string) => t.length > 0);
-                            const bowlerTagsLower = bowlerTags.map((t: string) => t.toLowerCase());
-                            const hasMatch = bowlerTagsLower.some((t: string) => normalizedTags.includes(t));
-                            if (hasMatch) {
-                                allBowlers.push(bowler);
-                            }
-                        }
-                    }
-                 }
-            }
 
-            const a3Keys = list.keys.filter((k: any) => k.name.includes(':a3:'));
+        const bowlersUrl = new URL(`${getSupabaseRestUrl(env)}/bowlers`);
+        bowlersUrl.searchParams.set('select', '*');
 
-            if (a3Keys.length > 0) {
-                 const batchPromises = a3Keys.map((key: any) => env.BOWLER_DATA.get(key.name, 'json'));
-                 const batchResults = await Promise.all(batchPromises);
-                 
-                 for (const data of batchResults) {
-                    if (data && typeof data === 'object') {
-                        const a3 = data as any;
-                        const userKey = a3.userId || a3.userAccountId;
-                        const isPublic = await resolveIsPublic(userKey);
-                        if (!isPublic) {
-                          continue;
-                        }
-                        if (a3.tag) {
-                            const a3Tags = String(a3.tag)
-                              .split(',')
-                              .map((t: string) => t.trim())
-                              .filter((t: string) => t.length > 0);
-                            const a3TagsLower = a3Tags.map((t: string) => t.toLowerCase());
-                            const hasMatch = a3TagsLower.some((t: string) => normalizedTags.includes(t));
-                            if (hasMatch) {
-                                allA3Cases.push(a3);
-                            }
-                        }
-                    }
-                 }
-            }
+        const a3Url = new URL(`${getSupabaseRestUrl(env)}/a3_cases`);
+        a3Url.searchParams.set('select', '*');
+
+        const [bowlersResponse, a3Response] = await Promise.all([
+          fetch(bowlersUrl.toString(), {
+            method: 'GET',
+            headers: getSupabaseHeaders(env),
+          }),
+          fetch(a3Url.toString(), {
+            method: 'GET',
+            headers: getSupabaseHeaders(env),
+          }),
+        ]);
+
+        if (!bowlersResponse.ok) {
+          throw new Error('Failed to load bowlers from Supabase for consolidation');
         }
-        
-        const sortFn = (a: any, b: any) => {
-             if (a.userId !== b.userId) {
-                 return (a.userId || '').localeCompare(b.userId || '');
-             }
-             const orderA = typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER;
-             const orderB = typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER;
-             return orderA - orderB;
-        };
-        
-        allBowlers.sort(sortFn);
-        allA3Cases.sort(sortFn);
 
-        return new Response(JSON.stringify({ success: true, bowlers: allBowlers, a3Cases: allA3Cases }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        if (!a3Response.ok) {
+          throw new Error('Failed to load A3 cases from Supabase for consolidation');
+        }
 
-      } catch (err: any) {
-        return new Response(JSON.stringify({ success: false, error: err.message }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-    }
+        const bowlersJson = (await bowlersResponse.json()) as any[];
+        const a3Json = (await a3Response.json()) as any[];
 
-    if (request.method === 'GET' && url.pathname === '/admin/kv-list') {
-      try {
-        const items: any[] = [];
-        let cursor: string | undefined = undefined;
-        let listComplete = false;
-
-        while (!listComplete) {
-          const list: any = await env.BOWLER_DATA.list({ cursor });
-          cursor = list.cursor;
-          listComplete = list.list_complete;
-
-          for (const key of list.keys) {
-            const name = key.name as string;
-            const parts = name.split(':');
-            let userId: string | null = null;
-            let kind: string | null = null;
-            let entityId: string | null = null;
-
-            if (parts.length >= 3 && parts[0] === 'user') {
-              userId = parts[1] || null;
-              kind = parts[2] || null;
-              if (parts.length >= 4) {
-                entityId = parts[3] || null;
-              }
-            } else if (parts.length >= 1) {
-              kind = parts[0] || null;
-              if (parts.length >= 2) {
-                entityId = parts[1] || null;
-              }
-            }
-
-            items.push({
-              key: name,
-              userId,
-              kind,
-              entityId,
-            });
+        const matchesTags = (value: unknown): boolean => {
+          if (!value) {
+            return false;
           }
-        }
+          const raw = String(value);
+          const parts = raw
+            .split(',')
+            .map(t => t.trim())
+            .filter(t => t.length > 0);
+          if (parts.length === 0) {
+            return false;
+          }
+          const lower = parts.map(t => t.toLowerCase());
+          return lower.some(t => normalizedTags.includes(t));
+        };
 
-        return new Response(JSON.stringify({ success: true, items }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      } catch (err: any) {
-        return new Response(JSON.stringify({ success: false, error: err.message }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-    }
-
-    if (request.method === 'POST' && url.pathname === '/admin/kv-delete') {
-      try {
-        const body = await request.json() as { keys?: string[] };
-        const keys = Array.isArray(body.keys) ? body.keys : [];
-        if (keys.length === 0) {
-          return new Response(JSON.stringify({ success: false, error: 'No keys provided' }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        for (const row of bowlersJson || []) {
+          if (!matchesTags(row.tag)) {
+            continue;
+          }
+          const userKey = row.user_id as string | undefined;
+          const isPublic = await resolveIsPublic(userKey);
+          if (!isPublic) {
+            continue;
+          }
+          const order =
+            typeof row.order_index === 'number' ? row.order_index : undefined;
+          allBowlers.push({
+            id: row.id,
+            name: row.name,
+            description: row.description ?? undefined,
+            group: row.group ?? undefined,
+            champion: row.champion ?? undefined,
+            commitment: row.commitment ?? undefined,
+            tag: row.tag ?? undefined,
+            metricStartDate: row.metric_start_date ?? undefined,
+            metrics: row.metrics ?? undefined,
+            statusColor: row.status_color ?? undefined,
+            userId: userKey,
+            order,
           });
         }
 
-        const uniqueKeys = Array.from(new Set(keys));
-        await Promise.all(uniqueKeys.map(name => env.BOWLER_DATA.delete(name)));
+        for (const row of a3Json || []) {
+          if (!matchesTags(row.tag)) {
+            continue;
+          }
+          const userKey = row.user_id as string | undefined;
+          const isPublic = await resolveIsPublic(userKey);
+          if (!isPublic) {
+            continue;
+          }
+          allA3Cases.push({
+            id: row.id,
+            title: row.title,
+            description: row.description ?? undefined,
+            owner: row.owner ?? undefined,
+            group: row.group ?? undefined,
+            tag: row.tag ?? undefined,
+            linkedMetricIds: row.linked_metric_ids ?? undefined,
+            priority: row.priority ?? undefined,
+            startDate: row.start_date ?? undefined,
+            endDate: row.end_date ?? undefined,
+            status: row.status ?? undefined,
+            problemStatement: row.problem_statement ?? undefined,
+            problemContext: row.problem_context ?? undefined,
+            results: row.results ?? undefined,
+            mindMapNodes: row.mind_map_nodes ?? undefined,
+            mindMapText: row.mind_map_text ?? undefined,
+            mindMapScale: row.mind_map_scale ?? undefined,
+            mindMapCanvasHeight: row.mind_map_canvas_height ?? undefined,
+            rootCause: row.root_cause ?? undefined,
+            actionPlanTasks: row.action_plan_tasks ?? undefined,
+            dataAnalysisObservations: row.data_analysis_observations ?? undefined,
+            dataAnalysisImages: row.data_analysis_images ?? undefined,
+            dataAnalysisCanvasHeight: row.data_analysis_canvas_height ?? undefined,
+            resultImages: row.result_images ?? undefined,
+            resultCanvasHeight: row.result_canvas_height ?? undefined,
+            userId: userKey,
+            userAccountId: userKey,
+          });
+        }
 
-        return new Response(JSON.stringify({ success: true, deleted: uniqueKeys.length }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        const sortFn = (a: any, b: any) => {
+          if (a.userId !== b.userId) {
+            return (a.userId || '').localeCompare(b.userId || '');
+          }
+          const orderA =
+            typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER;
+          const orderB =
+            typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER;
+          return orderA - orderB;
+        };
+
+        allBowlers.sort(sortFn);
+        allA3Cases.sort(sortFn);
+
+        const strippedBowlers = allBowlers.map(b => {
+          const { userId: _userId, order: _order, ...rest } = b;
+          return rest;
         });
+
+        const strippedA3Cases = allA3Cases.map(a => {
+          const { userId: _userId, userAccountId: _userAccountId, ...rest } = a;
+          return rest;
+        });
+
+        return new Response(JSON.stringify({ success: true, bowlers: strippedBowlers, a3Cases: strippedA3Cases }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+
       } catch (err: any) {
         return new Response(JSON.stringify({ success: false, error: err.message }), {
           status: 500,
@@ -534,8 +422,6 @@ export default {
     if (request.method === 'GET' && url.pathname === '/all-a3') {
       try {
         const allA3Cases: any[] = [];
-        let cursor: string | undefined = undefined;
-        let listComplete = false;
         const profileCache = new Map<string, { isPublic: boolean; plant?: string }>();
 
         const resolveProfile = async (
@@ -578,63 +464,73 @@ export default {
           }
         };
 
-        while (!listComplete) {
-          const list: any = await env.BOWLER_DATA.list({ prefix: 'user:', cursor });
-          cursor = list.cursor;
-          listComplete = list.list_complete;
+        const a3Url = new URL(`${getSupabaseRestUrl(env)}/a3_cases`);
+        a3Url.searchParams.set('select', '*');
 
-          const a3Keys = list.keys.filter((k: any) => k.name.includes(':a3:'));
+        const a3Response = await fetch(a3Url.toString(), {
+          method: 'GET',
+          headers: getSupabaseHeaders(env),
+        });
 
-          if (a3Keys.length > 0) {
-            const batchPromises = a3Keys.map((key: any) =>
-              env.BOWLER_DATA.get(key.name, 'json' as any),
-            );
-            const batchResults = await Promise.all(batchPromises);
+        if (!a3Response.ok) {
+          throw new Error('Failed to load A3 cases from Supabase');
+        }
 
-            const userKeys: string[] = [];
-            for (const data of batchResults) {
-              if (data && typeof data === 'object') {
-                const a3 = data as any;
-                const userKey = (a3.userId || a3.userAccountId) as string | undefined;
-                if (userKey) {
-                  userKeys.push(userKey);
-                }
-              }
-            }
+        const a3Json = (await a3Response.json()) as any[];
 
-            const uniqueUserKeys = Array.from(new Set(userKeys));
-            await Promise.all(uniqueUserKeys.map(userKey => resolveProfile(userKey)));
-
-            for (const data of batchResults) {
-              if (data && typeof data === 'object') {
-                const a3 = data as any;
-                const userKey = a3.userId || a3.userAccountId;
-                const profile = await resolveProfile(userKey);
-                if (!profile.isPublic) {
-                  continue;
-                }
-
-                const {
-                  dataAnalysisImages: _dataAnalysisImages,
-                  dataAnalysisCanvasHeight: _dataAnalysisCanvasHeight,
-                  resultImages: _resultImages,
-                  resultCanvasHeight: _resultCanvasHeight,
-                  ...rest
-                } = a3 as any;
-
-                const enriched = {
-                  ...rest,
-                  plant: profile.plant,
-                };
-                allA3Cases.push(enriched);
-              }
-            }
+        const userKeys: string[] = [];
+        for (const row of a3Json) {
+          const userKey = typeof row.user_id === 'string' ? row.user_id : undefined;
+          if (userKey) {
+            userKeys.push(userKey);
           }
         }
 
+        const uniqueUserKeys = Array.from(new Set(userKeys));
+        await Promise.all(uniqueUserKeys.map(userKey => resolveProfile(userKey)));
+
+        for (const row of a3Json) {
+          const userKey = typeof row.user_id === 'string' ? row.user_id : null;
+          const profile = await resolveProfile(userKey);
+          if (!profile.isPublic) {
+            continue;
+          }
+
+          const a3 = {
+            id: row.id,
+            userId: userKey || undefined,
+            title: row.title,
+            description: row.description ?? undefined,
+            owner: row.owner ?? undefined,
+            group: row.group ?? undefined,
+            tag: row.tag ?? undefined,
+            linkedMetricIds: row.linked_metric_ids ?? undefined,
+            priority: row.priority ?? undefined,
+            startDate: row.start_date ?? undefined,
+            endDate: row.end_date ?? undefined,
+            status: row.status ?? undefined,
+            problemStatement: row.problem_statement ?? undefined,
+            problemContext: row.problem_context ?? undefined,
+            results: row.results ?? undefined,
+            mindMapNodes: row.mind_map_nodes ?? undefined,
+            mindMapText: row.mind_map_text ?? undefined,
+            mindMapScale: row.mind_map_scale ?? undefined,
+            mindMapCanvasHeight: row.mind_map_canvas_height ?? undefined,
+            rootCause: row.root_cause ?? undefined,
+            actionPlanTasks: row.action_plan_tasks ?? undefined,
+            dataAnalysisObservations: row.data_analysis_observations ?? undefined,
+          };
+
+          const enriched = {
+            ...a3,
+            plant: profile.plant,
+          };
+          allA3Cases.push(enriched);
+        }
+
         allA3Cases.sort((a: any, b: any) => {
-          const userA = (a.userId || a.userAccountId || '') as string;
-          const userB = (b.userId || b.userAccountId || '') as string;
+          const userA = (a.userId || '') as string;
+          const userB = (b.userId || '') as string;
           if (userA !== userB) {
             return userA.localeCompare(userB);
           }
@@ -665,101 +561,106 @@ export default {
       }
 
       try {
-        const bowlers: any[] = [];
-        const a3Cases: any[] = [];
-        let dashboardMarkdown: string | undefined;
-        let dashboardTitle: string | undefined;
-        let dashboardMindmaps: any[] | undefined;
-        let activeMindmapId: string | undefined;
-        let dashboardSettings: any | undefined;
+        const trimmedUserId = userId.trim();
 
-        // Load dashboard markdown and title
-        const dashboardRaw = await env.BOWLER_DATA.get(`user:${userId}:dashboard`);
-        if (dashboardRaw) {
-          try {
-            const parsed = JSON.parse(dashboardRaw as string);
-            if (typeof parsed === 'string') {
-              dashboardMarkdown = parsed;
-            } else if (parsed && typeof parsed === 'object') {
-              dashboardMarkdown = parsed.content ?? '';
-              dashboardTitle = parsed.title ?? '';
-              if (Array.isArray(parsed.mindmaps)) {
-                dashboardMindmaps = parsed.mindmaps;
-              }
-              if (typeof parsed.activeMindmapId === 'string') {
-                activeMindmapId = parsed.activeMindmapId;
-              }
-              if (parsed.settings && typeof parsed.settings === 'object') {
-                dashboardSettings = parsed.settings;
-              } else if (parsed.dashboardSettings && typeof parsed.dashboardSettings === 'object') {
-                dashboardSettings = parsed.dashboardSettings;
-              }
-            }
-          } catch (e) {
-            dashboardMarkdown = dashboardRaw as string;
-          }
+        const bowlersUrl = new URL(`${getSupabaseRestUrl(env)}/bowlers`);
+        bowlersUrl.searchParams.set('user_id', `eq.${trimmedUserId}`);
+        bowlersUrl.searchParams.set('select', '*');
+        bowlersUrl.searchParams.set('order', 'order_index.asc');
+
+        const a3Url = new URL(`${getSupabaseRestUrl(env)}/a3_cases`);
+        a3Url.searchParams.set('user_id', `eq.${trimmedUserId}`);
+        a3Url.searchParams.set('select', '*');
+
+        const dashboardUrl = new URL(`${getSupabaseRestUrl(env)}/dashboards`);
+        dashboardUrl.searchParams.set('user_id', `eq.${trimmedUserId}`);
+        dashboardUrl.searchParams.set('select', '*');
+
+        const [bowlersResponse, a3Response, dashboardResponse] = await Promise.all([
+          fetch(bowlersUrl.toString(), {
+            method: 'GET',
+            headers: getSupabaseHeaders(env),
+          }),
+          fetch(a3Url.toString(), {
+            method: 'GET',
+            headers: getSupabaseHeaders(env),
+          }),
+          fetch(dashboardUrl.toString(), {
+            method: 'GET',
+            headers: getSupabaseHeaders(env),
+          }),
+        ]);
+
+        if (!bowlersResponse.ok) {
+          throw new Error('Failed to load bowlers from Supabase');
         }
 
-        // List keys for the user
-        // Ensure we are reading data that was written with the same userId
-        const bowlerListPromise = env.BOWLER_DATA.list({ prefix: `user:${userId}:bowler:` });
-        const a3ListPromise = env.BOWLER_DATA.list({ prefix: `user:${userId}:a3:` });
-
-        const [bowlerList, a3List] = await Promise.all([bowlerListPromise, a3ListPromise]);
-
-        const bowlerKeys = bowlerList.keys.map((k: any) => k.name);
-        const a3Keys = a3List.keys.map((k: any) => k.name);
-
-        const batchSize = 32;
-
-        for (let i = 0; i < bowlerKeys.length; i += batchSize) {
-          const slice = bowlerKeys.slice(i, i + batchSize);
-          const batch = await Promise.all(
-            slice.map(name => env.BOWLER_DATA.get(name, 'json' as any))
-          );
-          for (const data of batch) {
-            if (data && typeof data === 'object') {
-              const record: any = data;
-              if (record.userId === userId || record.userAccountId === userId) {
-                bowlers.push(record);
-              } else {
-                bowlers.push(record);
-              }
-            }
-          }
+        if (!a3Response.ok) {
+          throw new Error('Failed to load A3 cases from Supabase');
         }
 
-        // Sort by order field
-        bowlers.sort((a, b) => {
-            const orderA = typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER;
-            const orderB = typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER;
-            return orderA - orderB;
-        });
-
-        for (let i = 0; i < a3Keys.length; i += batchSize) {
-          const slice = a3Keys.slice(i, i + batchSize);
-          const batch = await Promise.all(
-            slice.map(name => env.BOWLER_DATA.get(name, 'json' as any)),
-          );
-          for (const data of batch) {
-            if (data && typeof data === 'object') {
-              const record: any = data;
-              if (record.userId !== userId && record.userAccountId !== userId) {
-                continue;
-              }
-
-              const {
-                dataAnalysisImages: _dataAnalysisImages,
-                dataAnalysisCanvasHeight: _dataAnalysisCanvasHeight,
-                resultImages: _resultImages,
-                resultCanvasHeight: _resultCanvasHeight,
-                ...meta
-              } = record;
-
-              a3Cases.push(meta);
-            }
-          }
+        if (!dashboardResponse.ok && dashboardResponse.status !== 406 && dashboardResponse.status !== 404) {
+          throw new Error('Failed to load dashboard from Supabase');
         }
+
+        const bowlersJson = (await bowlersResponse.json()) as any[];
+        const a3Json = (await a3Response.json()) as any[];
+        const dashboardJson = dashboardResponse.ok ? ((await dashboardResponse.json()) as any[]) : [];
+
+        const bowlers = (bowlersJson || []).map(row => ({
+          id: row.id,
+          name: row.name,
+          description: row.description ?? undefined,
+          group: row.group ?? undefined,
+          champion: row.champion ?? undefined,
+          commitment: row.commitment ?? undefined,
+          tag: row.tag ?? undefined,
+          metricStartDate: row.metric_start_date ?? undefined,
+          metrics: row.metrics ?? undefined,
+          statusColor: row.status_color ?? undefined,
+        }));
+
+        const a3Cases = (a3Json || []).map(row => ({
+          id: row.id,
+          title: row.title,
+          description: row.description ?? undefined,
+          owner: row.owner ?? undefined,
+          group: row.group ?? undefined,
+          tag: row.tag ?? undefined,
+          linkedMetricIds: row.linked_metric_ids ?? undefined,
+          priority: row.priority ?? undefined,
+          startDate: row.start_date ?? undefined,
+          endDate: row.end_date ?? undefined,
+          status: row.status ?? undefined,
+          problemStatement: row.problem_statement ?? undefined,
+          problemContext: row.problem_context ?? undefined,
+          results: row.results ?? undefined,
+          mindMapNodes: row.mind_map_nodes ?? undefined,
+          mindMapText: row.mind_map_text ?? undefined,
+          mindMapScale: row.mind_map_scale ?? undefined,
+          mindMapCanvasHeight: row.mind_map_canvas_height ?? undefined,
+          rootCause: row.root_cause ?? undefined,
+          actionPlanTasks: row.action_plan_tasks ?? undefined,
+          dataAnalysisObservations: row.data_analysis_observations ?? undefined,
+          dataAnalysisImages: row.data_analysis_images ?? undefined,
+          dataAnalysisCanvasHeight: row.data_analysis_canvas_height ?? undefined,
+          resultImages: row.result_images ?? undefined,
+          resultCanvasHeight: row.result_canvas_height ?? undefined,
+        }));
+
+        const dashboardRow = dashboardJson && dashboardJson.length > 0 ? dashboardJson[0] : null;
+
+        const dashboardMarkdown = dashboardRow?.markdown ?? '';
+        const dashboardTitle = dashboardRow?.title ?? '';
+        const dashboardMindmaps = Array.isArray(dashboardRow?.mindmaps) ? dashboardRow.mindmaps : [];
+        const activeMindmapId =
+          dashboardRow && typeof dashboardRow.active_mindmap_id === 'string'
+            ? dashboardRow.active_mindmap_id
+            : undefined;
+        const dashboardSettings =
+          dashboardRow && dashboardRow.settings && typeof dashboardRow.settings === 'object'
+            ? dashboardRow.settings
+            : {};
 
         return new Response(JSON.stringify({
           success: true,

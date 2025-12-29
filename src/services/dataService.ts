@@ -708,62 +708,6 @@ export const dataService = {
     };
   },
 
-  async listKvItems() {
-    const response = await fetch(`${API_BASE_URL}/admin/kv-list`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to load KV items');
-    }
-
-    return response.json();
-  },
-
-  async deleteKvItems(keys: string[]) {
-    const uniqueKeys = Array.from(new Set(keys));
-    const chunkSize = 200;
-    let deletedTotal = 0;
-
-    for (let i = 0; i < uniqueKeys.length; i += chunkSize) {
-      const slice = uniqueKeys.slice(i, i + chunkSize);
-      const response = await fetch(`${API_BASE_URL}/admin/kv-delete`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ keys: slice }),
-      });
-
-      if (!response.ok) {
-        let message = 'Failed to delete KV items';
-        try {
-          const data = await response.json();
-          if (data && typeof data.error === 'string') {
-            message = data.error;
-          }
-        } catch (e) {
-          void e;
-        }
-        throw new Error(message);
-      }
-
-      try {
-        const data = await response.json() as any;
-        if (data && typeof data.deleted === 'number') {
-          deletedTotal += data.deleted;
-        }
-      } catch (e) {
-        void e;
-      }
-    }
-
-    return { success: true, deleted: deletedTotal };
-  },
-
   async scheduleEmail(options: {
     userId?: string;
     recipients: string[];

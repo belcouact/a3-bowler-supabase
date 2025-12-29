@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Bot, Inbox, Users, X, Calendar, Trash2 } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Bot, Inbox, Users, X, Calendar } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
 import { Bowler, Metric, AIModelKey, GroupPerformanceRow } from '../types';
@@ -197,14 +197,6 @@ const Layout = () => {
   const [selectedGlobalA3, setSelectedGlobalA3] = useState<GlobalA3Case | null>(null);
   const [globalRootCauseView, setGlobalRootCauseView] = useState<'text' | 'mindmap'>('text');
   const [lastAllA3LoadedAt, setLastAllA3LoadedAt] = useState<number | null>(null);
-  const [isKvAdminOpen, setIsKvAdminOpen] = useState(false);
-  const [isKvLoading, setIsKvLoading] = useState(false);
-  const [kvError, setKvError] = useState<string | null>(null);
-  const [kvItems, setKvItems] = useState<
-    { key: string; userId: string | null; kind: string | null; entityId: string | null }[]
-  >([]);
-  const [kvSelectedKeys, setKvSelectedKeys] = useState<Set<string>>(new Set());
-  const [kvFilterText, setKvFilterText] = useState('');
 
   const loadAdminUsers = async () => {
     setIsLoadingAdminUsers(true);
@@ -2168,105 +2160,6 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
     }
   };
 
-  const handleOpenKvAdmin = async () => {
-    if (!isSuperAdmin) {
-      toast.error('Only super administrators can perform this action.');
-      return;
-    }
-    setIsKvAdminOpen(true);
-    setIsKvLoading(true);
-    setKvError(null);
-    setKvSelectedKeys(new Set());
-    try {
-      const response = await dataService.listKvItems();
-      const items = (response.items || []) as {
-        key: string;
-        userId?: string | null;
-        kind?: string | null;
-        entityId?: string | null;
-      }[];
-      const normalized = items.map(item => ({
-        key: item.key,
-        userId: item.userId ?? null,
-        kind: item.kind ?? null,
-        entityId: item.entityId ?? null,
-      }));
-      setKvItems(normalized);
-    } catch (error: any) {
-      console.error('Failed to load KV items', error);
-      setKvError(error?.message || 'Failed to load KV items from server.');
-      setKvItems([]);
-    } finally {
-      setIsKvLoading(false);
-    }
-  };
-
-  const handleToggleKvKey = (key: string) => {
-    setKvSelectedKeys(prev => {
-      const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
-      } else {
-        next.add(key);
-      }
-      return next;
-    });
-  };
-
-  const handleToggleKvAll = () => {
-    setKvSelectedKeys(prev => {
-      const filter = kvFilterText.trim().toLowerCase();
-      const visibleItems = filter
-        ? kvItems.filter(item => {
-            const key = item.key.toLowerCase();
-            const kind = (item.kind || '').toLowerCase();
-            return key.includes(filter) || kind.includes(filter);
-          })
-        : kvItems;
-
-      const visibleKeys = visibleItems.map(item => item.key);
-      const allVisibleSelected = visibleKeys.every(key => prev.has(key));
-
-      if (allVisibleSelected) {
-        const next = new Set(prev);
-        visibleKeys.forEach(key => next.delete(key));
-        return next;
-      }
-
-      const next = new Set(prev);
-      visibleKeys.forEach(key => next.add(key));
-      return next;
-    });
-  };
-
-  const handleDeleteSelectedKv = async () => {
-    const keys = Array.from(kvSelectedKeys);
-    if (keys.length === 0) {
-      toast.error('No items selected to delete.');
-      return;
-    }
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ${keys.length} KV item${keys.length === 1 ? '' : 's'}? This cannot be undone.`,
-    );
-    if (!confirmed) {
-      return;
-    }
-    setIsKvLoading(true);
-    setKvError(null);
-    try {
-      await dataService.deleteKvItems(keys);
-      const remaining = kvItems.filter(item => !kvSelectedKeys.has(item.key));
-      setKvItems(remaining);
-      setKvSelectedKeys(new Set());
-      toast.success('Selected KV items deleted.');
-    } catch (error: any) {
-      console.error('Failed to delete KV items', error);
-      setKvError(error?.message || 'Failed to delete KV items.');
-    } finally {
-      setIsKvLoading(false);
-    }
-  };
-
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Top Bar */}
@@ -2372,13 +2265,6 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   title="User management"
                 >
                   <Users className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={handleOpenKvAdmin}
-                  className="p-2 rounded-md bg-red-500 text-white shadow-sm hover:bg-red-600 transition-colors"
-                  title="KV data cleanup"
-                >
-                  <Trash2 className="w-4 h-4" />
                 </button>
               </>
             )}
@@ -4157,191 +4043,6 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
           )}
         </main>
       </div>
-
-      {isKvAdminOpen && (
-        <div className="fixed inset-0 z-[125] bg-gray-900/80 flex flex-col">
-          <div className="flex-1 bg-white flex flex-col w-full h-full rounded-none shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-red-600 text-white text-sm font-semibold">
-                  <Trash2 className="w-4 h-4" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-semibold text-gray-900">
-                    KV Data Cleanup
-                  </h2>
-                  <p className="text-xs text-gray-500">
-                    View all bowler and A3 KV records, and delete selected items.
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsKvAdminOpen(false)}
-                className="rounded-full p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-hidden bg-white">
-              <div className="h-full flex flex-col">
-                <div className="px-6 py-3 border-b border-gray-100 flex items-center justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-gray-900">
-                      KV records
-                    </h3>
-                    <p className="text-xs text-gray-500">
-                      Total: {kvItems.length} item{kvItems.length === 1 ? '' : 's'}. Selected:{' '}
-                      {kvSelectedKeys.size}.
-                    </p>
-                    <div className="mt-2 flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={kvFilterText}
-                        onChange={e => setKvFilterText(e.target.value)}
-                        className="w-56 max-w-full border border-gray-300 rounded-md px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-                        placeholder="Filter by key or type (e.g. audit)"
-                      />
-                      <span className="text-[11px] text-gray-500">
-                        Visible:{" "}
-                        {kvFilterText.trim()
-                          ? kvItems.filter(item => {
-                              const filter = kvFilterText.trim().toLowerCase();
-                              const key = item.key.toLowerCase();
-                              const kind = (item.kind || "").toLowerCase();
-                              return key.includes(filter) || kind.includes(filter);
-                            }).length
-                          : kvItems.length}
-                      </span>
-                    </div>
-                    {kvError && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {kvError}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handleDeleteSelectedKv}
-                      disabled={isKvLoading || kvSelectedKeys.size === 0}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {isKvLoading ? (
-                        <>
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                          <span>Deleting...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Trash2 className="w-3 h-3" />
-                          <span>Delete selected</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-                <div className="flex-1 overflow-auto px-6 py-4 bg-gray-50">
-                  {isKvLoading && kvItems.length === 0 ? (
-                    <div className="h-full flex items-center justify-center text-sm text-gray-500">
-                      <Loader2 className="w-4 h-4 animate-spin text-red-600 mr-2" />
-                      Loading KV items...
-                    </div>
-                  ) : kvItems.length === 0 ? (
-                    <div className="h-full flex items-center justify-center text-sm text-gray-500">
-                      No KV records found under the user: namespace.
-                    </div>
-                  ) : (
-                    <table className="min-w-full border border-gray-200 text-xs bg-white">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-2 py-2 text-left font-semibold text-gray-600 border-b border-gray-200 w-12">
-                            <input
-                              type="checkbox"
-                              className="h-3.5 w-3.5 rounded border-gray-300 text-red-600 focus:ring-red-500"
-                              checked={
-                                (kvFilterText.trim()
-                                  ? kvItems.filter(item => {
-                                      const filter = kvFilterText.trim().toLowerCase();
-                                      const key = item.key.toLowerCase();
-                                      const kind = (item.kind || "").toLowerCase();
-                                      return key.includes(filter) || kind.includes(filter);
-                                    })
-                                  : kvItems
-                                ).every(item => kvSelectedKeys.has(item.key)) &&
-                                (kvFilterText.trim()
-                                  ? kvItems.filter(item => {
-                                      const filter = kvFilterText.trim().toLowerCase();
-                                      const key = item.key.toLowerCase();
-                                      const kind = (item.kind || "").toLowerCase();
-                                      return key.includes(filter) || kind.includes(filter);
-                                    }).length > 0
-                                  : kvItems.length > 0)
-                              }
-                              onChange={handleToggleKvAll}
-                            />
-                          </th>
-                          <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
-                            Key
-                          </th>
-                          <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
-                            User
-                          </th>
-                          <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
-                            Type
-                          </th>
-                          <th className="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">
-                            Entity ID
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {(kvFilterText.trim()
-                          ? kvItems.filter(item => {
-                              const filter = kvFilterText.trim().toLowerCase();
-                              const key = item.key.toLowerCase();
-                              const kind = (item.kind || "").toLowerCase();
-                              return key.includes(filter) || kind.includes(filter);
-                            })
-                          : kvItems
-                        ).map(item => {
-                          const isSelected = kvSelectedKeys.has(item.key);
-                          return (
-                            <tr
-                              key={item.key}
-                              className={isSelected ? 'bg-red-50' : 'bg-white'}
-                            >
-                              <td className="px-2 py-2 border-b border-gray-100">
-                                <input
-                                  type="checkbox"
-                                  className="h-3.5 w-3.5 rounded border-gray-300 text-red-600 focus:ring-red-500"
-                                  checked={isSelected}
-                                  onChange={() => handleToggleKvKey(item.key)}
-                                />
-                              </td>
-                              <td className="px-3 py-2 text-gray-900 font-mono text-[11px] break-all border-b border-gray-100">
-                                {item.key}
-                              </td>
-                              <td className="px-3 py-2 text-gray-700 border-b border-gray-100">
-                                {item.userId || '—'}
-                              </td>
-                              <td className="px-3 py-2 text-gray-700 border-b border-gray-100">
-                                {item.kind || '—'}
-                              </td>
-                              <td className="px-3 py-2 text-gray-700 border-b border-gray-100">
-                                {item.entityId || '—'}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {isAdminPanelOpen && (
         <div className="fixed inset-0 z-[120] bg-gray-900/80 flex flex-col">
