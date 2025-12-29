@@ -565,6 +565,73 @@ export const dataService = {
     };
   },
 
+  async deleteA3ImagesForCase(a3Case: {
+    dataAnalysisImages?: { src?: string }[];
+    resultImages?: { src?: string }[];
+  }) {
+    ensureSupabaseConfigured();
+
+    const basePublicPrefix = `${SUPABASE_STORAGE_URL}/object/public/${encodeURIComponent(
+      A3_IMAGES_BUCKET,
+    )}/`;
+
+    const objectPaths = new Set<string>();
+
+    const collectPaths = (images?: { src?: string }[]) => {
+      (images || []).forEach(image => {
+        const src = image?.src;
+        if (!src || typeof src !== 'string') {
+          return;
+        }
+        if (!src.startsWith(basePublicPrefix)) {
+          return;
+        }
+        const objectPath = src.slice(basePublicPrefix.length);
+        if (!objectPath) {
+          return;
+        }
+        objectPaths.add(objectPath);
+      });
+    };
+
+    collectPaths(a3Case.dataAnalysisImages);
+    collectPaths(a3Case.resultImages);
+
+    if (objectPaths.size === 0) {
+      return {
+        success: true,
+        deleted: 0,
+      };
+    }
+
+    let deleted = 0;
+
+    await Promise.all(
+      Array.from(objectPaths).map(async objectPath => {
+        const deleteUrl = `${SUPABASE_STORAGE_URL}/object/${encodeURIComponent(
+          A3_IMAGES_BUCKET,
+        )}/${objectPath}`;
+
+        try {
+          const response = await fetch(deleteUrl, {
+            method: 'DELETE',
+            headers: getSupabaseHeaders(),
+          });
+          if (response.ok) {
+            deleted += 1;
+          }
+        } catch {
+          // Ignore individual delete errors; bucket cleanup is best-effort.
+        }
+      }),
+    );
+
+    return {
+      success: true,
+      deleted,
+    };
+  },
+
   async consolidateBowlers(tags: string[]) {
     ensureSupabaseConfigured();
 

@@ -2103,13 +2103,21 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
   };
 
   const handleDeleteA3Case = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this A3 Case?')) {
-      deleteA3Case(id);
-      setIsA3ModalOpen(false);
-      setEditingA3Case(null);
-      if (location.pathname.includes(`/a3-analysis/${id}`)) {
-        navigate('/a3-analysis');
-      }
+    if (!window.confirm('Are you sure you want to delete this A3 Case?')) {
+      return;
+    }
+
+    const caseToDelete = a3Cases.find(c => c.id === id);
+    if (caseToDelete) {
+      void dataService.deleteA3ImagesForCase(caseToDelete);
+    }
+
+    deleteA3Case(id);
+    setIsA3ModalOpen(false);
+    setEditingA3Case(null);
+
+    if (location.pathname.includes(`/a3-analysis/${id}`)) {
+      navigate('/a3-analysis');
     }
   };
 
