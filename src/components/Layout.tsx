@@ -198,6 +198,23 @@ const Layout = () => {
   const [globalRootCauseView, setGlobalRootCauseView] = useState<'text' | 'mindmap'>('text');
   const [lastAllA3LoadedAt, setLastAllA3LoadedAt] = useState<number | null>(null);
 
+  const visibleAllA3Cases = useMemo(
+    () => {
+      if (isAdminOrSuperAdmin || !userPlant) {
+        return allA3Cases;
+      }
+
+      return allA3Cases.filter(a3 => {
+        const plantValue = (a3.plant || '').toString().trim();
+        if (!plantValue) {
+          return true;
+        }
+        return plantValue === userPlant;
+      });
+    },
+    [allA3Cases, isAdminOrSuperAdmin, userPlant],
+  );
+
   const loadAdminUsers = async () => {
     setIsLoadingAdminUsers(true);
     setAdminUsersError(null);
@@ -385,23 +402,6 @@ const Layout = () => {
       setSelectedGlobalA3(null);
     }
   }, [isAllA3Loading, visibleAllA3Cases.length, selectedGlobalA3]);
-
-  const visibleAllA3Cases = useMemo(
-    () => {
-      if (isAdminOrSuperAdmin || !userPlant) {
-        return allA3Cases;
-      }
-
-      return allA3Cases.filter(a3 => {
-        const plantValue = (a3.plant || '').toString().trim();
-        if (!plantValue) {
-          return true;
-        }
-        return plantValue === userPlant;
-      });
-    },
-    [allA3Cases, isAdminOrSuperAdmin, userPlant],
-  );
 
   const a3PortfolioStats = useMemo(() => {
     const filteredCases = a3PortfolioGroupFilter
