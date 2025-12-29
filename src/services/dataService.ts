@@ -1,6 +1,5 @@
 import { authService } from './authService';
 
-const API_BASE_URL = 'https://bowler-worker.study-llm.me';
 const EMAIL_API_BASE_URL = 'https://email-worker.study-llm.me';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;

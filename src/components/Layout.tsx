@@ -2140,7 +2140,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
     try {
       const response = await dataService.loadAllA3Cases();
       if (!response || response.success === false) {
-        throw new Error((response && response.error) || 'Failed to load A3 cases');
+        throw new Error('Failed to load A3 cases');
       }
       const cases = (response.a3Cases || []) as GlobalA3Case[];
       setAllA3Cases(cases);

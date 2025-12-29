@@ -260,7 +260,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                 }
             }
         } else if (!data.success) {
-            throw new Error(data.message || "Failed to load data");
+            throw new Error("Failed to load data");
         }
     } catch (err) {
         if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
