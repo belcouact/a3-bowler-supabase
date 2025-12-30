@@ -3,7 +3,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Bot, Inbox, Users, X, Calendar } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
-import { Bowler, Metric, AIModelKey, GroupPerformanceRow, A3Comment } from '../types';
+import { Bowler, Metric, AIModelKey, GroupPerformanceRow, A3Comment, A3Reaction, A3ReactionType } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { dataService } from '../services/dataService';
@@ -201,18 +201,27 @@ const Layout = () => {
   const [isLoadingA3Comments, setIsLoadingA3Comments] = useState(false);
   const [a3CommentsError, setA3CommentsError] = useState<string | null>(null);
   const [newCommentText, setNewCommentText] = useState('');
+  const [activeCommentSection, setActiveCommentSection] = useState<
+    'all' | 'general' | 'problem' | 'data' | 'root' | 'action' | 'results'
+  >('general');
   const [activeReplyToId, setActiveReplyToId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+  const [a3Reactions, setA3Reactions] = useState<A3Reaction[]>([]);
+  const [isLoadingA3Reactions, setIsLoadingA3Reactions] = useState(false);
+  const [a3BestPracticeOnly, setA3BestPracticeOnly] = useState(false);
+  const [isUpdatingBestPractice, setIsUpdatingBestPractice] = useState(false);
 
   useEffect(() => {
     if (!selectedGlobalA3) {
       setA3Comments([]);
       setA3CommentsError(null);
       setNewCommentText('');
+       setActiveCommentSection('general');
       setActiveReplyToId(null);
       setReplyText('');
+      setA3Reactions([]);
       return;
     }
 
@@ -245,21 +254,131 @@ const Layout = () => {
     };
   }, [selectedGlobalA3]);
 
+  useEffect(() => {
+    if (!selectedGlobalA3) {
+      return;
+    }
+    let isCancelled = false;
+
+    const loadReactions = async () => {
+      setIsLoadingA3Reactions(true);
+      try {
+        const reactions = await dataService.loadA3Reactions(selectedGlobalA3.id);
+        if (!isCancelled) {
+          setA3Reactions(reactions);
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          console.error('Failed to load A3 reactions', error);
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsLoadingA3Reactions(false);
+        }
+      }
+    };
+
+    loadReactions();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedGlobalA3]);
+
+  const filteredA3Comments = useMemo(() => {
+    if (activeCommentSection === 'all') {
+      return a3Comments;
+    }
+    const sectionKey =
+      activeCommentSection === 'general' ? undefined : activeCommentSection;
+    return a3Comments.filter(comment => {
+      const value = comment.section || 'general';
+      if (!sectionKey) {
+        return value === 'general';
+      }
+      return value === sectionKey;
+    });
+  }, [a3Comments, activeCommentSection]);
+
+  const reactionTypes: { key: A3ReactionType; label: string }[] = [
+    { key: 'like', label: 'Like' },
+    { key: 'helpful', label: 'Helpful' },
+    { key: 'me_too', label: 'Me too' },
+  ];
+
+  const handleToggleReaction = async (type: A3ReactionType) => {
+    if (!selectedGlobalA3) {
+      return;
+    }
+    if (!user || !user.username) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+    const existing = a3Reactions.find(
+      reaction => reaction.type === type && reaction.userId === user.username,
+    );
+    if (existing) {
+      setA3Reactions(prev => prev.filter(reaction => reaction.id !== existing.id));
+      try {
+        await dataService.removeA3Reaction({
+          a3Id: selectedGlobalA3.id,
+          type,
+          userId: user.username,
+        });
+      } catch (error) {
+        console.error('Failed to remove reaction', error);
+        setA3Reactions(prev => [...prev, existing]);
+        toast.error('Failed to update reaction. Please try again.');
+      }
+      return;
+    }
+    const optimistic: A3Reaction = {
+      id: `${Date.now()}-${type}`,
+      a3Id: selectedGlobalA3.id,
+      userId: user.username,
+      username: user.username,
+      type,
+      createdAt: new Date().toISOString(),
+    };
+    setA3Reactions(prev => [...prev, optimistic]);
+    try {
+      const created = await dataService.addA3Reaction({
+        a3Id: selectedGlobalA3.id,
+        type,
+        userId: user.username,
+        username: user.username,
+      });
+      setA3Reactions(prev =>
+        prev.map(reaction => (reaction === optimistic ? created : reaction)),
+      );
+    } catch (error) {
+      console.error('Failed to add reaction', error);
+      setA3Reactions(prev => prev.filter(reaction => reaction !== optimistic));
+      toast.error('Failed to update reaction. Please try again.');
+    }
+  };
+
   const visibleAllA3Cases = useMemo(
     () => {
-      if (isAdminOrSuperAdmin || !userPlant) {
-        return allA3Cases;
+      let cases = allA3Cases;
+
+      if (!isAdminOrSuperAdmin && userPlant) {
+        cases = cases.filter(a3 => {
+          const plantValue = (a3.plant || '').toString().trim();
+          if (!plantValue) {
+            return true;
+          }
+          return plantValue === userPlant;
+        });
       }
 
-      return allA3Cases.filter(a3 => {
-        const plantValue = (a3.plant || '').toString().trim();
-        if (!plantValue) {
-          return true;
-        }
-        return plantValue === userPlant;
-      });
+      if (a3BestPracticeOnly) {
+        cases = cases.filter(a3 => !!a3.isBestPractice);
+      }
+
+      return cases;
     },
-    [allA3Cases, isAdminOrSuperAdmin, userPlant],
+    [allA3Cases, isAdminOrSuperAdmin, userPlant, a3BestPracticeOnly],
   );
 
   const loadAdminUsers = async () => {
@@ -4593,6 +4712,17 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                         ? 'Loading cases from server...'
                         : `${visibleAllA3Cases.length} case${visibleAllA3Cases.length === 1 ? '' : 's'} visible`}
                     </p>
+                    <div className="mt-1">
+                      <label className="inline-flex items-center gap-1 text-[11px] text-gray-600">
+                        <input
+                          type="checkbox"
+                          className="h-3 w-3 text-amber-600 border-gray-300 rounded"
+                          checked={a3BestPracticeOnly}
+                          onChange={e => setA3BestPracticeOnly(e.target.checked)}
+                        />
+                        <span>Best practice only</span>
+                      </label>
+                    </div>
                   </div>
                   <button
                     type="button"
@@ -4655,6 +4785,12 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                     <span className="text-[11px] inline-flex items-center rounded-full border px-1.5 py-0.5 font-medium bg-white text-gray-600">
                                       {a3.group || 'Ungrouped'}
                                     </span>
+                                    {a3.isBestPractice && (
+                                      <span className="inline-flex items-center rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 border border-amber-200">
+                                        <Lightbulb className="w-3 h-3 mr-1" />
+                                        Best practice
+                                      </span>
+                                    )}
                                   </div>
                                   <div className="mt-1 text-xs font-semibold text-indigo-700 underline decoration-dotted underline-offset-2">
                                     {a3.title || 'Untitled A3'}
@@ -4719,17 +4855,75 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       Same structure as the Report tab of A3 Analysis.
                     </p>
                   </div>
-                  {!isA3PortfolioSidebarOpen && (
-                    <button
-                      type="button"
-                      onClick={() => setIsA3PortfolioSidebarOpen(true)}
-                      className="ml-3 inline-flex items-center rounded-full border border-gray-200 px-2 py-1 text-[11px] text-gray-600 hover:bg-gray-50"
-                      title="Show portfolio list"
-                    >
-                      <ChevronRight className="w-3 h-3" />
-                      <span className="ml-1 hidden sm:inline">Portfolio</span>
-                    </button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {isAdminOrSuperAdmin && selectedGlobalA3 && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!selectedGlobalA3 || !isAdminOrSuperAdmin) {
+                            return;
+                          }
+                          const ownerId = selectedGlobalA3.userAccountId || selectedGlobalA3.userId;
+                          if (!ownerId) {
+                            toast.error('Unable to identify owner for this A3 case.');
+                            return;
+                          }
+                          const nextValue = !selectedGlobalA3.isBestPractice;
+                          try {
+                            setIsUpdatingBestPractice(true);
+                            await dataService.updateA3BestPractice(ownerId, selectedGlobalA3.id, nextValue);
+                            setAllA3Cases(prev =>
+                              prev.map(c =>
+                                c.id === selectedGlobalA3.id &&
+                                (c.userId === selectedGlobalA3.userId ||
+                                  c.userAccountId === selectedGlobalA3.userAccountId)
+                                  ? { ...c, isBestPractice: nextValue }
+                                  : c,
+                              ),
+                            );
+                            setSelectedGlobalA3(prev =>
+                              prev ? { ...prev, isBestPractice: nextValue } : prev,
+                            );
+                            toast.success(
+                              nextValue
+                                ? 'Marked as best practice.'
+                                : 'Removed best practice flag.',
+                            );
+                          } catch (error) {
+                            console.error('Failed to update best practice flag', error);
+                            toast.error('Failed to update best practice flag. Please try again.');
+                          } finally {
+                            setIsUpdatingBestPractice(false);
+                          }
+                        }}
+                        className={clsx(
+                          'inline-flex items-center rounded-full border px-2 py-1 text-[11px] font-medium',
+                          selectedGlobalA3.isBestPractice
+                            ? 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'
+                            : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50',
+                        )}
+                        disabled={isUpdatingBestPractice}
+                      >
+                        <Lightbulb className="w-3 h-3 mr-1" />
+                        <span>
+                          {selectedGlobalA3.isBestPractice
+                            ? 'Best practice'
+                            : 'Mark best practice'}
+                        </span>
+                      </button>
+                    )}
+                    {!isA3PortfolioSidebarOpen && (
+                      <button
+                        type="button"
+                        onClick={() => setIsA3PortfolioSidebarOpen(true)}
+                        className="ml-1 inline-flex items-center rounded-full border border-gray-200 px-2 py-1 text-[11px] text-gray-600 hover:bg-gray-50"
+                        title="Show portfolio list"
+                      >
+                        <ChevronRight className="w-3 h-3" />
+                        <span className="ml-1 hidden sm:inline">Portfolio</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex-1 overflow-auto p-4 bg-gray-50">
                   {!selectedGlobalA3 ? (
@@ -4787,6 +4981,50 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                               {selectedGlobalA3.problemStatement || 'Not defined'}
                             </p>
                           </div>
+                          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
+                            <span className="text-gray-500">Reactions:</span>
+                            {isLoadingA3Reactions && (
+                              <span className="text-gray-400">Loading...</span>
+                            )}
+                            {!isLoadingA3Reactions &&
+                              reactionTypes.map(option => {
+                                const count = a3Reactions.filter(
+                                  reaction => reaction.type === option.key,
+                                ).length;
+                                const userReacted =
+                                  !!user &&
+                                  !!user.username &&
+                                  a3Reactions.some(
+                                    reaction =>
+                                      reaction.type === option.key &&
+                                      reaction.userId === user.username,
+                                  );
+                                return (
+                                  <button
+                                    key={option.key}
+                                    type="button"
+                                    className={clsx(
+                                      'inline-flex items-center gap-1 rounded-full border px-2 py-0.5',
+                                      userReacted
+                                        ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
+                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50',
+                                    )}
+                                    onClick={() => handleToggleReaction(option.key)}
+                                  >
+                                    <span>{option.label}</span>
+                                    <span className="text-[10px] text-gray-500">
+                                      {count}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                          </div>
+                          {selectedGlobalA3.isBestPractice && (
+                            <div className="mt-3 inline-flex items-center rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                              <Lightbulb className="w-3 h-3 mr-1" />
+                              Best practice case
+                            </div>
+                          )}
                         </div>
 
                         <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
@@ -4962,9 +5200,44 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                         </div>
 
                         <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">
-                            Comments
-                          </h4>
+                          <div className="mb-2 flex items-center justify-between border-b pb-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
+                                Comments
+                              </h4>
+                              <span className="inline-flex items-center rounded-full bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-600 border border-gray-200">
+                                {filteredA3Comments.length} of {a3Comments.length} comment
+                                {a3Comments.length === 1 ? '' : 's'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 text-[10px]">
+                              {[
+                                { key: 'all', label: 'All' },
+                                { key: 'general', label: 'General' },
+                                { key: 'problem', label: 'Problem' },
+                                { key: 'data', label: 'Data' },
+                                { key: 'root', label: 'Root' },
+                                { key: 'action', label: 'Action' },
+                                { key: 'results', label: 'Results' },
+                              ].map(option => (
+                                <button
+                                  key={option.key}
+                                  type="button"
+                                  className={clsx(
+                                    'px-2 py-0.5 rounded-full border text-[10px]',
+                                    activeCommentSection === option.key
+                                      ? 'bg-blue-600 border-blue-600 text-white'
+                                      : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50',
+                                  )}
+                                  onClick={() =>
+                                    setActiveCommentSection(option.key as typeof activeCommentSection)
+                                  }
+                                >
+                                  {option.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                           <div className="space-y-4">
                             {isLoadingA3Comments ? (
                               <div className="flex items-center text-xs text-gray-500">
@@ -4976,17 +5249,17 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 {a3CommentsError && (
                                   <p className="text-xs text-red-500">{a3CommentsError}</p>
                                 )}
-                                {a3Comments.length === 0 && !a3CommentsError && (
+                                {filteredA3Comments.length === 0 && !a3CommentsError && (
                                   <p className="text-xs text-gray-500">
                                     No comments yet. Be the first to share feedback on this A3.
                                   </p>
                                 )}
-                                {a3Comments.length > 0 && (
+                                {filteredA3Comments.length > 0 && (
                                   <div className="space-y-4">
-                                    {a3Comments
+                                    {filteredA3Comments
                                       .filter(comment => !comment.parentId)
                                       .map(comment => {
-                                        const replies = a3Comments.filter(
+                                        const replies = filteredA3Comments.filter(
                                           reply => reply.parentId === comment.id,
                                         );
                                         const isReplying = activeReplyToId === comment.id;
@@ -5005,6 +5278,21 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                                 </span>
                                               )}
                                             </div>
+                                            {comment.section && (
+                                              <span className="mt-0.5 inline-flex items-center rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600">
+                                                {comment.section === 'problem'
+                                                  ? 'Problem'
+                                                  : comment.section === 'data'
+                                                  ? 'Data'
+                                                  : comment.section === 'root'
+                                                  ? 'Root'
+                                                  : comment.section === 'action'
+                                                  ? 'Action'
+                                                  : comment.section === 'results'
+                                                  ? 'Results'
+                                                  : 'General'}
+                                              </span>
+                                            )}
                                             <p className="mt-1 whitespace-pre-wrap text-gray-700">
                                               {comment.content}
                                             </p>
@@ -5063,6 +5351,8 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                                         const created = await dataService.addA3Comment({
                                                           a3Id: selectedGlobalA3.id,
                                                           content: replyText.trim(),
+                                                          section:
+                                                            comment.section || activeCommentSection,
                                                           parentId: comment.id,
                                                           userId: user.username,
                                                           username: user.username,
@@ -5165,6 +5455,10 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                       const created = await dataService.addA3Comment({
                                         a3Id: selectedGlobalA3.id,
                                         content: newCommentText.trim(),
+                                        section:
+                                          activeCommentSection === 'all'
+                                            ? 'general'
+                                            : activeCommentSection,
                                         userId: user.username,
                                         username: user.username,
                                       });

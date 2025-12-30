@@ -127,15 +127,28 @@ export interface A3Case {
   dataAnalysisCanvasHeight?: number;
   resultImages?: DataAnalysisImage[];
   resultCanvasHeight?: number;
+  isBestPractice?: boolean;
 }
 
 export interface A3Comment {
   id: string;
   a3Id: string;
+  section?: string;
   parentId?: string;
   userId?: string;
   username?: string;
   content: string;
+  createdAt: string;
+}
+
+export type A3ReactionType = 'like' | 'helpful' | 'me_too';
+
+export interface A3Reaction {
+  id: string;
+  a3Id: string;
+  userId?: string;
+  username?: string;
+  type: A3ReactionType;
   createdAt: string;
 }
 

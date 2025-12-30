@@ -1,5 +1,5 @@
 import { authService } from './authService';
-import { A3Comment } from '../types';
+import { A3Comment, A3Reaction, A3ReactionType } from '../types';
 
 const EMAIL_API_BASE_URL = 'https://email-worker.study-llm.me';
 
@@ -104,6 +104,7 @@ export const dataService = {
       data_analysis_canvas_height: a3.dataAnalysisCanvasHeight ?? null,
       result_images: a3.resultImages ?? null,
       result_canvas_height: a3.resultCanvasHeight ?? null,
+      is_best_practice: a3.isBestPractice ?? null,
     }));
 
     const dashboardUrl = new URL(`${SUPABASE_REST_URL}/dashboards`);
@@ -322,6 +323,7 @@ export const dataService = {
         dataAnalysisCanvasHeight: row.data_analysis_canvas_height ?? undefined,
         resultImages: row.result_images ?? undefined,
         resultCanvasHeight: row.result_canvas_height ?? undefined,
+        isBestPractice: row.is_best_practice ?? undefined,
       }));
 
       const dashboardRow = dashboardJson && dashboardJson.length > 0 ? dashboardJson[0] : null;
@@ -442,6 +444,7 @@ export const dataService = {
           dataAnalysisCanvasHeight: row.data_analysis_canvas_height ?? undefined,
           resultImages: row.result_images ?? undefined,
           resultCanvasHeight: row.result_canvas_height ?? undefined,
+          isBestPractice: row.is_best_practice ?? undefined,
           userId,
           userAccountId: userId,
           plant: profile.plant,
@@ -464,6 +467,33 @@ export const dataService = {
       success: true,
       a3Cases,
     };
+  },
+
+  async updateA3BestPractice(userId: string, a3Id: string, isBestPractice: boolean) {
+    ensureSupabaseConfigured();
+
+    const trimmedUserId = userId.trim();
+
+    const url = new URL(`${SUPABASE_REST_URL}/a3_cases`);
+    url.searchParams.set('user_id', `eq.${trimmedUserId}`);
+    url.searchParams.set('id', `eq.${a3Id}`);
+
+    const row = {
+      is_best_practice: isBestPractice,
+    };
+
+    const response = await fetch(url.toString(), {
+      method: 'PATCH',
+      headers: {
+        ...getSupabaseHeaders('application/json'),
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify(row),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update A3 best practice flag in Supabase');
+    }
   },
 
   async loadA3Detail(userId: string, a3Id: string) {
@@ -655,6 +685,7 @@ export const dataService = {
     return (json || []).map(row => ({
       id: row.id,
       a3Id: row.a3_id,
+      section: row.section ?? undefined,
       parentId: row.parent_id ?? undefined,
       userId: row.user_id ?? undefined,
       username: row.username ?? undefined,
@@ -666,6 +697,7 @@ export const dataService = {
   async addA3Comment(input: {
     a3Id: string;
     content: string;
+    section?: string;
     parentId?: string;
     userId?: string;
     username?: string;
@@ -676,6 +708,7 @@ export const dataService = {
 
     const row = {
       a3_id: input.a3Id,
+      section: input.section ?? null,
       parent_id: input.parentId ?? null,
       user_id: input.userId ?? null,
       username: input.username ?? null,
@@ -704,12 +737,112 @@ export const dataService = {
     return {
       id: created.id,
       a3Id: created.a3_id,
+      section: created.section ?? undefined,
       parentId: created.parent_id ?? undefined,
       userId: created.user_id ?? undefined,
       username: created.username ?? undefined,
       content: created.content ?? input.content,
       createdAt: created.created_at ?? now,
     };
+  },
+
+  async loadA3Reactions(a3Id: string): Promise<A3Reaction[]> {
+    ensureSupabaseConfigured();
+
+    const url = new URL(`${SUPABASE_REST_URL}/a3_reactions`);
+    url.searchParams.set('a3_id', `eq.${a3Id}`);
+    url.searchParams.set('select', '*');
+    url.searchParams.set('order', 'created_at.asc');
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: getSupabaseHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to load A3 reactions from Supabase');
+    }
+
+    const json = (await response.json()) as any[];
+
+    return (json || []).map(row => ({
+      id: row.id,
+      a3Id: row.a3_id,
+      userId: row.user_id ?? undefined,
+      username: row.username ?? undefined,
+      type: row.reaction_type as A3ReactionType,
+      createdAt: row.created_at ?? new Date().toISOString(),
+    }));
+  },
+
+  async addA3Reaction(input: {
+    a3Id: string;
+    type: A3ReactionType;
+    userId?: string;
+    username?: string;
+  }): Promise<A3Reaction> {
+    ensureSupabaseConfigured();
+
+    const now = new Date().toISOString();
+
+    const row = {
+      a3_id: input.a3Id,
+      reaction_type: input.type,
+      user_id: input.userId ?? null,
+      username: input.username ?? null,
+      created_at: now,
+    };
+
+    const url = new URL(`${SUPABASE_REST_URL}/a3_reactions`);
+
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      headers: {
+        ...getSupabaseHeaders('application/json'),
+        Prefer: 'return=representation',
+      },
+      body: JSON.stringify([row]),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to add A3 reaction to Supabase');
+    }
+
+    const json = (await response.json()) as any[];
+    const created = json && json.length > 0 ? json[0] : row;
+
+    return {
+      id: created.id,
+      a3Id: created.a3_id,
+      userId: created.user_id ?? undefined,
+      username: created.username ?? undefined,
+      type: created.reaction_type as A3ReactionType,
+      createdAt: created.created_at ?? now,
+    };
+  },
+
+  async removeA3Reaction(params: {
+    a3Id: string;
+    type: A3ReactionType;
+    userId?: string;
+  }): Promise<void> {
+    ensureSupabaseConfigured();
+
+    const url = new URL(`${SUPABASE_REST_URL}/a3_reactions`);
+    url.searchParams.set('a3_id', `eq.${params.a3Id}`);
+    url.searchParams.set('reaction_type', `eq.${params.type}`);
+    if (params.userId) {
+      url.searchParams.set('user_id', `eq.${params.userId}`);
+    }
+
+    const response = await fetch(url.toString(), {
+      method: 'DELETE',
+      headers: getSupabaseHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to remove A3 reaction from Supabase');
+    }
   },
 
   async consolidateBowlers(tags: string[]) {
