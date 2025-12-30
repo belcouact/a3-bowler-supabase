@@ -4774,12 +4774,13 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                     </div>
                   ) : (
                     <div className="p-3 space-y-2">
-                      <div className="hidden md:grid grid-cols-6 gap-2 text-[11px] font-semibold text-gray-500 px-2 py-1">
+                      <div className="hidden md:grid grid-cols-7 gap-2 text-[11px] font-semibold text-gray-500 px-2 py-1">
                         <span className="col-span-2">A3 Title</span>
                         <span>Owner</span>
                         <span>Plant</span>
-                        <span className="text-right">Due Date</span>
-                        <span className="text-right"># Comments</span>
+                        <span>Due Date</span>
+                        <span>Status</span>
+                        <span># Comments</span>
                       </div>
                       <div className="space-y-1">
                         {visibleAllA3Cases.map(a3 => {
@@ -4804,7 +4805,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 isSelected ? 'border-blue-400 bg-blue-50/60' : 'border-gray-100',
                               )}
                             >
-                              <div className="flex flex-col md:grid md:grid-cols-6 md:gap-2 md:items-center">
+                              <div className="flex flex-col md:grid md:grid-cols-7 md:gap-2 md:items-center">
                                 <div className="md:col-span-2">
                                   <div className="flex items-center gap-2">
                                     <span className="text-[11px] inline-flex items-center rounded-full border px-1.5 py-0.5 font-medium bg-white text-gray-600">
@@ -4835,22 +4836,21 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 <div className="mt-1 md:mt-0 text-[11px] text-gray-700">
                                   {a3.plant || '—'}
                                 </div>
-                                <div className="mt-1 md:mt-0 text-[11px] text-gray-700 md:text-right">
-                                  <div>{a3.endDate || '—'}</div>
-                                  <div className="mt-0.5 flex md:justify-end">
-                                    <span
-                                      className={clsx(
-                                        'inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium',
-                                        statusColor,
-                                      )}
-                                    >
-                                      {status || 'Not Started'}
-                                    </span>
-                                  </div>
+                                <div className="mt-1 md:mt-0 text-[11px] text-gray-700">
+                                  {a3.endDate || '—'}
+                                </div>
+                                <div className="mt-1 md:mt-0 text-[11px] text-gray-700">
+                                  <span
+                                    className={clsx(
+                                      'inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium',
+                                      statusColor,
+                                    )}
+                                  >
+                                    {status || 'Not Started'}
+                                  </span>
                                 </div>
                                 <div className="mt-1 md:mt-0 text-[11px] text-gray-500 md:text-right">
-                                  {(a3CommentCounts[a3.id] ?? 0).toLocaleString()} comment
-                                  {(a3CommentCounts[a3.id] ?? 0) === 1 ? '' : 's'}
+                                  {(a3CommentCounts[a3.id] ?? 0).toLocaleString()}
                                 </div>
                               </div>
                             </button>
