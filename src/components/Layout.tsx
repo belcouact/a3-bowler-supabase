@@ -4705,9 +4705,16 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
               >
                 <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-white">
                   <div>
-                    <p className="text-xs font-semibold tracking-wide text-gray-600 uppercase">
-                      A3 Report Preview
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs font-semibold tracking-wide text-gray-600 uppercase">
+                        A3 Report Preview
+                      </p>
+                      {selectedGlobalA3 && (
+                        <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700 border border-blue-100">
+                          {a3Comments.length} comment{a3Comments.length === 1 ? '' : 's'}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-[11px] text-gray-500">
                       Same structure as the Report tab of A3 Analysis.
                     </p>
