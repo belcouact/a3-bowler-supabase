@@ -129,6 +129,16 @@ export interface A3Case {
   resultCanvasHeight?: number;
 }
 
+export interface A3Comment {
+  id: string;
+  a3Id: string;
+  parentId?: string;
+  userId?: string;
+  username?: string;
+  content: string;
+  createdAt: string;
+}
+
 export interface GroupPerformanceRow {
   groupName: string;
   metricId: string;

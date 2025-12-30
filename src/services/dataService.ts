@@ -1,4 +1,5 @@
 import { authService } from './authService';
+import { A3Comment } from '../types';
 
 const EMAIL_API_BASE_URL = 'https://email-worker.study-llm.me';
 
@@ -629,6 +630,85 @@ export const dataService = {
     return {
       success: true,
       deleted,
+    };
+  },
+
+  async loadA3Comments(a3Id: string): Promise<A3Comment[]> {
+    ensureSupabaseConfigured();
+
+    const url = new URL(`${SUPABASE_REST_URL}/a3_comments`);
+    url.searchParams.set('a3_id', `eq.${a3Id}`);
+    url.searchParams.set('select', '*');
+    url.searchParams.set('order', 'created_at.asc');
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: getSupabaseHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to load A3 comments from Supabase');
+    }
+
+    const json = (await response.json()) as any[];
+
+    return (json || []).map(row => ({
+      id: row.id,
+      a3Id: row.a3_id,
+      parentId: row.parent_id ?? undefined,
+      userId: row.user_id ?? undefined,
+      username: row.username ?? undefined,
+      content: row.content ?? '',
+      createdAt: row.created_at ?? new Date().toISOString(),
+    }));
+  },
+
+  async addA3Comment(input: {
+    a3Id: string;
+    content: string;
+    parentId?: string;
+    userId?: string;
+    username?: string;
+  }): Promise<A3Comment> {
+    ensureSupabaseConfigured();
+
+    const now = new Date().toISOString();
+
+    const row = {
+      a3_id: input.a3Id,
+      parent_id: input.parentId ?? null,
+      user_id: input.userId ?? null,
+      username: input.username ?? null,
+      content: input.content,
+      created_at: now,
+    };
+
+    const url = new URL(`${SUPABASE_REST_URL}/a3_comments`);
+
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      headers: {
+        ...getSupabaseHeaders('application/json'),
+        Prefer: 'return=representation',
+      },
+      body: JSON.stringify([row]),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to add A3 comment to Supabase');
+    }
+
+    const json = (await response.json()) as any[];
+    const created = json && json.length > 0 ? json[0] : row;
+
+    return {
+      id: created.id,
+      a3Id: created.a3_id,
+      parentId: created.parent_id ?? undefined,
+      userId: created.user_id ?? undefined,
+      username: created.username ?? undefined,
+      content: created.content ?? input.content,
+      createdAt: created.created_at ?? now,
     };
   },
 

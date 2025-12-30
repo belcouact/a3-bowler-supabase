@@ -3,7 +3,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Bot, Inbox, Users, X, Calendar } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
-import { Bowler, Metric, AIModelKey, GroupPerformanceRow } from '../types';
+import { Bowler, Metric, AIModelKey, GroupPerformanceRow, A3Comment } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { dataService } from '../services/dataService';
@@ -197,6 +197,53 @@ const Layout = () => {
   const [selectedGlobalA3, setSelectedGlobalA3] = useState<GlobalA3Case | null>(null);
   const [globalRootCauseView, setGlobalRootCauseView] = useState<'text' | 'mindmap'>('text');
   const [lastAllA3LoadedAt, setLastAllA3LoadedAt] = useState<number | null>(null);
+  const [a3Comments, setA3Comments] = useState<A3Comment[]>([]);
+  const [isLoadingA3Comments, setIsLoadingA3Comments] = useState(false);
+  const [a3CommentsError, setA3CommentsError] = useState<string | null>(null);
+  const [newCommentText, setNewCommentText] = useState('');
+  const [activeReplyToId, setActiveReplyToId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+
+  useEffect(() => {
+    if (!selectedGlobalA3) {
+      setA3Comments([]);
+      setA3CommentsError(null);
+      setNewCommentText('');
+      setActiveReplyToId(null);
+      setReplyText('');
+      return;
+    }
+
+    let isCancelled = false;
+
+    const loadComments = async () => {
+      setIsLoadingA3Comments(true);
+      setA3CommentsError(null);
+      try {
+        const comments = await dataService.loadA3Comments(selectedGlobalA3.id);
+        if (!isCancelled) {
+          setA3Comments(comments);
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          console.error('Failed to load A3 comments', error);
+          setA3CommentsError('Failed to load comments.');
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsLoadingA3Comments(false);
+        }
+      }
+    };
+
+    loadComments();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedGlobalA3]);
 
   const visibleAllA3Cases = useMemo(
     () => {
@@ -4904,6 +4951,236 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                               <span className="font-medium text-gray-900">Outcome:</span>{' '}
                               {selectedGlobalA3.results || 'No results recorded yet.'}
                             </p>
+                          </div>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">
+                            Comments
+                          </h4>
+                          <div className="space-y-4">
+                            {isLoadingA3Comments ? (
+                              <div className="flex items-center text-xs text-gray-500">
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                <span>Loading comments...</span>
+                              </div>
+                            ) : (
+                              <>
+                                {a3CommentsError && (
+                                  <p className="text-xs text-red-500">{a3CommentsError}</p>
+                                )}
+                                {a3Comments.length === 0 && !a3CommentsError && (
+                                  <p className="text-xs text-gray-500">
+                                    No comments yet. Be the first to share feedback on this A3.
+                                  </p>
+                                )}
+                                {a3Comments.length > 0 && (
+                                  <div className="space-y-4">
+                                    {a3Comments
+                                      .filter(comment => !comment.parentId)
+                                      .map(comment => {
+                                        const replies = a3Comments.filter(
+                                          reply => reply.parentId === comment.id,
+                                        );
+                                        const isReplying = activeReplyToId === comment.id;
+                                        const createdAt = comment.createdAt
+                                          ? new Date(comment.createdAt)
+                                          : null;
+                                        return (
+                                          <div key={comment.id} className="text-xs text-gray-700">
+                                            <div className="flex items-center justify-between">
+                                              <span className="font-semibold text-gray-900">
+                                                {comment.username || comment.userId || 'Anonymous'}
+                                              </span>
+                                              {createdAt && (
+                                                <span className="text-[11px] text-gray-400">
+                                                  {createdAt.toLocaleString()}
+                                                </span>
+                                              )}
+                                            </div>
+                                            <p className="mt-1 whitespace-pre-wrap text-gray-700">
+                                              {comment.content}
+                                            </p>
+                                            <button
+                                              type="button"
+                                              className="mt-1 text-[11px] font-medium text-blue-600 hover:text-blue-700"
+                                              onClick={() => {
+                                                if (isReplying) {
+                                                  setActiveReplyToId(null);
+                                                  setReplyText('');
+                                                } else {
+                                                  setActiveReplyToId(comment.id);
+                                                  setReplyText('');
+                                                }
+                                              }}
+                                            >
+                                              {isReplying ? 'Cancel reply' : 'Reply'}
+                                            </button>
+                                            {isReplying && (
+                                              <div className="mt-2">
+                                                <textarea
+                                                  className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                  rows={2}
+                                                  placeholder="Write your reply..."
+                                                  value={replyText}
+                                                  onChange={e => setReplyText(e.target.value)}
+                                                />
+                                                <div className="mt-1 flex justify-end gap-2">
+                                                  <button
+                                                    type="button"
+                                                    className="inline-flex items-center rounded-md border border-gray-300 px-2 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50"
+                                                    onClick={() => {
+                                                      setActiveReplyToId(null);
+                                                      setReplyText('');
+                                                    }}
+                                                    disabled={isSubmittingReply}
+                                                  >
+                                                    Cancel
+                                                  </button>
+                                                  <button
+                                                    type="button"
+                                                    className="inline-flex items-center rounded-md bg-blue-600 px-3 py-1 text-[11px] font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+                                                    onClick={async () => {
+                                                      if (!selectedGlobalA3) {
+                                                        return;
+                                                      }
+                                                      if (!replyText.trim()) {
+                                                        return;
+                                                      }
+                                                      if (!user || !user.username) {
+                                                        setIsLoginModalOpen(true);
+                                                        return;
+                                                      }
+                                                      try {
+                                                        setIsSubmittingReply(true);
+                                                        const created = await dataService.addA3Comment({
+                                                          a3Id: selectedGlobalA3.id,
+                                                          content: replyText.trim(),
+                                                          parentId: comment.id,
+                                                          userId: user.username,
+                                                          username: user.username,
+                                                        });
+                                                        setA3Comments(prev => [...prev, created]);
+                                                        setReplyText('');
+                                                        setActiveReplyToId(null);
+                                                      } catch (error) {
+                                                        console.error('Failed to post reply', error);
+                                                        toast.error(
+                                                          'Failed to post reply. Please try again.',
+                                                        );
+                                                      } finally {
+                                                        setIsSubmittingReply(false);
+                                                      }
+                                                    }}
+                                                    disabled={isSubmittingReply || !replyText.trim()}
+                                                  >
+                                                    {isSubmittingReply && (
+                                                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                                    )}
+                                                    <span>Post reply</span>
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            )}
+                                            {replies.length > 0 && (
+                                              <div className="mt-2 border-l border-gray-200 pl-3 space-y-2">
+                                                {replies.map(reply => {
+                                                  const replyCreatedAt = reply.createdAt
+                                                    ? new Date(reply.createdAt)
+                                                    : null;
+                                                  return (
+                                                    <div key={reply.id} className="text-xs">
+                                                      <div className="flex items-center justify-between">
+                                                        <span className="font-semibold text-gray-900">
+                                                          {reply.username ||
+                                                            reply.userId ||
+                                                            'Anonymous'}
+                                                        </span>
+                                                        {replyCreatedAt && (
+                                                          <span className="text-[11px] text-gray-400">
+                                                            {replyCreatedAt.toLocaleString()}
+                                                          </span>
+                                                        )}
+                                                      </div>
+                                                      <p className="mt-1 whitespace-pre-wrap text-gray-700">
+                                                        {reply.content}
+                                                      </p>
+                                                    </div>
+                                                  );
+                                                })}
+                                              </div>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
+                                  </div>
+                                )}
+                              </>
+                            )}
+
+                            <div className="border-t border-gray-100 pt-3 mt-2">
+                              <p className="text-[11px] text-gray-500 mb-2">
+                                Share feedback or questions about this A3 report.
+                              </p>
+                              <textarea
+                                className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                rows={3}
+                                placeholder={
+                                  user
+                                    ? 'Write a comment...'
+                                    : 'Log in to comment on this A3 report.'
+                                }
+                                value={newCommentText}
+                                onChange={e => setNewCommentText(e.target.value)}
+                              />
+                              <div className="mt-2 flex items-center justify-between">
+                                {!user && (
+                                  <span className="text-[11px] text-gray-500">
+                                    You need to log in to post comments.
+                                  </span>
+                                )}
+                                <button
+                                  type="button"
+                                  className="ml-auto inline-flex items-center rounded-md bg-blue-600 px-3 py-1 text-[11px] font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+                                  onClick={async () => {
+                                    if (!selectedGlobalA3) {
+                                      return;
+                                    }
+                                    if (!newCommentText.trim()) {
+                                      return;
+                                    }
+                                    if (!user || !user.username) {
+                                      setIsLoginModalOpen(true);
+                                      return;
+                                    }
+                                    try {
+                                      setIsSubmittingComment(true);
+                                      const created = await dataService.addA3Comment({
+                                        a3Id: selectedGlobalA3.id,
+                                        content: newCommentText.trim(),
+                                        userId: user.username,
+                                        username: user.username,
+                                      });
+                                      setA3Comments(prev => [...prev, created]);
+                                      setNewCommentText('');
+                                    } catch (error) {
+                                      console.error('Failed to post comment', error);
+                                      toast.error(
+                                        'Failed to post comment. Please try again.',
+                                      );
+                                    } finally {
+                                      setIsSubmittingComment(false);
+                                    }
+                                  }}
+                                  disabled={isSubmittingComment || !newCommentText.trim()}
+                                >
+                                  {isSubmittingComment && (
+                                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                  )}
+                                  <span>Post comment</span>
+                                </button>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
