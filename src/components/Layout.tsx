@@ -198,6 +198,7 @@ const Layout = () => {
   const [globalRootCauseView, setGlobalRootCauseView] = useState<'text' | 'mindmap'>('text');
   const [lastAllA3LoadedAt, setLastAllA3LoadedAt] = useState<number | null>(null);
   const [a3Comments, setA3Comments] = useState<A3Comment[]>([]);
+  const [a3CommentCounts, setA3CommentCounts] = useState<Record<string, number>>({});
   const [isLoadingA3Comments, setIsLoadingA3Comments] = useState(false);
   const [a3CommentsError, setA3CommentsError] = useState<string | null>(null);
   const [newCommentText, setNewCommentText] = useState('');
@@ -234,6 +235,17 @@ const Layout = () => {
         const comments = await dataService.loadA3Comments(selectedGlobalA3.id);
         if (!isCancelled) {
           setA3Comments(comments);
+          setA3CommentCounts(prev => {
+            const currentCount = comments.length;
+            const existing = prev[selectedGlobalA3.id];
+            if (existing === currentCount) {
+              return prev;
+            }
+            return {
+              ...prev,
+              [selectedGlobalA3.id]: currentCount,
+            };
+          });
         }
       } catch (error) {
         if (!isCancelled) {
@@ -2332,6 +2344,18 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
         setSelectedGlobalA3(cases[0]);
       } else {
         setSelectedGlobalA3(null);
+      }
+      if (cases.length > 0) {
+        try {
+          const counts = await dataService.loadA3CommentCounts(
+            cases.map(a3 => a3.id),
+          );
+          setA3CommentCounts(counts);
+        } catch (error) {
+          console.error('Failed to load A3 comment counts', error);
+        }
+      } else {
+        setA3CommentCounts({});
       }
     } catch (error: any) {
       console.error('Failed to load global A3 cases', error);
@@ -4811,7 +4835,13 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                   {a3.plant || '—'}
                                 </div>
                                 <div className="mt-1 md:mt-0 text-[11px] text-gray-700 md:text-right">
-                                  <div>{a3.endDate || '—'}</div>
+                                  <div>
+                                    {a3.endDate || '—'}
+                                    <span className="ml-1 text-gray-400">
+                                      · {(a3CommentCounts[a3.id] ?? 0)} comment
+                                      {(a3CommentCounts[a3.id] ?? 0) === 1 ? '' : 's'}
+                                    </span>
+                                  </div>
                                   <div className="mt-0.5 flex md:justify-end">
                                     <span
                                       className={clsx(
@@ -5358,6 +5388,14 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                                           username: user.username,
                                                         });
                                                         setA3Comments(prev => [...prev, created]);
+                                                        setA3CommentCounts(prev => {
+                                                          const current =
+                                                            prev[selectedGlobalA3.id] ?? 0;
+                                                          return {
+                                                            ...prev,
+                                                            [selectedGlobalA3.id]: current + 1,
+                                                          };
+                                                        });
                                                         setReplyText('');
                                                         setActiveReplyToId(null);
                                                       } catch (error) {
@@ -5463,6 +5501,14 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                         username: user.username,
                                       });
                                       setA3Comments(prev => [...prev, created]);
+                                      setA3CommentCounts(prev => {
+                                        const current =
+                                          prev[selectedGlobalA3.id] ?? 0;
+                                        return {
+                                          ...prev,
+                                          [selectedGlobalA3.id]: current + 1,
+                                        };
+                                      });
                                       setNewCommentText('');
                                     } catch (error) {
                                       console.error('Failed to post comment', error);

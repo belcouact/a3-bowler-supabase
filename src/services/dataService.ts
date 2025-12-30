@@ -746,6 +746,49 @@ export const dataService = {
     };
   },
 
+  async loadA3CommentCounts(a3Ids: string[]): Promise<Record<string, number>> {
+    ensureSupabaseConfigured();
+
+    const uniqueIds = Array.from(
+      new Set(
+        (a3Ids || []).filter(id => typeof id === 'string' && id.trim().length > 0),
+      ),
+    );
+
+    if (uniqueIds.length === 0) {
+      return {};
+    }
+
+    const url = new URL(`${SUPABASE_REST_URL}/a3_comments`);
+    const inList = uniqueIds.map(id => `"${id}"`).join(',');
+    url.searchParams.set('a3_id', `in.(${inList})`);
+    url.searchParams.set('select', 'a3_id');
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: getSupabaseHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to load A3 comment counts from Supabase');
+    }
+
+    const json = (await response.json()) as any[];
+
+    const counts: Record<string, number> = {};
+
+    (json || []).forEach(row => {
+      const key = row.a3_id;
+      if (!key) {
+        return;
+      }
+      const previous = counts[key] ?? 0;
+      counts[key] = previous + 1;
+    });
+
+    return counts;
+  },
+
   async loadA3Reactions(a3Id: string): Promise<A3Reaction[]> {
     ensureSupabaseConfigured();
 
