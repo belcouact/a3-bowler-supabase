@@ -115,7 +115,7 @@ const Layout = () => {
   const isSuperAdmin = normalizedRole === 'super admin';
   const isAdminOrSuperAdmin = isAdmin || isSuperAdmin;
   const userPlant = (user?.plant || '').trim();
-  
+
   // Identify active module based on path
   const isMetricBowler = location.pathname.includes('/metric-bowler');
   const isA3Analysis = location.pathname.includes('/a3-analysis') || location.pathname.includes('/portfolio');
@@ -678,7 +678,7 @@ const Layout = () => {
     [groupPerformanceTableData, a3Cases, a3LowPerfRule, a3PortfolioGroupFilter],
   );
 
-const groupFilterOptions = useMemo(
+  const groupFilterOptions = useMemo(
     () => {
       const names = Array.from(new Set(groupPerformanceTableData.map(row => row.groupName)));
       names.sort();
@@ -705,6 +705,16 @@ const groupFilterOptions = useMemo(
     },
     [a3PortfolioStats],
   );
+
+  const metricLabelById = useMemo(() => {
+    const map = new Map<string, string>();
+    bowlers.forEach(bowler => {
+      (bowler.metrics || []).forEach(metric => {
+        map.set(metric.id, `${bowler.name} – ${metric.name}`);
+      });
+    });
+    return map;
+  }, [bowlers]);
 
   const filteredGroupPerformanceTableData = useMemo(
     () => {
@@ -950,13 +960,6 @@ const groupFilterOptions = useMemo(
         dotClass: 'bg-red-500',
       },
     ];
-
-    const metricLabelById = new Map<string, string>();
-    bowlers.forEach(bowler => {
-      (bowler.metrics || []).forEach(metric => {
-        metricLabelById.set(metric.id, `${bowler.name} – ${metric.name}`);
-      });
-    });
 
     const labelColorPalette = [
       'bg-blue-50 border-blue-100',
@@ -4586,6 +4589,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                               : status === 'In Progress'
                               ? 'bg-blue-50 text-blue-700 border-blue-200'
                               : 'bg-gray-50 text-gray-600 border-gray-200';
+                          const primaryMetricId = (a3.linkedMetricIds || [])[0];
+                          const relatedMetricLabel =
+                            primaryMetricId && metricLabelById.get(primaryMetricId);
                           return (
                             <button
                               key={`${a3.userId || a3.userAccountId || 'user'}:${a3.id}`}
@@ -4602,13 +4608,15 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                     <span className="text-[11px] inline-flex items-center rounded-full border px-1.5 py-0.5 font-medium bg-white text-gray-600">
                                       {a3.group || 'Ungrouped'}
                                     </span>
-                                    <span className={clsx('inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium', statusColor)}>
-                                      {status || 'Not Started'}
-                                    </span>
                                   </div>
                                   <div className="mt-1 text-xs font-semibold text-indigo-700 underline decoration-dotted underline-offset-2">
                                     {a3.title || 'Untitled A3'}
                                   </div>
+                                  {relatedMetricLabel && (
+                                    <div className="mt-0.5 text-[11px] text-gray-600">
+                                      Related metric: {relatedMetricLabel}
+                                    </div>
+                                  )}
                                   <div className="mt-0.5 text-[11px] text-gray-500 line-clamp-2">
                                     {a3.problemStatement || a3.description || 'No problem statement recorded.'}
                                   </div>
@@ -4620,7 +4628,17 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                   {a3.plant || '—'}
                                 </div>
                                 <div className="mt-1 md:mt-0 text-[11px] text-gray-700 md:text-right">
-                                  {a3.endDate || '—'}
+                                  <div>{a3.endDate || '—'}</div>
+                                  <div className="mt-0.5 flex md:justify-end">
+                                    <span
+                                      className={clsx(
+                                        'inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium',
+                                        statusColor,
+                                      )}
+                                    >
+                                      {status || 'Not Started'}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             </button>
