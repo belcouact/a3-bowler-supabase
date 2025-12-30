@@ -4826,7 +4826,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                         <span>Plant</span>
                         <span>Due Date</span>
                         <span>Status</span>
-                        <span># Comments</span>
+                        <span># of interaction</span>
                       </div>
                       <div className="space-y-1">
                         {visibleAllA3Cases.map(a3 => {
@@ -4922,7 +4922,10 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       </p>
                       {selectedGlobalA3 && (
                         <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700 border border-blue-100">
-                          {a3Comments.length} comment{a3Comments.length === 1 ? '' : 's'}
+                          {a3Reactions.length} reaction
+                          {a3Reactions.length === 1 ? '' : 's'},{' '}
+                          {a3Comments.length} comment
+                          {a3Comments.length === 1 ? '' : 's'}
                         </span>
                       )}
                     </div>
