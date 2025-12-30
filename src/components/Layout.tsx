@@ -352,6 +352,57 @@ const Layout = () => {
     ],
   };
 
+  const getReactionButtonClasses = (
+    section: A3ReactionSection,
+    userReacted: boolean,
+  ) => {
+    const base =
+      'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px]';
+
+    if (section === 'problem') {
+      return clsx(
+        base,
+        userReacted
+          ? 'bg-indigo-100 border-indigo-300 text-indigo-800'
+          : 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100',
+      );
+    }
+
+    if (section === 'data') {
+      return clsx(
+        base,
+        userReacted
+          ? 'bg-amber-100 border-amber-300 text-amber-800'
+          : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100',
+      );
+    }
+
+    if (section === 'root') {
+      return clsx(
+        base,
+        userReacted
+          ? 'bg-teal-100 border-teal-300 text-teal-800'
+          : 'bg-teal-50 border-teal-200 text-teal-700 hover:bg-teal-100',
+      );
+    }
+
+    if (section === 'action') {
+      return clsx(
+        base,
+        userReacted
+          ? 'bg-sky-100 border-sky-300 text-sky-800'
+          : 'bg-sky-50 border-sky-200 text-sky-700 hover:bg-sky-100',
+      );
+    }
+
+    return clsx(
+      base,
+      userReacted
+        ? 'bg-emerald-100 border-emerald-300 text-emerald-800'
+        : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100',
+    );
+  };
+
   const handleToggleReaction = async (
     type: A3ReactionType,
     section: A3ReactionSection,
@@ -5103,12 +5154,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                   <button
                                     key={option.key}
                                     type="button"
-                                    className={clsx(
-                                      'inline-flex items-center gap-1 rounded-full border px-2 py-0.5',
-                                      userReacted
-                                        ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
-                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50',
-                                    )}
+                                    className={getReactionButtonClasses('problem', userReacted)}
                                     onClick={() =>
                                       handleToggleReaction(option.key, 'problem')
                                     }
@@ -5186,12 +5232,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                   <button
                                     key={option.key}
                                     type="button"
-                                    className={clsx(
-                                      'inline-flex items-center gap-1 rounded-full border px-2 py-0.5',
-                                      userReacted
-                                        ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
-                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50',
-                                    )}
+                                    className={getReactionButtonClasses('data', userReacted)}
                                     onClick={() =>
                                       handleToggleReaction(option.key, 'data')
                                     }
@@ -5305,12 +5346,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                   <button
                                     key={option.key}
                                     type="button"
-                                    className={clsx(
-                                      'inline-flex items-center gap-1 rounded-full border px-2 py-0.5',
-                                      userReacted
-                                        ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
-                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50',
-                                    )}
+                                    className={getReactionButtonClasses('root', userReacted)}
                                     onClick={() =>
                                       handleToggleReaction(option.key, 'root')
                                     }
@@ -5418,12 +5454,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                   <button
                                     key={option.key}
                                     type="button"
-                                    className={clsx(
-                                      'inline-flex items-center gap-1 rounded-full border px-2 py-0.5',
-                                      userReacted
-                                        ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
-                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50',
-                                    )}
+                                    className={getReactionButtonClasses('action', userReacted)}
                                     onClick={() =>
                                       handleToggleReaction(option.key, 'action')
                                     }
@@ -5481,12 +5512,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                   <button
                                     key={option.key}
                                     type="button"
-                                    className={clsx(
-                                      'inline-flex items-center gap-1 rounded-full border px-2 py-0.5',
-                                      userReacted
-                                        ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
-                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50',
-                                    )}
+                                    className={getReactionButtonClasses('results', userReacted)}
                                     onClick={() =>
                                       handleToggleReaction(option.key, 'results')
                                     }
