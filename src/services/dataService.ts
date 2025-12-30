@@ -1,5 +1,5 @@
 import { authService } from './authService';
-import { A3Comment, A3Reaction, A3ReactionType } from '../types';
+import { A3Comment, A3Reaction, A3ReactionSection, A3ReactionType } from '../types';
 
 const EMAIL_API_BASE_URL = 'https://email-worker.study-llm.me';
 
@@ -813,6 +813,7 @@ export const dataService = {
       a3Id: row.a3_id,
       userId: row.user_id ?? undefined,
       username: row.username ?? undefined,
+      section: row.section ?? undefined,
       type: row.reaction_type as A3ReactionType,
       createdAt: row.created_at ?? new Date().toISOString(),
     }));
@@ -821,6 +822,7 @@ export const dataService = {
   async addA3Reaction(input: {
     a3Id: string;
     type: A3ReactionType;
+    section?: A3ReactionSection;
     userId?: string;
     username?: string;
   }): Promise<A3Reaction> {
@@ -830,6 +832,7 @@ export const dataService = {
 
     const row = {
       a3_id: input.a3Id,
+      section: input.section ?? null,
       reaction_type: input.type,
       user_id: input.userId ?? null,
       username: input.username ?? null,
@@ -859,6 +862,7 @@ export const dataService = {
       a3Id: created.a3_id,
       userId: created.user_id ?? undefined,
       username: created.username ?? undefined,
+      section: created.section ?? undefined,
       type: created.reaction_type as A3ReactionType,
       createdAt: created.created_at ?? now,
     };
@@ -867,6 +871,7 @@ export const dataService = {
   async removeA3Reaction(params: {
     a3Id: string;
     type: A3ReactionType;
+    section?: A3ReactionSection;
     userId?: string;
   }): Promise<void> {
     ensureSupabaseConfigured();
@@ -874,6 +879,9 @@ export const dataService = {
     const url = new URL(`${SUPABASE_REST_URL}/a3_reactions`);
     url.searchParams.set('a3_id', `eq.${params.a3Id}`);
     url.searchParams.set('reaction_type', `eq.${params.type}`);
+    if (params.section) {
+      url.searchParams.set('section', `eq.${params.section}`);
+    }
     if (params.userId) {
       url.searchParams.set('user_id', `eq.${params.userId}`);
     }

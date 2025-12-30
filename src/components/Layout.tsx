@@ -3,7 +3,16 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Bot, Inbox, Users, X, Calendar } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
-import { Bowler, Metric, AIModelKey, GroupPerformanceRow, A3Comment, A3Reaction, A3ReactionType } from '../types';
+import {
+  Bowler,
+  Metric,
+  AIModelKey,
+  GroupPerformanceRow,
+  A3Comment,
+  A3Reaction,
+  A3ReactionSection,
+  A3ReactionType,
+} from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { dataService } from '../services/dataService';
@@ -312,13 +321,41 @@ const Layout = () => {
     });
   }, [a3Comments, activeCommentSection]);
 
-  const reactionTypes: { key: A3ReactionType; label: string }[] = [
-    { key: 'like', label: 'Like' },
-    { key: 'helpful', label: 'Helpful' },
-    { key: 'me_too', label: 'Me too' },
-  ];
+  const reactionOptionsBySection: Record<
+    A3ReactionSection,
+    { key: A3ReactionType; label: string }[]
+  > = {
+    problem: [
+      { key: 'like', label: 'Like' },
+      { key: 'helpful', label: 'Helpful' },
+      { key: 'me_too', label: 'Me too' },
+    ],
+    data: [
+      { key: 'data_clear', label: 'Clear' },
+      { key: 'data_missing', label: 'Needs more data' },
+      { key: 'data_confusing', label: 'Confusing' },
+    ],
+    root: [
+      { key: 'root_solid', label: 'Solid root cause' },
+      { key: 'root_weak', label: 'Weak root cause' },
+      { key: 'root_needs_5whys', label: 'Needs more 5 Whys' },
+    ],
+    action: [
+      { key: 'actions_strong', label: 'Strong actions' },
+      { key: 'actions_vague', label: 'Too vague' },
+      { key: 'actions_too_many', label: 'Too many actions' },
+    ],
+    results: [
+      { key: 'results_achieved', label: 'Achieved' },
+      { key: 'results_partial', label: 'Partially achieved' },
+      { key: 'results_not_achieved', label: 'Not achieved' },
+    ],
+  };
 
-  const handleToggleReaction = async (type: A3ReactionType) => {
+  const handleToggleReaction = async (
+    type: A3ReactionType,
+    section: A3ReactionSection,
+  ) => {
     if (!selectedGlobalA3) {
       return;
     }
@@ -326,15 +363,22 @@ const Layout = () => {
       setIsLoginModalOpen(true);
       return;
     }
-    const existing = a3Reactions.find(
-      reaction => reaction.type === type && reaction.userId === user.username,
-    );
+    const existing = a3Reactions.find(reaction => {
+      const reactionSection =
+        (reaction.section as A3ReactionSection | undefined) ?? 'problem';
+      return (
+        reaction.type === type &&
+        reaction.userId === user.username &&
+        reactionSection === section
+      );
+    });
     if (existing) {
       setA3Reactions(prev => prev.filter(reaction => reaction.id !== existing.id));
       try {
         await dataService.removeA3Reaction({
           a3Id: selectedGlobalA3.id,
           type,
+          section,
           userId: user.username,
         });
       } catch (error) {
@@ -349,6 +393,7 @@ const Layout = () => {
       a3Id: selectedGlobalA3.id,
       userId: user.username,
       username: user.username,
+      section,
       type,
       createdAt: new Date().toISOString(),
     };
@@ -357,6 +402,7 @@ const Layout = () => {
       const created = await dataService.addA3Reaction({
         a3Id: selectedGlobalA3.id,
         type,
+        section,
         userId: user.username,
         username: user.username,
       });
@@ -5016,18 +5062,29 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                               <span className="text-gray-400">Loading...</span>
                             )}
                             {!isLoadingA3Reactions &&
-                              reactionTypes.map(option => {
-                                const count = a3Reactions.filter(
-                                  reaction => reaction.type === option.key,
-                                ).length;
+                              reactionOptionsBySection.problem.map(option => {
+                                const count = a3Reactions.filter(reaction => {
+                                  const section =
+                                    (reaction.section as A3ReactionSection | undefined) ??
+                                    'problem';
+                                  return (
+                                    reaction.type === option.key && section === 'problem'
+                                  );
+                                }).length;
                                 const userReacted =
                                   !!user &&
                                   !!user.username &&
-                                  a3Reactions.some(
-                                    reaction =>
+                                  a3Reactions.some(reaction => {
+                                    const section =
+                                      (reaction.section as
+                                        | A3ReactionSection
+                                        | undefined) ?? 'problem';
+                                    return (
                                       reaction.type === option.key &&
-                                      reaction.userId === user.username,
-                                  );
+                                      reaction.userId === user.username &&
+                                      section === 'problem'
+                                    );
+                                  });
                                 return (
                                   <button
                                     key={option.key}
@@ -5038,7 +5095,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                         ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
                                         : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50',
                                     )}
-                                    onClick={() => handleToggleReaction(option.key)}
+                                    onClick={() =>
+                                      handleToggleReaction(option.key, 'problem')
+                                    }
                                   >
                                     <span>{option.label}</span>
                                     <span className="text-[10px] text-gray-500">
@@ -5082,6 +5141,55 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 ))}
                               </div>
                             )}
+                          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
+                            <span className="text-gray-500">Reactions:</span>
+                            {isLoadingA3Reactions && (
+                              <span className="text-gray-400">Loading...</span>
+                            )}
+                            {!isLoadingA3Reactions &&
+                              reactionOptionsBySection.data.map(option => {
+                                const count = a3Reactions.filter(reaction => {
+                                  const section =
+                                    (reaction.section as A3ReactionSection | undefined) ??
+                                    'problem';
+                                  return reaction.type === option.key && section === 'data';
+                                }).length;
+                                const userReacted =
+                                  !!user &&
+                                  !!user.username &&
+                                  a3Reactions.some(reaction => {
+                                    const section =
+                                      (reaction.section as
+                                        | A3ReactionSection
+                                        | undefined) ?? 'problem';
+                                    return (
+                                      reaction.type === option.key &&
+                                      reaction.userId === user.username &&
+                                      section === 'data'
+                                    );
+                                  });
+                                return (
+                                  <button
+                                    key={option.key}
+                                    type="button"
+                                    className={clsx(
+                                      'inline-flex items-center gap-1 rounded-full border px-2 py-0.5',
+                                      userReacted
+                                        ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
+                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50',
+                                    )}
+                                    onClick={() =>
+                                      handleToggleReaction(option.key, 'data')
+                                    }
+                                  >
+                                    <span>{option.label}</span>
+                                    <span className="text-[10px] text-gray-500">
+                                      {count}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                          </div>
                         </div>
 
                         <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
@@ -5152,6 +5260,55 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                               )}
                             </div>
                           </div>
+                          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
+                            <span className="text-gray-500">Reactions:</span>
+                            {isLoadingA3Reactions && (
+                              <span className="text-gray-400">Loading...</span>
+                            )}
+                            {!isLoadingA3Reactions &&
+                              reactionOptionsBySection.root.map(option => {
+                                const count = a3Reactions.filter(reaction => {
+                                  const section =
+                                    (reaction.section as A3ReactionSection | undefined) ??
+                                    'problem';
+                                  return reaction.type === option.key && section === 'root';
+                                }).length;
+                                const userReacted =
+                                  !!user &&
+                                  !!user.username &&
+                                  a3Reactions.some(reaction => {
+                                    const section =
+                                      (reaction.section as
+                                        | A3ReactionSection
+                                        | undefined) ?? 'problem';
+                                    return (
+                                      reaction.type === option.key &&
+                                      reaction.userId === user.username &&
+                                      section === 'root'
+                                    );
+                                  });
+                                return (
+                                  <button
+                                    key={option.key}
+                                    type="button"
+                                    className={clsx(
+                                      'inline-flex items-center gap-1 rounded-full border px-2 py-0.5',
+                                      userReacted
+                                        ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
+                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50',
+                                    )}
+                                    onClick={() =>
+                                      handleToggleReaction(option.key, 'root')
+                                    }
+                                  >
+                                    <span>{option.label}</span>
+                                    <span className="text-[10px] text-gray-500">
+                                      {count}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                          </div>
                         </div>
 
                         <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
@@ -5214,6 +5371,57 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                               </tbody>
                             </table>
                           </div>
+                          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
+                            <span className="text-gray-500">Reactions:</span>
+                            {isLoadingA3Reactions && (
+                              <span className="text-gray-400">Loading...</span>
+                            )}
+                            {!isLoadingA3Reactions &&
+                              reactionOptionsBySection.action.map(option => {
+                                const count = a3Reactions.filter(reaction => {
+                                  const section =
+                                    (reaction.section as A3ReactionSection | undefined) ??
+                                    'problem';
+                                  return (
+                                    reaction.type === option.key && section === 'action'
+                                  );
+                                }).length;
+                                const userReacted =
+                                  !!user &&
+                                  !!user.username &&
+                                  a3Reactions.some(reaction => {
+                                    const section =
+                                      (reaction.section as
+                                        | A3ReactionSection
+                                        | undefined) ?? 'problem';
+                                    return (
+                                      reaction.type === option.key &&
+                                      reaction.userId === user.username &&
+                                      section === 'action'
+                                    );
+                                  });
+                                return (
+                                  <button
+                                    key={option.key}
+                                    type="button"
+                                    className={clsx(
+                                      'inline-flex items-center gap-1 rounded-full border px-2 py-0.5',
+                                      userReacted
+                                        ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
+                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50',
+                                    )}
+                                    onClick={() =>
+                                      handleToggleReaction(option.key, 'action')
+                                    }
+                                  >
+                                    <span>{option.label}</span>
+                                    <span className="text-[10px] text-gray-500">
+                                      {count}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                          </div>
                         </div>
 
                         <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
@@ -5225,6 +5433,57 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                               <span className="font-medium text-gray-900">Outcome:</span>{' '}
                               {selectedGlobalA3.results || 'No results recorded yet.'}
                             </p>
+                          </div>
+                          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
+                            <span className="text-gray-500">Reactions:</span>
+                            {isLoadingA3Reactions && (
+                              <span className="text-gray-400">Loading...</span>
+                            )}
+                            {!isLoadingA3Reactions &&
+                              reactionOptionsBySection.results.map(option => {
+                                const count = a3Reactions.filter(reaction => {
+                                  const section =
+                                    (reaction.section as A3ReactionSection | undefined) ??
+                                    'problem';
+                                  return (
+                                    reaction.type === option.key && section === 'results'
+                                  );
+                                }).length;
+                                const userReacted =
+                                  !!user &&
+                                  !!user.username &&
+                                  a3Reactions.some(reaction => {
+                                    const section =
+                                      (reaction.section as
+                                        | A3ReactionSection
+                                        | undefined) ?? 'problem';
+                                    return (
+                                      reaction.type === option.key &&
+                                      reaction.userId === user.username &&
+                                      section === 'results'
+                                    );
+                                  });
+                                return (
+                                  <button
+                                    key={option.key}
+                                    type="button"
+                                    className={clsx(
+                                      'inline-flex items-center gap-1 rounded-full border px-2 py-0.5',
+                                      userReacted
+                                        ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
+                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50',
+                                    )}
+                                    onClick={() =>
+                                      handleToggleReaction(option.key, 'results')
+                                    }
+                                  >
+                                    <span>{option.label}</span>
+                                    <span className="text-[10px] text-gray-500">
+                                      {count}
+                                    </span>
+                                  </button>
+                                );
+                              })}
                           </div>
                         </div>
 
