@@ -333,7 +333,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                       <br />
                       <span className="font-mono font-medium">Type</span> column with values <span className="font-mono">Target</span> or <span className="font-mono">Actual</span>, plus date columns <span className="font-mono">YYYY/MMM</span>.
                       <br />
-                      <span className="text-gray-400 italic">Example header: "Bowler Name","Metric Name","Definition","Owner","Scope","Attribute","Target Meeting Rule","Type","2024/Jan","2024/Feb",...</span>
+                      <span className="text-gray-400 italic">Example header: "Bowler Name","Group","Tag","Metric Name","Definition","Owner","Scope","Attribute","Target Meeting Rule","Type","2024/Jan","2024/Feb",...</span>
                     </li>
                   </ul>
                 </div>
