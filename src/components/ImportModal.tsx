@@ -326,14 +326,14 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                     <li><span className="font-mono font-medium">Metric Name</span> (Required)</li>
                     <li><span className="font-mono font-medium">Scope</span> (Required)</li>
                     <li><span className="font-mono font-medium">Type</span> (Required)</li>
-                    <li><span className="font-mono font-medium">Description, Group, Champion, Commitment, Tag</span> (Optional)</li>
+                    <li><span className="font-mono font-medium">Bowler Description, Group, Champion, Commitment, Tag</span> (Optional)</li>
                     <li><span className="font-mono font-medium">Definition, Owner, Attribute, Target Meeting Rule</span> (Optional)</li>
                     <li>
                       Recommended format (matches Download CSV):
                       <br />
                       <span className="font-mono font-medium">Type</span> column with values <span className="font-mono">Target</span> or <span className="font-mono">Actual</span>, plus date columns <span className="font-mono">YYYY/MMM</span>.
                       <br />
-                      <span className="text-gray-400 italic">Example header: "Bowler Name","Group","Tag","Metric Name","Definition","Owner","Scope","Attribute","Target Meeting Rule","Type","2024/Jan","2024/Feb",...</span>
+                      <span className="text-gray-400 italic">Example header: "Bowler Name","Bowler Description","Group","Tag","Metric Name","Definition","Owner","Scope","Attribute","Target Meeting Rule","Type","2024/Jan","2024/Feb",...</span>
                     </li>
                   </ul>
                 </div>

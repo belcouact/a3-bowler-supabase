@@ -1393,14 +1393,14 @@ const groupFilterOptions = useMemo(
       return `${year}/${monthName}`;
     });
 
-    const header = `"Bowler Name","Group","Tag","Metric Name","Definition","Owner","Scope","Attribute","Target Meeting Rule","Type",${monthLabels
+    const header = `"Bowler Name","Bowler Description","Group","Tag","Metric Name","Definition","Owner","Scope","Attribute","Target Meeting Rule","Type",${monthLabels
       .map(l => `"${l}"`)
       .join(',')}\n`;
 
     const rows = bowlers
       .flatMap(bowler =>
         (bowler.metrics || []).flatMap(metric => {
-          const basicInfo = `"${bowler.name}","${bowler.group || ''}","${bowler.tag || ''}","${metric.name}","${metric.definition || ''}","${metric.owner || ''}","${metric.scope || ''}","${metric.attribute || ''}","${
+          const basicInfo = `"${bowler.name}","${bowler.description || ''}","${bowler.group || ''}","${bowler.tag || ''}","${metric.name}","${metric.definition || ''}","${metric.owner || ''}","${metric.scope || ''}","${metric.attribute || ''}","${
             metric.targetMeetingRule || ''
           }"`;
 

@@ -83,6 +83,12 @@ const MetricBowler = () => {
     content: React.ReactNode;
   } | null>(null);
 
+  useEffect(() => {
+    if (!id && bowlers.length > 0) {
+      navigate(`/metric-bowler/${bowlers[0].id}`, { replace: true });
+    }
+  }, [id, bowlers, navigate]);
+
   const displayMonths = useMemo(() => {
     const [startYearStr, startMonthStr] = startDate.split('-');
     const startYear = parseInt(startYearStr, 10);
