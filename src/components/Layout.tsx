@@ -4826,7 +4826,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                         <span>Plant</span>
                         <span>Due Date</span>
                         <span>Status</span>
-                        <span># of interaction</span>
+                        <span>Interactions</span>
                       </div>
                       <div className="space-y-1">
                         {visibleAllA3Cases.map(a3 => {
@@ -4896,7 +4896,18 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                   </span>
                                 </div>
                                 <div className="mt-1 md:mt-0 text-[11px] text-gray-500 md:text-right">
-                                  {(a3CommentCounts[a3.id] ?? 0).toLocaleString()}
+                                  {(() => {
+                                    const commentCount = a3CommentCounts[a3.id] ?? 0;
+                                    const reactionCount =
+                                      selectedGlobalA3 && selectedGlobalA3.id === a3.id
+                                        ? a3Reactions.length
+                                        : 0;
+                                    return `${reactionCount} reaction${
+                                      reactionCount === 1 ? '' : 's'
+                                    }, ${commentCount} comment${
+                                      commentCount === 1 ? '' : 's'
+                                    }`;
+                                  })()}
                                 </div>
                               </div>
                             </button>
