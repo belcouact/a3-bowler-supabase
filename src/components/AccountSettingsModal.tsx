@@ -1319,7 +1319,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
           {/* Header */}
           <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-gray-200 flex justify-between items-center">
             <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-              {mode === 'email' ? 'Email Settings' : 'Account Settings'}
+              {mode === 'email' ? 'Email Scheduling' : 'Account Settings'}
             </h3>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
               <X className="h-5 w-5" />

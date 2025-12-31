@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Bot, Inbox, Users, X, Calendar } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Inbox, Users, X, Calendar } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
 import {
@@ -2411,8 +2411,6 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
     }
   };
 
-  const currentModelLabel = modelOptions.find(option => option.key === selectedModel)?.label || 'Gemini';
-
   const navItems = [
     { path: '/metric-bowler', label: 'Metric Bowler', icon: TrendingUp },
     { path: '/a3-analysis', label: 'A3 Analysis', icon: Zap },
@@ -2704,7 +2702,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                     className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-rose-600"
                   >
                     <Calendar className="w-4 h-4 mr-3" />
-                    Email Settings
+                    Email Scheduling
                   </button>
 
                   <button
