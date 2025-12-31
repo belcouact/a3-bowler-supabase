@@ -2,10 +2,11 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Inbox, Users, X, Calendar } from 'lucide-react';
 import clsx from 'clsx';
-import { useApp, A3Case } from '../context/AppContext';
+import { useApp, A3Case, MindMapNodeData, ActionPlanTaskData } from '../context/AppContext';
 import {
   Bowler,
   Metric,
+  MetricData,
   AIModelKey,
   GroupPerformanceRow,
   A3Comment,
@@ -22,6 +23,8 @@ import { getBowlerStatusColor, computeGroupPerformanceTableData } from '../utils
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { diffDays, addDays, formatDate, getMonthName } from '../utils/dateUtils';
 import { MindMap } from './MindMap';
+import { generateShortId } from '../utils/idUtils';
+import { analyzeMetric, generateA3PlanFromMetric } from '../services/aiService';
 
 const A3CaseModal = lazy(() => import('./A3CaseModal'));
 const BowlerModal = lazy(() => import('./BowlerModal'));
@@ -225,6 +228,9 @@ const Layout = () => {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
   const [a3Reactions, setA3Reactions] = useState<A3Reaction[]>([]);
+  const [isQuickDemoOpen, setIsQuickDemoOpen] = useState(false);
+  const [quickDemoMetricName, setQuickDemoMetricName] = useState('');
+  const [isGeneratingQuickDemo, setIsGeneratingQuickDemo] = useState(false);
   const [isLoadingA3Reactions, setIsLoadingA3Reactions] = useState(false);
   const [a3BestPracticeOnly, setA3BestPracticeOnly] = useState(false);
   const [isUpdatingBestPractice, setIsUpdatingBestPractice] = useState(false);
@@ -2411,6 +2417,251 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
     }
   };
 
+  const handleGenerateQuickDemo = async () => {
+    if (!quickDemoMetricName.trim()) {
+      toast.error('Please enter a metric you would like to create.');
+      return;
+    }
+    if (!user) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+    if (isGeneratingQuickDemo) return;
+    setIsGeneratingQuickDemo(true);
+    try {
+      const baseValue = 120;
+      const targetValue = 80;
+      const startYear = new Date().getFullYear() - 1;
+      const startMonthIndex = 0;
+      const monthlyData: Record<string, MetricData> = {};
+      let current = baseValue;
+      for (let i = 0; i < 12; i++) {
+        const date = new Date(startYear, startMonthIndex + i, 1);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const key = `${year}-${month}`;
+        const delta = Math.random() * 6 - 3;
+        current = current - 4 + delta;
+        if (current < 0) current = Math.abs(current) + 5;
+        monthlyData[key] = {
+          target: String(targetValue),
+          actual: current.toFixed(1),
+        };
+      }
+
+      const demoBowler: Bowler = {
+        id: generateShortId(),
+        name: 'AI Demo Bowler',
+        description: 'Automatically created bowler and metric for a quick AI-guided demo.',
+        group: user.plant || 'Demo Group',
+        champion: user.username || '',
+        commitment: 'Demonstrate how metrics and A3 work together.',
+        tag: 'AI-DEMO',
+        metricStartDate: `${startYear}-${String(startMonthIndex + 1).padStart(2, '0')}`,
+        metrics: [
+          {
+            id: generateShortId(),
+            name: quickDemoMetricName.trim(),
+            definition: `AI-generated example metric for "${quickDemoMetricName.trim()}", with a slightly decreasing trend and realistic month-to-month variance.`,
+            owner: user.username || '',
+            scope: 'Single site / team',
+            attribute: 'Individual data',
+            targetMeetingRule: 'lte',
+            monthlyData,
+          },
+        ],
+      };
+
+      addBowler(demoBowler);
+
+      const createdBowler = demoBowler;
+      const createdMetric = createdBowler.metrics![0];
+
+      const linkedA3Cases = a3Cases.filter(
+        c => (c.linkedMetricIds || []).includes(createdMetric.id),
+      );
+      const analysis = await analyzeMetric(createdMetric, selectedModel, linkedA3Cases);
+      const plan = await generateA3PlanFromMetric(createdMetric, selectedModel);
+      const today = formatDate(new Date());
+      const trendLabel = analysis.trend.charAt(0).toUpperCase() + analysis.trend.slice(1);
+      let priority: 'Low' | 'Medium' | 'High' = 'Medium';
+      const loweredTrend = analysis.trend.toLowerCase();
+      if (
+        loweredTrend === 'degrading' ||
+        loweredTrend === 'unstable' ||
+        loweredTrend === 'incapable' ||
+        analysis.achievementRate < 50
+      ) {
+        priority = 'High';
+      } else if (
+        analysis.achievementRate >= 80 &&
+        (loweredTrend === 'capable' || loweredTrend === 'improving' || loweredTrend === 'stable')
+      ) {
+        priority = 'Low';
+      }
+
+      const achievement =
+        typeof analysis.achievementRate === 'number'
+          ? `${analysis.achievementRate.toFixed(1)}%`
+          : '';
+      const descriptionParts: string[] = [];
+      if (analysis.summary) {
+        descriptionParts.push(analysis.summary.trim());
+      }
+      if (achievement) {
+        descriptionParts.push(`Current target achievement: ${achievement}.`);
+      }
+      const description = descriptionParts.join('\n\n');
+
+      const rootCauseText = plan.rootCauses.length
+        ? `Most likely root causes:\n- ${plan.rootCauses.join('\n- ')}`
+        : '';
+
+      const mindMapNodes: MindMapNodeData[] = [];
+      const rootId = 'root';
+      const rootText =
+        plan.problemStatement && plan.problemStatement.trim().length > 0
+          ? plan.problemStatement.trim()
+          : `Improve performance of metric "${createdMetric.name}".`;
+      mindMapNodes.push({
+        id: rootId,
+        text: rootText,
+        x: 50,
+        y: 220,
+        parentId: null,
+        type: 'root',
+      });
+
+      const addChildren = (
+        nodes: MindMapNodeData[],
+        tree: { cause: string; children?: { cause: string; children?: any[] }[] }[],
+        parentId: string,
+        depth: number,
+      ) => {
+        const stepY = 120;
+        const stepX = 220;
+        const parent = nodes.find(n => n.id === parentId);
+        if (!parent) {
+          return;
+        }
+
+        const validNodes = tree.filter(
+          node => node && typeof node.cause === 'string' && node.cause.trim().length > 0,
+        );
+
+        const count = validNodes.length;
+
+        validNodes.forEach((node, index) => {
+          const id = generateShortId();
+          const offset = count > 1 ? index - (count - 1) / 2 : 0;
+          const x = parent.x + stepX;
+          const y = parent.y + offset * stepY;
+
+          nodes.push({
+            id,
+            text: node.cause.trim(),
+            x,
+            y,
+            parentId,
+            type: 'child',
+          });
+
+          if (node.children && node.children.length > 0) {
+            addChildren(nodes, node.children, id, depth + 1);
+          }
+        });
+      };
+
+      if (plan.whyTree && (plan.whyTree as any[]).length > 0) {
+        addChildren(mindMapNodes, plan.whyTree as any, rootId, 1);
+      }
+
+      const actions: ActionPlanTaskData[] = [];
+      const baseDate = new Date();
+      const actionsSource = Array.isArray(plan.actions) && plan.actions.length > 0 ? plan.actions : [];
+      actionsSource.forEach((a, index) => {
+        const name = a.name || `Action ${index + 1}`;
+        const descriptionText = a.description || '';
+        const ownerText = a.owner || createdBowler.champion || user.username || '';
+        const groupText = a.group || createdBowler.group || undefined;
+        let startDateStr: string | undefined;
+        let endDateStr: string | undefined;
+        if (a.startDate && !Number.isNaN(Date.parse(a.startDate))) {
+          startDateStr = a.startDate;
+        }
+        if (a.endDate && !Number.isNaN(Date.parse(a.endDate))) {
+          endDateStr = a.endDate;
+        }
+        if (!startDateStr) {
+          const start = addDays(baseDate, index * 7);
+          startDateStr = formatDate(start);
+        }
+        if (!endDateStr) {
+          const startDateObj = new Date(startDateStr);
+          const end = addDays(startDateObj, 7);
+          endDateStr = formatDate(end);
+        }
+        const rawStatus = a.status;
+        const status: 'Not Started' | 'In Progress' | 'Completed' =
+          rawStatus === 'In Progress' || rawStatus === 'Completed'
+            ? rawStatus
+            : 'Not Started';
+        const progress =
+          typeof a.progress === 'number' && isFinite(a.progress) && a.progress >= 0 && a.progress <= 100
+            ? a.progress
+            : 0;
+        actions.push({
+          id: generateShortId(),
+          name,
+          description: descriptionText,
+          owner: ownerText,
+          group: groupText,
+          startDate: startDateStr,
+          endDate: endDateStr,
+          status,
+          progress,
+        });
+      });
+
+      const createdA3 = addA3Case({
+        title: `A3: ${createdMetric.name} – ${trendLabel}`,
+        description,
+        owner: createdBowler.champion || user.username || '',
+        group: createdBowler.group,
+        tag: createdBowler.tag,
+        linkedMetricIds: [createdMetric.id],
+        priority,
+        startDate: today,
+        endDate: '',
+        status: 'In Progress',
+        problemStatement: plan.problemStatement || rootText,
+        results: '',
+        mindMapNodes,
+        mindMapText: '',
+        rootCause: rootCauseText,
+        actionPlanTasks: actions,
+        dataAnalysisObservations: '',
+        dataAnalysisImages: [],
+        dataAnalysisCanvasHeight: undefined,
+        resultImages: [],
+        resultCanvasHeight: undefined,
+      });
+
+      setIsQuickDemoOpen(false);
+      setQuickDemoMetricName('');
+      toast.success('Created demo metric and A3 with AI.');
+      navigate(`/metric-bowler/${createdBowler.id}`);
+      setTimeout(() => {
+        navigate(`/a3-analysis/${createdA3.id}`);
+      }, 400);
+    } catch (error) {
+      console.error('Failed to generate AI demo metric and A3', error);
+      toast.error('Failed to generate AI demo metric and A3. Please try again.');
+    } finally {
+      setIsGeneratingQuickDemo(false);
+    }
+  };
+
   const navItems = [
     { path: '/metric-bowler', label: 'Metric Bowler', icon: TrendingUp },
     { path: '/a3-analysis', label: 'A3 Analysis', icon: Zap },
@@ -2518,7 +2769,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   key={item.path}
                   to={item.path}
                   className={clsx(
-                    'flex items-center px-1.5 md:px-2 py-1.5 rounded text-xs md:text-sm font-medium transition-all duration-200',
+                    'flex items-center px-1 md:px-1.5 py-1.5 rounded text-xs md:text-sm font-medium transition-all duration-200',
                     isActive
                       ? 'bg-blue-50 text-blue-800'
                       : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
@@ -2548,6 +2799,13 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
               title="Exit to Main App"
             >
               <ExternalLink className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setIsQuickDemoOpen(true)}
+              className="p-2 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 hover:text-indigo-800 transition-colors"
+              title="AI demo: create a sample metric and A3"
+            >
+              <Sparkles className="w-4 h-4" />
             </button>
             <button
               onClick={() => setIsImportModalOpen(true)}
@@ -4787,6 +5045,101 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
           onClose={() => setIsConsolidateModalOpen(false)}
         />
       </Suspense>
+
+      {isQuickDemoOpen && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center px-4 py-8">
+          <div
+            className="absolute inset-0 bg-gray-900/60"
+            onClick={() => {
+              if (!isGeneratingQuickDemo) {
+                setIsQuickDemoOpen(false);
+                setQuickDemoMetricName('');
+              }
+            }}
+          />
+          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200">
+            <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-200 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-md bg-indigo-600 text-white flex items-center justify-center">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <h2 className="text-sm sm:text-base font-semibold text-gray-900">
+                    AI demo: create a sample metric and A3
+                  </h2>
+                  <p className="text-xs sm:text-sm text-gray-500">
+                    Describe a metric you care about. AI will create 12 months of data and a full A3.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isGeneratingQuickDemo) {
+                    setIsQuickDemoOpen(false);
+                    setQuickDemoMetricName('');
+                  }
+                }}
+                className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="px-4 py-4 sm:px-6 sm:py-5 space-y-3">
+              <div>
+                <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase mb-1">
+                  Metric you would like to create
+                </label>
+                <input
+                  type="text"
+                  value={quickDemoMetricName}
+                  onChange={e => setQuickDemoMetricName(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder='e.g. "Customer complaint rate", "On-time delivery", "Scrap rate"'
+                  disabled={isGeneratingQuickDemo}
+                />
+              </div>
+              <p className="text-xs text-gray-500">
+                The app will create a demo bowler with a realistic, slightly decreasing trend, set a target rule
+                (lower is better), and then use AI to generate a complete A3 problem-solving story linked to this metric.
+              </p>
+            </div>
+            <div className="px-4 py-3 sm:px-6 sm:py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isGeneratingQuickDemo) {
+                    setIsQuickDemoOpen(false);
+                    setQuickDemoMetricName('');
+                  }
+                }}
+                className="px-3 py-1.5 text-xs sm:text-sm rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
+                disabled={isGeneratingQuickDemo}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleGenerateQuickDemo}
+                className="px-3 py-1.5 text-xs sm:text-sm rounded-md bg-indigo-600 text-white hover:bg-indigo-700 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={isGeneratingQuickDemo}
+              >
+                {isGeneratingQuickDemo ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Creating demo...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    <span>Create demo metric &amp; A3</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isAllA3ModalOpen && (
         <div className="fixed inset-0 z-[140] bg-gray-900/80 flex flex-col">
