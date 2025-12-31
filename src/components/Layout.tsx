@@ -62,6 +62,13 @@ const modelShortLabels: Record<AIModelKey, string> = {
   glm: 'GL',
 };
 
+const modelLogos: Record<AIModelKey, string> = {
+  gemini: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/google-gemini.svg',
+  deepseek: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/deepseek.svg',
+  kimi: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/kimi-ai.svg',
+  glm: 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/z-ai.svg',
+};
+
 type AdminSortKey =
   | 'username'
   | 'email'
@@ -2791,7 +2798,15 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   className="h-8 w-8 rounded-full bg-pink-500 text-white shadow-sm hover:bg-pink-600 transition-colors flex items-center justify-center text-[10px] font-semibold"
                   title={`AI Model: ${modelOptions.find(option => option.key === selectedModel)?.label || ''}`}
                 >
-                  {modelShortLabels[selectedModel]}
+                  {modelLogos[selectedModel] ? (
+                    <img
+                      src={modelLogos[selectedModel]}
+                      alt="AI model logo"
+                      className="w-5 h-5"
+                    />
+                  ) : (
+                    modelShortLabels[selectedModel]
+                  )}
                 </button>
                 {isModelMenuOpen && (
                   <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-[80]">
