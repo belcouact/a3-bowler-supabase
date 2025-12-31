@@ -2818,8 +2818,8 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                 title={user.username || 'User'}
                 onClick={() => setIsAccountSettingsOpen(true)}
               >
-                <div className="h-8 w-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-700 font-bold text-xs">
-                  {user.username ? user.username.substring(0, 2).toUpperCase() : <UserIcon className="w-4 h-4" />}
+                <div className="h-8 px-3 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-700 font-bold text-xs">
+                  {user.username ? user.username.substring(0, 3).toUpperCase() : <UserIcon className="w-4 h-4" />}
                 </div>
               </div>
               <div 
@@ -4804,7 +4804,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
 
       {isAllA3ModalOpen && (
         <div className="fixed inset-0 z-[140] bg-gray-900/80 flex flex-col">
-          <div className="flex-1 bg-white flex flex-col w-full h-full rounded-none shadow-2xl overflow-hidden print-summary-root">
+        <div className="flex-1 bg-white flex flex-col w-full h-full rounded-none shadow-2xl overflow-hidden print-summary-root">
             <div className="flex items-center justify-end px-4 py-3 border-b border-gray-200 bg-gray-50">
               <button
                 onClick={() => {
@@ -4818,9 +4818,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                 <X className="w-4 h-4" />
               </button>
             </div>
-              <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
               {isA3PortfolioSidebarOpen && (
-                <div className="w-full lg:w-1/2 border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col">
+                <div className="w-full lg:w-1/2 border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col flex-1 min-h-0">
                 <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-white">
                   <div>
                     <p className="text-xs font-semibold tracking-wide text-gray-600 uppercase">
@@ -4972,7 +4972,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
               )}
               <div
                 className={clsx(
-                  'w-full bg-gray-100 flex flex-col',
+                  'w-full bg-gray-100 flex flex-col flex-1 min-h-0',
                   isA3PortfolioSidebarOpen ? 'lg:w-1/2' : 'lg:w-full',
                 )}
               >
@@ -4983,11 +4983,15 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                         A3 Report Preview
                       </p>
                       {selectedGlobalA3 && (
-                        <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700 border border-blue-100">
-                          {a3Reactions.length} reaction
-                          {a3Reactions.length === 1 ? '' : 's'},{' '}
-                          {a3Comments.length} comment
-                          {a3Comments.length === 1 ? '' : 's'}
+                        <span className="inline-flex flex-col items-start sm:flex-row sm:items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700 border border-blue-100">
+                          <span>
+                            {a3Reactions.length} reaction
+                            {a3Reactions.length === 1 ? '' : 's'},
+                          </span>
+                          <span className="sm:ml-1">
+                            {a3Comments.length} comment
+                            {a3Comments.length === 1 ? '' : 's'}
+                          </span>
                         </span>
                       )}
                     </div>
