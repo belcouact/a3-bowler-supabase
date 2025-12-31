@@ -4,6 +4,7 @@ import { Bowler, Metric } from '../context/AppContext';
 import clsx from 'clsx';
 import { generateShortId } from '../utils/idUtils';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 
 interface BowlerModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface BowlerModalProps {
 const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerModalProps) => {
   const [activeTab, setActiveTab] = useState<'General' | 'Metrics'>('General');
   const toast = useToast();
+  const { user } = useAuth();
   
   // General State
   const [generalData, setGeneralData] = useState({
@@ -44,11 +46,10 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
         });
         setMetrics(initialData.metrics || []);
       } else {
-        // Reset form
         setGeneralData({
           name: '',
           description: '',
-          group: '',
+          group: user?.plant || '',
           champion: '',
           commitment: '',
           tag: '',
@@ -56,7 +57,7 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
         setMetrics([]);
       }
     }
-  }, [isOpen, initialData]);
+  }, [isOpen, initialData, user]);
 
   if (!isOpen) return null;
 
