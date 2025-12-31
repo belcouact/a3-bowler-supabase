@@ -2792,10 +2792,10 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
 
           {user ? (
             <div className="flex items-center space-x-2 md:space-x-3">
-              <div className="hidden md:block relative">
+              <div className="relative">
                 <button
                   onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
-                  className="h-8 w-8 rounded-full bg-pink-500 text-white shadow-sm hover:bg-pink-600 transition-colors flex items-center justify-center text-[10px] font-semibold"
+                  className="h-8 w-8 rounded-full border border-pink-500 text-pink-600 bg-white shadow-sm hover:bg-pink-50 transition-colors flex items-center justify-center text-[10px] font-semibold"
                   title={`AI Model: ${modelOptions.find(option => option.key === selectedModel)?.label || ''}`}
                 >
                   {modelLogos[selectedModel] ? (
