@@ -2429,26 +2429,56 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
     if (isGeneratingQuickDemo) return;
     setIsGeneratingQuickDemo(true);
     try {
-      const targetValue = 80;
+      const metricName = quickDemoMetricName.trim();
+      const normalizedName = metricName.toLowerCase();
+      const isPercentMetric =
+        normalizedName.includes('%') ||
+        normalizedName.includes('percent') ||
+        normalizedName.includes('on-time') ||
+        normalizedName.includes('on time') ||
+        normalizedName.includes('on-time delivery') ||
+        normalizedName.includes('on time delivery');
+
+      const targetValue = isPercentMetric ? 95 : 80;
       const startYear = new Date().getFullYear() - 1;
       const startMonthIndex = 0;
       const monthlyData: Record<string, MetricData> = {};
-      const baseActuals = [118, 111, 106, 103, 96, 92, 84, 78, 72, 67, 62, 60];
+      const baseActuals = isPercentMetric
+        ? [86, 82, 84, 80, 83, 85, 87, 89, 90, 92, 93, 95]
+        : [118, 112, 109, 105, 101, 96, 92, 88, 84, 80, 76, 72];
       for (let i = 0; i < 12; i++) {
         const date = new Date(startYear, startMonthIndex + i, 1);
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const key = `${year}-${month}`;
-        const noise = (Math.random() - 0.5) * 4;
-        const actualValue = baseActuals[i] + noise;
+        const noise = (Math.random() - 0.5) * (isPercentMetric ? 3 : 5);
+        let actualValue = baseActuals[i] + noise;
+        if (isPercentMetric) {
+          if (i === 3) {
+            actualValue -= 3;
+          }
+          if (i === 6) {
+            actualValue += 2;
+          }
+          if (actualValue > 100) {
+            actualValue = 100;
+          }
+          if (actualValue < 50) {
+            actualValue = 50;
+          }
+        } else if (actualValue < 0) {
+          actualValue = Math.abs(actualValue) + 5;
+        }
         monthlyData[key] = {
           target: String(targetValue),
           actual: actualValue.toFixed(1),
         };
       }
 
-      const metricName = quickDemoMetricName.trim();
       const scenarioName = metricName || 'On-time delivery';
+      const definitionText = isPercentMetric
+        ? `Monthly on-time performance for "${scenarioName}" as a percentage. The sample data starts below the target and gradually improves toward the goal, with natural month-to-month variation and no values above 100%.`
+        : `Monthly performance for "${scenarioName}". The sample data shows a team starting well above the target (higher is worse) and progressively improving month by month with realistic up-and-down movement. Interpret it as something like "late deliveries per 1,000 shipments" or "incidents per month" where lower values are better.`;
 
       const demoBowler: Bowler = {
         id: generateShortId(),
@@ -2464,12 +2494,11 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
           {
             id: generateShortId(),
             name: scenarioName,
-            definition:
-              `Monthly performance for "${scenarioName}". The sample data shows a team starting well above the target (higher is worse) and progressively improving month by month. Interpret it as something like "late deliveries per 1,000 shipments" or "incidents per month" where lower values are better.`,
+            definition: definitionText,
             owner: user.username || '',
             scope: 'Single site / value stream',
             attribute: 'Individual data (one value per month)',
-            targetMeetingRule: 'lte',
+            targetMeetingRule: isPercentMetric ? 'gte' : 'lte',
             monthlyData,
           },
         ],
@@ -5001,7 +5030,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                     Sample metric &amp; A3 with AI
                   </h2>
                   <p className="text-xs sm:text-sm text-gray-500">
-                    Describe a metric you care about. The app will generate realistic 12-month data and a full A3 story.
+                    Describe a metric you care about. The app will generate realistic 12-month data (including percentages that stay within 0–100%) and a full A3 story.
                   </p>
                 </div>
               </div>
