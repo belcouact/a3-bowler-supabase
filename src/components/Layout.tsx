@@ -2475,10 +2475,10 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
         };
       }
 
-      const scenarioName = metricName || 'On-time delivery';
+      const scenarioName = metricName;
       const definitionText = isPercentMetric
-        ? `Monthly on-time performance for "${scenarioName}" as a percentage. The sample data starts below the target and gradually improves toward the goal, with natural month-to-month variation and no values above 100%.`
-        : `Monthly performance for "${scenarioName}". The sample data shows a team starting well above the target (higher is worse) and progressively improving month by month with realistic up-and-down movement. Interpret it as something like "late deliveries per 1,000 shipments" or "incidents per month" where lower values are better.`;
+        ? `Monthly performance for "${scenarioName}" expressed as a percentage. The sample data starts below the target and gradually improves toward the goal, with natural month-to-month variation.`
+        : `Monthly performance for "${scenarioName}". The sample data starts far from the target and progressively improves month by month with realistic up-and-down movement. Lower values represent better performance.`;
 
       const demoBowler: Bowler = {
         id: generateShortId(),
