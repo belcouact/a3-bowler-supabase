@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Inbox, Users, X, Calendar, FlaskConical } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Inbox, Users, X, Calendar, FlaskConical, Activity, Clock3 } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
 import {
@@ -595,6 +595,42 @@ const Layout = () => {
     });
     return list;
   }, [adminAccounts, adminSortKey, adminSortDirection]);
+
+  const adminUserStats = useMemo(() => {
+    const total = adminAccounts.length;
+    const now = Date.now();
+    const dayMs = 24 * 60 * 60 * 1000;
+    let active7 = 0;
+    let active30 = 0;
+    let active90 = 0;
+
+    adminAccounts.forEach(account => {
+      if (!account.lastLoginAt) {
+        return;
+      }
+      const time = new Date(account.lastLoginAt).getTime();
+      if (!Number.isFinite(time)) {
+        return;
+      }
+      const diffDays = (now - time) / dayMs;
+      if (diffDays <= 7) {
+        active7 += 1;
+      }
+      if (diffDays <= 30) {
+        active30 += 1;
+      }
+      if (diffDays <= 90) {
+        active90 += 1;
+      }
+    });
+
+    return {
+      total,
+      active7,
+      active30,
+      active90,
+    };
+  }, [adminAccounts]);
 
   const handleAdminSort = (key: AdminSortKey) => {
     if (adminSortKey === key) {
@@ -4457,6 +4493,62 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       {adminUsersError}
                     </p>
                   )}
+                  {!isLoadingAdminUsers && adminAccounts.length > 0 && (
+                    <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                      <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                        <div>
+                          <div className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                            Total users
+                          </div>
+                          <div className="mt-1 text-lg font-semibold text-gray-900">
+                            {adminUserStats.total}
+                          </div>
+                        </div>
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-700">
+                          <Users className="w-4 h-4" />
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                        <div>
+                          <div className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                            Active last 7 days
+                          </div>
+                          <div className="mt-1 text-lg font-semibold text-gray-900">
+                            {adminUserStats.active7}
+                          </div>
+                        </div>
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+                          <Activity className="w-4 h-4" />
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                        <div>
+                          <div className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                            Active last 30 days
+                          </div>
+                          <div className="mt-1 text-lg font-semibold text-gray-900">
+                            {adminUserStats.active30}
+                          </div>
+                        </div>
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50 text-indigo-700">
+                          <Clock3 className="w-4 h-4" />
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                        <div>
+                          <div className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                            Active last 90 days
+                          </div>
+                          <div className="mt-1 text-lg font-semibold text-gray-900">
+                            {adminUserStats.active90}
+                          </div>
+                        </div>
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-50 text-amber-700">
+                          <TrendingUp className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   {isLoadingAdminUsers ? (
                     <p className="text-sm text-gray-500">Loading users...</p>
                   ) : adminAccounts.length === 0 ? (
@@ -4675,51 +4767,71 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                 <label className="block text-xs font-medium text-gray-700 mb-1">
                   Role
                 </label>
-                <input
-                  type="text"
+                <select
                   value={editAdminForm.role}
                   onChange={e => handleChangeEditAdminField('role', e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Role"
-                />
+                  className="w-full border border-gray-300 rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                >
+                  <option value="">Select role</option>
+                  <option value="Super admin">Super admin</option>
+                  <option value="admin">admin</option>
+                  <option value="Common user">Common user</option>
+                </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">
                     Country/Region
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={editAdminForm.country}
                     onChange={e => handleChangeEditAdminField('country', e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Country"
-                  />
+                    className="w-full border border-gray-300 rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  >
+                    <option value="">Select Region</option>
+                    <option value="China">China</option>
+                    <option value="US">US</option>
+                    <option value="EMEA">EMEA</option>
+                    <option value="APAC">APAC</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">
                     Plant/Office
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={editAdminForm.plant}
                     onChange={e => handleChangeEditAdminField('plant', e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Plant or office"
-                  />
+                    className="w-full border border-gray-300 rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  >
+                    <option value="">Select Plant/Office</option>
+                    <option value="BJ">BJ</option>
+                    <option value="SH">SH</option>
+                    <option value="TW">TW</option>
+                    <option value="SZFTZ">SZFTZ</option>
+                    <option value="SZBAN">SZBAN</option>
+                    <option value="EM1">EM1</option>
+                    <option value="EM5">EM5</option>
+                    <option value="LOV">LOV</option>
+                    <option value="PU3">PU3</option>
+                    <option value="Others">Others</option>
+                  </select>
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
                   Team
                 </label>
-                <input
-                  type="text"
+                <select
                   value={editAdminForm.team}
                   onChange={e => handleChangeEditAdminField('team', e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Team"
-                />
+                  className="w-full border border-gray-300 rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  >
+                  <option value="">Select Functional Team</option>
+                  <option value="Commercial">Commercial</option>
+                  <option value="SC">SC</option>
+                  <option value="Technical">Technical</option>
+                </select>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-700">Profile visibility</span>
