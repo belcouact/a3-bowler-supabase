@@ -2637,9 +2637,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-2">
             <img
-              src="/logo.png"
+              src={`${import.meta.env.BASE_URL}logo.png`}
               alt="A3 Bowler logo"
-              className="w-8 h-8 rounded-md border border-teal-500 bg-white object-contain"
+              className="w-8 h-8 rounded-md bg-white object-contain"
             />
             <div className="flex items-center space-x-1">
               <h1 className="text-lg font-semibold text-gray-900 tracking-tight hidden md:block">A3 Bowler</h1>
