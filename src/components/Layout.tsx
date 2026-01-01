@@ -24,7 +24,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { diffDays, addDays, formatDate, getMonthName } from '../utils/dateUtils';
 import { MindMap } from './MindMap';
 import { generateShortId } from '../utils/idUtils';
-import { analyzeMetric, generateA3PlanFromMetric } from '../services/aiService';
+import { analyzeMetric, generateA3PlanFromMetric, generateSampleSeriesFromAI } from '../services/aiService';
 
 const A3CaseModal = lazy(() => import('./A3CaseModal'));
 const BowlerModal = lazy(() => import('./BowlerModal'));
@@ -2439,32 +2439,39 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
         normalizedName.includes('on-time delivery') ||
         normalizedName.includes('on time delivery');
 
-      const targetValue = isPercentMetric ? 95 : 80;
+      const aiSeries = await generateSampleSeriesFromAI(metricName, isPercentMetric, selectedModel);
+
       const startYear = new Date().getFullYear() - 1;
       const startMonthIndex = 0;
       const monthlyData: Record<string, MetricData> = {};
-      const baseActuals = isPercentMetric
+
+      const defaultTarget = isPercentMetric ? 95 : 80;
+      const targetValue =
+        aiSeries.targetValue !== undefined && isFinite(aiSeries.targetValue)
+          ? aiSeries.targetValue
+          : defaultTarget;
+
+      const fallbackActuals = isPercentMetric
         ? [86, 82, 84, 80, 83, 85, 87, 89, 90, 92, 93, 95]
-        : [118, 112, 109, 105, 101, 96, 92, 88, 84, 80, 76, 72];
+        : [120.3, 113.9, 108.5, 102.9, 103.5, 96.9, 92.1, 89.3, 83.6, 79.3, 75.4, 71.9];
+
+      const rawActuals =
+        aiSeries.actualValues && aiSeries.actualValues.length === 12
+          ? aiSeries.actualValues
+          : fallbackActuals;
+
       for (let i = 0; i < 12; i++) {
         const date = new Date(startYear, startMonthIndex + i, 1);
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const key = `${year}-${month}`;
-        const noise = (Math.random() - 0.5) * (isPercentMetric ? 3 : 5);
-        let actualValue = baseActuals[i] + noise;
+        let actualValue = rawActuals[i];
         if (isPercentMetric) {
-          if (i === 3) {
-            actualValue -= 3;
-          }
-          if (i === 6) {
-            actualValue += 2;
-          }
           if (actualValue > 100) {
             actualValue = 100;
           }
-          if (actualValue < 50) {
-            actualValue = 50;
+          if (actualValue < 0) {
+            actualValue = 0;
           }
         } else if (actualValue < 0) {
           actualValue = Math.abs(actualValue) + 5;
@@ -2857,7 +2864,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                     className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-indigo-600"
                   >
                     <FlaskConical className="w-4 h-4 mr-3" />
-                    Sample metric + A3
+                    Sample metric
                   </button>
                   
                   <button

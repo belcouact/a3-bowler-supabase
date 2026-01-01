@@ -506,3 +506,96 @@ Response requirements:
     };
   }
 };
+
+interface SampleSeriesResponse {
+  actualValues?: number[];
+  targetValue?: number;
+}
+
+export const generateSampleSeriesFromAI = async (
+  metricName: string,
+  isPercentMetric: boolean,
+  model: AIModelKey,
+): Promise<SampleSeriesResponse> => {
+  const typeText = isPercentMetric
+    ? 'percentage metric with values between 0 and 100'
+    : 'count or rate metric where lower values are better';
+
+  const userPrompt = `
+You are generating demo data for a performance metric.
+
+Metric name: "${metricName}"
+Metric type: ${typeText}
+
+Create 12 months of sample data with these requirements:
+- Provide a clear performance trend that starts away from the target and gradually moves toward it.
+- Include realistic month-to-month variation. Do not make the series perfectly linear.
+- For percentage metrics, every value must be between 0 and 100.
+- For non-percentage metrics, use positive values.
+- The target should be a single constant value that the team is trying to achieve.
+
+Return JSON ONLY with this exact structure:
+{
+  "actualValues": [n1, n2, ..., n12],
+  "targetValue": number
+}
+
+Rules:
+- "actualValues" must contain exactly 12 numeric values.
+- "targetValue" must be a single number.
+`;
+
+  try {
+    const response = await fetch('https://multi-model-worker.study-llm.me/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You generate realistic numeric time series for performance metrics and respond strictly with JSON.',
+          },
+          { role: 'user', content: userPrompt },
+        ],
+        stream: false,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '{}';
+    const cleanContent = content.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+    let parsed: SampleSeriesResponse;
+    try {
+      parsed = JSON.parse(cleanContent);
+    } catch {
+      parsed = {};
+    }
+
+    const rawValues = Array.isArray(parsed.actualValues) ? parsed.actualValues : [];
+    const actualValues = rawValues
+      .map(v => (typeof v === 'number' && isFinite(v) ? v : NaN))
+      .filter(v => !Number.isNaN(v));
+
+    const targetValue =
+      typeof parsed.targetValue === 'number' && isFinite(parsed.targetValue)
+        ? parsed.targetValue
+        : undefined;
+
+    return {
+      actualValues,
+      targetValue,
+    };
+  } catch (error) {
+    console.error('AI Sample Series Error:', error);
+    return {};
+  }
+};

@@ -189,7 +189,7 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
 
             <div className="border-t border-gray-100 pt-6 mt-6 text-center">
                  <p className="text-xs text-gray-400">
-                    Designed by Alex Luo. Created with Gemini-3-Pro-Preview.
+                    Designed by Alex Luo. Created with Gemini-3-Pro-Preview & GPT-5.1.
                  </p>
             </div>
 
