@@ -2512,7 +2512,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
             definition: definitionText,
             owner: user.username || '',
             scope: 'Single site / value stream',
-            attribute: 'Individual data (one value per month)',
+            attribute: 'Individual data',
             targetMeetingRule:
               aiSeries.targetMeetingRule === 'gte' || aiSeries.targetMeetingRule === 'lte'
                 ? aiSeries.targetMeetingRule
@@ -2523,10 +2523,11 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
       };
 
       addBowler(demoBowler);
+      navigate(`/metric-bowler/${demoBowler.id}`);
       setIsQuickDemoOpen(false);
       setQuickDemoMetricName('');
       toast.success(
-        'Created demo metric with AI. Open Metric Bowler to review it and create an A3 from the chart when you are ready.',
+        'Created demo metric with AI. You can now review it in Metric Bowler and create an A3 from the chart when you are ready.',
       );
     } catch (error) {
       console.error('Failed to generate AI demo metric and A3', error);
@@ -4867,14 +4868,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                 <div className="w-8 h-8 rounded-md bg-indigo-600 text-white flex items-center justify-center">
                   <FlaskConical className="w-4 h-4" />
                 </div>
-                <div>
-                  <h2 className="text-sm sm:text-base font-semibold text-gray-900">
-                    Quick sample metric with AI
-                  </h2>
-                  <p className="text-xs sm:text-sm text-gray-500">
-                    Describe a metric you care about. The app will generate realistic 12-month sample data and add a demo bowler for you.
-                  </p>
-                </div>
+                <h2 className="text-sm sm:text-base font-semibold text-gray-900">
+                  Quick sample metric with AI
+                </h2>
               </div>
               <button
                 type="button"
@@ -4903,9 +4899,6 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   disabled={isGeneratingQuickDemo}
                 />
               </div>
-              <p className="text-xs text-gray-500">
-                After the sample metric is created, open it in Metric Bowler. From there you can use the AI buttons on the chart to analyze the metric and create an A3 when you decide it is needed.
-              </p>
             </div>
             <div className="px-4 py-3 sm:px-6 sm:py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-3">
               <button
