@@ -229,6 +229,7 @@ const Layout = () => {
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
   const [a3Reactions, setA3Reactions] = useState<A3Reaction[]>([]);
   const [isQuickDemoOpen, setIsQuickDemoOpen] = useState(false);
+  const [isLogoPreviewOpen, setIsLogoPreviewOpen] = useState(false);
   const [quickDemoMetricName, setQuickDemoMetricName] = useState('');
   const [isGeneratingQuickDemo, setIsGeneratingQuickDemo] = useState(false);
   const [isLoadingA3Reactions, setIsLoadingA3Reactions] = useState(false);
@@ -2639,16 +2640,19 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
             <img
               src={`${import.meta.env.BASE_URL}logo.png`}
               alt="A3 Bowler logo"
-              className="w-8 h-8 rounded-md bg-white object-contain"
+              className="w-8 h-8 rounded-md bg-white object-contain cursor-pointer"
+              onClick={() => setIsLogoPreviewOpen(true)}
             />
-            <div className="flex items-center space-x-1">
-              <h1 className="text-lg font-semibold text-gray-900 tracking-tight hidden md:block">A3 Bowler</h1>
-              <button 
-                  onClick={() => setIsAppInfoOpen(true)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                  title="About this app"
+            <div className="relative flex items-center">
+              <h1 className="text-lg font-semibold text-gray-900 tracking-tight hidden md:block pr-5">
+                A3 Bowler
+              </h1>
+              <button
+                onClick={() => setIsAppInfoOpen(true)}
+                className="hidden md:inline-flex md:absolute md:-top-2 md:right-0 text-gray-400 hover:text-gray-600 transition-colors"
+                title="About this app"
               >
-                  <Info className="w-4 h-4" />
+                <Info className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
@@ -4918,6 +4922,32 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
           onImport={handleImport}
         />
       </Suspense>
+
+      {isLogoPreviewOpen && (
+        <div
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60"
+          onClick={() => setIsLogoPreviewOpen(false)}
+        >
+          <div
+            className="relative max-w-[95vw] max-h-[95vh]"
+            onClick={event => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setIsLogoPreviewOpen(false)}
+              className="absolute -top-3 -right-3 rounded-full bg-white/90 text-gray-700 shadow-md hover:bg-white p-1"
+              aria-label="Close logo preview"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <img
+              src={`${import.meta.env.BASE_URL}logo.png`}
+              alt="A3 Bowler logo full size"
+              className="max-w-[95vw] max-h-[85vh] w-auto h-auto rounded-md bg-white object-contain"
+            />
+          </div>
+        </div>
+      )}
 
       <Suspense fallback={null}>
         <AccountSettingsModal
