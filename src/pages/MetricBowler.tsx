@@ -153,7 +153,8 @@ const MetricBowler = () => {
         updateBowler({
             ...selectedBowler,
             name: editBowlerName,
-            description: editBowlerDesc
+            description: editBowlerDesc,
+            metricStartDate: startDate
         });
     }
     setIsEditingBowler(false);
