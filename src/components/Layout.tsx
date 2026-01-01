@@ -4495,7 +4495,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   )}
                   {!isLoadingAdminUsers && adminAccounts.length > 0 && (
                     <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-                      <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                      <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
                         <div>
                           <div className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
                             Total users
@@ -4508,7 +4508,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                           <Users className="w-4 h-4" />
                         </div>
                       </div>
-                      <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                      <div className="flex items-center justify-between rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2">
                         <div>
                           <div className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
                             Active last 7 days
@@ -4521,7 +4521,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                           <Activity className="w-4 h-4" />
                         </div>
                       </div>
-                      <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                      <div className="flex items-center justify-between rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2">
                         <div>
                           <div className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
                             Active last 30 days
@@ -4534,7 +4534,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                           <Clock3 className="w-4 h-4" />
                         </div>
                       </div>
-                      <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                      <div className="flex items-center justify-between rounded-lg border border-amber-100 bg-amber-50 px-3 py-2">
                         <div>
                           <div className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
                             Active last 90 days
