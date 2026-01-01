@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Inbox, Users, X, Calendar } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Inbox, Users, X, Calendar, FlaskConical } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case, MindMapNodeData, ActionPlanTaskData } from '../context/AppContext';
 import {
@@ -2429,43 +2429,46 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
     if (isGeneratingQuickDemo) return;
     setIsGeneratingQuickDemo(true);
     try {
-      const baseValue = 120;
       const targetValue = 80;
       const startYear = new Date().getFullYear() - 1;
       const startMonthIndex = 0;
       const monthlyData: Record<string, MetricData> = {};
-      let current = baseValue;
+      const baseActuals = [118, 111, 106, 103, 96, 92, 84, 78, 72, 67, 62, 60];
       for (let i = 0; i < 12; i++) {
         const date = new Date(startYear, startMonthIndex + i, 1);
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const key = `${year}-${month}`;
-        const delta = Math.random() * 6 - 3;
-        current = current - 4 + delta;
-        if (current < 0) current = Math.abs(current) + 5;
+        const noise = (Math.random() - 0.5) * 4;
+        const actualValue = baseActuals[i] + noise;
         monthlyData[key] = {
           target: String(targetValue),
-          actual: current.toFixed(1),
+          actual: actualValue.toFixed(1),
         };
       }
 
+      const metricName = quickDemoMetricName.trim();
+      const scenarioName = metricName || 'On-time delivery';
+
       const demoBowler: Bowler = {
         id: generateShortId(),
-        name: 'AI Demo Bowler',
-        description: 'Automatically created bowler and metric for a quick AI-guided demo.',
-        group: user.plant || 'Demo Group',
+        name: `Sample – ${scenarioName}`,
+        description:
+          `Sample bowler used for onboarding. It represents a real-world team tracking "${scenarioName}" over 12 months, starting far from target and then improving.`,
+        group: user.plant || 'Operations – Demo',
         champion: user.username || '',
-        commitment: 'Demonstrate how metrics and A3 work together.',
-        tag: 'AI-DEMO',
+        commitment: 'Close the gap between actual performance and target using A3 problem solving.',
+        tag: 'SAMPLE',
         metricStartDate: `${startYear}-${String(startMonthIndex + 1).padStart(2, '0')}`,
         metrics: [
           {
             id: generateShortId(),
-            name: quickDemoMetricName.trim(),
-            definition: `AI-generated example metric for "${quickDemoMetricName.trim()}", with a slightly decreasing trend and realistic month-to-month variance.`,
+            name: scenarioName,
+            definition:
+              `Monthly performance for "${scenarioName}". The sample data shows a team starting well above the target (higher is worse) and progressively improving month by month. Interpret it as something like "late deliveries per 1,000 shipments" or "incidents per month" where lower values are better.`,
             owner: user.username || '',
-            scope: 'Single site / team',
-            attribute: 'Individual data',
+            scope: 'Single site / value stream',
+            attribute: 'Individual data (one value per month)',
             targetMeetingRule: 'lte',
             monthlyData,
           },
@@ -2792,87 +2795,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
         </div>
         
         <div className="flex items-center space-x-2 md:space-x-4">
-          <div className="hidden md:flex items-center space-x-4">
-            <button
-              onClick={handleExit}
-              className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-red-600 transition-colors"
-              title="Exit to Main App"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setIsQuickDemoOpen(true)}
-              className="p-2 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 hover:text-indigo-800 transition-colors"
-              title="AI demo: create a sample metric and A3"
-            >
-              <Sparkles className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setIsImportModalOpen(true)}
-              className="p-2 rounded-md bg-green-500 text-white shadow-sm hover:bg-green-600 transition-colors"
-              title="Import CSV"
-            >
-              <Upload className="w-4 h-4" />
-            </button>
-            <button
-              onClick={handleDownloadAllCSV}
-              className="p-2 rounded-md bg-blue-500 text-white shadow-sm hover:bg-blue-600 transition-colors"
-              title="Download all bowlers"
-            >
-              <Download className="w-4 h-4" />
-            </button>
-            {isSuperAdmin && (
-              <>
-                <button
-                  onClick={() => {
-                    setIsAdminPanelOpen(true);
-                  }}
-                  className="p-2 rounded-md bg-orange-500 text-white shadow-sm hover:bg-orange-600 transition-colors"
-                  title="User management"
-                >
-                  <Users className="w-4 h-4" />
-                </button>
-              </>
-            )}
-            <button
-              onClick={() => navigate('/mindmap')}
-              className="p-2 rounded-md bg-amber-500 text-white shadow-sm hover:bg-amber-600 transition-colors"
-              title="Map Ideas"
-            >
-              <Lightbulb className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setIsAIChatOpen(true)}
-              className="p-2 bg-indigo-600 text-white rounded-md shadow-sm hover:bg-indigo-700 transition-colors"
-              title="Chat with AI"
-            >
-              <Sparkles className="w-4 h-4" />
-            </button>
-            <button
-              onClick={handleOpenConsolidateModal}
-              className="p-2 bg-purple-600 text-white rounded-md shadow-sm hover:bg-purple-700 transition-colors"
-              title="Consolidate Bowlers & A3"
-            >
-              <Inbox className="w-4 h-4" />
-            </button>
-            <button
-              onClick={handleOpenAllA3Modal}
-              className="p-2 rounded-md bg-blue-600 text-white shadow-sm hover:bg-blue-700 transition-colors"
-              title="View all A3 cases (all accounts)"
-            >
-              <FileText className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setIsEmailSettingsOpen(true)}
-              className="p-2 bg-rose-600 text-white rounded-md shadow-sm hover:bg-rose-700 transition-colors"
-              title="Email settings"
-            >
-              <Calendar className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Mobile Menu Dropdown */}
-          <div className="md:hidden relative">
+          <div className="relative">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="p-2 rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 transition-colors"
@@ -2896,6 +2819,16 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   >
                     <ExternalLink className="w-4 h-4 mr-3" />
                     Exit App
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsQuickDemoOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-indigo-600"
+                  >
+                    <FlaskConical className="w-4 h-4 mr-3" />
+                    Sample metric + A3
                   </button>
                   
                   <button
@@ -5061,14 +4994,14 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
             <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-md bg-indigo-600 text-white flex items-center justify-center">
-                  <Sparkles className="w-4 h-4" />
+                  <FlaskConical className="w-4 h-4" />
                 </div>
                 <div>
                   <h2 className="text-sm sm:text-base font-semibold text-gray-900">
-                    AI demo: create a sample metric and A3
+                    Sample metric &amp; A3 with AI
                   </h2>
                   <p className="text-xs sm:text-sm text-gray-500">
-                    Describe a metric you care about. AI will create 12 months of data and a full A3.
+                    Describe a metric you care about. The app will generate realistic 12-month data and a full A3 story.
                   </p>
                 </div>
               </div>
@@ -5131,8 +5064,8 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4" />
-                    <span>Create demo metric &amp; A3</span>
+                    <FlaskConical className="w-4 h-4" />
+                    <span>Create sample metric &amp; A3</span>
                   </>
                 )}
               </button>
