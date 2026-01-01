@@ -2,7 +2,7 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Inbox, Users, X, Calendar, FlaskConical } from 'lucide-react';
 import clsx from 'clsx';
-import { useApp, A3Case, MindMapNodeData, ActionPlanTaskData } from '../context/AppContext';
+import { useApp, A3Case } from '../context/AppContext';
 import {
   Bowler,
   Metric,
@@ -24,7 +24,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { diffDays, addDays, formatDate, getMonthName } from '../utils/dateUtils';
 import { MindMap } from './MindMap';
 import { generateShortId } from '../utils/idUtils';
-import { analyzeMetric, generateA3PlanFromMetric, generateSampleSeriesFromAI } from '../services/aiService';
+import { generateSampleSeriesFromAI } from '../services/aiService';
 
 const A3CaseModal = lazy(() => import('./A3CaseModal'));
 const BowlerModal = lazy(() => import('./BowlerModal'));
@@ -2523,187 +2523,11 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
       };
 
       addBowler(demoBowler);
-
-      const createdBowler = demoBowler;
-      const createdMetric = createdBowler.metrics![0];
-
-      const linkedA3Cases = a3Cases.filter(
-        c => (c.linkedMetricIds || []).includes(createdMetric.id),
-      );
-      const analysis = await analyzeMetric(createdMetric, selectedModel, linkedA3Cases);
-      const plan = await generateA3PlanFromMetric(createdMetric, selectedModel);
-      const today = formatDate(new Date());
-      const trendLabel = analysis.trend.charAt(0).toUpperCase() + analysis.trend.slice(1);
-      let priority: 'Low' | 'Medium' | 'High' = 'Medium';
-      const loweredTrend = analysis.trend.toLowerCase();
-      if (
-        loweredTrend === 'degrading' ||
-        loweredTrend === 'unstable' ||
-        loweredTrend === 'incapable' ||
-        analysis.achievementRate < 50
-      ) {
-        priority = 'High';
-      } else if (
-        analysis.achievementRate >= 80 &&
-        (loweredTrend === 'capable' || loweredTrend === 'improving' || loweredTrend === 'stable')
-      ) {
-        priority = 'Low';
-      }
-
-      const achievement =
-        typeof analysis.achievementRate === 'number'
-          ? `${analysis.achievementRate.toFixed(1)}%`
-          : '';
-      const descriptionParts: string[] = [];
-      if (analysis.summary) {
-        descriptionParts.push(analysis.summary.trim());
-      }
-      if (achievement) {
-        descriptionParts.push(`Current target achievement: ${achievement}.`);
-      }
-      const description = descriptionParts.join('\n\n');
-
-      const rootCauseText = plan.rootCauses.length
-        ? `Most likely root causes:\n- ${plan.rootCauses.join('\n- ')}`
-        : '';
-
-      const mindMapNodes: MindMapNodeData[] = [];
-      const rootId = 'root';
-      const rootText =
-        plan.problemStatement && plan.problemStatement.trim().length > 0
-          ? plan.problemStatement.trim()
-          : `Improve performance of metric "${createdMetric.name}".`;
-      mindMapNodes.push({
-        id: rootId,
-        text: rootText,
-        x: 50,
-        y: 220,
-        parentId: null,
-        type: 'root',
-      });
-
-      const addChildren = (
-        nodes: MindMapNodeData[],
-        tree: { cause: string; children?: { cause: string; children?: any[] }[] }[],
-        parentId: string,
-        depth: number,
-      ) => {
-        const stepY = 120;
-        const stepX = 220;
-        const parent = nodes.find(n => n.id === parentId);
-        if (!parent) {
-          return;
-        }
-
-        const validNodes = tree.filter(
-          node => node && typeof node.cause === 'string' && node.cause.trim().length > 0,
-        );
-
-        const count = validNodes.length;
-
-        validNodes.forEach((node, index) => {
-          const id = generateShortId();
-          const offset = count > 1 ? index - (count - 1) / 2 : 0;
-          const x = parent.x + stepX;
-          const y = parent.y + offset * stepY;
-
-          nodes.push({
-            id,
-            text: node.cause.trim(),
-            x,
-            y,
-            parentId,
-            type: 'child',
-          });
-
-          if (node.children && node.children.length > 0) {
-            addChildren(nodes, node.children, id, depth + 1);
-          }
-        });
-      };
-
-      if (plan.whyTree && (plan.whyTree as any[]).length > 0) {
-        addChildren(mindMapNodes, plan.whyTree as any, rootId, 1);
-      }
-
-      const actions: ActionPlanTaskData[] = [];
-      const baseDate = new Date();
-      const actionsSource = Array.isArray(plan.actions) && plan.actions.length > 0 ? plan.actions : [];
-      actionsSource.forEach((a, index) => {
-        const name = a.name || `Action ${index + 1}`;
-        const descriptionText = a.description || '';
-        const ownerText = a.owner || createdBowler.champion || user.username || '';
-        const groupText = a.group || createdBowler.group || undefined;
-        let startDateStr: string | undefined;
-        let endDateStr: string | undefined;
-        if (a.startDate && !Number.isNaN(Date.parse(a.startDate))) {
-          startDateStr = a.startDate;
-        }
-        if (a.endDate && !Number.isNaN(Date.parse(a.endDate))) {
-          endDateStr = a.endDate;
-        }
-        if (!startDateStr) {
-          const start = addDays(baseDate, index * 7);
-          startDateStr = formatDate(start);
-        }
-        if (!endDateStr) {
-          const startDateObj = new Date(startDateStr);
-          const end = addDays(startDateObj, 7);
-          endDateStr = formatDate(end);
-        }
-        const rawStatus = a.status;
-        const status: 'Not Started' | 'In Progress' | 'Completed' =
-          rawStatus === 'In Progress' || rawStatus === 'Completed'
-            ? rawStatus
-            : 'Not Started';
-        const progress =
-          typeof a.progress === 'number' && isFinite(a.progress) && a.progress >= 0 && a.progress <= 100
-            ? a.progress
-            : 0;
-        actions.push({
-          id: generateShortId(),
-          name,
-          description: descriptionText,
-          owner: ownerText,
-          group: groupText,
-          startDate: startDateStr,
-          endDate: endDateStr,
-          status,
-          progress,
-        });
-      });
-
-      const createdA3 = addA3Case({
-        title: `A3: ${createdMetric.name} – ${trendLabel}`,
-        description,
-        owner: createdBowler.champion || user.username || '',
-        group: createdBowler.group,
-        tag: createdBowler.tag,
-        linkedMetricIds: [createdMetric.id],
-        priority,
-        startDate: today,
-        endDate: '',
-        status: 'In Progress',
-        problemStatement: plan.problemStatement || rootText,
-        results: '',
-        mindMapNodes,
-        mindMapText: '',
-        rootCause: rootCauseText,
-        actionPlanTasks: actions,
-        dataAnalysisObservations: '',
-        dataAnalysisImages: [],
-        dataAnalysisCanvasHeight: undefined,
-        resultImages: [],
-        resultCanvasHeight: undefined,
-      });
-
       setIsQuickDemoOpen(false);
       setQuickDemoMetricName('');
-      toast.success('Created demo metric and A3 with AI.');
-      navigate(`/metric-bowler/${createdBowler.id}`);
-      setTimeout(() => {
-        navigate(`/a3-analysis/${createdA3.id}`);
-      }, 400);
+      toast.success(
+        'Created demo metric with AI. Open Metric Bowler to review it and create an A3 from the chart when you are ready.',
+      );
     } catch (error) {
       console.error('Failed to generate AI demo metric and A3', error);
       toast.error('Failed to generate AI demo metric and A3. Please try again.');
@@ -5045,10 +4869,10 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                 </div>
                 <div>
                   <h2 className="text-sm sm:text-base font-semibold text-gray-900">
-                    Sample metric &amp; A3 with AI
+                    Quick sample metric with AI
                   </h2>
                   <p className="text-xs sm:text-sm text-gray-500">
-                    Describe a metric you care about. The app will generate realistic 12-month data (including percentages that stay within 0–100%) and a full A3 story.
+                    Describe a metric you care about. The app will generate realistic 12-month sample data and add a demo bowler for you.
                   </p>
                 </div>
               </div>
@@ -5080,8 +4904,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                 />
               </div>
               <p className="text-xs text-gray-500">
-                The app will create a demo bowler with a realistic, slightly decreasing trend, set a target rule
-                (lower is better), and then use AI to generate a complete A3 problem-solving story linked to this metric.
+                After the sample metric is created, open it in Metric Bowler. From there you can use the AI buttons on the chart to analyze the metric and create an A3 when you decide it is needed.
               </p>
             </div>
             <div className="px-4 py-3 sm:px-6 sm:py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-3">
@@ -5107,12 +4930,12 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                 {isGeneratingQuickDemo ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Creating demo...</span>
+                    <span>Creating demo metric...</span>
                   </>
                 ) : (
                   <>
                     <FlaskConical className="w-4 h-4" />
-                    <span>Create sample metric &amp; A3</span>
+                    <span>Create sample metric</span>
                   </>
                 )}
               </button>
