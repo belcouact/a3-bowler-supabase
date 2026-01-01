@@ -10,6 +10,29 @@ const SUPABASE_STORAGE_URL = `${SUPABASE_URL}/storage/v1`;
 const A3_IMAGES_BUCKET = 'a3-bowler';
 const A3_IMAGES_FOLDER = 'images';
 
+const normalizeMetricStartDateForSave = (value?: string | null): string | null => {
+  if (!value) return null;
+  const parts = value.split('-');
+  if (parts.length === 2) {
+    const [year, month] = parts;
+    if (year.length === 4) {
+      return `${year}-${month.padStart(2, '0')}-01`;
+    }
+  }
+  return value;
+};
+
+const normalizeMetricStartDateFromLoad = (value: unknown): string | undefined => {
+  if (!value || typeof value !== 'string') return undefined;
+  const parts = value.split('-');
+  if (parts.length >= 2) {
+    const year = parts[0];
+    const month = parts[1].padStart(2, '0');
+    return `${year}-${month}`;
+  }
+  return value;
+};
+
 const ensureSupabaseConfigured = () => {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     throw new Error('Supabase is not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.');
@@ -70,7 +93,7 @@ export const dataService = {
         champion: bowler.champion ?? null,
         commitment: bowler.commitment ?? null,
         tag: bowler.tag ?? null,
-        metric_start_date: bowler.metricStartDate ?? null,
+        metric_start_date: normalizeMetricStartDateForSave(bowler.metricStartDate),
         metrics: normalizedMetrics,
         status_color: bowler.statusColor ?? null,
         order_index: index,
@@ -292,7 +315,7 @@ export const dataService = {
         champion: row.champion ?? undefined,
         commitment: row.commitment ?? undefined,
         tag: row.tag ?? undefined,
-        metricStartDate: row.metric_start_date ?? undefined,
+        metricStartDate: normalizeMetricStartDateFromLoad(row.metric_start_date),
         metrics: row.metrics ?? undefined,
         statusColor: row.status_color ?? undefined,
       }));
@@ -961,7 +984,7 @@ export const dataService = {
         champion: row.champion ?? undefined,
         commitment: row.commitment ?? undefined,
         tag: row.tag ?? undefined,
-        metricStartDate: row.metric_start_date ?? undefined,
+        metricStartDate: normalizeMetricStartDateFromLoad(row.metric_start_date),
         metrics: row.metrics ?? undefined,
         statusColor: row.status_color ?? undefined,
         userId: row.user_id ?? undefined,
