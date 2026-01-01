@@ -2492,14 +2492,14 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
 
       const scenarioName = metricName;
       const definitionText = isPercentMetric
-        ? `Monthly performance for "${scenarioName}" expressed as a percentage. The sample data starts below the target and gradually improves toward the goal, with natural month-to-month variation.`
-        : `Monthly performance for "${scenarioName}". The sample data starts far from the target and progressively improves month by month with realistic up-and-down movement. Lower values represent better performance.`;
+        ? `Monthly performance for "${scenarioName}" expressed as a percentage. The sample data shows chronic underperformance versus the target, with unstable month-to-month results that often miss the goal.`
+        : `Monthly performance for "${scenarioName}". The sample data shows performance consistently worse than the target, with unstable month-to-month movement and no sustained improvement. Lower values represent better performance.`;
 
       const demoBowler: Bowler = {
         id: generateShortId(),
         name: `Sample – ${scenarioName}`,
         description:
-          `Sample bowler used for onboarding. It represents a real-world team tracking "${scenarioName}" over 12 months, starting far from target and then improving.`,
+          `Sample bowler used for onboarding. It represents a real-world team struggling with performance on "${scenarioName}" over 12 months, frequently missing the target and needing A3 problem solving.`,
         group: user.plant || 'Operations – Demo',
         champion: user.username || '',
         commitment: 'Close the gap between actual performance and target using A3 problem solving.',
@@ -2513,7 +2513,10 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
             owner: user.username || '',
             scope: 'Single site / value stream',
             attribute: 'Individual data (one value per month)',
-            targetMeetingRule: isPercentMetric ? 'gte' : 'lte',
+            targetMeetingRule:
+              aiSeries.targetMeetingRule === 'gte' || aiSeries.targetMeetingRule === 'lte'
+                ? aiSeries.targetMeetingRule
+                : 'gte',
             monthlyData,
           },
         ],

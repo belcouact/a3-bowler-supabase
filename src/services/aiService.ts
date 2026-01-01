@@ -510,6 +510,7 @@ Response requirements:
 interface SampleSeriesResponse {
   actualValues?: number[];
   targetValue?: number;
+  targetMeetingRule?: 'gte' | 'lte';
 }
 
 export const generateSampleSeriesFromAI = async (
@@ -518,8 +519,8 @@ export const generateSampleSeriesFromAI = async (
   model: AIModelKey,
 ): Promise<SampleSeriesResponse> => {
   const typeText = isPercentMetric
-    ? 'percentage metric with values between 0 and 100'
-    : 'count or rate metric where lower values are better';
+    ? 'percentage performance metric with values between 0 and 100'
+    : 'numeric performance metric (count, rate, or score)';
 
   const userPrompt = `
 You are generating demo data for a performance metric.
@@ -527,10 +528,13 @@ You are generating demo data for a performance metric.
 Metric name: "${metricName}"
 Metric type: ${typeText}
 
-Create 12 months of sample data with these requirements:
-- Provide a clear performance trend that starts away from the target and gradually moves toward it.
+Create 12 months of sample data that clearly show a performance problem the team needs to fix. Requirements:
+- Performance should be worse than the target for most of the 12 months.
+- The trend should either be clearly deteriorating over time or unstable with repeated missed targets. It is fine if there is a small improvement in the last 2–3 months, but the metric should still not be reliably at target by the end.
+- Based on the metric name, decide whether higher or lower values represent better performance. Set "targetMeetingRule" accordingly: use "gte" if higher values are better, or "lte" if lower values are better.
+- Missing the target means the actual value is on the wrong side of the target (below the target if higher is better, above the target if lower is better).
 - Include realistic month-to-month variation. Do not make the series perfectly linear.
-- Month-to-month changes must not all be the same size. At least three months should noticeably deviate from a straight line trend (for example, a small temporary setback or plateau).
+- Month-to-month changes must not all be the same size. At least three months should noticeably deviate from a straight line trend (for example, a temporary setback or spike).
 - For percentage metrics, every value must be between 0 and 100.
 - For non-percentage metrics, use positive values.
 - The target should be a single constant value that the team is trying to achieve.
@@ -538,12 +542,14 @@ Create 12 months of sample data with these requirements:
 Return JSON ONLY with this exact structure:
 {
   "actualValues": [n1, n2, ..., n12],
-  "targetValue": number
+  "targetValue": number,
+  "targetMeetingRule": "gte" or "lte"
 }
 
 Rules:
 - "actualValues" must contain exactly 12 numeric values.
 - "targetValue" must be a single number.
+- "targetMeetingRule" must be either "gte" or "lte".
 `;
 
   try {
@@ -582,18 +588,87 @@ Rules:
     }
 
     const rawValues = Array.isArray(parsed.actualValues) ? parsed.actualValues : [];
-    const actualValues = rawValues
+    let actualValues = rawValues
       .map(v => (typeof v === 'number' && isFinite(v) ? v : NaN))
       .filter(v => !Number.isNaN(v));
+
+    const parsedRule =
+      parsed.targetMeetingRule === 'gte' || parsed.targetMeetingRule === 'lte'
+        ? parsed.targetMeetingRule
+        : undefined;
 
     const targetValue =
       typeof parsed.targetValue === 'number' && isFinite(parsed.targetValue)
         ? parsed.targetValue
         : undefined;
 
+    const effectiveRule: 'gte' | 'lte' = parsedRule || 'gte';
+    const isHigherBetter = effectiveRule === 'gte';
+
+    if (actualValues.length === 12 && targetValue !== undefined && isFinite(targetValue)) {
+      const isMeetingTarget = (value: number) =>
+        isHigherBetter ? value >= targetValue : value <= targetValue;
+
+      let notMetCount = actualValues.filter(v => !isMeetingTarget(v)).length;
+      const desiredNotMet = Math.max(8, Math.ceil(actualValues.length * 0.7));
+
+      if (notMetCount < desiredNotMet) {
+        const adjusted = [...actualValues];
+        for (let i = 0; i < adjusted.length && notMetCount < desiredNotMet; i++) {
+          if (isMeetingTarget(adjusted[i])) {
+            if (isPercentMetric) {
+              const baseMargin = targetValue * 0.05 || 3;
+              const margin = Math.max(3, Math.min(10, baseMargin));
+              let newValue = targetValue - margin;
+              if (newValue < 0) newValue = 0;
+              adjusted[i] = newValue;
+            } else {
+              const baseMargin = Math.abs(targetValue) * 0.1 || 1;
+              const margin = Math.max(1, baseMargin);
+              adjusted[i] = targetValue + margin;
+            }
+            notMetCount++;
+          }
+        }
+        actualValues = adjusted;
+      }
+
+      const first = actualValues[0];
+      const last = actualValues[actualValues.length - 1];
+
+      if (isHigherBetter) {
+        if (last >= targetValue || last >= first) {
+          const degradeMarginBase = Math.abs(targetValue) * 0.03 || 2;
+          const degradeMargin = isPercentMetric
+            ? Math.max(2, Math.min(8, degradeMarginBase))
+            : Math.max(1, degradeMarginBase);
+          let newLast = Math.min(first, targetValue) - degradeMargin;
+          if (isPercentMetric && newLast < 0) newLast = 0;
+          actualValues[actualValues.length - 1] = newLast;
+        }
+      } else {
+        if (last <= targetValue || last <= first) {
+          const degradeMarginBase = Math.abs(targetValue) * 0.1 || 1;
+          const degradeMargin = Math.max(1, degradeMarginBase);
+          actualValues[actualValues.length - 1] = Math.max(first, targetValue) + degradeMargin;
+        }
+      }
+
+      if (isPercentMetric) {
+        actualValues = actualValues.map(v => {
+          if (v < 0) return 0;
+          if (v > 100) return 100;
+          return v;
+        });
+      } else {
+        actualValues = actualValues.map(v => (v < 0 ? Math.abs(v) + 5 : v));
+      }
+    }
+
     return {
       actualValues,
       targetValue,
+      targetMeetingRule: parsedRule,
     };
   } catch (error) {
     console.error('AI Sample Series Error:', error);
