@@ -4862,7 +4862,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
               }
             }}
           />
-          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200">
+          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
             <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-md bg-indigo-600 text-white flex items-center justify-center">
