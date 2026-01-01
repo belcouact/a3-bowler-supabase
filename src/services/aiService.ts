@@ -530,6 +530,7 @@ Metric type: ${typeText}
 Create 12 months of sample data with these requirements:
 - Provide a clear performance trend that starts away from the target and gradually moves toward it.
 - Include realistic month-to-month variation. Do not make the series perfectly linear.
+- Month-to-month changes must not all be the same size. At least three months should noticeably deviate from a straight line trend (for example, a small temporary setback or plateau).
 - For percentage metrics, every value must be between 0 and 100.
 - For non-percentage metrics, use positive values.
 - The target should be a single constant value that the team is trying to achieve.

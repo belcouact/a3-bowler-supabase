@@ -2460,22 +2460,30 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
           ? aiSeries.actualValues
           : fallbackActuals;
 
+      const adjustedActuals = rawActuals.map((value, index) => {
+        let v = value;
+        const range = Math.abs(rawActuals[0] - rawActuals[rawActuals.length - 1]) || 1;
+        const baseJitter = isPercentMetric ? 1.2 : Math.max(0.5, range * 0.03);
+        const jitter = (Math.random() - 0.5) * 2 * baseJitter;
+        v += jitter;
+        if (!isPercentMetric && (index === 3 || index === 7)) {
+          v += baseJitter;
+        }
+        if (isPercentMetric) {
+          if (v > 100) v = 100;
+          if (v < 0) v = 0;
+        } else if (v < 0) {
+          v = Math.abs(v) + 5;
+        }
+        return v;
+      });
+
       for (let i = 0; i < 12; i++) {
         const date = new Date(startYear, startMonthIndex + i, 1);
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const key = `${year}-${month}`;
-        let actualValue = rawActuals[i];
-        if (isPercentMetric) {
-          if (actualValue > 100) {
-            actualValue = 100;
-          }
-          if (actualValue < 0) {
-            actualValue = 0;
-          }
-        } else if (actualValue < 0) {
-          actualValue = Math.abs(actualValue) + 5;
-        }
+        const actualValue = adjustedActuals[i];
         monthlyData[key] = {
           target: String(targetValue),
           actual: actualValue.toFixed(1),
