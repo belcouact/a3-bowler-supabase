@@ -3004,31 +3004,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                 </>
               ) : (
                 <div className="flex items-center gap-1">
-                  {isMetricBowler && (
-                    <>
-                      <button
-                        onClick={() => setIsBowlerFilterOpen(!isBowlerFilterOpen)}
-                        className={clsx(
-                          "p-1 rounded-md border transition-colors",
-                          isBowlerFilterOpen
-                            ? "bg-gray-200 border-gray-300 text-gray-800"
-                            : "bg-white border-gray-200 text-gray-500 hover:bg-gray-100"
-                        )}
-                        title="Filter Bowler lists"
-                      >
-                        <Filter className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setIsQuickDemoOpen(true)}
-                        className="p-1 rounded-md hover:bg-indigo-100 text-indigo-600 transition-colors"
-                        title="Sample metric"
-                      >
-                        <FlaskConical className="w-5 h-5" />
-                      </button>
-                    </>
-                  )}
-                  {/* Compact portfolio button removed; portfolio is now a main function view */}
-                  <button 
+                  <button
                     onClick={handlePlusClick}
                     className="p-1 rounded-md hover:bg-blue-100 text-blue-600 transition-colors"
                     title="Add New"
