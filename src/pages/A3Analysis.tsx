@@ -1,12 +1,17 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation, useParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { useApp } from '../context/AppContext';
-import { AlertCircle, BarChart2, GitBranch, Calendar, CheckCircle, FileText, Bot } from 'lucide-react';
+import { AlertCircle, BarChart2, GitBranch, Calendar, CheckCircle, FileText, Bot, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const A3Analysis = () => {
   const location = useLocation();
   const { id } = useParams();
   const { a3Cases } = useApp();
+
+  const tabsContainerRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   const selectedCase = a3Cases.find(c => c.id === id);
   const title = selectedCase ? selectedCase.title : 'A3 Problem Solving';
@@ -20,6 +25,36 @@ const A3Analysis = () => {
     { path: 'summary', label: 'A3 Report', icon: FileText },
     { path: 'ai-coach', label: 'AI Coach', icon: Bot },
   ];
+
+  const updateScrollButtons = () => {
+    const el = tabsContainerRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 0);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  };
+
+  const handleScrollTabs = (direction: 'left' | 'right') => {
+    const el = tabsContainerRef.current;
+    if (!el) return;
+    const amount = el.clientWidth * 0.6;
+    el.scrollBy({
+      left: direction === 'left' ? -amount : amount,
+      behavior: 'smooth',
+    });
+  };
+
+  useEffect(() => {
+    const el = tabsContainerRef.current;
+    if (!el) return;
+    const handleScroll = () => updateScrollButtons();
+    handleScroll();
+    el.addEventListener('scroll', handleScroll);
+    window.addEventListener('resize', handleScroll);
+    return () => {
+      el.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, [location.pathname]);
 
   if (!id) {
     return (
@@ -55,26 +90,55 @@ const A3Analysis = () => {
           </div>
         </div>
 
-        <div className="flex space-x-1 border-b border-gray-200 overflow-x-auto">
-          {tabs.map((tab) => {
-            const isActive = location.pathname.includes(tab.path);
-            return (
-              <Link
-                key={tab.path}
-                to={tab.path}
-                className={clsx(
-                  'py-2 px-3 md:py-3 md:px-6 border-b-2 font-medium text-sm transition-all duration-200 whitespace-nowrap flex items-center',
-                  isActive
-                    ? 'border-blue-600 text-blue-600 bg-blue-50/50'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50'
-                )}
-                title={tab.label}
-              >
-                <tab.icon className={clsx("w-5 h-5 md:w-4 md:h-4 md:mr-2")} />
-                <span className="hidden md:inline">{tab.label}</span>
-              </Link>
-            );
-          })}
+        <div className="relative border-b border-gray-200">
+          <button
+            type="button"
+            onClick={() => handleScrollTabs('left')}
+            disabled={!canScrollLeft}
+            className={clsx(
+              'absolute left-0 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow ring-1 ring-gray-200 text-gray-500 hover:text-gray-700',
+              !canScrollLeft && 'opacity-40 cursor-default'
+            )}
+            aria-label="Scroll tabs left"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <div
+            ref={tabsContainerRef}
+            className="no-scrollbar flex space-x-1 overflow-x-auto px-8"
+          >
+            {tabs.map(tab => {
+              const isActive = location.pathname.includes(tab.path);
+              return (
+                <Link
+                  key={tab.path}
+                  to={tab.path}
+                  className={clsx(
+                    'py-2 px-3 md:py-3 md:px-6 border-b-2 font-medium text-sm transition-all duration-200 whitespace-nowrap flex items-center',
+                    isActive
+                      ? 'border-blue-600 text-blue-600 bg-blue-50/50'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                  )}
+                  title={tab.label}
+                >
+                  <tab.icon className={clsx('w-5 h-5 md:w-4 md:h-4 md:mr-2')} />
+                  <span className="hidden md:inline">{tab.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            onClick={() => handleScrollTabs('right')}
+            disabled={!canScrollRight}
+            className={clsx(
+              'absolute right-0 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow ring-1 ring-gray-200 text-gray-500 hover:text-gray-700',
+              !canScrollRight && 'opacity-40 cursor-default'
+            )}
+            aria-label="Scroll tabs right"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
       </div>
       
