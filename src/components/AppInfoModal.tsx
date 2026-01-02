@@ -19,9 +19,11 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
         <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 sm:px-6 flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-md border border-teal-500 text-teal-500 flex items-center justify-center text-xs font-bold">
-                A&amp;B
-              </div>
+              <img
+                src={`${import.meta.env.BASE_URL}logo.png`}
+                alt="A3 Bowler logo"
+                className="w-8 h-8 rounded-md bg-white object-contain"
+              />
               <h3 className="text-sm font-medium text-gray-900" id="modal-title">
                 About A3 Bowler
               </h3>
@@ -34,9 +36,11 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
           <div className="bg-white px-4 pt-5 pb-6 sm:px-8 sm:pt-8 sm:pb-8">
             <div className="mb-6 text-center flex flex-col items-center">
               <div className="mb-3">
-                <div className="w-8 h-8 rounded-md border border-teal-500 text-teal-500 flex items-center justify-center text-xs font-bold">
-                  A&amp;B
-                </div>
+                <img
+                  src={`${import.meta.env.BASE_URL}logo.png`}
+                  alt="A3 Bowler logo"
+                  className="w-10 h-10 rounded-md bg-white object-contain"
+                />
               </div>
               <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">A3 Bowler</h2>
               <p className="mt-1 text-sm text-gray-500">AI-Assisted Performance Tracker &amp; A3 Problem Solving</p>
