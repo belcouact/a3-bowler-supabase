@@ -329,10 +329,19 @@ Response format (JSON only, no backticks):
         .replace(/```/g, '')
         .trim();
 
-      const cleanContent = cleanedForJson.replace(
-        /:\s*function\s*\([^)]*\)\s*\{[\s\S]*?\}/g,
-        ': null',
-      );
+      const cleanContent = cleanedForJson
+        .replace(
+          /,\s*"formatter"\s*:\s*function\s*\([^)]*\)\s*\{[\s\S]*?},/g,
+          '},',
+        )
+        .replace(
+          /,\s*"formatter"[\s\S]*?},/g,
+          '},',
+        )
+        .replace(
+          /:\s*function\s*\([^)]*\)\s*\{[\s\S]*?\}/g,
+          ': null',
+        );
 
       let parsed: any;
       try {
@@ -400,7 +409,7 @@ Response format (JSON only, no backticks):
               className={
                 isSidebarCollapsed
                   ? 'flex w-9 flex-col border-r border-gray-200 bg-gray-50'
-                  : 'flex w-full flex-col gap-3 border-r border-gray-200 bg-gray-50 p-3 lg:w-80'
+                  : 'flex w-full flex-col gap-3 border-r border-gray-200 bg-gray-50 p-3 lg:w-1/2'
               }
             >
               <div className="flex items-center justify-between mb-2">
@@ -493,7 +502,7 @@ Response format (JSON only, no backticks):
                           No data yet. Upload a file or add a row to start.
                         </div>
                       ) : (
-                        <table className="min-w-full border-collapse text-[11px]">
+                        <table className="min-w-full border-collapse text-[11px] table-fixed">
                           <tbody>
                             {tableData.map((row, rowIndex) => (
                               <tr key={rowIndex} className={rowIndex === 0 ? 'bg-gray-50' : ''}>
@@ -513,14 +522,12 @@ Response format (JSON only, no backticks):
                                       }
                                       className="w-full border-none bg-transparent p-0 text-[11px] focus:outline-none focus:ring-0"
                                     />
-                                    {rowIndex === 0 && (
-                                      <div
-                                        className="absolute top-0 right-0 h-full w-1 cursor-col-resize bg-transparent group-hover:bg-gray-300"
-                                        onMouseDown={e =>
-                                          handleColumnResizeStart(e, colIndex)
-                                        }
-                                      />
-                                    )}
+                                    <div
+                                      className="absolute top-0 right-0 h-full w-1 cursor-col-resize bg-transparent group-hover:bg-gray-300"
+                                      onMouseDown={e =>
+                                        handleColumnResizeStart(e, colIndex)
+                                      }
+                                    />
                                   </td>
                                 ))}
                               </tr>
