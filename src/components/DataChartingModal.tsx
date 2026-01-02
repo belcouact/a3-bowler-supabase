@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Upload, FileText, Activity, Loader2 } from 'lucide-react';
+import { X, Upload, FileText, Activity, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import * as echarts from 'echarts';
 import type { EChartsOption } from 'echarts';
 import * as XLSX from 'xlsx';
@@ -11,6 +11,8 @@ interface DataChartingModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+type SampleDatasetType = 'pareto' | 'sankey' | 'boxplot' | 'normal';
 
 export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) => {
   const toast = useToast();
@@ -26,6 +28,7 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
   const [chartOptionRaw, setChartOptionRaw] = useState('');
   const [chartOptionError, setChartOptionError] = useState<string | null>(null);
   const [columnWidths, setColumnWidths] = useState<number[]>([]);
+   const [isSampleMenuOpen, setIsSampleMenuOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
@@ -296,13 +299,13 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
     }
   };
 
-  const handleGenerateChart = async () => {
-    if (!tableData.length) {
+  const runGenerateChart = async (data: string[][], prompt: string) => {
+    if (!data.length) {
       toast.info('Please upload data or enter data into the sheet.');
       return;
     }
 
-    if (!chartPrompt.trim()) {
+    if (!prompt.trim()) {
       toast.info('Please describe how to interpret and chart the data.');
       return;
     }
@@ -311,13 +314,13 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
     setAiError(null);
 
     try {
-      const header = tableData[0] || [];
-      const rows = tableData.slice(1);
+      const header = data[0] || [];
+      const rows = data.slice(1);
 
       const payload = {
         header,
         rows,
-        prompt: chartPrompt.trim(),
+        prompt: prompt.trim(),
       };
 
       const systemMessage =
@@ -359,8 +362,8 @@ Response format (JSON only, no backticks):
         throw new Error(`API error: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      const rawContent = data.choices?.[0]?.message?.content || '{}';
+      const responseJson = await response.json();
+      const rawContent = responseJson.choices?.[0]?.message?.content || '{}';
       const cleanedForJson = String(rawContent)
         .replace(/```json/gi, '')
         .replace(/```/g, '')
@@ -454,6 +457,106 @@ Response format (JSON only, no backticks):
     }
   };
 
+  const handleGenerateChart = () => {
+    runGenerateChart(tableData, chartPrompt);
+  };
+
+  const handleSampleDatasetClick = (type: SampleDatasetType) => {
+    let data: string[][];
+    let prompt: string;
+
+    if (type === 'pareto') {
+      data = [
+        ['Category', 'Value'],
+        ['Defect A', '80'],
+        ['Defect B', '40'],
+        ['Defect C', '25'],
+        ['Defect D', '15'],
+        ['Defect E', '10'],
+      ];
+      prompt =
+        'Create a Pareto chart where Category is on the X axis, Value is the bar series, and the cumulative percentage line is overlaid on a second Y axis.';
+    } else if (type === 'sankey') {
+      data = [
+        ['Source', 'Target', 'Value'],
+        ['Email', 'Website', '120'],
+        ['Email', 'Sales', '45'],
+        ['Ads', 'Website', '180'],
+        ['Ads', 'Sales', '60'],
+        ['Social', 'Website', '90'],
+        ['Social', 'Sales', '30'],
+      ];
+      prompt =
+        'Create a Sankey diagram showing the flow from Source to Target using Value as the link weight.';
+    } else if (type === 'boxplot') {
+      data = [
+        ['Region', 'Value'],
+        ['North', '12'],
+        ['North', '15'],
+        ['North', '18'],
+        ['North', '22'],
+        ['North', '25'],
+        ['South', '10'],
+        ['South', '14'],
+        ['South', '17'],
+        ['South', '19'],
+        ['South', '23'],
+        ['East', '8'],
+        ['East', '11'],
+        ['East', '15'],
+        ['East', '18'],
+        ['East', '21'],
+        ['West', '9'],
+        ['West', '13'],
+        ['West', '16'],
+        ['West', '20'],
+        ['West', '24'],
+      ];
+      prompt =
+        'Create a boxplot chart grouping values by Region to compare distributions.';
+    } else {
+      data = [
+        ['Sample', 'Value'],
+        ['1', '-0.8'],
+        ['2', '-0.2'],
+        ['3', '0.1'],
+        ['4', '0.4'],
+        ['5', '0.0'],
+        ['6', '0.6'],
+        ['7', '1.1'],
+        ['8', '0.9'],
+        ['9', '-0.4'],
+        ['10', '0.3'],
+        ['11', '0.7'],
+        ['12', '1.3'],
+        ['13', '-0.6'],
+        ['14', '0.2'],
+        ['15', '0.5'],
+        ['16', '1.0'],
+        ['17', '-0.3'],
+        ['18', '0.8'],
+        ['19', '1.2'],
+        ['20', '0.4'],
+      ];
+      prompt =
+        'Create a histogram or density-style chart to show the approximate normal distribution of the Value column.';
+    }
+
+    setTableData(data);
+
+    const columnCount = data[0]?.length || 0;
+    if (columnCount > 0) {
+      const widths = Array.from({ length: columnCount }, () => 140);
+      setColumnWidths(widths);
+    } else {
+      setColumnWidths([]);
+    }
+
+    setChartPrompt(prompt);
+    setIsSampleMenuOpen(false);
+    runGenerateChart(data, prompt);
+  };
+
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-hidden no-scrollbar">
       <div
@@ -511,7 +614,11 @@ Response format (JSON only, no backticks):
                   className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-gray-300 bg-white text-xs text-gray-600 hover:bg-gray-50"
                   title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                 >
-                  {isSidebarCollapsed ? '>' : '<'}
+                  {isSidebarCollapsed ? (
+                    <ChevronRight className="h-3 w-3" />
+                  ) : (
+                    <ChevronLeft className="h-3 w-3" />
+                  )}
                 </button>
               </div>
 
@@ -551,6 +658,47 @@ Response format (JSON only, no backticks):
                       Edit cells or add rows and columns to adjust your data.
                     </p>
                     <div className="mb-2 flex flex-wrap items-center gap-2">
+                      <div className="relative flex-1">
+                        <button
+                          type="button"
+                          onClick={() => setIsSampleMenuOpen(prev => !prev)}
+                          className="inline-flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] font-medium text-gray-700 hover:bg-gray-50"
+                        >
+                          Sample Data
+                        </button>
+                        {isSampleMenuOpen && (
+                          <div className="absolute z-10 mt-1 w-full rounded-md border border-gray-200 bg-white text-[11px] shadow-lg">
+                            <button
+                              type="button"
+                              onClick={() => handleSampleDatasetClick('pareto')}
+                              className="block w-full px-2 py-1 text-left hover:bg-gray-50"
+                            >
+                              Pareto chart
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSampleDatasetClick('sankey')}
+                              className="block w-full px-2 py-1 text-left hover:bg-gray-50"
+                            >
+                              Sankey diagram
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSampleDatasetClick('boxplot')}
+                              className="block w-full px-2 py-1 text-left hover:bg-gray-50"
+                            >
+                              Boxplot by category
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSampleDatasetClick('normal')}
+                              className="block w-full px-2 py-1 text-left hover:bg-gray-50"
+                            >
+                              Normal distribution
+                            </button>
+                          </div>
+                        )}
+                      </div>
                       <button
                         type="button"
                         onClick={handleAddRow}
