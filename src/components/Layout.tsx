@@ -4980,10 +4980,54 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
       {isDataChartingOpen && (
         <Suspense
           fallback={
-            <div className="fixed inset-0 z-[95] flex items-center justify-center bg-gray-900/60">
-              <div className="flex items-center gap-2 rounded-md bg-white px-4 py-3 text-sm text-gray-700 shadow-lg">
-                <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
-                <span>Loading Data Charting...</span>
+            <div className="fixed inset-0 z-[95] flex items-center justify-center overflow-hidden">
+              <div className="absolute inset-0 bg-gray-900/60" />
+              <div className="relative z-[95] flex h-full w-full flex-col bg-white shadow-2xl border border-gray-200 rounded-none">
+                <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-50 text-blue-600">
+                      <Activity className="h-4 w-4" />
+                    </div>
+                    <div className="flex flex-col">
+                      <h2 className="text-sm font-semibold text-gray-900">Data Charting</h2>
+                      <p className="text-xs text-gray-500">
+                        Upload a CSV or Excel file, shape the data, and let AI design an ECharts chart.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="rounded-full p-1.5 text-gray-400 bg-white/70 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                    aria-label="Close"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="flex flex-1 flex-col gap-3 pb-4 pt-3 sm:pb-6 sm:pt-4">
+                  <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
+                    <div className="hidden lg:flex lg:w-1/2 flex-col gap-3 border-r border-gray-200 bg-gray-50 p-3">
+                      <div className="h-6 w-32 rounded-full bg-gray-200" />
+                      <div className="flex-1 rounded-md border border-dashed border-gray-300 bg-white" />
+                    </div>
+
+                    <div className="flex min-h-0 flex-1 flex-col gap-3 px-3 lg:px-0">
+                      <div className="flex-1 rounded-md border border-gray-200 bg-white p-3">
+                        <h3 className="mb-2 flex items-center text-xs font-semibold text-gray-800">
+                          <Activity className="mr-1.5 h-3.5 w-3.5 text-blue-500" />
+                          <span>Chart</span>
+                        </h3>
+                        <div className="relative h-64 w-full sm:h-80 lg:h-[420px]">
+                          <div className="h-full w-full rounded border border-dashed border-gray-200 bg-gray-50" />
+                          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-4 text-center text-xs text-gray-400">
+                            <Loader2 className="mb-2 h-5 w-5 animate-spin text-indigo-500" />
+                            <span>Loading chart area...</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           }

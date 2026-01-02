@@ -890,8 +890,9 @@ Response format (JSON only, no backticks):
                     className="h-full w-full rounded border border-dashed border-gray-200 bg-gray-50"
                   />
                   {!chartOption && (
-                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-4 text-center text-xs text-gray-400">
-                      The chart will appear here after AI generates an ECharts option.
+                    <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-4 text-center text-xs text-gray-400">
+                      <Loader2 className="mb-2 h-4 w-4 animate-spin text-indigo-500" />
+                      <span>The chart will appear here after AI generates an ECharts option.</span>
                     </div>
                   )}
                 </div>
