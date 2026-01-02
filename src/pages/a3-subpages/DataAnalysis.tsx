@@ -9,7 +9,7 @@ import { dataService } from '../../services/dataService';
 
 const DataAnalysis = () => {
   const { id } = useParams();
-  const { a3Cases, updateA3Case } = useApp();
+  const { a3Cases, updateA3Case, isLoading } = useApp();
   const { user } = useAuth();
   const currentCase = a3Cases.find(c => c.id === id);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -278,12 +278,23 @@ For each bullet, be specific and actionable, but concise.`
     }
   };
 
-  if (!currentCase) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16">
         <div className="flex flex-col items-center">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          <p className="mt-3 text-base font-medium text-gray-700">Loading application data...</p>
+          <p className="mt-3 text-base font-medium text-gray-700">Loading A3 Data Analysis...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentCase) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="flex flex-col items-center text-center">
+          <p className="mt-3 text-base font-medium text-gray-800">A3 case could not be found.</p>
+          <p className="mt-1 text-sm text-gray-500">It may have been deleted or the link is invalid.</p>
         </div>
       </div>
     );
