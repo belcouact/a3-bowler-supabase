@@ -488,7 +488,7 @@ Response format (JSON only, no backticks):
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col gap-3 overflow-hidden px-4 pb-4 pt-3 sm:px-6 sm:pb-6 sm:pt-4">
+        <div className="flex flex-1 flex-col gap-3 overflow-hidden pb-4 pt-3 sm:pb-6 sm:pt-4">
           <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
             <div
               className={
@@ -594,7 +594,18 @@ Response format (JSON only, no backticks):
                           No data yet. Upload a file or add a row to start.
                         </div>
                       ) : (
-                        <table className="min-w-full border-collapse text-[11px]">
+                        <table className="border-collapse text-[11px]">
+                          <colgroup>
+                            {(tableData[0] || []).map((_, colIndex) => (
+                              <col
+                                key={colIndex}
+                                style={{
+                                  width: columnWidths[colIndex] || 120,
+                                  minWidth: 60,
+                                }}
+                              />
+                            ))}
+                          </colgroup>
                           <tbody>
                             {tableData.map((row, rowIndex) => (
                               <tr key={rowIndex} className={rowIndex === 0 ? 'bg-gray-50' : ''}>
@@ -602,10 +613,6 @@ Response format (JSON only, no backticks):
                                   <td
                                     key={`${rowIndex}-${colIndex}`}
                                     className="border border-gray-200 px-1 py-0.5"
-                                    style={{
-                                      width: columnWidths[colIndex] || 120,
-                                      minWidth: 60,
-                                    }}
                                   >
                                     <input
                                       value={cell}
