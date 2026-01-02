@@ -605,13 +605,13 @@ Response format (JSON only, no backticks):
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col gap-3 overflow-hidden pb-4 pt-3 sm:pb-6 sm:pt-4">
+        <div className="flex flex-1 flex-col gap-3 overflow-y-auto lg:overflow-hidden pb-4 pt-3 sm:pb-6 sm:pt-4">
           <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
             <div
               className={
                 isSidebarCollapsed
-                  ? 'flex w-9 flex-col border-r border-gray-200 bg-gray-50'
-                  : 'flex w-full flex-col gap-3 border-r border-gray-200 bg-gray-50 p-3 lg:w-1/2'
+                  ? 'flex min-h-0 flex-1 w-9 flex-col border-r border-gray-200 bg-gray-50 overflow-hidden'
+                  : 'flex min-h-0 flex-1 w-full flex-col gap-3 border-r border-gray-200 bg-gray-50 p-3 lg:w-1/2 overflow-hidden'
               }
             >
               <div className="flex items-center justify-between mb-2">
