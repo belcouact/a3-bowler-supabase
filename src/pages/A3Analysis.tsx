@@ -16,8 +16,8 @@ const A3Analysis = () => {
     { path: 'data-analysis', label: 'Data Analysis', icon: BarChart2 },
     { path: 'why-analysis', label: 'Root Cause', icon: GitBranch },
     { path: 'action-plan', label: 'Action Plan', icon: Calendar },
-    { path: 'result', label: 'Result', icon: CheckCircle },
-    { path: 'summary', label: 'Report', icon: FileText },
+    { path: 'result', label: 'Result Validation', icon: CheckCircle },
+    { path: 'summary', label: 'A3 Report', icon: FileText },
     { path: 'ai-coach', label: 'AI Coach', icon: Bot },
   ];
 

@@ -52,7 +52,6 @@ const Summary = () => {
           </h4>
           <div className="text-sm text-gray-600 space-y-2">
             <p>
-              <span className="font-medium text-gray-900">Problem:</span>{' '}
               {currentCase.problemStatement || 'Not defined'}
             </p>
           </div>
