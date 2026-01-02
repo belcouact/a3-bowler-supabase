@@ -2950,7 +2950,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
           <div className="max-w-6xl mx-auto px-4 py-2 flex items-center justify-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
             <p className="text-xs md:text-sm font-medium text-blue-700">
-              Loading application data...
+              Loading your metrics, A3 cases, and dashboard...
             </p>
           </div>
         </div>
