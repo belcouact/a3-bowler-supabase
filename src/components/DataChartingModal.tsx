@@ -64,6 +64,13 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
   }, [chartOption]);
 
   useEffect(() => {
+    if (!chartInstanceRef.current) {
+      return;
+    }
+    chartInstanceRef.current.resize();
+  }, [isSidebarCollapsed]);
+
+  useEffect(() => {
     if (!isOpen) {
       setChartOption(null);
       setAiInterpretation('');
@@ -356,7 +363,50 @@ Response format (JSON only, no backticks):
         throw new Error('AI response does not contain a valid "option" field.');
       }
 
-      setChartOption(parsed.option as EChartsOption);
+      const baseOption = parsed.option as EChartsOption;
+
+      const enhancedOption: EChartsOption = {
+        ...baseOption,
+      };
+
+      if (!enhancedOption.toolbox) {
+        enhancedOption.toolbox = {};
+      }
+
+      if (typeof enhancedOption.toolbox === 'object' && !Array.isArray(enhancedOption.toolbox)) {
+        const feature = enhancedOption.toolbox.feature || {};
+        enhancedOption.toolbox.feature = {
+          ...feature,
+          dataZoom: { yAxisIndex: 'none' },
+          restore: feature.restore || {},
+          saveAsImage: feature.saveAsImage || {},
+        };
+      }
+
+      if (!enhancedOption.dataZoom) {
+        enhancedOption.dataZoom = [
+          {
+            type: 'slider',
+            yAxisIndex: 0,
+            orient: 'vertical',
+            right: 5,
+            top: 60,
+            bottom: 40,
+          },
+        ];
+      }
+
+      if (!enhancedOption.grid) {
+        enhancedOption.grid = {};
+      }
+
+      if (typeof enhancedOption.grid === 'object' && !Array.isArray(enhancedOption.grid)) {
+        if (enhancedOption.grid.top === undefined) {
+          enhancedOption.grid.top = 80;
+        }
+      }
+
+      setChartOption(enhancedOption);
       setAiInterpretation(typeof parsed.interpretation === 'string' ? parsed.interpretation : '');
       toast.success('Chart generated.');
     } catch (error: any) {
@@ -615,9 +665,9 @@ Response format (JSON only, no backticks):
                 </div>
               </div>
 
-              <div className="max-h-40 rounded-md border border-gray-200 bg-white p-3">
+              <div className="flex h-40 flex-col rounded-md border border-gray-200 bg-white p-3">
                 <h3 className="mb-1 text-xs font-semibold text-gray-800">AI Interpretation</h3>
-                <div className="mt-1 max-h-28 overflow-y-auto text-xs text-gray-700">
+                <div className="mt-1 flex-1 overflow-y-auto text-xs text-gray-700">
                   {aiInterpretation ? (
                     <MarkdownRenderer content={aiInterpretation} />
                   ) : (
