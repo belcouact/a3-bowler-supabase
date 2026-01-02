@@ -35,13 +35,6 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
 
           <div className="bg-white px-4 pt-5 pb-6 sm:px-8 sm:pt-8 sm:pb-8">
             <div className="mb-6 text-center flex flex-col items-center">
-              <div className="mb-3">
-                <img
-                  src={`${import.meta.env.BASE_URL}logo.png`}
-                  alt="A3 Bowler logo"
-                  className="w-10 h-10 rounded-md bg-white object-contain"
-                />
-              </div>
               <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">A3 Bowler</h2>
               <p className="mt-1 text-sm text-gray-500">AI-Assisted Performance Tracker &amp; A3 Problem Solving</p>
             </div>
