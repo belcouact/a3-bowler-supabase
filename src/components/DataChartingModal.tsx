@@ -235,6 +235,7 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
 
   const handleAutoFitColumns = () => {
     if (!tableData.length) {
+      toast.info('No data to auto fit. Please add or upload data first.');
       return;
     }
 
@@ -245,9 +246,9 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
     }
 
     const nextWidths: number[] = [];
-    const minWidth = 60;
-    const maxWidth = 260;
-    const charWidth = 8;
+    const minWidth = 80;
+    const maxWidth = 400;
+    const charWidth = 12;
 
     for (let col = 0; col < columnCount; col += 1) {
       let maxLen = 0;
@@ -263,6 +264,7 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
     }
 
     setColumnWidths(nextWidths);
+    toast.success('Columns auto fitted to data.');
   };
 
   const handleCellChange = (rowIndex: number, colIndex: number, value: string) => {
@@ -462,7 +464,7 @@ Response format (JSON only, no backticks):
           }
         }}
       />
-      <div className="relative z-[95] flex h-full w-full flex-col bg-white shadow-2xl border border-gray-200 rounded-none">
+      <div className="relative z-[95] flex h-full w-full flex-col bg-white shadow-2xl border border-gray-200 rounded-none overflow-hidden">
         <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-50 text-blue-600">
@@ -506,20 +508,10 @@ Response format (JSON only, no backticks):
                 <button
                   type="button"
                   onClick={() => setIsSidebarCollapsed(prev => !prev)}
-                  className="inline-flex items-center rounded-full border border-gray-200 bg-white px-1.5 py-1 text-[11px] text-gray-600 hover:bg-gray-50"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-gray-300 bg-white text-xs text-gray-600 hover:bg-gray-50"
                   title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                 >
-                  {isSidebarCollapsed ? (
-                    <>
-                      <span className="hidden sm:inline mr-1">Open</span>
-                      <Activity className="w-3 h-3" />
-                    </>
-                  ) : (
-                    <>
-                      <span className="hidden sm:inline mr-1">Hide</span>
-                      <Activity className="w-3 h-3" />
-                    </>
-                  )}
+                  {isSidebarCollapsed ? '>' : '<'}
                 </button>
               </div>
 
