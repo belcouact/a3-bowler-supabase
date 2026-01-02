@@ -62,7 +62,11 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
 
   useEffect(() => {
     if (!isOpen && chartInstanceRef.current) {
-      chartInstanceRef.current.dispose();
+      try {
+        chartInstanceRef.current.dispose();
+      } catch (error) {
+        console.error('ECharts dispose error', error);
+      }
       chartInstanceRef.current = null;
       setChartOption(null);
       setAiInterpretation('');
@@ -360,8 +364,13 @@ Response format (JSON only, no backticks):
       toast.success('Chart generated.');
     } catch (error: any) {
       console.error('Generate chart error', error);
-      setAiError(error?.message || 'Failed to generate chart from AI.');
-      toast.error('Failed to generate chart from AI.');
+      if (error?.message && (error.message.includes('Failed to fetch') || error.message.includes('Network'))) {
+        setAiError('Network error while contacting the AI service. Please check your connection and try again.');
+        toast.error('Network error while contacting the AI service.');
+      } else {
+        setAiError(error?.message || 'Failed to generate chart from AI.');
+        toast.error('Failed to generate chart from AI.');
+      }
     } finally {
       setIsGenerating(false);
     }
