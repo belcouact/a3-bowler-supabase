@@ -594,7 +594,7 @@ Response format (JSON only, no backticks):
                           No data yet. Upload a file or add a row to start.
                         </div>
                       ) : (
-                        <table className="min-w-full border-collapse text-[11px] table-fixed">
+                        <table className="min-w-full border-collapse text-[11px]">
                           <tbody>
                             {tableData.map((row, rowIndex) => (
                               <tr key={rowIndex} className={rowIndex === 0 ? 'bg-gray-50' : ''}>
@@ -718,7 +718,7 @@ Response format (JSON only, no backticks):
                 </div>
               </div>
 
-              <div className="flex max-h-60 flex-col rounded-md border border-gray-200 bg-white p-3">
+              <div className="flex flex-1 min-h-[140px] flex-col rounded-md border border-gray-200 bg-white p-3">
                 <h3 className="mb-1 text-xs font-semibold text-gray-800">AI Interpretation</h3>
                 <div className="mt-1 flex-1 overflow-y-auto text-xs text-gray-700">
                   {aiInterpretation ? (
