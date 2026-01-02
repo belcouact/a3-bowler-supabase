@@ -239,7 +239,6 @@ const Layout = () => {
   const [a3BestPracticeOnly, setA3BestPracticeOnly] = useState(false);
   const [isUpdatingBestPractice, setIsUpdatingBestPractice] = useState(false);
   const [isDataChartingOpen, setIsDataChartingOpen] = useState(false);
-  const [isDataChartingOpen, setIsDataChartingOpen] = useState(false);
 
   useEffect(() => {
     if (!selectedGlobalA3) {
