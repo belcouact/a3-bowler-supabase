@@ -605,6 +605,10 @@ Response format (JSON only, no backticks):
                                   <td
                                     key={`${rowIndex}-${colIndex}`}
                                     className="border border-gray-200 px-1 py-0.5"
+                                    style={{
+                                      width: columnWidths[colIndex] || 120,
+                                      minWidth: 60,
+                                    }}
                                   >
                                     <input
                                       value={cell}
@@ -701,7 +705,7 @@ Response format (JSON only, no backticks):
               )}
             </div>
 
-            <div className="flex min-h-0 flex-1 flex-col gap-3">
+            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto no-scrollbar">
               <div className="flex-1 rounded-md border border-gray-200 bg-white p-3">
                 <h3 className="mb-2 text-xs font-semibold text-gray-800">Chart</h3>
                 <div className="relative h-64 w-full sm:h-80 lg:h-[420px]">
@@ -719,7 +723,7 @@ Response format (JSON only, no backticks):
 
               <div className="flex flex-1 min-h-[140px] flex-col rounded-md border border-gray-200 bg-white p-3">
                 <h3 className="mb-1 text-xs font-semibold text-gray-800">AI Interpretation</h3>
-                <div className="mt-1 flex-1 overflow-y-auto text-xs text-gray-700">
+                <div className="mt-1 flex-1 overflow-y-auto no-scrollbar text-xs text-gray-700">
                   {aiInterpretation ? (
                     <MarkdownRenderer content={aiInterpretation} />
                   ) : (
