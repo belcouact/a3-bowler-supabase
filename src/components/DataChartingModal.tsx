@@ -513,7 +513,7 @@ Response format (JSON only, no backticks):
         ['West', '24'],
       ];
       prompt =
-        'Create a boxplot chart grouping values by Region to compare distributions.';
+        'Create a boxplot chart grouping values by Region to compare distributions, with mean lines connected in red color between groups.';
     } else {
       data = [
         ['Sample', 'Value'],
@@ -725,7 +725,7 @@ Response format (JSON only, no backticks):
                         onClick={handleAutoFitColumns}
                         className="inline-flex flex-1 items-center justify-center rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] font-medium text-gray-700 hover:bg-gray-50"
                       >
-                        Auto Fit Columns
+                        Auto Fit
                       </button>
                     </div>
                     <div className="max-h-48 overflow-auto rounded border border-gray-200">
