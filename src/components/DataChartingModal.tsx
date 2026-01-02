@@ -602,12 +602,13 @@ Response format (JSON only, no backticks):
             <div className="flex min-h-0 flex-1 flex-col gap-3">
               <div className="flex-1 rounded-md border border-gray-200 bg-white p-3">
                 <h3 className="mb-2 text-xs font-semibold text-gray-800">Chart</h3>
-                <div
-                  ref={chartContainerRef}
-                  className="h-64 w-full rounded border border-dashed border-gray-200 bg-gray-50 sm:h-80 lg:h-[420px]"
-                >
+                <div className="relative h-64 w-full sm:h-80 lg:h-[420px]">
+                  <div
+                    ref={chartContainerRef}
+                    className="h-full w-full rounded border border-dashed border-gray-200 bg-gray-50"
+                  />
                   {!chartOption && (
-                    <div className="flex h-full items-center justify-center px-4 text-center text-xs text-gray-400">
+                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-4 text-center text-xs text-gray-400">
                       The chart will appear here after AI generates an ECharts option.
                     </div>
                   )}
