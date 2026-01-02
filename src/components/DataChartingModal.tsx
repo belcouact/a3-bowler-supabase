@@ -30,26 +30,29 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
   const chartInstanceRef = useRef<echarts.ECharts | null>(null);
 
   useEffect(() => {
-    if (!isOpen) {
+    if (!isOpen || !chartContainerRef.current) {
       return;
     }
 
-    if (!chartContainerRef.current) {
-      return;
-    }
-
-    if (!chartInstanceRef.current) {
-      chartInstanceRef.current = echarts.init(chartContainerRef.current);
-    }
+    const instance = echarts.init(chartContainerRef.current);
+    chartInstanceRef.current = instance;
 
     const handleResize = () => {
-      chartInstanceRef.current?.resize();
+      instance.resize();
     };
 
     window.addEventListener('resize', handleResize);
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      try {
+        instance.dispose();
+      } catch (error) {
+        console.error('ECharts dispose error', error);
+      }
+      if (chartInstanceRef.current === instance) {
+        chartInstanceRef.current = null;
+      }
     };
   }, [isOpen]);
 
@@ -61,13 +64,7 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
   }, [chartOption]);
 
   useEffect(() => {
-    if (!isOpen && chartInstanceRef.current) {
-      try {
-        chartInstanceRef.current.dispose();
-      } catch (error) {
-        console.error('ECharts dispose error', error);
-      }
-      chartInstanceRef.current = null;
+    if (!isOpen) {
       setChartOption(null);
       setAiInterpretation('');
       setAiError(null);
