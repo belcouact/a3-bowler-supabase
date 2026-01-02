@@ -455,7 +455,7 @@ Response format (JSON only, no backticks):
   };
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center">
+    <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-hidden no-scrollbar">
       <div
         className="absolute inset-0 bg-gray-900/60"
         onClick={() => {
@@ -586,7 +586,7 @@ Response format (JSON only, no backticks):
                           No data yet. Upload a file or add a row to start.
                         </div>
                       ) : (
-                        <table className="border-collapse text-[11px]">
+                        <table className="min-w-max border-collapse text-[11px] table-fixed">
                           <colgroup>
                             {(tableData[0] || []).map((_, colIndex) => (
                               <col
@@ -705,7 +705,7 @@ Response format (JSON only, no backticks):
               )}
             </div>
 
-            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto no-scrollbar">
+            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
               <div className="flex-1 rounded-md border border-gray-200 bg-white p-3">
                 <h3 className="mb-2 text-xs font-semibold text-gray-800">Chart</h3>
                 <div className="relative h-64 w-full sm:h-80 lg:h-[420px]">
@@ -723,7 +723,7 @@ Response format (JSON only, no backticks):
 
               <div className="flex flex-1 min-h-[140px] flex-col rounded-md border border-gray-200 bg-white p-3">
                 <h3 className="mb-1 text-xs font-semibold text-gray-800">AI Interpretation</h3>
-                <div className="mt-1 flex-1 overflow-y-auto no-scrollbar text-xs text-gray-700">
+                <div className="mt-1 flex-1 overflow-y-auto text-xs text-gray-700">
                   {aiInterpretation ? (
                     <MarkdownRenderer content={aiInterpretation} />
                   ) : (
