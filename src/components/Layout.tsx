@@ -240,6 +240,33 @@ const Layout = () => {
   const [isUpdatingBestPractice, setIsUpdatingBestPractice] = useState(false);
   const [isDataChartingOpen, setIsDataChartingOpen] = useState(false);
 
+  const isGlobalLoading = isLoading || isDataLoading;
+  let globalLoadingMessage = '';
+
+  if (isLoading && isDataLoading) {
+    if (isMetricBowler) {
+      globalLoadingMessage = 'Loading your account, metrics, and dashboard...';
+    } else if (isA3Analysis) {
+      globalLoadingMessage = 'Loading your account, A3 cases, and dashboard...';
+    } else if (isMindmapPage) {
+      globalLoadingMessage = 'Loading your account and dashboard mindmaps...';
+    } else {
+      globalLoadingMessage = 'Loading your account and workspace data...';
+    }
+  } else if (isLoading) {
+    globalLoadingMessage = 'Loading your account...';
+  } else if (isDataLoading) {
+    if (isMetricBowler) {
+      globalLoadingMessage = 'Loading your metrics and dashboard...';
+    } else if (isA3Analysis) {
+      globalLoadingMessage = 'Loading your A3 cases and dashboard...';
+    } else if (isMindmapPage) {
+      globalLoadingMessage = 'Loading your dashboard mindmaps...';
+    } else {
+      globalLoadingMessage = 'Loading your workspace data...';
+    }
+  }
+
   useEffect(() => {
     if (!selectedGlobalA3) {
       setA3Comments([]);
@@ -2945,12 +2972,12 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
         </div>
       </header>
 
-      {(isLoading || isDataLoading) && (
+      {isGlobalLoading && globalLoadingMessage && (
         <div className="bg-blue-50 border-b border-blue-100">
           <div className="max-w-6xl mx-auto px-4 py-2 flex items-center justify-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
             <p className="text-xs md:text-sm font-medium text-blue-700">
-              Loading your metrics, A3 cases, and dashboard...
+              {globalLoadingMessage}
             </p>
           </div>
         </div>

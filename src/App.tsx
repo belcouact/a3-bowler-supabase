@@ -49,7 +49,7 @@ function App() {
           <Route
             path="metric-bowler"
             element={
-              <Suspense fallback={<LoadingView message="Loading Metric Bowler..." />}>
+              <Suspense fallback={null}>
                 <MetricBowler />
               </Suspense>
             }
@@ -57,7 +57,7 @@ function App() {
           <Route
             path="metric-bowler/:id"
             element={
-              <Suspense fallback={<LoadingView message="Loading Metric Bowler..." />}>
+              <Suspense fallback={null}>
                 <MetricBowler />
               </Suspense>
             }
@@ -65,7 +65,7 @@ function App() {
           <Route
             path="a3-analysis"
             element={
-              <Suspense fallback={<LoadingView message="Loading A3 Analysis..." />}>
+              <Suspense fallback={null}>
                 <Outlet />
               </Suspense>
             }
