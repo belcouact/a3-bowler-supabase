@@ -50,6 +50,9 @@ const SummaryModal = lazy(() =>
 const MindmapModal = lazy(() =>
   import('./MindmapModal').then(module => ({ default: module.MindmapModal })),
 );
+const DataChartingModal = lazy(() =>
+  import('./DataChartingModal').then(module => ({ default: module.DataChartingModal })),
+);
 
 const modelOptions: { key: AIModelKey; label: string }[] = [
   { key: 'gemini', label: 'gemini-3-flash' },
@@ -235,6 +238,8 @@ const Layout = () => {
   const [isLoadingA3Reactions, setIsLoadingA3Reactions] = useState(false);
   const [a3BestPracticeOnly, setA3BestPracticeOnly] = useState(false);
   const [isUpdatingBestPractice, setIsUpdatingBestPractice] = useState(false);
+  const [isDataChartingOpen, setIsDataChartingOpen] = useState(false);
+  const [isDataChartingOpen, setIsDataChartingOpen] = useState(false);
 
   useEffect(() => {
     if (!selectedGlobalA3) {
@@ -2754,6 +2759,16 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                     <Download className="w-4 h-4 mr-3" />
                     Download
                   </button>
+                  <button
+                    onClick={() => {
+                      setIsDataChartingOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-emerald-600"
+                  >
+                    <Activity className="w-4 h-4 mr-3" />
+                    Data Charting
+                  </button>
                   {isSuperAdmin && (
                     <button
                       onClick={() => {
@@ -4960,6 +4975,13 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
           isLoading={isGeneratingSummary}
           onHideWhileLoading={handleHideSummaryWhileLoading}
           groupPerformanceTableData={groupPerformanceTableData}
+        />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <DataChartingModal
+          isOpen={isDataChartingOpen}
+          onClose={() => setIsDataChartingOpen(false)}
         />
       </Suspense>
 
