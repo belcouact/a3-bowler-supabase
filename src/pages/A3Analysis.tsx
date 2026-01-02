@@ -96,7 +96,7 @@ const A3Analysis = () => {
             onClick={() => handleScrollTabs('left')}
             disabled={!canScrollLeft}
             className={clsx(
-              'absolute left-0 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow ring-1 ring-gray-200 text-gray-500 hover:text-gray-700',
+              'absolute left-0 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-gray-50 shadow ring-1 ring-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-100',
               !canScrollLeft && 'opacity-40 cursor-default'
             )}
             aria-label="Scroll tabs left"
@@ -132,7 +132,7 @@ const A3Analysis = () => {
             onClick={() => handleScrollTabs('right')}
             disabled={!canScrollRight}
             className={clsx(
-              'absolute right-0 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow ring-1 ring-gray-200 text-gray-500 hover:text-gray-700',
+              'absolute right-0 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-gray-50 shadow ring-1 ring-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-100',
               !canScrollRight && 'opacity-40 cursor-default'
             )}
             aria-label="Scroll tabs right"
