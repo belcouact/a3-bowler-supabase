@@ -23,6 +23,7 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
   const [chartOption, setChartOption] = useState<EChartsOption | null>(null);
   const [aiInterpretation, setAiInterpretation] = useState('');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [columnWidths, setColumnWidths] = useState<number[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
@@ -69,6 +70,32 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
       setIsGenerating(false);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!tableData.length) {
+      return;
+    }
+    const columnCount = tableData[0]?.length || 0;
+    if (columnCount === 0) {
+      return;
+    }
+    setColumnWidths(prev => {
+      if (prev.length === columnCount) {
+        return prev;
+      }
+      if (prev.length === 0) {
+        return Array.from({ length: columnCount }, () => 120);
+      }
+      const next = [...prev];
+      while (next.length < columnCount) {
+        next.push(120);
+      }
+      if (next.length > columnCount) {
+        next.length = columnCount;
+      }
+      return next;
+    });
+  }, [tableData]);
 
   if (!isOpen) {
     return null;
@@ -182,13 +209,16 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
     if (!tableData.length) {
       const newRow = Array.from({ length: 3 }, () => '');
       setTableData([newRow]);
+      setColumnWidths([120, 120, 120]);
       return;
     }
     setTableData(prev => prev.map(row => [...row, '']));
+    setColumnWidths(prev => (prev.length ? [...prev, prev[prev.length - 1] || 120] : [120]));
   };
 
   const handleClearData = () => {
     setTableData([]);
+    setColumnWidths([]);
   };
 
   const handleCellChange = (rowIndex: number, colIndex: number, value: string) => {
@@ -200,6 +230,33 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
       next[rowIndex][colIndex] = value;
       return next;
     });
+  };
+
+  const handleColumnResizeStart = (
+    event: React.MouseEvent<HTMLDivElement>,
+    columnIndex: number,
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const startX = event.clientX;
+    const startWidth = columnWidths[columnIndex] || 120;
+
+    const handleMove = (e: MouseEvent) => {
+      const delta = e.clientX - startX;
+      setColumnWidths(prev => {
+        const next = [...prev];
+        next[columnIndex] = Math.max(60, startWidth + delta);
+        return next;
+      });
+    };
+
+    const handleUp = () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+    };
+
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
   };
 
   const handleGenerateChart = async () => {
@@ -267,10 +324,15 @@ Response format (JSON only, no backticks):
 
       const data = await response.json();
       const rawContent = data.choices?.[0]?.message?.content || '{}';
-      const cleanContent = String(rawContent)
+      const cleanedForJson = String(rawContent)
         .replace(/```json/gi, '')
         .replace(/```/g, '')
         .trim();
+
+      const cleanContent = cleanedForJson.replace(
+        /:\s*function\s*\([^)]*\)\s*\{[\s\S]*?\}/g,
+        ': null',
+      );
 
       let parsed: any;
       try {
@@ -297,7 +359,7 @@ Response format (JSON only, no backticks):
   };
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center px-3 py-6 sm:px-6">
+    <div className="fixed inset-0 z-[90] flex items-center justify-center">
       <div
         className="absolute inset-0 bg-gray-900/60"
         onClick={() => {
@@ -306,7 +368,7 @@ Response format (JSON only, no backticks):
           }
         }}
       />
-      <div className="relative z-[95] flex h-full w-full max-w-6xl flex-col rounded-xl bg-white shadow-2xl border border-gray-200">
+      <div className="relative z-[95] flex h-full w-full flex-col bg-white shadow-2xl border border-gray-200 rounded-none">
         <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-50 text-blue-600">
@@ -337,17 +399,35 @@ Response format (JSON only, no backticks):
             <div
               className={
                 isSidebarCollapsed
-                  ? 'flex w-10 flex-col border-r border-gray-200 bg-gray-50'
+                  ? 'flex w-9 flex-col border-r border-gray-200 bg-gray-50'
                   : 'flex w-full flex-col gap-3 border-r border-gray-200 bg-gray-50 p-3 lg:w-80'
               }
             >
-              <button
-                type="button"
-                onClick={() => setIsSidebarCollapsed(prev => !prev)}
-                className="mb-2 inline-flex items-center justify-center rounded-md border border-gray-200 bg-white px-2 py-1 text-[11px] font-medium text-gray-600 shadow-sm hover:bg-gray-50"
-              >
-                {isSidebarCollapsed ? 'Expand' : 'Collapse'}
-              </button>
+              <div className="flex items-center justify-between mb-2">
+                {!isSidebarCollapsed && (
+                  <span className="text-[11px] font-semibold text-gray-600">
+                    Setup
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsSidebarCollapsed(prev => !prev)}
+                  className="inline-flex items-center rounded-full border border-gray-200 bg-white px-1.5 py-1 text-[11px] text-gray-600 hover:bg-gray-50"
+                  title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                >
+                  {isSidebarCollapsed ? (
+                    <>
+                      <span className="hidden sm:inline mr-1">Open</span>
+                      <Activity className="w-3 h-3" />
+                    </>
+                  ) : (
+                    <>
+                      <span className="hidden sm:inline mr-1">Hide</span>
+                      <Activity className="w-3 h-3" />
+                    </>
+                  )}
+                </button>
+              </div>
 
               {!isSidebarCollapsed && (
                 <div className="flex flex-1 flex-col gap-3 overflow-y-auto pr-1 text-xs">
@@ -420,15 +500,27 @@ Response format (JSON only, no backticks):
                                 {row.map((cell, colIndex) => (
                                   <td
                                     key={`${rowIndex}-${colIndex}`}
-                                    className="border border-gray-200 px-1 py-0.5"
+                                    className="border border-gray-200 px-1 py-0.5 relative group"
+                                    style={{
+                                      width: columnWidths[colIndex] || 120,
+                                      minWidth: 60,
+                                    }}
                                   >
                                     <input
                                       value={cell}
                                       onChange={e =>
                                         handleCellChange(rowIndex, colIndex, e.target.value)
                                       }
-                                      className="w-24 border-none bg-transparent p-0 text-[11px] focus:outline-none focus:ring-0"
+                                      className="w-full border-none bg-transparent p-0 text-[11px] focus:outline-none focus:ring-0"
                                     />
+                                    {rowIndex === 0 && (
+                                      <div
+                                        className="absolute top-0 right-0 h-full w-1 cursor-col-resize bg-transparent group-hover:bg-gray-300"
+                                        onMouseDown={e =>
+                                          handleColumnResizeStart(e, colIndex)
+                                        }
+                                      />
+                                    )}
                                   </td>
                                 ))}
                               </tr>
@@ -499,7 +591,7 @@ Response format (JSON only, no backticks):
                 <h3 className="mb-2 text-xs font-semibold text-gray-800">Chart</h3>
                 <div
                   ref={chartContainerRef}
-                  className="h-64 w-full rounded border border-dashed border-gray-200 bg-gray-50 sm:h-full"
+                  className="h-64 w-full rounded border border-dashed border-gray-200 bg-gray-50 sm:h-80 lg:h-[420px]"
                 >
                   {!chartOption && (
                     <div className="flex h-full items-center justify-center px-4 text-center text-xs text-gray-400">
@@ -528,4 +620,3 @@ Response format (JSON only, no backticks):
     </div>
   );
 };
-
