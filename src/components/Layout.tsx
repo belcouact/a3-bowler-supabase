@@ -4977,7 +4977,16 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
         />
       </Suspense>
 
-      <Suspense fallback={null}>
+      <Suspense
+        fallback={
+          <div className="fixed inset-0 z-[95] flex items-center justify-center bg-gray-900/60">
+            <div className="flex items-center gap-2 rounded-md bg-white px-4 py-3 text-sm text-gray-700 shadow-lg">
+              <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+              <span>Loading Data Charting...</span>
+            </div>
+          </div>
+        }
+      >
         <DataChartingModal
           isOpen={isDataChartingOpen}
           onClose={() => setIsDataChartingOpen(false)}
