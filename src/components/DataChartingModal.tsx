@@ -23,6 +23,8 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
   const [chartOption, setChartOption] = useState<EChartsOption | null>(null);
   const [aiInterpretation, setAiInterpretation] = useState('');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [chartOptionRaw, setChartOptionRaw] = useState('');
+  const [chartOptionError, setChartOptionError] = useState<string | null>(null);
   const [columnWidths, setColumnWidths] = useState<number[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -76,6 +78,8 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
       setAiInterpretation('');
       setAiError(null);
       setIsGenerating(false);
+      setChartOptionRaw('');
+      setChartOptionError(null);
     }
   }, [isOpen]);
 
@@ -229,6 +233,38 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
     setColumnWidths([]);
   };
 
+  const handleAutoFitColumns = () => {
+    if (!tableData.length) {
+      return;
+    }
+
+    const rows = tableData;
+    const columnCount = rows[0]?.length || 0;
+    if (!columnCount) {
+      return;
+    }
+
+    const nextWidths: number[] = [];
+    const minWidth = 60;
+    const maxWidth = 260;
+    const charWidth = 8;
+
+    for (let col = 0; col < columnCount; col += 1) {
+      let maxLen = 0;
+      for (let row = 0; row < rows.length; row += 1) {
+        const value = rows[row]?.[col] ?? '';
+        const len = String(value).length;
+        if (len > maxLen) {
+          maxLen = len;
+        }
+      }
+      const width = Math.min(maxWidth, Math.max(minWidth, maxLen * charWidth));
+      nextWidths.push(width);
+    }
+
+    setColumnWidths(nextWidths);
+  };
+
   const handleCellChange = (rowIndex: number, colIndex: number, value: string) => {
     setTableData(prev => {
       const next = prev.map(row => [...row]);
@@ -240,31 +276,22 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
     });
   };
 
-  const handleColumnResizeStart = (
-    event: React.MouseEvent<HTMLDivElement>,
-    columnIndex: number,
-  ) => {
-    event.preventDefault();
-    event.stopPropagation();
-    const startX = event.clientX;
-    const startWidth = columnWidths[columnIndex] || 120;
+  const handleChartOptionChange = (value: string) => {
+    setChartOptionRaw(value);
 
-    const handleMove = (e: MouseEvent) => {
-      const delta = e.clientX - startX;
-      setColumnWidths(prev => {
-        const next = [...prev];
-        next[columnIndex] = Math.max(60, startWidth + delta);
-        return next;
-      });
-    };
+    if (!value.trim()) {
+      setChartOption(null);
+      setChartOptionError(null);
+      return;
+    }
 
-    const handleUp = () => {
-      window.removeEventListener('mousemove', handleMove);
-      window.removeEventListener('mouseup', handleUp);
-    };
-
-    window.addEventListener('mousemove', handleMove);
-    window.addEventListener('mouseup', handleUp);
+    try {
+      const parsed = JSON.parse(value);
+      setChartOption(parsed as EChartsOption);
+      setChartOptionError(null);
+    } catch (error) {
+      setChartOptionError('Invalid JSON. Fix errors to update the chart.');
+    }
   };
 
   const handleGenerateChart = async () => {
@@ -407,6 +434,8 @@ Response format (JSON only, no backticks):
       }
 
       setChartOption(enhancedOption);
+      setChartOptionRaw(JSON.stringify(enhancedOption, null, 2));
+      setChartOptionError(null);
       setAiInterpretation(typeof parsed.interpretation === 'string' ? parsed.interpretation : '');
       toast.success('Chart generated.');
     } catch (error: any) {
@@ -529,7 +558,7 @@ Response format (JSON only, no backticks):
                     <p className="mb-2 text-[11px] text-gray-500">
                       Edit cells or add rows and columns to adjust your data.
                     </p>
-                    <div className="mb-2 flex items-center gap-2">
+                    <div className="mb-2 flex flex-wrap items-center gap-2">
                       <button
                         type="button"
                         onClick={handleAddRow}
@@ -551,6 +580,13 @@ Response format (JSON only, no backticks):
                       >
                         Clear
                       </button>
+                      <button
+                        type="button"
+                        onClick={handleAutoFitColumns}
+                        className="inline-flex flex-1 items-center justify-center rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] font-medium text-gray-700 hover:bg-gray-50"
+                      >
+                        Auto Fit Columns
+                      </button>
                     </div>
                     <div className="max-h-48 overflow-auto rounded border border-gray-200">
                       {tableData.length === 0 ? (
@@ -565,7 +601,7 @@ Response format (JSON only, no backticks):
                                 {row.map((cell, colIndex) => (
                                   <td
                                     key={`${rowIndex}-${colIndex}`}
-                                    className="border border-gray-200 px-1 py-0.5 relative group"
+                                    className="border border-gray-200 px-1 py-0.5"
                                     style={{
                                       width: columnWidths[colIndex] || 120,
                                       minWidth: 60,
@@ -577,12 +613,6 @@ Response format (JSON only, no backticks):
                                         handleCellChange(rowIndex, colIndex, e.target.value)
                                       }
                                       className="w-full border-none bg-transparent p-0 text-[11px] focus:outline-none focus:ring-0"
-                                    />
-                                    <div
-                                      className="absolute top-0 right-0 h-full w-1 cursor-col-resize bg-transparent group-hover:bg-gray-300"
-                                      onMouseDown={e =>
-                                        handleColumnResizeStart(e, colIndex)
-                                      }
                                     />
                                   </td>
                                 ))}
@@ -645,6 +675,29 @@ Response format (JSON only, no backticks):
                       )}
                     </button>
                   </div>
+
+                  {chartOptionRaw && (
+                    <div className="rounded-md border border-gray-200 bg-white p-3">
+                      <div className="mb-1 flex items-center justify-between">
+                        <h3 className="text-xs font-semibold text-gray-800">ECharts Option (JSON)</h3>
+                        {chartOptionError && (
+                          <span className="text-[10px] text-red-600">
+                            {chartOptionError}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mb-2 text-[11px] text-gray-500">
+                        Edit this JSON to tweak the chart. Valid changes update the chart immediately.
+                      </p>
+                      <textarea
+                        value={chartOptionRaw}
+                        onChange={e => handleChartOptionChange(e.target.value)}
+                        rows={10}
+                        spellCheck={false}
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-[11px] font-mono shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -665,7 +718,7 @@ Response format (JSON only, no backticks):
                 </div>
               </div>
 
-              <div className="flex h-40 flex-col rounded-md border border-gray-200 bg-white p-3">
+              <div className="flex max-h-60 flex-col rounded-md border border-gray-200 bg-white p-3">
                 <h3 className="mb-1 text-xs font-semibold text-gray-800">AI Interpretation</h3>
                 <div className="mt-1 flex-1 overflow-y-auto text-xs text-gray-700">
                   {aiInterpretation ? (
