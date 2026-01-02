@@ -24,7 +24,15 @@ interface DataChartingModalProps {
   onClose: () => void;
 }
 
-type SampleDatasetType = 'pareto' | 'sankey' | 'boxplot' | 'normal';
+type SampleDatasetType =
+  | 'pareto'
+  | 'sankey'
+  | 'boxplot'
+  | 'normal'
+  | 'timeSeries'
+  | 'stackedBar'
+  | 'dualAxis'
+  | 'funnel';
 
 export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) => {
   const toast = useToast();
@@ -526,6 +534,55 @@ Response format (JSON only, no backticks):
       ];
       prompt =
         'Create a boxplot chart grouping values by Region to compare distributions, with mean lines connected in red color between groups.';
+    } else if (type === 'timeSeries') {
+      data = [
+        ['Month', 'Actual', 'Target'],
+        ['Jan', '72', '80'],
+        ['Feb', '75', '80'],
+        ['Mar', '78', '82'],
+        ['Apr', '81', '82'],
+        ['May', '79', '83'],
+        ['Jun', '83', '84'],
+        ['Jul', '85', '85'],
+        ['Aug', '88', '86'],
+        ['Sep', '86', '86'],
+        ['Oct', '89', '87'],
+        ['Nov', '91', '88'],
+        ['Dec', '93', '89'],
+      ];
+      prompt =
+        "Create a dual-line time series chart where Month is on the X axis, Actual and Target are two smooth line series with markers, and the area under the Actual line is lightly filled to emphasize improvement over time. Add a tooltip with all series values and a legend at the top.";
+    } else if (type === 'stackedBar') {
+      data = [
+        ['Region', 'On-time', 'Late', 'Very Late'],
+        ['North', '160', '40', '10'],
+        ['South', '140', '55', '20'],
+        ['East', '120', '60', '25'],
+        ['West', '150', '35', '15'],
+      ];
+      prompt =
+        "Create a stacked bar chart where Region is on the X axis and On-time, Late, and Very Late are stacked bar series on the Y axis to show shipment reliability mix by region. Include percentage labels inside the bars and a legend at the bottom.";
+    } else if (type === 'dualAxis') {
+      data = [
+        ['Month', 'Revenue', 'Margin %'],
+        ['Q1-2024', '420000', '18.5'],
+        ['Q2-2024', '460000', '19.2'],
+        ['Q3-2024', '510000', '17.8'],
+        ['Q4-2024', '580000', '20.4'],
+      ];
+      prompt =
+        'Create a combo chart with Revenue as blue bars on the primary Y axis and Margin % as an orange line with circle markers on a secondary Y axis (0–25%). Use Month on the X axis and show both values in the tooltip when hovering.';
+    } else if (type === 'funnel') {
+      data = [
+        ['Stage', 'Count'],
+        ['Visited site', '12000'],
+        ['Signed up', '5100'],
+        ['Activated trial', '2300'],
+        ['Requested quote', '900'],
+        ['Closed deal', '320'],
+      ];
+      prompt =
+        'Create a funnel chart with Stage on the Y axis and Count as the funnel value, sorted from largest to smallest. Show conversion percentages between stages in the labels so the user can see drop-off at each step.';
     } else {
       data = [
         ['Sample', 'Value'],
@@ -701,6 +758,34 @@ Response format (JSON only, no backticks):
                               className="block w-full px-2 py-1 text-left hover:bg-gray-50"
                             >
                               Boxplot by category
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSampleDatasetClick('timeSeries')}
+                              className="block w-full px-2 py-1 text-left hover:bg-gray-50"
+                            >
+                              Time-series target vs actual
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSampleDatasetClick('stackedBar')}
+                              className="block w-full px-2 py-1 text-left hover:bg-gray-50"
+                            >
+                              Stacked bar by category
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSampleDatasetClick('dualAxis')}
+                              className="block w-full px-2 py-1 text-left hover:bg-gray-50"
+                            >
+                              Dual-axis revenue and margin
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSampleDatasetClick('funnel')}
+                              className="block w-full px-2 py-1 text-left hover:bg-gray-50"
+                            >
+                              Funnel conversion stages
                             </button>
                             <button
                               type="button"
