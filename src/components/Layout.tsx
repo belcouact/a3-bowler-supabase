@@ -5086,8 +5086,19 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
 
       {isAllA3ModalOpen && (
         <div className="fixed inset-0 z-[140] bg-gray-900/80 flex flex-col">
-        <div className="flex-1 bg-white flex flex-col w-full h-full rounded-none shadow-2xl overflow-hidden print-summary-root">
-            <div className="flex items-center justify-end px-4 py-3 border-b border-gray-200 bg-gray-50">
+          <div className="flex-1 bg-white flex flex-col w-full h-full rounded-none shadow-2xl overflow-hidden print-summary-root">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-indigo-50 text-indigo-600">
+                  <Layers className="h-4 w-4" />
+                </div>
+                <div className="flex flex-col">
+                  <h2 className="text-sm font-semibold text-gray-900">A3 Portfolio</h2>
+                  <p className="text-xs text-gray-500">
+                    Review and filter A3 problem-solving cases across your portfolio.
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={() => {
                   setIsAllA3ModalOpen(false);

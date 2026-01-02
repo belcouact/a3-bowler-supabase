@@ -779,6 +779,14 @@ Response format (JSON only, no backticks):
                     <h3 className="mb-1 text-xs font-semibold text-gray-800">
                       How should the data be charted?
                     </h3>
+                    <a
+                      href="https://echarts.apache.org/examples/en/index.html"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mb-2 inline-block text-[11px] text-indigo-600 hover:text-indigo-700 hover:underline"
+                    >
+                      EChart Library
+                    </a>
                     <p className="mb-2 text-[11px] text-gray-500">
                       Describe which columns are dimensions and metrics, and what chart you expect.
                     </p>
