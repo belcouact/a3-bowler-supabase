@@ -55,44 +55,91 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
   const chartInstanceRef = useRef<echarts.ECharts | null>(null);
 
   useEffect(() => {
-    if (!isOpen || !chartContainerRef.current) {
+    if (!isOpen) {
       return;
     }
 
-    const instance = echarts.init(chartContainerRef.current);
-    chartInstanceRef.current = instance;
+    const container = chartContainerRef.current;
+    if (!container) {
+      return;
+    }
+
+    let instance = chartInstanceRef.current;
+
+    const safeInit = () => {
+      if (instance || chartInstanceRef.current) {
+        return;
+      }
+      const rect = container.getBoundingClientRect();
+      if (!rect.width || !rect.height) {
+        return;
+      }
+      try {
+        instance = echarts.init(container);
+        chartInstanceRef.current = instance;
+      } catch (error) {
+        console.error('ECharts init error', error);
+        instance = null;
+        chartInstanceRef.current = null;
+      }
+    };
+
+    safeInit();
 
     const handleResize = () => {
-      instance.resize();
+      try {
+        if (!chartInstanceRef.current) {
+          safeInit();
+          return;
+        }
+        chartInstanceRef.current.resize();
+      } catch (error) {
+        console.error('ECharts resize error', error);
+      }
     };
 
     window.addEventListener('resize', handleResize);
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      try {
-        instance.dispose();
-      } catch (error) {
-        console.error('ECharts dispose error', error);
-      }
-      if (chartInstanceRef.current === instance) {
-        chartInstanceRef.current = null;
+      const current = chartInstanceRef.current;
+      if (current) {
+        try {
+          current.dispose();
+        } catch (error) {
+          console.error('ECharts dispose error', error);
+        }
+        if (chartInstanceRef.current === current) {
+          chartInstanceRef.current = null;
+        }
       }
     };
   }, [isOpen]);
 
   useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
     if (!chartInstanceRef.current || !chartOption) {
       return;
     }
-    chartInstanceRef.current.setOption(chartOption, true);
-  }, [chartOption]);
+    try {
+      chartInstanceRef.current.setOption(chartOption, true);
+      chartInstanceRef.current.resize();
+    } catch (error) {
+      console.error('ECharts setOption error', error);
+    }
+  }, [chartOption, isOpen]);
 
   useEffect(() => {
     if (!chartInstanceRef.current) {
       return;
     }
-    chartInstanceRef.current.resize();
+    try {
+      chartInstanceRef.current.resize();
+    } catch (error) {
+      console.error('ECharts resize error', error);
+    }
   }, [isSidebarCollapsed]);
 
   useEffect(() => {
