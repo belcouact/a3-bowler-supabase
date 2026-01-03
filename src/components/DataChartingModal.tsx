@@ -12,9 +12,8 @@ import {
   BarChart3,
   Sparkles,
 } from 'lucide-react';
-import * as echarts from 'echarts';
+import type * as echartsType from 'echarts';
 import type { EChartsOption } from 'echarts';
-import * as XLSX from 'xlsx';
 import { useToast } from '../context/ToastContext';
 import { useApp } from '../context/AppContext';
 import { MarkdownRenderer } from './MarkdownRenderer';
@@ -52,7 +51,7 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
-  const chartInstanceRef = useRef<echarts.ECharts | null>(null);
+  const chartInstanceRef = useRef<echartsType.ECharts | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -64,32 +63,41 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
       return;
     }
 
-    let instance = chartInstanceRef.current;
+    let isInitializing = false;
+    let isCancelled = false;
 
-    const safeInit = () => {
-      if (instance || chartInstanceRef.current) {
+    const safeInit = async () => {
+      if (isCancelled) {
+        return;
+      }
+      if (isInitializing || chartInstanceRef.current) {
         return;
       }
       const rect = container.getBoundingClientRect();
       if (!rect.width || !rect.height) {
         return;
       }
+      isInitializing = true;
       try {
-        instance = echarts.init(container);
-        chartInstanceRef.current = instance;
+        const echartsModule = await import('echarts');
+        if (isCancelled) {
+          return;
+        }
+        const created = echartsModule.init(container);
+        chartInstanceRef.current = created;
       } catch (error) {
         console.error('ECharts init error', error);
-        instance = null;
-        chartInstanceRef.current = null;
+      } finally {
+        isInitializing = false;
       }
     };
 
-    safeInit();
+    void safeInit();
 
     const handleResize = () => {
       try {
         if (!chartInstanceRef.current) {
-          safeInit();
+          void safeInit();
           return;
         }
         chartInstanceRef.current.resize();
@@ -101,6 +109,7 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
     window.addEventListener('resize', handleResize);
 
     return () => {
+      isCancelled = true;
       window.removeEventListener('resize', handleResize);
       const current = chartInstanceRef.current;
       if (current) {
@@ -252,13 +261,14 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
 
     if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
       const reader = new FileReader();
-      reader.onload = e => {
+      reader.onload = async e => {
         try {
           const data = e.target?.result;
           if (!data) {
             toast.error('Failed to read Excel file.');
             return;
           }
+          const XLSX = await import('xlsx');
           const workbook = XLSX.read(data, { type: 'array' });
           const sheetName = workbook.SheetNames[0];
           const sheet = workbook.Sheets[sheetName];
