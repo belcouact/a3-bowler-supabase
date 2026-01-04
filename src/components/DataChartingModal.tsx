@@ -41,7 +41,7 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
 
         <div className="flex flex-1 flex-col overflow-hidden">
           <iframe
-            src="/chart-example.html"
+            src="/chart.html"
             title="数据分析"
             className="h-full w-full border-0"
           />
