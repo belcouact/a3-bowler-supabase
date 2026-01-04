@@ -405,7 +405,7 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
 
       const userMessage = `
 User's Goal: 
-  ${userGoal} // e.g., "Show the relationship between advertising spend and monthly revenue for each product category." 
+  ${userGoal}
 
 Data Table (first row is header): 
   ${JSON.stringify(payload, null, 2)} 
@@ -420,10 +420,14 @@ Instructions:
      -   Use a \`legend\` when multiple series are present. 
  5.  **Enhance Interactivity**: Add a rich \`tooltip\` that provides context-specific information. Include other interactive features like \`dataZoom\`, \`toolbox\`, or \`brush\` if they would meaningfully help the user explore the data. 
  6.  **Apply Professional Styling**: Use a clear and visually appealing color scheme. Ensure text is legible and the chart is not cluttered. Make deliberate choices about \`itemStyle\`, \`lineStyle\`, etc. 
+ 7.  **Transform API Specifics**: When using data transforms, adhere strictly to the ECharts v5 API:
+     - For \`boxplot\` transforms, you MUST specify the \`groupBy\` property in the config.
+     - For \`aggregate\` transforms, the main property is \`aggregate\` (an array of objects), not \`operations\`. Each object in the array must use \`op\` for the operation (e.g., 'average', 'sum') and \`as\` to define the name of the resulting column.
 
 Response format (JSON only, no backticks): 
 { 
-  "option": { /* A complete, valid, and well-structured ECharts option object that follows all instructions above. */ }, 
+  "option": { 
+  }, 
   "interpretation": { 
     "chartType": "The specific name of the chart type chosen (e.g., 'Grouped Bar Chart', 'Scatter Plot with Third Dimension').", 
     "rationale": "A concise explanation of why this chart type is the optimal choice to achieve the user's goal.", 
