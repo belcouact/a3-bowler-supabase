@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type ChangeEvent } from 'react';
 import {
   X,
   Upload,
@@ -47,7 +47,7 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
   const [chartOptionRaw, setChartOptionRaw] = useState('');
   const [chartOptionError, setChartOptionError] = useState<string | null>(null);
   const [columnWidths, setColumnWidths] = useState<number[]>([]);
-   const [isSampleMenuOpen, setIsSampleMenuOpen] = useState(false);
+  const [isSampleMenuOpen, setIsSampleMenuOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
@@ -73,18 +73,20 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
       if (isInitializing || chartInstanceRef.current) {
         return;
       }
+
       const rect = container.getBoundingClientRect();
       if (!rect.width || !rect.height) {
         return;
       }
+
       isInitializing = true;
       try {
         const echartsModule = await import('echarts');
         if (isCancelled) {
           return;
         }
-        const created = echartsModule.init(container);
-        chartInstanceRef.current = created;
+        const instance = echartsModule.init(container);
+        chartInstanceRef.current = instance;
       } catch (error) {
         console.error('ECharts init error', error);
       } finally {
@@ -167,7 +169,7 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
       return;
     }
     const columnCount = tableData[0]?.length || 0;
-    if (columnCount === 0) {
+    if (!columnCount) {
       return;
     }
     setColumnWidths(prev => {
@@ -226,11 +228,11 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
         }
       }
       cells.push(current);
-      return cells.map(c => c.trim());
+      return cells.map(cell => cell.trim());
     });
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
       return;
@@ -305,7 +307,9 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
       return;
     }
     setTableData(prev => prev.map(row => [...row, '']));
-    setColumnWidths(prev => (prev.length ? [...prev, prev[prev.length - 1] || 120] : [120]));
+    setColumnWidths(prev =>
+      prev.length ? [...prev, prev[prev.length - 1] || 120] : [120],
+    );
   };
 
   const handleClearData = () => {
@@ -325,10 +329,10 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
       return;
     }
 
-    const nextWidths: number[] = [];
     const minWidth = 80;
     const maxWidth = 400;
     const charWidth = 12;
+    const nextWidths: number[] = [];
 
     for (let col = 0; col < columnCount; col += 1) {
       let maxLen = 0;
@@ -371,7 +375,7 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
       const parsed = JSON.parse(value);
       setChartOption(parsed as EChartsOption);
       setChartOptionError(null);
-    } catch (error) {
+    } catch {
       setChartOptionError('Invalid JSON. Fix errors to update the chart.');
     }
   };
@@ -401,43 +405,35 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
       };
 
       const systemMessage =
-        "You are an expert data visualization analyst and a master of the Apache ECharts library (version 5). Your core task is to interpret a user's request and data, then generate the most effective and insightful ECharts configuration. You must respond with a single, valid JSON object only, containing no markdown, no comments, and no text outside the JSON structure.";
+        'You are an expert data visualization analyst and a master of the Apache ECharts library (version 5). Your task is to interpret a user request and data, then generate the most effective and insightful ECharts configuration. You must respond with a single, valid JSON object only, containing no markdown, no comments, and no text outside the JSON structure.';
 
-      const userMessage = `
-User's Goal: 
-  ${userGoal}
+      const userMessage = `User Goal:
+${userGoal}
 
-Data Table (first row is header): 
-  ${JSON.stringify(payload, null, 2)} 
+Data Table (first row is header):
+${JSON.stringify(payload, null, 2)}
 
-Instructions: 
- 1.  **Analyze and Infer**: Deeply analyze the "User's Goal" and the provided data. Infer the data types (e.g., temporal, categorical, numerical) and the relationships between columns. Determine the primary analytical objective (e.g., comparison, trend over time, correlation, distribution, composition, part-to-whole, geographical data, flow). 
- 2.  **Select Optimal Chart Type**: Based on your analysis, choose the single most effective chart type. Do not limit yourself. Your choice should be the best fit for the user's stated goal. Consider all major ECharts series types (line, bar, pie, scatter, boxplot, heatmap, radar, sankey, graph, tree, map, etc.). 
- 3.  **Structure with \`dataset\`**: You MUST use the ECharts \`dataset\` property to hold the raw data. Decouple the data from the series definition. This is a strict requirement. 
- 4.  **Configure for Clarity**: The chart must be self-explanatory. 
-     -   Provide a descriptive \`title\`. 
-     -   Add clear \`name\` properties for both \`xAxis\` and \`yAxis\`. 
-     -   Use a \`legend\` when multiple series are present. 
- 5.  **Enhance Interactivity**: Add a rich \`tooltip\` that provides context-specific information. Include other interactive features like \`dataZoom\`, \`toolbox\`, or \`brush\` if they would meaningfully help the user explore the data. 
- 6.  **Apply Professional Styling**: Use a clear and visually appealing color scheme. Ensure text is legible and the chart is not cluttered. Make deliberate choices about \`itemStyle\`, \`lineStyle\`, etc. 
- 7.  **Transform API Specifics**: When using data transforms, adhere strictly to the ECharts v5 API:
-     - For \`boxplot\` transforms, you MUST specify the \`groupBy\` property in the config.
-     - For \`aggregate\` transforms, the main property is \`aggregate\` (an array of objects), not \`operations\`. Each object in the array must use \`op\` for the operation (e.g., 'average', 'sum') and \`as\` to define the name of the resulting column.
+Instructions:
+1. Analyze the goal and data to infer data types and relationships.
+2. Select the single most effective chart type based on the goal.
+3. Use the ECharts "dataset" property to hold the raw data.
+4. Configure a clear title, axis names, and legends where needed.
+5. Add rich tooltips and helpful interactive features (dataZoom, toolbox, brush).
+6. Apply professional styling so the chart is readable and not cluttered.
+7. When using transforms, follow ECharts v5 rules: boxplot transforms must include "groupBy", aggregate transforms must use "aggregate" with "op" and "as".
 
-Response format (JSON only, no backticks): 
-{ 
-  "option": { 
-  }, 
-  "interpretation": { 
-    "chartType": "The specific name of the chart type chosen (e.g., 'Grouped Bar Chart', 'Scatter Plot with Third Dimension').", 
-    "rationale": "A concise explanation of why this chart type is the optimal choice to achieve the user's goal.", 
-    "insights": [ 
-      "A key insight directly observable from the chart.", 
-      "A second important insight or observation." 
-    ] 
-  } 
-} 
-`;
+Response format (JSON only, no backticks):
+{
+  "option": {},
+  "interpretation": {
+    "chartType": "Name of the chosen chart type.",
+    "rationale": "Why this chart type is a good fit.",
+    "insights": [
+      "Key insight one.",
+      "Key insight two."
+    ]
+  }
+}`;
 
       const response = await fetch('https://multi-model-worker.study-llm.me/api/chat', {
         method: 'POST',
@@ -460,6 +456,7 @@ Response format (JSON only, no backticks):
 
       const responseJson = await response.json();
       const rawContent = responseJson.choices?.[0]?.message?.content || '{}';
+
       const cleanedForJson = String(rawContent)
         .replace(/```json/gi, '')
         .replace(/```/g, '')
@@ -501,7 +498,10 @@ Response format (JSON only, no backticks):
         enhancedOption.toolbox = {};
       }
 
-      if (typeof enhancedOption.toolbox === 'object' && !Array.isArray(enhancedOption.toolbox)) {
+      if (
+        typeof enhancedOption.toolbox === 'object' &&
+        !Array.isArray(enhancedOption.toolbox)
+      ) {
         const feature = enhancedOption.toolbox.feature || {};
         enhancedOption.toolbox.feature = {
           ...feature,
@@ -570,8 +570,13 @@ Response format (JSON only, no backticks):
       toast.success('Chart generated.');
     } catch (error: any) {
       console.error('Generate chart error', error);
-      if (error?.message && (error.message.includes('Failed to fetch') || error.message.includes('Network'))) {
-        setAiError('Network error while contacting the AI service. Please check your connection and try again.');
+      if (
+        error?.message &&
+        (error.message.includes('Failed to fetch') || error.message.includes('Network'))
+      ) {
+        setAiError(
+          'Network error while contacting the AI service. Please check your connection and try again.',
+        );
         toast.error('Network error while contacting the AI service.');
       } else {
         setAiError(error?.message || 'Failed to generate chart from AI.');
@@ -583,7 +588,7 @@ Response format (JSON only, no backticks):
   };
 
   const handleGenerateChart = () => {
-    runGenerateChart(tableData, chartPrompt);
+    void runGenerateChart(tableData, chartPrompt);
   };
 
   const handleSampleDatasetClick = (type: SampleDatasetType) => {
@@ -642,18 +647,18 @@ Response format (JSON only, no backticks):
     } else if (type === 'timeSeries') {
       data = [
         ['Month', 'Actual', 'Target'],
-        ['Jan', '72', '80'],
-        ['Feb', '75', '80'],
-        ['Mar', '78', '82'],
-        ['Apr', '81', '82'],
-        ['May', '79', '83'],
-        ['Jun', '83', '84'],
-        ['Jul', '85', '85'],
-        ['Aug', '88', '86'],
-        ['Sep', '86', '86'],
-        ['Oct', '89', '87'],
-        ['Nov', '91', '88'],
-        ['Dec', '93', '89'],
+        ['Jan', '72'],
+        ['Feb', '75'],
+        ['Mar', '78'],
+        ['Apr', '81'],
+        ['May', '79'],
+        ['Jun', '83'],
+        ['Jul', '85'],
+        ['Aug', '88'],
+        ['Sep', '86'],
+        ['Oct', '89'],
+        ['Nov', '91'],
+        ['Dec', '93'],
       ];
       prompt =
         "Create a dual-line time series chart where Month is on the X axis, Actual and Target are two smooth line series with markers, and the area under the Actual line is lightly filled to emphasize improvement over time. Add a tooltip with all series values and a legend at the top.";
@@ -666,17 +671,17 @@ Response format (JSON only, no backticks):
         ['West', '150', '35', '15'],
       ];
       prompt =
-        "Create a stacked bar chart where Region is on the X axis and On-time, Late, and Very Late are stacked bar series on the Y axis to show shipment reliability mix by region. Include percentage labels inside the bars and a legend at the bottom.";
+        'Create a stacked bar chart where Region is on the X axis and On-time, Late, and Very Late are stacked bar series on the Y axis to show shipment reliability mix by region. Include percentage labels inside the bars and a legend at the bottom.';
     } else if (type === 'dualAxis') {
       data = [
-        ['Month', 'Revenue', 'Margin %'],
+        ['Quarter', 'Revenue', 'MarginPercent'],
         ['Q1-2024', '420000', '18.5'],
         ['Q2-2024', '460000', '19.2'],
         ['Q3-2024', '510000', '17.8'],
         ['Q4-2024', '580000', '20.4'],
       ];
       prompt =
-        'Create a combo chart with Revenue as blue bars on the primary Y axis and Margin % as an orange line with circle markers on a secondary Y axis (0–25%). Use Month on the X axis and show both values in the tooltip when hovering.';
+        'Create a combo chart with Revenue as blue bars on the primary Y axis and MarginPercent as an orange line with circle markers on a secondary Y axis (0 to 25). Use Quarter on the X axis and show both values in the tooltip when hovering.';
     } else if (type === 'funnel') {
       data = [
         ['Stage', 'Count'],
@@ -728,7 +733,7 @@ Response format (JSON only, no backticks):
 
     setChartPrompt(prompt);
     setIsSampleMenuOpen(false);
-    runGenerateChart(data, prompt);
+    void runGenerateChart(data, prompt);
   };
 
   return (
@@ -951,7 +956,10 @@ Response format (JSON only, no backticks):
                           </colgroup>
                           <tbody>
                             {tableData.map((row, rowIndex) => (
-                              <tr key={rowIndex} className={rowIndex === 0 ? 'bg-gray-50' : ''}>
+                              <tr
+                                key={rowIndex}
+                                className={rowIndex === 0 ? 'bg-gray-50' : ''}
+                              >
                                 {row.map((cell, colIndex) => (
                                   <td
                                     key={`${rowIndex}-${colIndex}`}
@@ -990,7 +998,7 @@ Response format (JSON only, no backticks):
                         rel="noreferrer"
                         className="text-[11px] text-indigo-600 hover:text-indigo-700 hover:underline"
                       >
-                        EChart Library
+                        ECharts examples
                       </a>
                     </div>
                     <p className="mb-2 text-[11px] text-gray-500">
@@ -1001,7 +1009,7 @@ Response format (JSON only, no backticks):
                       onChange={e => setChartPrompt(e.target.value)}
                       rows={4}
                       className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                      placeholder="Example: Use the 'Month' column as X axis and plot 'Actual' and 'Target' as two line series."
+                      placeholder="Example: Use the Month column as X axis and plot Actual and Target as two line series."
                     />
                   </div>
 
@@ -1070,7 +1078,7 @@ Response format (JSON only, no backticks):
               )}
             </div>
 
-              <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
               <div className="flex-1 rounded-md border border-gray-200 bg-white p-3">
                 <h3 className="mb-2 flex items-center text-xs font-semibold text-gray-800">
                   <Activity className="mr-1.5 h-3.5 w-3.5 text-blue-500" />
@@ -1111,3 +1119,4 @@ Response format (JSON only, no backticks):
     </div>
   );
 };
+
