@@ -21,6 +21,75 @@ interface WorkbookSheet {
   data: (string | number)[][];
 }
 
+type DataSourceTab = 'upload' | 'sample';
+
+interface SampleDataset {
+  id: string;
+  name: string;
+  description: string;
+  data: string[][];
+  chartPrompt: string;
+}
+
+const SAMPLE_DATASETS: SampleDataset[] = [
+  {
+    id: 'on-time-delivery',
+    name: 'On-time delivery',
+    description: 'Delivery performance by week with on-time rate.',
+    data: [
+      ['Week', 'Total deliveries', 'On-time deliveries', 'On-time %'],
+      ['2024-W01', '120', '110', '91.7'],
+      ['2024-W02', '135', '126', '93.3'],
+      ['2024-W03', '128', '115', '89.8'],
+      ['2024-W04', '142', '134', '94.4'],
+    ],
+    chartPrompt:
+      'Create a line chart showing on-time delivery rate by week. Highlight any weeks below 92% and add data labels for the on-time %. Use a secondary bar or line to show total deliveries if it helps.',
+  },
+  {
+    id: 'revenue-profit',
+    name: 'Revenue & profit',
+    description: 'Monthly revenue, cost, and profit.',
+    data: [
+      ['Month', 'Revenue', 'Cost', 'Profit'],
+      ['Jan', '120000', '80000', '40000'],
+      ['Feb', '135000', '86000', '49000'],
+      ['Mar', '150000', '90000', '60000'],
+      ['Apr', '160000', '95000', '65000'],
+    ],
+    chartPrompt:
+      'Create a combined bar and line chart showing revenue and profit by month. Use bars for revenue and a line for profit. Emphasize the margin trend.',
+  },
+  {
+    id: 'yield',
+    name: 'Yield',
+    description: 'Production yield by batch.',
+    data: [
+      ['Batch', 'Input units', 'Good units', 'Yield %'],
+      ['B-101', '1000', '970', '97'],
+      ['B-102', '1200', '1130', '94.2'],
+      ['B-103', '900', '855', '95'],
+      ['B-104', '1100', '1030', '93.6'],
+    ],
+    chartPrompt:
+      'Create a bar chart of yield % by batch. Highlight any batch with yield below 95% in a different color and show the exact yield % on the bars.',
+  },
+  {
+    id: 'defects',
+    name: 'Defect rate',
+    description: 'Weekly defect rates in a production line.',
+    data: [
+      ['Week', 'Total units', 'Defect units', 'Defect rate %'],
+      ['2024-W01', '5000', '60', '1.2'],
+      ['2024-W02', '5200', '55', '1.06'],
+      ['2024-W03', '5100', '80', '1.57'],
+      ['2024-W04', '5300', '50', '0.94'],
+    ],
+    chartPrompt:
+      'Create a line or bar chart showing defect rate % by week. Clearly mark any week where the defect rate exceeds 1.3%.',
+  },
+];
+
 function cleanData(data: string[][]): string[][] {
   if (!data || data.length === 0) return data;
 
@@ -54,6 +123,7 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
   const [file, setFile] = useState<File | null>(null);
   const [workbook, setWorkbook] = useState<WorkbookSheet[]>([]);
   const [selectedSheet, setSelectedSheet] = useState(0);
+  const [dataSourceTab, setDataSourceTab] = useState<DataSourceTab>('upload');
   const [tableData, setTableData] = useState<string[][]>([]);
   const [status, setStatus] = useState<StatusMessage | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -63,7 +133,6 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
   const [dataBackground, setDataBackground] = useState('');
   const [chartRequirement, setChartRequirement] = useState('');
   const [codeOutput, setCodeOutput] = useState('');
-  const [codeExpanded, setCodeExpanded] = useState(false);
   const [chartVisible, setChartVisible] = useState(false);
 
   useEffect(() => {
@@ -71,7 +140,7 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
       setFile(null);
       setWorkbook([]);
       setSelectedSheet(0);
-       setTableData([]);
+      setTableData([]);
       setStatus(null);
       setAnalyzing(false);
       setGenerating(false);
@@ -80,8 +149,8 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
       setDataBackground('');
       setChartRequirement('');
       setCodeOutput('');
-      setCodeExpanded(false);
       setChartVisible(false);
+      setDataSourceTab('upload');
     }
   }, [isOpen]);
 
@@ -233,6 +302,22 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
     setSelectedSheet(0);
     setTableData([]);
     setStatus(null);
+  }
+
+  function applySampleDataset(dataset: SampleDataset) {
+    setFile(null);
+    const sheet: WorkbookSheet = {
+      name: dataset.name,
+      data: dataset.data,
+    };
+    setWorkbook([sheet]);
+    setSelectedSheet(0);
+    setTableData(dataset.data);
+    setStatus({
+      type: 'success',
+      text: `Loaded sample dataset: ${dataset.name}.`,
+    });
+    setChartRequirement(dataset.chartPrompt);
   }
 
   function getCurrentTableData(): string[][] | null {
@@ -590,7 +675,10 @@ ${JSON.stringify(structuredData, null, 2)}
         <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 bg-slate-50">
           <div className="flex items-center gap-3">
             <div className="flex flex-col">
-              <h2 className="text-sm font-semibold text-gray-900">Data Analysis</h2>
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                <span className="text-base">📊</span>
+                <span>Data Analysis</span>
+              </h2>
               <p className="text-xs text-gray-500">
                 Integrated workspace for file upload, data preview, AI analysis and chart generation.
               </p>
@@ -615,10 +703,43 @@ ${JSON.stringify(structuredData, null, 2)}
                 File Upload
               </h3>
 
+              <div className="flex items-center justify-between mt-1">
+                <div className="inline-flex rounded-full bg-slate-100 p-1 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setDataSourceTab('upload')}
+                    className={[
+                      'rounded-full px-3 py-1 transition-colors',
+                      dataSourceTab === 'upload'
+                        ? 'bg-white text-blue-700 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-800',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                  >
+                    Upload file
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDataSourceTab('sample')}
+                    className={[
+                      'rounded-full px-3 py-1 transition-colors',
+                      dataSourceTab === 'sample'
+                        ? 'bg-white text-blue-700 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-800',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                  >
+                    Sample data
+                  </button>
+                </div>
+              </div>
+
               {status && (
                 <div
                   className={[
-                    'flex items-center gap-2 rounded-md px-3 py-2 text-xs',
+                    'mt-2 flex items-center gap-2 rounded-md px-3 py-2 text-xs',
                     status.type === 'success' && 'bg-emerald-50 text-emerald-700 border border-emerald-100',
                     status.type === 'error' && 'bg-red-50 text-red-700 border border-red-100',
                     status.type === 'info' && 'bg-sky-50 text-sky-700 border border-sky-100',
@@ -630,54 +751,81 @@ ${JSON.stringify(structuredData, null, 2)}
                 </div>
               )}
 
-              <div
-                className="mt-1 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 bg-slate-50/80 px-4 py-6 text-center text-xs text-gray-500 hover:border-blue-300 hover:bg-blue-50/40 transition-colors cursor-pointer"
-                onDragOver={(e) => {
-                  e.preventDefault();
-                }}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                    handleFileSelect(e.dataTransfer.files[0]);
-                  }
-                }}
-                onClick={() => {
-                  const input = document.getElementById('chart-file-input') as HTMLInputElement | null;
-                  input?.click();
-                }}
-              >
-                <div className="text-3xl mb-2">📊</div>
-                <div className="font-medium text-gray-800">Drag file here or click to upload</div>
-                <div className="mt-1 text-[11px] text-gray-500">Supports CSV, XLS, XLSX formats, up to 10MB.</div>
-                <input
-                  id="chart-file-input"
-                  type="file"
-                  accept=".csv,.xls,.xlsx"
-                  className="hidden"
-                  onChange={(e) => {
-                    const selected = e.target.files?.[0];
-                    if (selected) {
-                      handleFileSelect(selected);
-                    }
-                  }}
-                />
-              </div>
-
-              {file && (
-                <div className="mt-3 flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-                  <div className="flex flex-col">
-                    <span className="text-xs font-medium text-gray-900 break-all">{file.name}</span>
-                    <span className="text-[11px] text-gray-500">
-                      {(file.size / 1024 / 1024).toFixed(2)} MB
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={clearFile}
-                    className="text-[11px] text-red-600 hover:text-red-700 hover:bg-red-50 rounded px-2 py-1"
+              {dataSourceTab === 'upload' && (
+                <>
+                  <div
+                    className="mt-1 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 bg-slate-50/80 px-4 py-6 text-center text-xs text-gray-500 hover:border-blue-300 hover:bg-blue-50/40 transition-colors cursor-pointer"
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                        handleFileSelect(e.dataTransfer.files[0]);
+                      }
+                    }}
+                    onClick={() => {
+                      const input = document.getElementById('chart-file-input') as HTMLInputElement | null;
+                      input?.click();
+                    }}
                   >
-                    Remove
-                  </button>
+                    <div className="text-3xl mb-2">📊</div>
+                    <div className="font-medium text-gray-800">Drag file here or click to upload</div>
+                    <div className="mt-1 text-[11px] text-gray-500">
+                      Supports CSV, XLS, XLSX formats, up to 10MB.
+                    </div>
+                    <input
+                      id="chart-file-input"
+                      type="file"
+                      accept=".csv,.xls,.xlsx"
+                      className="hidden"
+                      onChange={(e) => {
+                        const selected = e.target.files?.[0];
+                        if (selected) {
+                          handleFileSelect(selected);
+                        }
+                      }}
+                    />
+                  </div>
+
+                  {file && (
+                    <div className="mt-3 flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-medium text-gray-900 break-all">{file.name}</span>
+                        <span className="text-[11px] text-gray-500">
+                          {(file.size / 1024 / 1024).toFixed(2)} MB
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={clearFile}
+                        className="text-[11px] text-red-600 hover:text-red-700 hover:bg-red-50 rounded px-2 py-1"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {dataSourceTab === 'sample' && (
+                <div className="mt-3 space-y-2">
+                  <div className="text-[11px] text-gray-600">
+                    Choose a sample dataset to quickly try analysis and chart generation.
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {SAMPLE_DATASETS.map((dataset) => (
+                      <button
+                        key={dataset.id}
+                        type="button"
+                        onClick={() => applySampleDataset(dataset)}
+                        className="flex flex-col items-start rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-left hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                      >
+                        <span className="text-xs font-semibold text-gray-900">{dataset.name}</span>
+                        <span className="mt-1 text-[11px] text-gray-600">{dataset.description}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -705,16 +853,6 @@ ${JSON.stringify(structuredData, null, 2)}
                   </div>
                 </div>
               )}
-
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={clearFile}
-                  className="inline-flex items-center rounded-md bg-slate-100 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-slate-200"
-                >
-                  Clear file
-                </button>
-              </div>
             </section>
 
             <section className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 space-y-3">
@@ -850,23 +988,33 @@ ${JSON.stringify(structuredData, null, 2)}
                 />
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleGenerateChartCode}
-                  disabled={generating}
-                  className="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleGenerateChartCode}
+                    disabled={generating}
+                    className="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+                  >
+                    {generating ? 'Generating...' : 'Generate chart code'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => executeChartScript()}
+                    disabled={executing || !codeOutput}
+                    className="inline-flex items-center rounded-md bg-slate-100 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-slate-200 disabled:cursor-not-allowed disabled:text-gray-400"
+                  >
+                    {executing ? 'Executing...' : 'Run script'}
+                  </button>
+                </div>
+                <a
+                  href="https://echarts.apache.org/examples/en/index.html"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="ml-auto text-[11px] text-blue-600 hover:text-blue-700 hover:underline"
                 >
-                  {generating ? 'Generating...' : 'Generate chart code'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => executeChartScript()}
-                  disabled={executing || !codeOutput}
-                  className="inline-flex items-center rounded-md bg-slate-100 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-slate-200 disabled:cursor-not-allowed disabled:text-gray-400"
-                >
-                  {executing ? 'Executing...' : 'Run script'}
-                </button>
+                  ECharts examples
+                </a>
               </div>
 
               <div
@@ -880,26 +1028,15 @@ ${JSON.stringify(structuredData, null, 2)}
               >
                 <div className="flex flex-col rounded-lg border border-slate-200 bg-slate-50/70 p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-slate-800">Chart code</span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setCodeExpanded((prev) => !prev)}
-                        className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] text-gray-700 hover:bg-slate-100"
-                      >
-                        {codeExpanded ? 'Collapse editor' : 'Expand editor'}
-                      </button>
-                    </div>
+                    <span className="text-xs font-semibold text-slate-800 flex items-center gap-1">
+                      <span>🧾</span>
+                      <span>Chart code</span>
+                    </span>
                   </div>
                   <textarea
                     value={codeOutput}
                     onChange={(e) => setCodeOutput(e.target.value)}
-                    className={[
-                      'w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-mono text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400',
-                      codeExpanded ? 'min-h-[260px]' : 'min-h-[160px]',
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
+                    className="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-mono text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 min-h-[160px]"
                     placeholder="Generated chart code will appear here; you can edit it before running."
                   />
                 </div>
@@ -907,7 +1044,8 @@ ${JSON.stringify(structuredData, null, 2)}
                 <div className="flex flex-col rounded-lg border border-slate-200 bg-white p-3 min-h-[200px]">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-semibold text-slate-800 flex items-center gap-1">
-                      Chart result
+                      <span>📊</span>
+                      <span>Chart result</span>
                     </span>
                     <button
                       type="button"
