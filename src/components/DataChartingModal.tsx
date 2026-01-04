@@ -103,12 +103,12 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
     const fileExtension = selected.name.toLowerCase().substring(selected.name.lastIndexOf('.'));
 
     if (!validExtensions.includes(fileExtension)) {
-      showStatus('请选择有效的CSV、XLS或XLSX文件！', 'error');
+      showStatus('Please select a valid CSV, XLS or XLSX file.', 'error');
       return;
     }
 
     if (selected.size > 10 * 1024 * 1024) {
-      showStatus('文件大小超过10MB限制！', 'error');
+      showStatus('File size exceeds 10MB limit.', 'error');
       return;
     }
 
@@ -124,7 +124,7 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
       try {
         const result = e.target?.result;
         if (!result) {
-          throw new Error('文件内容为空');
+          throw new Error('File content is empty');
         }
 
         const data = new Uint8Array(result as ArrayBuffer);
@@ -136,12 +136,12 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
         }
       } catch (error) {
         const err = error as Error;
-        showStatus(`文件解析失败：${err.message}`, 'error');
+        showStatus(`File parsing failed: ${err.message}`, 'error');
       }
     };
 
     reader.onerror = () => {
-      showStatus('文件读取失败！', 'error');
+      showStatus('File reading failed.', 'error');
     };
 
     reader.readAsArrayBuffer(selected);
@@ -171,10 +171,10 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
       setSelectedSheet(0);
       const normalized = result.map((row) => row.map((cell) => String(cell ?? '')));
       setTableData(normalized);
-      showStatus('CSV文件解析成功！', 'success');
+      showStatus('CSV file parsed successfully.', 'success');
     } catch (error) {
       const err = error as Error;
-      showStatus(`CSV解析失败：${err.message}`, 'error');
+      showStatus(`CSV parsing failed: ${err.message}`, 'error');
     }
   }
 
@@ -206,15 +206,25 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
       } else {
         setTableData([]);
       }
-      showStatus(`Excel文件解析成功！共${sheets.length}个工作表`, 'success');
+      showStatus(`Excel file parsed successfully. ${sheets.length} sheet(s) found.`, 'success');
     } catch (error) {
       const err = error as Error;
-      showStatus(`Excel解析失败：${err.message}`, 'error');
+      showStatus(`Excel parsing failed: ${err.message}`, 'error');
     }
   }
 
   function handleSheetSelect(index: number) {
     setSelectedSheet(index);
+
+    const sheet = workbook[index];
+    if (sheet && sheet.data && sheet.data.length > 0) {
+      const normalized = sheet.data.map((row) =>
+        row.map((cell) => String(cell ?? ''))
+      );
+      setTableData(normalized);
+    } else {
+      setTableData([]);
+    }
   }
 
   function clearFile() {
@@ -279,7 +289,7 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`API调用失败: ${response.status} - ${errorText}`);
+      throw new Error(`API request failed: ${response.status} - ${errorText}`);
     }
 
     const result = await response.json();
@@ -296,7 +306,7 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
     }
 
     if (!content || content.length === 0) {
-      throw new Error('API返回了空内容');
+      throw new Error('API returned empty content');
     }
 
     return content;
@@ -306,7 +316,7 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
     const rawData = getCurrentTableData();
 
     if (!rawData || rawData.length === 0) {
-      showStatus('请先上传数据文件！', 'error');
+      showStatus('Please upload a data file first.', 'error');
       return;
     }
 
@@ -316,7 +326,7 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
       const cleanedData = cleanData(rawData);
 
       if (cleanedData.length === 0) {
-        throw new Error('数据为空或所有数据都是空值');
+        throw new Error('Data is empty or all values are blank');
       }
 
       const headers = cleanedData[0];
@@ -363,10 +373,10 @@ ${dataBackground ? `\n**数据背景说明**：${dataBackground}` : ''}
         .replace(/\*(.*?)\*/g, '<em class="text-gray-700">$1</em>');
 
       setAnalysisHtml(html);
-      showStatus('数据分析完成！', 'success');
+      showStatus('Data analysis completed.', 'success');
     } catch (error) {
       const err = error as Error;
-      showStatus(`数据分析失败：${err.message}`, 'error');
+      showStatus(`Data analysis failed: ${err.message}`, 'error');
     } finally {
       setAnalyzing(false);
     }
@@ -376,12 +386,12 @@ ${dataBackground ? `\n**数据背景说明**：${dataBackground}` : ''}
     const rawData = getCurrentTableData();
 
     if (!rawData || rawData.length === 0) {
-      throw new Error('请先上传数据文件！');
+      throw new Error('Please upload a data file first.');
     }
 
     const cleanedData = cleanData(rawData);
     if (cleanedData.length === 0) {
-      throw new Error('数据为空或所有数据都是空值，无法生成图表');
+      throw new Error('Data is empty or all values are blank, unable to generate chart');
     }
 
     const headers = cleanedData[0];
@@ -392,7 +402,7 @@ ${dataBackground ? `\n**数据背景说明**：${dataBackground}` : ''}
       headers.forEach((header, index) => {
         const value = row[index];
         rowObj[header] =
-          value === null || value === undefined || value === '' ? '空值' : String(value);
+          value === null || value === undefined || value === '' ? 'EMPTY' : String(value);
       });
       return rowObj;
     });
@@ -447,7 +457,7 @@ ${JSON.stringify(structuredData, null, 2)}
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`API调用失败: ${response.status} - ${errorText}`);
+      throw new Error(`API request failed: ${response.status} - ${errorText}`);
     }
 
     const result = await response.json();
@@ -464,7 +474,7 @@ ${JSON.stringify(structuredData, null, 2)}
     }
 
     if (!content || content.length === 0) {
-      throw new Error('API返回了空内容');
+      throw new Error('API returned empty content');
     }
 
     return content;
@@ -483,14 +493,14 @@ ${JSON.stringify(structuredData, null, 2)}
 
       setCodeOutput(cleanCode);
       setChartVisible(true);
-      showStatus('图表代码生成完成！正在自动执行...', 'success');
+      showStatus('Chart code generated. Executing automatically...', 'success');
 
       setTimeout(() => {
         executeChartScript(cleanCode);
       }, 500);
     } catch (error) {
       const err = error as Error;
-      showStatus(`图表代码生成失败：${err.message}`, 'error');
+      showStatus(`Chart code generation failed: ${err.message}`, 'error');
     } finally {
       setGenerating(false);
     }
@@ -500,7 +510,7 @@ ${JSON.stringify(structuredData, null, 2)}
     const htmlCode = (code ?? codeOutput).trim();
 
     if (!htmlCode) {
-      showStatus('请先生成图表代码！', 'error');
+      showStatus('Please generate chart code first.', 'error');
       return;
     }
 
@@ -509,7 +519,7 @@ ${JSON.stringify(structuredData, null, 2)}
     try {
       const container = document.getElementById('chartContent');
       if (!container) {
-        throw new Error('图表容器未找到');
+        throw new Error('Chart container not found');
       }
 
       container.innerHTML = '';
@@ -524,7 +534,7 @@ ${JSON.stringify(structuredData, null, 2)}
 
       const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
       if (!iframeDoc) {
-        throw new Error('无法访问图表窗口');
+        throw new Error('Unable to access chart window');
       }
 
       iframeDoc.open();
@@ -532,10 +542,10 @@ ${JSON.stringify(structuredData, null, 2)}
       iframeDoc.close();
 
       setChartVisible(true);
-      showStatus('图表执行成功！', 'success');
+      showStatus('Chart executed successfully.', 'success');
     } catch (error) {
       const err = error as Error;
-      showStatus(`图表执行失败：${err.message}`, 'error');
+      showStatus(`Chart execution failed: ${err.message}`, 'error');
     } finally {
       setExecuting(false);
     }
@@ -545,24 +555,24 @@ ${JSON.stringify(structuredData, null, 2)}
     const htmlCode = codeOutput.trim();
 
     if (!htmlCode) {
-      showStatus('请先生成图表代码！', 'error');
+      showStatus('Please generate chart code first.', 'error');
       return;
     }
 
     try {
       const newWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
       if (!newWindow) {
-        showStatus('弹窗被浏览器阻止，请允许弹窗后重试', 'error');
+        showStatus('Popup was blocked by the browser, please allow popups and try again.', 'error');
         return;
       }
 
       newWindow.document.write(htmlCode);
       newWindow.document.close();
 
-      showStatus('图表已在新窗口中打开', 'success');
+      showStatus('Chart opened in a new window.', 'success');
     } catch (error) {
       const err = error as Error;
-      showStatus(`无法打开新窗口：${err.message}`, 'error');
+      showStatus(`Unable to open new window: ${err.message}`, 'error');
     }
   }
 
@@ -580,9 +590,9 @@ ${JSON.stringify(structuredData, null, 2)}
         <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 bg-slate-50">
           <div className="flex items-center gap-3">
             <div className="flex flex-col">
-              <h2 className="text-sm font-semibold text-gray-900">数据分析</h2>
+              <h2 className="text-sm font-semibold text-gray-900">Data Analysis</h2>
               <p className="text-xs text-gray-500">
-                文件上传、数据预览、AI 分析与图表生成的一体化工作区。
+                Integrated workspace for file upload, data preview, AI analysis and chart generation.
               </p>
             </div>
           </div>
@@ -600,9 +610,9 @@ ${JSON.stringify(structuredData, null, 2)}
             <section className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 space-y-4">
               <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-600 text-xs font-medium">
-                  1
+                  📁
                 </span>
-                文件上传
+                File Upload
               </h3>
 
               {status && (
@@ -637,8 +647,8 @@ ${JSON.stringify(structuredData, null, 2)}
                 }}
               >
                 <div className="text-3xl mb-2">📊</div>
-                <div className="font-medium text-gray-800">拖拽文件到此处或点击上传</div>
-                <div className="mt-1 text-[11px] text-gray-500">支持 CSV, XLS, XLSX 格式，最大 10MB</div>
+                <div className="font-medium text-gray-800">Drag file here or click to upload</div>
+                <div className="mt-1 text-[11px] text-gray-500">Supports CSV, XLS, XLSX formats, up to 10MB.</div>
                 <input
                   id="chart-file-input"
                   type="file"
@@ -666,14 +676,14 @@ ${JSON.stringify(structuredData, null, 2)}
                     onClick={clearFile}
                     className="text-[11px] text-red-600 hover:text-red-700 hover:bg-red-50 rounded px-2 py-1"
                   >
-                    清除
+                    Remove
                   </button>
                 </div>
               )}
 
               {workbookSheetsAvailable && (
                 <div className="mt-3">
-                  <div className="text-[11px] font-medium text-gray-700 mb-1">选择工作表：</div>
+                  <div className="text-[11px] font-medium text-gray-700 mb-1">Select worksheet:</div>
                   <div className="flex flex-wrap gap-1">
                     {workbook.map((sheet, index) => (
                       <button
@@ -702,7 +712,7 @@ ${JSON.stringify(structuredData, null, 2)}
                   onClick={clearFile}
                   className="inline-flex items-center rounded-md bg-slate-100 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-slate-200"
                 >
-                  清空文件
+                  Clear file
                 </button>
               </div>
             </section>
@@ -710,9 +720,9 @@ ${JSON.stringify(structuredData, null, 2)}
             <section className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 space-y-3">
               <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-600 text-xs font-medium">
-                  2
+                  🔍
                 </span>
-                数据预览
+                Data Preview
               </h3>
               <div className="mt-2 rounded-md border border-slate-200 bg-white max-h-72 overflow-auto">
                 {tableData && tableData.length > 0 ? (
@@ -749,7 +759,7 @@ ${JSON.stringify(structuredData, null, 2)}
                   </table>
                 ) : (
                   <div className="flex items-center justify-center py-6 text-xs text-gray-500">
-                    暂无数据，请先上传并解析文件。
+                    No data yet. Please upload and parse a file first.
                   </div>
                 )}
               </div>
@@ -761,18 +771,20 @@ ${JSON.stringify(structuredData, null, 2)}
             >
               <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-600 text-xs font-medium">
-                  4
+                  🧠
                 </span>
-                数据分析
+                Data Analysis
               </h3>
 
               <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-800">
-                在文件上传后，请先在数据表格中清理不必要的数据，仅保留分析所需的数据行和列，并确保每列抬头名称清晰易懂，以获得更快且准确的结果。
+                After uploading a file, please clean unnecessary rows and columns in the table,
+                keep only the data needed for analysis, and ensure each column header is clear
+                for more accurate results.
               </div>
 
               <div className="space-y-2">
                 <label className="text-[11px] font-medium text-gray-700">
-                  数据背景说明（可选）
+                  Data background (optional)
                 </label>
                 <textarea
                   value={dataBackground}
@@ -780,7 +792,7 @@ ${JSON.stringify(structuredData, null, 2)}
                   rows={3}
                   className="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs text-gray-900 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
                   placeholder={
-                    '请提供数据背景信息，帮助AI更好地理解您的数据：\n• 表头字段的业务含义（如：销售额、客户数量、时间等）\n• 数据的业务场景（如：电商销售数据、用户行为数据等）\n• 希望重点分析的内容（如：找出销售趋势、识别异常值等）\n• 任何特殊的数据处理要求'
+                    'Provide data background to help AI understand your dataset:\n• Business meaning of each column (e.g. revenue, customer count, time)\n• Business scenario of the data (e.g. e-commerce sales, user behavior)\n• What you want to focus on (e.g. trends, anomalies)\n• Any special data processing requirements'
                   }
                 />
               </div>
@@ -792,13 +804,13 @@ ${JSON.stringify(structuredData, null, 2)}
                   disabled={analyzing}
                   className="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
                 >
-                  {analyzing ? '分析中...' : '数据分析'}
+                  {analyzing ? 'Analyzing...' : 'Analyze Data'}
                 </button>
               </div>
 
               {analysisHtml && (
                 <div className="mt-3 space-y-3">
-                  <div className="text-xs font-semibold text-slate-800">AI 深度分析</div>
+                  <div className="text-xs font-semibold text-slate-800">AI Deep Analysis</div>
                   <div className="rounded-lg border border-sky-200 bg-gradient-to-br from-sky-50 to-indigo-50 px-3 py-2 text-xs text-slate-800 leading-relaxed">
                     <div
                       className="prose prose-xs max-w-none"
@@ -806,7 +818,7 @@ ${JSON.stringify(structuredData, null, 2)}
                     />
                   </div>
                   <div className="rounded-md bg-slate-50 px-3 py-2 text-[11px] text-slate-600 border border-emerald-200">
-                    数据已自动清理：移除了空行和空列，确保分析准确性。
+                    Data has been automatically cleaned: empty rows and columns were removed to ensure accuracy.
                   </div>
                 </div>
               )}
@@ -818,14 +830,14 @@ ${JSON.stringify(structuredData, null, 2)}
             >
               <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-600 text-xs font-medium">
-                  5
+                  📈
                 </span>
-                图表生成
+                Chart Generation
               </h3>
 
               <div className="space-y-2">
                 <label className="text-[11px] font-medium text-gray-700">
-                  图表需求描述
+                  Chart requirements
                 </label>
                 <textarea
                   value={chartRequirement}
@@ -833,7 +845,7 @@ ${JSON.stringify(structuredData, null, 2)}
                   rows={4}
                   className="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs text-gray-900 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
                   placeholder={
-                    '请详细描述您想要生成的图表需求，例如：\n• 分析销售数据的月度趋势，使用折线图展示\n• 比较各部门的销售额，用柱状图显示\n• 展示市场份额分布，使用饼图\n• 显示温度与销量的关系，用散点图\n\n系统将自动选择合适的图表类型并生成相应代码'
+                    'Describe the chart you want in detail, for example:\n• Show monthly sales trend using a line chart\n• Compare department sales with a bar chart\n• Show market share distribution with a pie chart\n• Display relationship between temperature and sales using a scatter plot\n\nThe system will automatically choose the most suitable chart type and generate the code.'
                   }
                 />
               </div>
@@ -845,7 +857,7 @@ ${JSON.stringify(structuredData, null, 2)}
                   disabled={generating}
                   className="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
                 >
-                  {generating ? '生成中...' : '生成图表代码'}
+                  {generating ? 'Generating...' : 'Generate chart code'}
                 </button>
                 <button
                   type="button"
@@ -853,14 +865,14 @@ ${JSON.stringify(structuredData, null, 2)}
                   disabled={executing || !codeOutput}
                   className="inline-flex items-center rounded-md bg-slate-100 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-slate-200 disabled:cursor-not-allowed disabled:text-gray-400"
                 >
-                  {executing ? '执行中...' : '执行脚本'}
+                  {executing ? 'Executing...' : 'Run script'}
                 </button>
               </div>
 
               <div
                 id="chartResult"
                 className={[
-                  'mt-3 grid gap-3 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1.6fr)]',
+                  'mt-3 flex flex-col gap-3',
                   chartVisible ? '' : '',
                 ]
                   .filter(Boolean)
@@ -868,14 +880,14 @@ ${JSON.stringify(structuredData, null, 2)}
               >
                 <div className="flex flex-col rounded-lg border border-slate-200 bg-slate-50/70 p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-slate-800">图表代码</span>
+                    <span className="text-xs font-semibold text-slate-800">Chart code</span>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setCodeExpanded((prev) => !prev)}
                         className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] text-gray-700 hover:bg-slate-100"
                       >
-                        {codeExpanded ? '收起编辑器' : '展开编辑器'}
+                        {codeExpanded ? 'Collapse editor' : 'Expand editor'}
                       </button>
                     </div>
                   </div>
@@ -888,21 +900,21 @@ ${JSON.stringify(structuredData, null, 2)}
                     ]
                       .filter(Boolean)
                       .join(' ')}
-                    placeholder="生成的图表代码将显示在这里，您可以编辑后执行。"
+                    placeholder="Generated chart code will appear here; you can edit it before running."
                   />
                 </div>
 
                 <div className="flex flex-col rounded-lg border border-slate-200 bg-white p-3 min-h-[200px]">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-semibold text-slate-800 flex items-center gap-1">
-                      图表结果
+                      Chart result
                     </span>
                     <button
                       type="button"
                       onClick={handleViewChartInNewWindow}
                       className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] text-gray-700 hover:bg-slate-100"
                     >
-                      在新窗口中查看
+                      View in new window
                     </button>
                   </div>
                   <div
