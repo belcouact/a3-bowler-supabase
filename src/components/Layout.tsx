@@ -2680,10 +2680,10 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
               </h1>
               <button
                 onClick={() => setIsAppInfoOpen(true)}
-                className="inline-flex md:absolute md:-top-2 md:right-0 text-gray-400 hover:text-gray-600 transition-colors"
+                className="inline-flex md:absolute md:-top-2 md:right-0 items-center justify-center w-6 h-6 rounded-full border border-red-500 text-red-500 italic text-[10px] font-semibold bg-white hover:bg-red-50 hover:text-red-600 transition-colors"
                 title="About this app"
               >
-                <Info className="w-3.5 h-3.5" />
+                <span>i</span>
               </button>
             </div>
           </div>
@@ -5007,14 +5007,49 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
       {isDataChartingOpen && (
         <Suspense
           fallback={
-            <div className="fixed inset-0 z-[95] flex items-center justify-center bg-gray-900/60">
-              <div className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 shadow-xl border border-gray-200">
-                <Loader2 className="h-5 w-5 animate-spin text-indigo-500" />
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-gray-900">Loading Data Charting</span>
-                  <span className="text-xs text-gray-500">
-                    Preparing the full-screen charting workspace...
-                  </span>
+            <div className="fixed inset-0 z-[95] flex items-stretch justify-center overflow-hidden">
+              <div
+                className="absolute inset-0 bg-gray-900/60"
+                onClick={() => setIsDataChartingOpen(false)}
+              />
+              <div className="relative z-[96] flex h-full w-full flex-col bg-white shadow-2xl border-t border-gray-200 rounded-none overflow-hidden">
+                <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 bg-slate-50">
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col">
+                      <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                        <span className="text-base">📊</span>
+                        <span>Data Analysis</span>
+                      </h2>
+                      <p className="text-xs text-gray-500">
+                        Loading the ECharts charting workspace, please wait...
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsDataChartingOpen(false)}
+                    className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="flex flex-1 items-center justify-center bg-slate-50/60">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="relative flex h-12 w-12 items-center justify-center">
+                      <div className="h-10 w-10 rounded-full border-2 border-emerald-500/40 border-t-emerald-500 animate-spin" />
+                      <span className="absolute text-xs font-semibold text-emerald-700">
+                        E
+                      </span>
+                    </div>
+                    <div className="text-center space-y-1">
+                      <p className="text-sm font-medium text-gray-900">
+                        ECharts loading indicator
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Modal is ready. You can close it at any time.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
