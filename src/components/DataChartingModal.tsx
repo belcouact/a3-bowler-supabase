@@ -393,31 +393,46 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
     try {
       const header = data[0] || [];
       const rows = data.slice(1);
+      const userGoal = prompt.trim();
 
       const payload = {
         header,
         rows,
-        prompt: prompt.trim(),
       };
 
       const systemMessage =
-        'You are a data visualization assistant. You create Apache ECharts option objects and clear explanations. ' +
-        'You must respond with strict JSON only, no markdown, no comments.';
+        "You are an expert data visualization analyst and a master of the Apache ECharts library (version 5). Your core task is to interpret a user's request and data, then generate the most effective and insightful ECharts configuration. You must respond with a single, valid JSON object only, containing no markdown, no comments, and no text outside the JSON structure.";
 
       const userMessage = `
-Data table (first row is header):
-${JSON.stringify(payload, null, 2)}
+User's Goal: 
+  ${userGoal} // e.g., "Show the relationship between advertising spend and monthly revenue for each product category." 
 
-Task:
-- Design an effective chart using Apache ECharts (version 5) based on the data and the prompt.
-- Use the data values directly inside the option.
-- Prefer simple chart types (line, bar, scatter, pie) unless the prompt clearly asks for something different.
+Data Table (first row is header): 
+  ${JSON.stringify(payload, null, 2)} 
 
-Response format (JSON only, no backticks):
-{
-  "option": { /* valid ECharts option object using the data above */ },
-  "interpretation": "Short explanation of the chart and key insights."
-}
+Instructions: 
+ 1.  **Analyze and Infer**: Deeply analyze the "User's Goal" and the provided data. Infer the data types (e.g., temporal, categorical, numerical) and the relationships between columns. Determine the primary analytical objective (e.g., comparison, trend over time, correlation, distribution, composition, part-to-whole, geographical data, flow). 
+ 2.  **Select Optimal Chart Type**: Based on your analysis, choose the single most effective chart type. Do not limit yourself. Your choice should be the best fit for the user's stated goal. Consider all major ECharts series types (line, bar, pie, scatter, boxplot, heatmap, radar, sankey, graph, tree, map, etc.). 
+ 3.  **Structure with \`dataset\`**: You MUST use the ECharts \`dataset\` property to hold the raw data. Decouple the data from the series definition. This is a strict requirement. 
+ 4.  **Configure for Clarity**: The chart must be self-explanatory. 
+     -   Provide a descriptive \`title\`. 
+     -   Add clear \`name\` properties for both \`xAxis\` and \`yAxis\`. 
+     -   Use a \`legend\` when multiple series are present. 
+ 5.  **Enhance Interactivity**: Add a rich \`tooltip\` that provides context-specific information. Include other interactive features like \`dataZoom\`, \`toolbox\`, or \`brush\` if they would meaningfully help the user explore the data. 
+ 6.  **Apply Professional Styling**: Use a clear and visually appealing color scheme. Ensure text is legible and the chart is not cluttered. Make deliberate choices about \`itemStyle\`, \`lineStyle\`, etc. 
+
+Response format (JSON only, no backticks): 
+{ 
+  "option": { /* A complete, valid, and well-structured ECharts option object that follows all instructions above. */ }, 
+  "interpretation": { 
+    "chartType": "The specific name of the chart type chosen (e.g., 'Grouped Bar Chart', 'Scatter Plot with Third Dimension').", 
+    "rationale": "A concise explanation of why this chart type is the optimal choice to achieve the user's goal.", 
+    "insights": [ 
+      "A key insight directly observable from the chart.", 
+      "A second important insight or observation." 
+    ] 
+  } 
+} 
 `;
 
       const response = await fetch('https://multi-model-worker.study-llm.me/api/chat', {
@@ -518,7 +533,36 @@ Response format (JSON only, no backticks):
       setChartOption(enhancedOption);
       setChartOptionRaw(JSON.stringify(enhancedOption, null, 2));
       setChartOptionError(null);
-      setAiInterpretation(typeof parsed.interpretation === 'string' ? parsed.interpretation : '');
+
+      let interpretationText = '';
+      if (typeof parsed.interpretation === 'string') {
+        interpretationText = parsed.interpretation;
+      } else if (parsed.interpretation && typeof parsed.interpretation === 'object') {
+        const interpretation = parsed.interpretation as any;
+        const chartType = interpretation.chartType;
+        const rationale = interpretation.rationale;
+        const insights = interpretation.insights;
+        const parts: string[] = [];
+
+        if (chartType) {
+          parts.push(`Chart type: ${chartType}`);
+        }
+
+        if (rationale) {
+          parts.push(`Rationale: ${rationale}`);
+        }
+
+        if (Array.isArray(insights) && insights.length > 0) {
+          parts.push(
+            'Insights:',
+            ...insights.map((item: string) => `- ${item}`),
+          );
+        }
+
+        interpretationText = parts.join('\n\n');
+      }
+
+      setAiInterpretation(interpretationText);
       toast.success('Chart generated.');
     } catch (error: any) {
       console.error('Generate chart error', error);
