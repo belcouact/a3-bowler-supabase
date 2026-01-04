@@ -718,7 +718,10 @@ ${JSON.stringify(structuredData, null, 2)}
       showStatus('Chart executed successfully.', 'success');
     } catch (error) {
       const err = error as Error;
-      showStatus(`Chart execution failed: ${err.message}`, 'error');
+      showStatus(
+        `Chart execution failed. ECharts might not have loaded correctly or the generated code is invalid. Details: ${err.message}`,
+        'error'
+      );
     } finally {
       setExecuting(false);
     }
@@ -782,6 +785,22 @@ ${JSON.stringify(structuredData, null, 2)}
         </div>
 
         <div className="flex flex-1 flex-col overflow-hidden bg-slate-50/60">
+          {status && (
+            <div className="px-4 pt-3 sm:px-6">
+              <div
+                className={[
+                  'flex items-center gap-2 rounded-md px-3 py-2 text-xs',
+                  status.type === 'success' && 'bg-emerald-50 text-emerald-700 border border-emerald-100',
+                  status.type === 'error' && 'bg-red-50 text-red-700 border border-red-100',
+                  status.type === 'info' && 'bg-sky-50 text-sky-700 border border-sky-100',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+              >
+                <span>{status.text}</span>
+              </div>
+            </div>
+          )}
           <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 sm:px-6">
             <section className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 space-y-4">
               <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
@@ -823,21 +842,6 @@ ${JSON.stringify(structuredData, null, 2)}
                   </button>
                 </div>
               </div>
-
-              {status && (
-                <div
-                  className={[
-                    'mt-2 flex items-center gap-2 rounded-md px-3 py-2 text-xs',
-                    status.type === 'success' && 'bg-emerald-50 text-emerald-700 border border-emerald-100',
-                    status.type === 'error' && 'bg-red-50 text-red-700 border border-red-100',
-                    status.type === 'info' && 'bg-sky-50 text-sky-700 border border-sky-100',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                >
-                  <span>{status.text}</span>
-                </div>
-              )}
 
               {dataSourceTab === 'upload' && (
                 <>
