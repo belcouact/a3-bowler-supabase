@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { X } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { useApp } from '../context/AppContext';
+import type { AIModelKey } from '../types';
 
 interface DataChartingModalProps {
   isOpen: boolean;
@@ -17,39 +19,6 @@ interface StatusMessage {
 interface WorkbookSheet {
   name: string;
   data: (string | number)[][];
-}
-
-interface LuckysheetData {
-  headers: string[];
-  data: string[][];
-}
-
-type ModelType = 'deepseek' | 'kimi' | 'glm';
-
-async function loadScriptOnce(src: string, id: string): Promise<void> {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById(id)) return;
-
-  await new Promise<void>((resolve, reject) => {
-    const script = document.createElement('script');
-    script.id = id;
-    script.src = src;
-    script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
-    document.head.appendChild(script);
-  });
-}
-
-async function loadStylesheetOnce(href: string, id: string): Promise<void> {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById(id)) return;
-
-  const link = document.createElement('link');
-  link.id = id;
-  link.rel = 'stylesheet';
-  link.href = href;
-  document.head.appendChild(link);
 }
 
 function cleanData(data: string[][]): string[][] {
@@ -81,11 +50,12 @@ function cleanData(data: string[][]): string[][] {
 }
 
 export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) => {
+  const { selectedModel } = useApp();
   const [file, setFile] = useState<File | null>(null);
   const [workbook, setWorkbook] = useState<WorkbookSheet[]>([]);
   const [selectedSheet, setSelectedSheet] = useState(0);
+  const [tableData, setTableData] = useState<string[][]>([]);
   const [status, setStatus] = useState<StatusMessage | null>(null);
-  const [loading, setLoading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [executing, setExecuting] = useState(false);
@@ -95,141 +65,14 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
   const [codeOutput, setCodeOutput] = useState('');
   const [codeExpanded, setCodeExpanded] = useState(false);
   const [chartVisible, setChartVisible] = useState(false);
-  const [modelSelection, setModelSelection] = useState<ModelType>('deepseek');
-  const [luckysheetReady, setLuckysheetReady] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    let cancelled = false;
-
-    async function ensureLuckysheet() {
-      try {
-        await Promise.all([
-          loadStylesheetOnce(
-            'https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/css/pluginsCss.css',
-            'luckysheet-pluginsCss'
-          ),
-          loadStylesheetOnce(
-            'https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/plugins.css',
-            'luckysheet-plugins'
-          ),
-          loadStylesheetOnce(
-            'https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/css/luckysheet.css',
-            'luckysheet-css'
-          ),
-          loadStylesheetOnce(
-            'https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/assets/iconfont/iconfont.css',
-            'luckysheet-icons'
-          ),
-        ]);
-
-        await loadScriptOnce(
-          'https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/js/plugin.js',
-          'luckysheet-plugin-js'
-        );
-        await loadScriptOnce(
-          'https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/luckysheet.umd.js',
-          'luckysheet-umd-js'
-        );
-
-        if (cancelled) return;
-
-        const w = window as unknown as { luckysheet?: any; _cleanupLuckysheetScrollBase?: () => void };
-
-        if (!w.luckysheet || !w.luckysheet.create) {
-          setStatus({
-            type: 'error',
-            text: 'Luckysheet初始化失败，请刷新后重试。',
-          });
-          return;
-        }
-
-        const emptyData: any[][] = [];
-        for (let r = 0; r < 100; r += 1) {
-          emptyData[r] = [];
-          for (let c = 0; c < 26; c += 1) {
-            emptyData[r][c] = null;
-          }
-        }
-
-        const options = {
-          container: 'luckysheet',
-          title: '数据表格',
-          lang: 'zh',
-          showinfobar: false,
-          showsheetbar: true,
-          showstatisticBar: false,
-          showtoolbar: true,
-          allowEdit: true,
-          enableAddRow: false,
-          enableAddCol: false,
-          rowHeaderWidth: 46,
-          columnHeaderHeight: 20,
-          defaultRowHeight: 25,
-          defaultColWidth: 73,
-          cellRightClickConfig: {
-            copy: true,
-          },
-          data: [
-            {
-              name: 'Sheet1',
-              data: emptyData,
-            },
-          ],
-        };
-
-        w.luckysheet.create(options);
-
-        const container = document.getElementById('luckysheetContainer');
-        const luckysheetEl = document.getElementById('luckysheet');
-        const loadingEl = document.getElementById('luckysheet-loading');
-
-        if (container) {
-          container.classList.add('show');
-          container.style.overflow = 'hidden';
-        }
-        if (luckysheetEl) {
-          luckysheetEl.style.maxWidth = '100%';
-          luckysheetEl.style.display = 'block';
-        }
-        if (loadingEl) {
-          loadingEl.style.display = 'none';
-        }
-
-        if (w.luckysheet && w.luckysheet.resize) {
-          setTimeout(() => {
-            if (w.luckysheet && w.luckysheet.resize) {
-              w.luckysheet.resize();
-            }
-          }, 100);
-        }
-
-        setLuckysheetReady(true);
-      } catch {
-        if (!cancelled) {
-          setStatus({
-            type: 'error',
-            text: 'Luckysheet资源加载失败，请检查网络后重试。',
-          });
-        }
-      }
-    }
-
-    ensureLuckysheet();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
       setFile(null);
       setWorkbook([]);
       setSelectedSheet(0);
+       setTableData([]);
       setStatus(null);
-      setLoading(false);
       setAnalyzing(false);
       setGenerating(false);
       setExecuting(false);
@@ -239,7 +82,6 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
       setCodeOutput('');
       setCodeExpanded(false);
       setChartVisible(false);
-      setLuckysheetReady(false);
     }
   }, [isOpen]);
 
@@ -276,8 +118,6 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
   }
 
   function parseFile(selected: File) {
-    setLoading(true);
-
     const reader = new FileReader();
 
     reader.onload = (e) => {
@@ -297,13 +137,11 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
       } catch (error) {
         const err = error as Error;
         showStatus(`文件解析失败：${err.message}`, 'error');
-        setLoading(false);
       }
     };
 
     reader.onerror = () => {
       showStatus('文件读取失败！', 'error');
-      setLoading(false);
     };
 
     reader.readAsArrayBuffer(selected);
@@ -331,12 +169,12 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
 
       setWorkbook(sheets);
       setSelectedSheet(0);
+      const normalized = result.map((row) => row.map((cell) => String(cell ?? '')));
+      setTableData(normalized);
       showStatus('CSV文件解析成功！', 'success');
-      setLoading(false);
     } catch (error) {
       const err = error as Error;
       showStatus(`CSV解析失败：${err.message}`, 'error');
-      setLoading(false);
     }
   }
 
@@ -360,12 +198,18 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
 
       setWorkbook(sheets);
       setSelectedSheet(0);
+      if (sheets[0]) {
+        const normalized = sheets[0].data.map((row) =>
+          row.map((cell) => String(cell ?? ''))
+        );
+        setTableData(normalized);
+      } else {
+        setTableData([]);
+      }
       showStatus(`Excel文件解析成功！共${sheets.length}个工作表`, 'success');
-      setLoading(false);
     } catch (error) {
       const err = error as Error;
       showStatus(`Excel解析失败：${err.message}`, 'error');
-      setLoading(false);
     }
   }
 
@@ -373,184 +217,19 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
     setSelectedSheet(index);
   }
 
-  function loadToLuckysheet() {
-    if (!workbookSheetsAvailable) {
-      showStatus('请先上传文件！', 'error');
-      return;
-    }
-
-    if (!luckysheetReady) {
-      showStatus('Luckysheet尚未准备好，请稍候重试。', 'error');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const selectedData = workbook[selectedSheet].data;
-
-      if (!selectedData || selectedData.length === 0) {
-        throw new Error('数据为空或格式不正确');
-      }
-
-      const sheetData: any[][] = [];
-
-      for (let r = 0; r < selectedData.length; r += 1) {
-        sheetData[r] = [];
-        for (let c = 0; c < selectedData[r].length; c += 1) {
-          const value = selectedData[r][c];
-          if (value !== null && value !== undefined && value !== '') {
-            sheetData[r][c] = {
-              v: value,
-              ct: {
-                fa: 'General',
-                t: typeof value === 'number' ? 'n' : 'g',
-              },
-            };
-          } else {
-            sheetData[r][c] = null;
-          }
-        }
-      }
-
-      const w = window as unknown as { luckysheet?: any };
-
-      if (!w.luckysheet || !w.luckysheet.create) {
-        throw new Error('Luckysheet未加载或不可用');
-      }
-
-      const options = {
-        container: 'luckysheet',
-        title: '数据表格',
-        lang: 'zh',
-        showinfobar: false,
-        showsheetbar: true,
-        showstatisticBar: false,
-        showtoolbar: true,
-        allowEdit: true,
-        enableAddRow: false,
-        enableAddCol: false,
-        rowHeaderWidth: 46,
-        columnHeaderHeight: 20,
-        defaultRowHeight: 25,
-        defaultColWidth: 73,
-        cellRightClickConfig: {
-          copy: true,
-        },
-        data: [
-          {
-            name: workbook[selectedSheet].name || 'Sheet1',
-            data: sheetData,
-          },
-        ],
-      };
-
-      w.luckysheet.create(options);
-
-      const container = document.getElementById('luckysheetContainer');
-      const luckysheetEl = document.getElementById('luckysheet');
-
-      if (container) {
-        container.classList.add('show');
-        container.style.overflow = 'hidden';
-      }
-      if (luckysheetEl) {
-        luckysheetEl.style.maxWidth = '100%';
-      }
-
-      if (w.luckysheet && w.luckysheet.resize) {
-        setTimeout(() => {
-          if (w.luckysheet && w.luckysheet.resize) {
-            w.luckysheet.resize();
-          }
-        }, 100);
-      }
-
-      showStatus('数据已成功加载到Luckysheet！', 'success');
-      setLoading(false);
-    } catch (error) {
-      const err = error as Error;
-      showStatus(`加载到Luckysheet失败：${err.message}`, 'error');
-      setLoading(false);
-    }
-  }
-
   function clearFile() {
     setFile(null);
     setWorkbook([]);
     setSelectedSheet(0);
+    setTableData([]);
     setStatus(null);
   }
 
-  function getLuckysheetData(): LuckysheetData | null {
-    const w = window as unknown as { luckysheet?: any };
-    const ls = w.luckysheet;
-
-    if (!ls || !ls.getSheetData) {
-      return null;
-    }
-
-    try {
-      const raw = ls.getSheetData();
-      let actualData: any[] = [];
-      let headers: string[] = [];
-
-      if (raw && raw.data && Array.isArray(raw.data) && raw.data.length > 0) {
-        actualData = raw.data;
-        if (actualData.length > 0) {
-          headers = actualData[0].map((cell: any, index: number) => {
-            if (cell && cell.v !== undefined && cell.v !== null && cell.v !== '') {
-              return String(cell.v);
-            }
-            if (cell && cell.m !== undefined && cell.m !== null && cell.m !== '') {
-              return String(cell.m);
-            }
-            return `列${index + 1}`;
-          });
-        }
-      } else if (Array.isArray(raw) && raw.length > 0) {
-        actualData = raw;
-        if (actualData.length > 0) {
-          headers = actualData[0].map((cell: any, index: number) => {
-            if (cell && cell.v !== undefined && cell.v !== null && cell.v !== '') {
-              return String(cell.v);
-            }
-            if (cell && cell.m !== undefined && cell.m !== null && cell.m !== '') {
-              return String(cell.m);
-            }
-            return `列${index + 1}`;
-          });
-        }
-      } else {
-        return null;
-      }
-
-      const converted: string[][] = actualData.map((row: any[]) =>
-        row.map((cell: any) => {
-          if (!cell) return '';
-
-          if (cell.v !== undefined && cell.v !== null) {
-            return String(cell.v);
-          }
-          if (cell.m !== undefined && cell.m !== null) {
-            return String(cell.m);
-          }
-          if (typeof cell === 'object') {
-            return JSON.stringify(cell);
-          }
-          return String(cell);
-        })
-      );
-
-      const cleaned = cleanData(converted);
-
-      return {
-        headers: cleaned.length > 0 ? cleaned[0] : headers,
-        data: cleaned,
-      };
-    } catch {
-      return null;
-    }
+  function getCurrentTableData(): string[][] | null {
+    if (!workbookSheetsAvailable) return null;
+    const sheet = workbook[selectedSheet];
+    if (!sheet || !sheet.data || sheet.data.length === 0) return null;
+    return sheet.data.map((row) => row.map((cell) => String(cell ?? '')));
   }
 
   async function callAPIForAnalysis(analysisPrompt: string): Promise<string> {
@@ -576,8 +255,10 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
 
     const fullPrompt = `${systemMessage}\n\n分析任务：${analysisPrompt}`;
 
+    const modelToUse: AIModelKey = selectedModel || 'deepseek';
+
     const requestBody = {
-      model: modelSelection,
+      model: modelToUse,
       messages: [
         {
           role: 'user' as const,
@@ -622,17 +303,17 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
   }
 
   async function handleDataAnalysis() {
-    const luckysheetData = getLuckysheetData();
+    const rawData = getCurrentTableData();
 
-    if (!luckysheetData || !luckysheetData.data || luckysheetData.data.length === 0) {
-      showStatus('请先上传数据文件或在Luckysheet中输入数据！', 'error');
+    if (!rawData || rawData.length === 0) {
+      showStatus('请先上传数据文件！', 'error');
       return;
     }
 
     setAnalyzing(true);
 
     try {
-      const cleanedData = luckysheetData.data;
+      const cleanedData = cleanData(rawData);
 
       if (cleanedData.length === 0) {
         throw new Error('数据为空或所有数据都是空值');
@@ -692,13 +373,13 @@ ${dataBackground ? `\n**数据背景说明**：${dataBackground}` : ''}
   }
 
   async function generateChartCodeInternal(): Promise<string> {
-    const luckysheetData = getLuckysheetData();
+    const rawData = getCurrentTableData();
 
-    if (!luckysheetData || !luckysheetData.data || luckysheetData.data.length === 0) {
-      throw new Error('请先上传数据文件或在Luckysheet中输入数据！');
+    if (!rawData || rawData.length === 0) {
+      throw new Error('请先上传数据文件！');
     }
 
-    const cleanedData = cleanData(luckysheetData.data);
+    const cleanedData = cleanData(rawData);
     if (cleanedData.length === 0) {
       throw new Error('数据为空或所有数据都是空值，无法生成图表');
     }
@@ -742,8 +423,10 @@ ${JSON.stringify(structuredData, null, 2)}
 
     const fullPrompt = `${systemMessage}\n\n${userPrompt}`;
 
+    const modelToUse: AIModelKey = selectedModel || 'deepseek';
+
     const requestBody = {
-      model: modelSelection,
+      model: modelToUse,
       messages: [
         {
           role: 'user' as const,
@@ -888,12 +571,12 @@ ${JSON.stringify(structuredData, null, 2)}
   }
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-hidden">
+    <div className="fixed inset-0 z-[90] flex items-stretch justify-center overflow-hidden">
       <div
         className="absolute inset-0 bg-gray-900/60"
         onClick={handleOverlayClick}
       />
-      <div className="relative z-[95] flex h-full w-full max-w-6xl flex-col bg-white shadow-2xl border border-gray-200 rounded-xl overflow-hidden">
+      <div className="relative z-[95] flex h-full w-full flex-col bg-white shadow-2xl border-t border-gray-200 rounded-none overflow-hidden">
         <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 bg-slate-50">
           <div className="flex items-center gap-3">
             <div className="flex flex-col">
@@ -1016,14 +699,6 @@ ${JSON.stringify(structuredData, null, 2)}
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  onClick={loadToLuckysheet}
-                  disabled={loading || !workbookSheetsAvailable}
-                  className="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
-                >
-                  {loading ? '处理中...' : '加载到表格'}
-                </button>
-                <button
-                  type="button"
                   onClick={clearFile}
                   className="inline-flex items-center rounded-md bg-slate-100 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-slate-200"
                 >
@@ -1032,66 +707,51 @@ ${JSON.stringify(structuredData, null, 2)}
               </div>
             </section>
 
-            <section
-              id="luckysheetContainer"
-              className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 space-y-3"
-            >
+            <section className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 space-y-3">
               <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-600 text-xs font-medium">
                   2
                 </span>
-                数据预览&编辑
+                数据预览
               </h3>
-              <div
-                id="luckysheet-loading"
-                className="flex flex-col items-center justify-center py-6 text-xs text-gray-500"
-              >
-                <div className="mb-2 text-2xl">⏳</div>
-                <div>正在加载数据表格...</div>
-              </div>
-              <div
-                id="luckysheet"
-                className="min-h-[260px] max-h-[420px] w-full overflow-hidden rounded-md border border-slate-200 bg-white"
-              />
-            </section>
-
-            <section className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 space-y-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-600 text-xs font-medium">
-                    3
-                  </span>
-                  模型选择
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  <label className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] text-gray-800 cursor-pointer hover:border-blue-400">
-                    <input
-                      type="radio"
-                      className="h-3 w-3"
-                      checked={modelSelection === 'deepseek'}
-                      onChange={() => setModelSelection('deepseek')}
-                    />
-                    <span>DeepSeek</span>
-                  </label>
-                  <label className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] text-gray-800 cursor-pointer hover:border-blue-400">
-                    <input
-                      type="radio"
-                      className="h-3 w-3"
-                      checked={modelSelection === 'kimi'}
-                      onChange={() => setModelSelection('kimi')}
-                    />
-                    <span>Kimi</span>
-                  </label>
-                  <label className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] text-gray-800 cursor-pointer hover:border-blue-400">
-                    <input
-                      type="radio"
-                      className="h-3 w-3"
-                      checked={modelSelection === 'glm'}
-                      onChange={() => setModelSelection('glm')}
-                    />
-                    <span>GLM</span>
-                  </label>
-                </div>
+              <div className="mt-2 rounded-md border border-slate-200 bg-white max-h-72 overflow-auto">
+                {tableData && tableData.length > 0 ? (
+                  <table className="min-w-full border-collapse text-[11px] text-gray-800">
+                    <thead className="sticky top-0 bg-slate-50">
+                      <tr>
+                        {tableData[0].map((cell, index) => (
+                          <th
+                            key={index}
+                            className="border-b border-slate-200 px-2 py-1 text-left font-semibold"
+                          >
+                            {cell}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tableData.slice(1).map((row, rowIndex) => (
+                        <tr
+                          key={rowIndex}
+                          className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-slate-50/60'}
+                        >
+                          {row.map((cell, cellIndex) => (
+                            <td
+                              key={cellIndex}
+                              className="border-b border-slate-100 px-2 py-1 whitespace-nowrap"
+                            >
+                              {cell}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="flex items-center justify-center py-6 text-xs text-gray-500">
+                    暂无数据，请先上传并解析文件。
+                  </div>
+                )}
               </div>
             </section>
 
