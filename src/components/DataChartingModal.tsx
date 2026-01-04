@@ -864,7 +864,7 @@ ${JSON.stringify(structuredData, null, 2)}
                     <div className="text-3xl mb-2">📊</div>
                     <div className="font-medium text-gray-800">Drag file here or click to upload</div>
                     <div className="mt-1 text-[11px] text-gray-500">
-                      Supports CSV, XLS, XLSX formats, up to 10MB.
+                      Supports CSV, XLS, XLSX formats.
                     </div>
                     <input
                       id="chart-file-input"
@@ -1005,13 +1005,6 @@ ${JSON.stringify(structuredData, null, 2)}
                 </span>
                 Data Analysis
               </h3>
-
-              <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-800">
-                After uploading a file, please clean unnecessary rows and columns in the table,
-                keep only the data needed for analysis, and ensure each column header is clear
-                for more accurate results.
-              </div>
-
               <div className="space-y-2">
                 <label className="text-[11px] font-medium text-gray-700">
                   Data background (optional)
@@ -1058,12 +1051,22 @@ ${JSON.stringify(structuredData, null, 2)}
               id="chartGenerationSection"
               className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 space-y-4"
             >
-              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-600 text-xs font-medium">
-                  📈
-                </span>
-                Chart Generation
-              </h3>
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-600 text-xs font-medium">
+                    📈
+                  </span>
+                  Chart Generation
+                </h3>
+                <a
+                  href="https://echarts.apache.org/examples/en/index.html"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[11px] text-blue-600 hover:text-blue-700 hover:underline"
+                >
+                  ECharts examples
+                </a>
+              </div>
 
               <div className="space-y-2">
                 <label className="text-[11px] font-medium text-gray-700">
@@ -1080,7 +1083,7 @@ ${JSON.stringify(structuredData, null, 2)}
                 />
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
@@ -1099,14 +1102,6 @@ ${JSON.stringify(structuredData, null, 2)}
                     {executing ? 'Executing...' : 'Run script'}
                   </button>
                 </div>
-                <a
-                  href="https://echarts.apache.org/examples/en/index.html"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="ml-auto text-[11px] text-blue-600 hover:text-blue-700 hover:underline"
-                >
-                  ECharts examples
-                </a>
               </div>
 
               <div
