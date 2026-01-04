@@ -383,27 +383,30 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
   }
 
   async function callAPIForAnalysis(analysisPrompt: string): Promise<string> {
-    const systemMessage = `你是一个专业的数据分析师，具有丰富的业务分析经验。请严格按照以下要求进行分析：
+    const systemMessage = `You are a professional data analyst with rich business experience. Follow these rules strictly:
 
-**重要提醒：必须严格基于提供的实际数据进行分析，禁止使用任何随机生成的数据、假设的数据或示例数据。所有分析结论必须完全基于提供的数据集。**
+**Critical rule: You must base your analysis only on the actual data provided. Do not use any randomly generated data, assumed data, or sample data. Every conclusion must be grounded 100% in the provided dataset.**
 
-分析要求：
-1. 数据概览 - 简要描述数据集的业务含义（仅基于实际数据）
-2. 核心发现 - 指出数据中的主要模式、趋势、异常和业务洞察（仅基于实际数据）
-3. 实用建议 - 基于分析结果提供2-3条具体可行的业务建议（仅基于实际数据）
+Analysis requirements:
+1. Data overview – briefly describe the business meaning of the dataset (based only on the real data)
+2. Key findings – highlight the main patterns, trends, anomalies, and business insights (based only on the real data)
+3. Practical recommendations – provide 2–3 concrete, actionable business recommendations (based only on the real data)
 
-输出格式要求：
-- 使用Markdown格式，结构清晰
-- 内容简明扼要，突出重点
-- 避免冗长的技术细节
-- 专注于有价值的业务洞察
-- 不要生成任何图表代码或HTML代码
-- 提供可直接用于决策的建议
-- 如果数据不足或质量不佳，请如实说明，不要编造分析结果
+Output format requirements:
+- Use Markdown with a clear structure
+- Keep the content concise and focused on the key points
+- Avoid lengthy technical details
+- Focus on valuable business insights
+- Do not generate any chart code or HTML code
+- Provide suggestions that can be used directly for decision-making
+- If the data is insufficient or low quality, state this honestly and do not invent analysis
 
-请严格按照用户提供的分析任务要求执行，不要添加额外的内容或格式。`;
+Language requirements:
+- Always respond in English, even if the background or column names are in another language
 
-    const fullPrompt = `${systemMessage}\n\n分析任务：${analysisPrompt}`;
+Follow the user’s analysis task exactly and do not add extra sections or formats.`;
+
+    const fullPrompt = `${systemMessage}\n\nAnalysis task: ${analysisPrompt}`;
 
     const modelToUse: AIModelKey = selectedModel || 'deepseek';
 
@@ -472,38 +475,39 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
       const headers = cleanedData[0];
       const dataRows = cleanedData.slice(1);
 
-      const analysisPrompt = `你是一个专业的数据分析师，请对以下数据集进行深入分析，提供有价值的洞察。请严格按照以下格式输出，只输出分析内容：
+      const analysisPrompt = `You are a professional data analyst. Analyze the following dataset in depth and provide valuable insights. Output only the analysis content, following this structure:
 
-**完整数据集：**
-${headers ? `\n**表头信息**：${JSON.stringify(headers)}` : ''}
+**Complete dataset:**
+${headers ? `\n**Header information**: ${JSON.stringify(headers)}` : ''}
 ${JSON.stringify(dataRows, null, 2)}
-${dataBackground ? `\n**数据背景说明**：${dataBackground}` : ''}
+${dataBackground ? `\n**Data background**: ${dataBackground}` : ''}
 
-**完整数据集说明**：请基于完整数据集进行分析。
+**Dataset note**: Your analysis must be based on the full dataset above.
 
-**重要提醒：必须严格基于上述实际数据进行分析，禁止使用任何随机生成的数据、假设的数据或示例数据。所有分析结论必须完全基于提供的数据集。**
+**Important reminder: You must strictly base your analysis only on the real data above. Do not use any randomly generated data, assumed data, or sample data. All conclusions must be fully grounded in the provided dataset.**
 
-请提供以下分析：
+Please provide the following analysis:
 
-### 1. 数据概览
-基于表头信息简要描述数据集的业务含义（仅基于实际数据）
+### 1. Data overview
+Briefly describe the business meaning of the dataset based on the headers and values (only using the real data)
 
-### 2. 核心发现
-指出数据中的主要模式、趋势、异常和业务洞察（仅基于实际数据）
+### 2. Key findings
+Identify the main patterns, trends, anomalies, and business insights in the data (only using the real data)
 
-### 3. 实用建议
-基于分析结果提供2-3条具体可行的业务建议（仅基于实际数据）
+### 3. Practical recommendations
+Provide 2–3 concrete, actionable business recommendations based on the analysis (only using the real data)
 
-严格要求：
-- 使用Markdown格式，结构清晰
-- 内容简明扼要，突出重点
-- 避免冗长的技术细节
-- 专注于有价值的业务洞察
-- 不要生成任何图表代码或HTML代码
-- 提供可直接用于决策的建议
-- 绝对禁止使用任何随机数据、假设数据或示例数据
-- 所有分析必须100%基于上述提供的实际数据
-- 如果数据不足或质量不佳，请如实说明，不要编造分析结果`;
+Strict requirements:
+- Use Markdown with a clear structure
+- Keep the content concise and focused on key points
+- Avoid lengthy technical details
+- Focus on valuable business insights
+- Do not generate any chart code or HTML code
+- Provide suggestions that can be used directly for decision-making
+- Absolutely do not use any random, assumed, or sample data
+- Base every part of the analysis 100% on the actual data above
+- If the data is insufficient or low quality, state this honestly and do not invent analysis
+- Write the entire analysis in English`;
 
       const apiAnalysis = await callAPIForAnalysis(analysisPrompt);
 
