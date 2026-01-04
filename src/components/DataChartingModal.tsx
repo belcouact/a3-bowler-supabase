@@ -24,7 +24,7 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
             <div className="flex flex-col">
               <h2 className="text-sm font-semibold text-gray-900">数据分析</h2>
               <p className="text-xs text-gray-500">
-                全屏数据图表分析工作区（基于 chart-example.html）。
+                全屏数据图表分析工作区（基于 chart.html）。
               </p>
             </div>
           </div>
