@@ -2680,7 +2680,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
               </h1>
               <button
                 onClick={() => setIsAppInfoOpen(true)}
-                className="inline-flex md:absolute md:-top-2 md:right-0 items-center justify-center w-6 h-6 rounded-full border border-red-500 text-red-500 italic text-[10px] font-semibold bg-white hover:bg-red-50 hover:text-red-600 transition-colors"
+                className="inline-flex md:absolute md:-top-1.5 md:right-0 items-center justify-center w-4 h-4 rounded-full border border-red-500 text-red-500 italic text-[9px] font-semibold bg-white hover:bg-red-50 hover:text-red-600 transition-colors"
                 title="About this app"
               >
                 <span>i</span>
