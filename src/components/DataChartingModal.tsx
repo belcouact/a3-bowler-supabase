@@ -611,7 +611,6 @@ ${JSON.stringify(structuredData, null, 2)}
 
       const iframe = document.createElement('iframe');
       iframe.style.width = '100%';
-      iframe.style.height = '100%';
       iframe.style.border = 'none';
       iframe.style.borderRadius = '0.5rem';
 
@@ -625,6 +624,36 @@ ${JSON.stringify(structuredData, null, 2)}
       iframeDoc.open();
       iframeDoc.write(htmlCode);
       iframeDoc.close();
+
+      const adjustHeight = () => {
+        try {
+          const docElement = iframeDoc.documentElement;
+          const body = iframeDoc.body;
+
+          if (!docElement && !body) {
+            return;
+          }
+
+          const scrollHeight = Math.max(
+            docElement?.scrollHeight ?? 0,
+            body?.scrollHeight ?? 0,
+            docElement?.offsetHeight ?? 0,
+            body?.offsetHeight ?? 0
+          );
+
+          const minHeight = 420;
+          const maxHeight = 2400;
+          const finalHeight = Math.max(scrollHeight, minHeight);
+
+          iframe.style.height = `${Math.min(finalHeight, maxHeight)}px`;
+        } catch {
+          iframe.style.height = '420px';
+        }
+      };
+
+      adjustHeight();
+      setTimeout(adjustHeight, 300);
+      setTimeout(adjustHeight, 1000);
 
       setChartVisible(true);
       showStatus('Chart executed successfully.', 'success');
@@ -1057,9 +1086,9 @@ ${JSON.stringify(structuredData, null, 2)}
                   </div>
                   <div
                     id="chartContainer"
-                    className="relative flex-1 rounded-md border border-slate-200 bg-slate-50/60 overflow-hidden"
+                    className="relative rounded-md border border-slate-200 bg-slate-50/60 min-h-[420px] max-h-[900px] overflow-auto"
                   >
-                    <div id="chartContent" className="h-full w-full" />
+                    <div id="chartContent" className="w-full" />
                   </div>
                 </div>
               </div>
