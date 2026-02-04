@@ -96,16 +96,16 @@ const A3Analysis = () => {
             onClick={() => handleScrollTabs('left')}
             disabled={!canScrollLeft}
             className={clsx(
-              'absolute left-0 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-md ring-1 ring-slate-100 text-primary-600 hover:text-primary-700 hover:bg-primary-50 transition-all',
+              'absolute left-0 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-lg ring-1 ring-slate-200 text-primary-600 hover:text-primary-700 hover:bg-slate-50 transition-all hover:scale-105',
               !canScrollLeft && 'opacity-0 cursor-default pointer-events-none'
             )}
             aria-label="Scroll tabs left"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-5 h-5" />
           </button>
           <div
             ref={tabsContainerRef}
-            className="no-scrollbar flex space-x-1 overflow-x-auto px-8 scroll-smooth"
+            className="scrollbar-hide flex space-x-1 overflow-x-auto px-10 scroll-smooth"
           >
             {tabs.map(tab => {
               const isActive = location.pathname.includes(tab.path);
@@ -114,7 +114,7 @@ const A3Analysis = () => {
                   key={tab.path}
                   to={tab.path}
                   className={clsx(
-                    'py-2 px-3 md:py-3 md:px-6 border-b-2 font-medium text-sm transition-all duration-200 whitespace-nowrap flex items-center',
+                    'py-3 px-4 md:py-3 md:px-6 border-b-2 font-medium text-sm transition-all duration-200 whitespace-nowrap flex items-center',
                     isActive
                       ? 'border-primary-500 text-primary-700 bg-primary-50/40'
                       : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50'
@@ -132,12 +132,12 @@ const A3Analysis = () => {
             onClick={() => handleScrollTabs('right')}
             disabled={!canScrollRight}
             className={clsx(
-              'absolute right-0 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-md ring-1 ring-slate-100 text-primary-600 hover:text-primary-700 hover:bg-primary-50 transition-all',
+              'absolute right-0 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-lg ring-1 ring-slate-200 text-primary-600 hover:text-primary-700 hover:bg-slate-50 transition-all hover:scale-105',
               !canScrollRight && 'opacity-0 cursor-default pointer-events-none'
             )}
             aria-label="Scroll tabs right"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-5 h-5" />
           </button>
         </div>
       </div>
