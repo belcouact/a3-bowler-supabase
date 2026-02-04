@@ -2707,6 +2707,14 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                 ? 'text-emerald-600'
                 : 'text-primary-600';
 
+              const activeContainerClasses = isMetric
+                ? 'bg-primary-50 text-primary-900 border-primary-200 shadow-sm ring-1 ring-primary-100'
+                : isA3
+                ? 'bg-purple-50 text-purple-900 border-purple-200 shadow-sm ring-1 ring-purple-100'
+                : isPortfolio
+                ? 'bg-emerald-50 text-emerald-900 border-emerald-200 shadow-sm ring-1 ring-emerald-100'
+                : 'bg-white text-slate-900 border-slate-200 shadow-sm ring-1 ring-slate-100';
+
               return (
                 <Link
                   key={item.path}
@@ -2714,7 +2722,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   className={clsx(
                     'flex items-center px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-200 border border-transparent',
                     isActive
-                      ? 'bg-white text-slate-900 border-slate-200 shadow-sm ring-1 ring-slate-100'
+                      ? activeContainerClasses
                       : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
                   )}
                   title={item.label}
