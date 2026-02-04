@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation, useParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { useApp } from '../context/AppContext';
-import { AlertCircle, BarChart2, GitBranch, Calendar, CheckCircle, FileText, Bot, ChevronLeft, ChevronRight } from 'lucide-react';
+import { AlertCircle, BarChart2, GitBranch, Calendar, CheckCircle, FileText, Bot, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 
 const A3Analysis = () => {
   const location = useLocation();
@@ -144,11 +144,23 @@ const A3Analysis = () => {
       
       {location.pathname.includes('action-plan') ? (
         <div className="h-[calc(100vh-14rem)] border border-t-0 border-slate-100 bg-white rounded-b-xl overflow-hidden">
-          <Outlet />
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-full">
+              <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+            </div>
+          }>
+            <Outlet />
+          </Suspense>
         </div>
       ) : (
         <div className="bg-white p-5 md:p-8 shadow-soft border border-slate-100 border-t-0 rounded-b-xl min-h-[500px]">
-          <Outlet />
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-64">
+              <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+            </div>
+          }>
+            <Outlet />
+          </Suspense>
         </div>
       )}
     </div>
