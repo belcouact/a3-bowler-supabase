@@ -73,31 +73,31 @@ const A3Analysis = () => {
   }
 
   return (
-    <div className="">
-      <div className="bg-white p-3 md:p-6 shadow-sm border border-gray-200 border-b-0">
+    <div className="p-4 md:p-6">
+      <div className="bg-white p-5 md:p-6 shadow-soft border border-slate-100 rounded-t-xl">
         <div className="mb-4 md:mb-6 space-y-4">
           <div className="flex justify-between items-start">
             <div>
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900">{title}</h2>
-              <div className="mt-1 text-xs text-gray-500 space-x-3">
-                <span>Owner: <span className="font-medium text-gray-700">{selectedCase.owner || 'Unassigned'}</span></span>
-                <span>Group: <span className="font-medium text-gray-700">{selectedCase.group || 'Ungrouped'}</span></span>
+              <h2 className="text-xl md:text-2xl font-bold text-slate-900 font-display tracking-tight">{title}</h2>
+              <div className="mt-1 text-xs text-slate-500 space-x-3">
+                <span>Owner: <span className="font-medium text-slate-700">{selectedCase.owner || 'Unassigned'}</span></span>
+                <span>Group: <span className="font-medium text-slate-700">{selectedCase.group || 'Ungrouped'}</span></span>
               </div>
             </div>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-50 text-primary-700 ring-1 ring-primary-100">
               {selectedCase.status || 'In Progress'}
             </span>
           </div>
         </div>
 
-        <div className="relative border-b border-gray-200">
+        <div className="relative border-b border-slate-100">
           <button
             type="button"
             onClick={() => handleScrollTabs('left')}
             disabled={!canScrollLeft}
             className={clsx(
-              'absolute left-0 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-blue-50 shadow ring-1 ring-blue-100 text-blue-600 hover:text-blue-700 hover:bg-blue-100',
-              !canScrollLeft && 'opacity-40 cursor-default'
+              'absolute left-0 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-md ring-1 ring-slate-100 text-primary-600 hover:text-primary-700 hover:bg-primary-50 transition-all',
+              !canScrollLeft && 'opacity-0 cursor-default pointer-events-none'
             )}
             aria-label="Scroll tabs left"
           >
@@ -105,7 +105,7 @@ const A3Analysis = () => {
           </button>
           <div
             ref={tabsContainerRef}
-            className="no-scrollbar flex space-x-1 overflow-x-auto px-8"
+            className="no-scrollbar flex space-x-1 overflow-x-auto px-8 scroll-smooth"
           >
             {tabs.map(tab => {
               const isActive = location.pathname.includes(tab.path);
@@ -116,12 +116,12 @@ const A3Analysis = () => {
                   className={clsx(
                     'py-2 px-3 md:py-3 md:px-6 border-b-2 font-medium text-sm transition-all duration-200 whitespace-nowrap flex items-center',
                     isActive
-                      ? 'border-blue-600 text-blue-600 bg-blue-50/50'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                      ? 'border-primary-500 text-primary-700 bg-primary-50/40'
+                      : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                   )}
                   title={tab.label}
                 >
-                  <tab.icon className={clsx('w-5 h-5 md:w-4 md:h-4 md:mr-2')} />
+                  <tab.icon className={clsx('w-5 h-5 md:w-4 md:h-4 md:mr-2', isActive ? 'text-primary-600' : 'text-slate-400')} />
                   <span className="hidden md:inline">{tab.label}</span>
                 </Link>
               );
@@ -132,8 +132,8 @@ const A3Analysis = () => {
             onClick={() => handleScrollTabs('right')}
             disabled={!canScrollRight}
             className={clsx(
-              'absolute right-0 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-blue-50 shadow ring-1 ring-blue-100 text-blue-600 hover:text-blue-700 hover:bg-blue-100',
-              !canScrollRight && 'opacity-40 cursor-default'
+              'absolute right-0 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-md ring-1 ring-slate-100 text-primary-600 hover:text-primary-700 hover:bg-primary-50 transition-all',
+              !canScrollRight && 'opacity-0 cursor-default pointer-events-none'
             )}
             aria-label="Scroll tabs right"
           >
@@ -143,11 +143,11 @@ const A3Analysis = () => {
       </div>
       
       {location.pathname.includes('action-plan') ? (
-        <div className="h-[calc(100vh-14rem)] border-t border-gray-200">
+        <div className="h-[calc(100vh-14rem)] border border-t-0 border-slate-100 bg-white rounded-b-xl overflow-hidden">
           <Outlet />
         </div>
       ) : (
-        <div className="bg-white p-3 md:p-8 shadow-sm border border-gray-200 min-h-[500px]">
+        <div className="bg-white p-5 md:p-8 shadow-soft border border-slate-100 border-t-0 rounded-b-xl min-h-[500px]">
           <Outlet />
         </div>
       )}

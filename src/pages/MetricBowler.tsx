@@ -650,34 +650,34 @@ const MetricBowler = () => {
             </div>
         </div>
       </div>
-      <div className="overflow-x-auto overflow-y-hidden no-scrollbar">
-        <table className="min-w-full divide-y divide-gray-200 table-auto">
-          <thead className="bg-gray-50">
+      <div className="overflow-x-auto overflow-y-hidden scrollbar-hide border-t border-slate-200">
+        <table className="min-w-full divide-y divide-slate-100 table-auto">
+          <thead className="bg-slate-50/80 backdrop-blur-sm">
             <tr>
-              <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] w-48">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider sticky left-0 bg-slate-50/95 z-20 border-r border-slate-200 shadow-soft w-48 font-display">
                 Metric Name
               </th>
-              <th scope="col" className="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-24 border-r border-gray-200">
+              <th scope="col" className="px-2 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider w-24 border-r border-slate-200 font-display">
                 Scope
               </th>
-              <th scope="col" className="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-20 border-r border-gray-200">
+              <th scope="col" className="px-2 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider w-20 border-r border-slate-200 font-display">
                 Type
               </th>
               {displayMonths.map((month) => (
                 <th
                   key={month.key}
                   scope="col"
-                  className="px-1 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider text-gray-400 whitespace-normal break-words min-w-[3rem] border-r border-gray-200"
+                  className="px-1 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-normal break-words min-w-[3rem] border-r border-slate-200 font-display"
                 >
                   {month.label.replace('/', ' ')}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-slate-100">
             {metrics.length === 0 ? (
                 <tr>
-                    <td colSpan={3 + displayMonths.length} className="px-6 py-10 text-center text-gray-500 italic">
+                    <td colSpan={3 + displayMonths.length} className="px-6 py-10 text-center text-slate-400 italic font-medium">
                         No metrics added yet. Use the + button to add metrics.
                     </td>
                 </tr>
@@ -686,13 +686,13 @@ const MetricBowler = () => {
                   <>
                   <tr
                     key={`${metric.id}-row1`}
-                    className="hover:bg-gray-50 transition-colors border-b-0"
+                    className="hover:bg-slate-50/50 transition-colors border-b-0 group/row"
                   >
-                    <td rowSpan={2} className="px-4 py-4 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 hover:z-[60] border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] group-hover:bg-gray-50 align-top break-words">
+                    <td rowSpan={2} className="px-4 py-4 text-sm font-medium text-slate-900 sticky left-0 bg-white z-10 group-hover/row:bg-slate-50/50 border-r border-slate-200 shadow-soft align-top break-words transition-colors">
                       <div className="flex items-start justify-between">
                         <div className="flex flex-col">
                             <div className="flex items-center flex-wrap">
-                                <span className="mr-2">{metric.name}</span>
+                                <span className="mr-2 font-semibold tracking-tight">{metric.name}</span>
                                 <div 
                                     className="inline-block"
                                     onMouseEnter={(e) => {
@@ -702,45 +702,45 @@ const MetricBowler = () => {
                                             y: rect.top,
                                             content: (
                                                 <>
-                                                    <p className="font-semibold mb-1">Definition:</p>
-                                                    <p className="mb-2">{metric.definition || 'N/A'}</p>
+                                                    <p className="font-semibold mb-1 text-white">Definition:</p>
+                                                    <p className="mb-2 text-slate-200">{metric.definition || 'N/A'}</p>
                                                     
-                                                    <p className="font-semibold mb-1">Owner:</p>
-                                                    <p className="mb-2">{metric.owner || 'N/A'}</p>
+                                                    <p className="font-semibold mb-1 text-white">Owner:</p>
+                                                    <p className="mb-2 text-slate-200">{metric.owner || 'N/A'}</p>
                                                     
-                                                    <p className="font-semibold mb-1">Attribute:</p>
-                                                    <p>{metric.attribute || 'N/A'}</p>
+                                                    <p className="font-semibold mb-1 text-white">Attribute:</p>
+                                                    <p className="text-slate-200">{metric.attribute || 'N/A'}</p>
                                                 </>
                                             )
                                         });
                                     }}
                                     onMouseLeave={() => setTooltip(null)}
                                 >
-                                    <Info className="w-3.5 h-3.5 text-gray-400 hover:text-blue-500 cursor-help" />
+                                    <Info className="w-3.5 h-3.5 text-slate-400 hover:text-primary-500 cursor-help transition-colors" />
                                 </div>
                             </div>
                         </div>
                       </div>
                     </td>
                     
-                    <td rowSpan={2} className="px-2 py-4 whitespace-nowrap text-xs text-gray-700 bg-white border-r border-gray-200 border-b-0 align-top">
+                    <td rowSpan={2} className="px-2 py-4 whitespace-nowrap text-xs text-slate-600 bg-white border-r border-slate-200 border-b-0 align-top group-hover/row:bg-slate-50/50 transition-colors">
                         {metric.scope || '-'}
                     </td>
 
-                    <td className="px-2 py-2 whitespace-nowrap text-xs font-medium text-gray-500 bg-gray-50/30 border-b border-gray-100 h-8">
+                    <td className="px-2 py-2 whitespace-nowrap text-xs font-semibold text-slate-500 bg-slate-50/30 border-b border-slate-100 h-8">
                       Target
                     </td>
 
                     {displayMonths.map((month, monthIndex) => (
                       <td
                         key={`${month.key}-target`}
-                        className="px-0 py-0 whitespace-nowrap text-xs text-gray-500 bg-gray-50/30 border-b border-r border-gray-100 h-8 p-0 relative group/cell"
+                        className="px-0 py-0 whitespace-nowrap text-xs text-slate-500 bg-slate-50/30 border-b border-r border-slate-100 h-8 p-0 relative group/cell"
                         onContextMenu={(e) => handleRightClick(e, metric.id, month.key, 'target', metric.monthlyData?.[month.key]?.targetNote || '')}
                       >
                         <input
                             id={`cell-${metric.id}-${month.key}-target`}
                             type="text"
-                            className="w-full h-full bg-transparent text-center focus:outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-500 px-1 min-w-[3rem]"
+                            className="w-full h-full bg-transparent text-center focus:outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary-500 px-1 min-w-[3rem] transition-all font-medium text-slate-700 placeholder-slate-300"
                             defaultValue={metric.monthlyData?.[month.key]?.target || ''}
                             onBlur={(e) => handleCellUpdate(metric.id, month.key, 'target', e.target.value)}
                             onKeyDown={(e) => handleKeyDown(e, 'target', metricIndex, monthIndex)}
@@ -753,8 +753,8 @@ const MetricBowler = () => {
                     ))}
                   </tr>
 
-                  <tr key={`${metric.id}-row2`} className="hover:bg-gray-50 transition-colors">
-                     <td className="px-2 py-2 whitespace-nowrap text-xs font-medium text-gray-500 h-8 border-b border-r border-gray-100">
+                  <tr key={`${metric.id}-row2`} className="hover:bg-slate-50/50 transition-colors group/row">
+                     <td className="px-2 py-2 whitespace-nowrap text-xs font-semibold text-slate-500 h-8 border-b border-r border-slate-100">
                         Actual
                      </td>
                      {displayMonths.map((month, monthIndex) => {
@@ -766,18 +766,18 @@ const MetricBowler = () => {
                        return (
                        <td
                          key={`${month.key}-actual`}
-                         className="px-0 py-0 whitespace-nowrap text-xs text-gray-500 h-8 p-0 relative group/cell border-b border-r border-gray-100"
+                         className="px-0 py-0 whitespace-nowrap text-xs text-slate-500 h-8 p-0 relative group/cell border-b border-r border-slate-100"
                          onContextMenu={(e) => handleRightClick(e, metric.id, month.key, 'actual', metric.monthlyData?.[month.key]?.actualNote || '')}
                        >
                          <input
                              id={`cell-${metric.id}-${month.key}-actual`}
                              type="text"
-                             className={`w-full h-full bg-transparent text-center focus:outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-500 px-1 min-w-[3rem] ${
+                             className={`w-full h-full bg-transparent text-center focus:outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary-500 px-1 min-w-[3rem] transition-all ${
                                !metric.monthlyData?.[month.key]?.actual 
-                                 ? 'text-gray-400' 
+                                 ? 'text-slate-300' 
                                  : violation 
-                                   ? 'text-red-600 font-bold bg-red-50' 
-                                   : 'text-gray-900 font-semibold'
+                                   ? 'text-red-600 font-bold bg-red-50/50' 
+                                   : 'text-slate-900 font-bold'
                              }`}
                              defaultValue={metric.monthlyData?.[month.key]?.actual || ''}
                              onBlur={(e) => handleCellUpdate(metric.id, month.key, 'actual', e.target.value)}
@@ -882,14 +882,14 @@ const MetricBowler = () => {
               ];
 
               return (
-                <div key={`${metric.id}-chart`} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                  <div className="flex justify-between items-start mb-4">
-                    <h4 className="text-sm font-medium text-gray-900">{metric.name}</h4>
+                <div key={`${metric.id}-chart`} className="bg-white p-5 rounded-xl shadow-soft border border-slate-100 hover:shadow-medium transition-shadow duration-300">
+                  <div className="flex justify-between items-start mb-5">
+                    <h4 className="text-base font-bold text-slate-800 font-display tracking-tight">{metric.name}</h4>
                     <div className="flex items-center space-x-1">
                       <button
                         onClick={() => handleAIAnalysis(metric)}
                         disabled={analyzingMetrics[metric.id]}
-                        className="p-1 rounded-md transition-colors text-blue-500 hover:text-blue-700 hover:bg-blue-50 disabled:opacity-50"
+                        className="p-1.5 rounded-lg transition-all text-primary-500 hover:text-primary-700 hover:bg-primary-50 disabled:opacity-50"
                         title="AI Analysis"
                       >
                         {analyzingMetrics[metric.id] ? (
@@ -902,10 +902,10 @@ const MetricBowler = () => {
                         onClick={() =>
                           setChartSettingsOpen(prev => ({ ...prev, [metric.id]: !prev[metric.id] }))
                         }
-                        className={`p-1 rounded-md transition-colors ${
+                        className={`p-1.5 rounded-lg transition-all ${
                           isSettingsOpen
-                            ? 'bg-gray-100 text-blue-600'
-                            : 'text-gray-400 hover:text-gray-600'
+                            ? 'bg-slate-100 text-primary-600'
+                            : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
                         }`}
                         title="Adjust Scale"
                       >
@@ -914,7 +914,7 @@ const MetricBowler = () => {
                       <button
                         onClick={() => handleCreateA3FromMetric(metric)}
                         disabled={creatingA3FromMetric[metric.id]}
-                        className="p-1 rounded-md transition-colors text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                        className="p-1.5 rounded-lg transition-all text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
                         title="Create A3 with AI"
                       >
                         {creatingA3FromMetric[metric.id] ? (
@@ -927,14 +927,14 @@ const MetricBowler = () => {
                   </div>
                   
                   {isSettingsOpen && (
-                    <div className="mb-4 p-3 bg-gray-50 rounded-md text-xs">
+                    <div className="mb-4 p-3 bg-slate-50 rounded-lg text-xs border border-slate-100">
                         <div className="flex items-center space-x-4">
-                            <span className="font-medium text-gray-600">Y-Axis Scale:</span>
+                            <span className="font-medium text-slate-600">Y-Axis Scale:</span>
                             <div className="flex items-center space-x-2">
-                                <label className="text-gray-500">Min:</label>
+                                <label className="text-slate-500">Min:</label>
                                 <input 
                                     type="number" 
-                                    className="w-20 p-1 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-20 p-1 border border-slate-300 rounded focus:ring-primary-500 focus:border-primary-500"
                                     placeholder="Auto"
                                     value={scale.min}
                                     onChange={(e) => setChartScales(prev => ({
@@ -944,10 +944,10 @@ const MetricBowler = () => {
                                 />
                             </div>
                             <div className="flex items-center space-x-2">
-                                <label className="text-gray-500">Max:</label>
+                                <label className="text-slate-500">Max:</label>
                                 <input 
                                     type="number" 
-                                    className="w-20 p-1 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-20 p-1 border border-slate-300 rounded focus:ring-primary-500 focus:border-primary-500"
                                     placeholder="Auto"
                                     value={scale.max}
                                     onChange={(e) => setChartScales(prev => ({
@@ -963,15 +963,15 @@ const MetricBowler = () => {
                   <div className="h-64 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                         <XAxis
                           dataKey="name"
-                          tick={{ fontSize: 10, fill: '#6b7280' }}
+                          tick={{ fontSize: 10, fill: '#64748b' }}
                           axisLine={false}
                           tickLine={false}
                         />
                         <YAxis
-                          tick={{ fontSize: 10, fill: '#6b7280' }}
+                          tick={{ fontSize: 10, fill: '#64748b' }}
                           axisLine={false}
                           tickLine={false}
                           domain={yDomain}

@@ -2665,22 +2665,25 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Top Bar */}
-      <header className="bg-white border-b border-gray-200 z-[60] shadow-sm h-16 flex items-center px-6 justify-between relative">
+      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 z-[60] h-16 flex items-center px-6 justify-between sticky top-0 w-full transition-all duration-300">
         <div className="flex items-center space-x-6">
-          <div className="flex items-center space-x-2">
-            <img
-              src={`${import.meta.env.BASE_URL}logo.png`}
-              alt="A3 Bowler logo"
-              className="w-8 h-8 rounded-md bg-white object-contain cursor-pointer"
-              onClick={() => setIsLogoPreviewOpen(true)}
-            />
+          <div className="flex items-center space-x-3">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-primary-500 rounded-lg blur opacity-20 group-hover:opacity-30 transition-opacity"></div>
+              <img
+                src={`${import.meta.env.BASE_URL}logo.png`}
+                alt="A3 Bowler logo"
+                className="relative w-8 h-8 rounded-lg bg-white object-contain cursor-pointer shadow-sm border border-slate-100"
+                onClick={() => setIsLogoPreviewOpen(true)}
+              />
+            </div>
             <div className="relative flex items-center">
-              <h1 className="text-lg font-semibold text-gray-900 tracking-tight hidden md:block pr-5">
+              <h1 className="text-lg font-bold text-slate-900 tracking-tight hidden md:block pr-5 font-display">
                 A3 Bowler
               </h1>
               <button
                 onClick={() => setIsAppInfoOpen(true)}
-                className="inline-flex md:absolute md:-top-1.5 md:right-0 items-center justify-center w-4 h-4 rounded-full border border-red-500 text-red-500 italic text-[9px] font-semibold bg-white hover:bg-red-50 hover:text-red-600 transition-colors"
+                className="inline-flex md:absolute md:-top-1.5 md:right-0 items-center justify-center w-4 h-4 rounded-full border border-primary-500 text-primary-600 italic text-[9px] font-semibold bg-white hover:bg-primary-50 transition-colors shadow-sm"
                 title="About this app"
               >
                 <span>i</span>
@@ -2688,7 +2691,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
             </div>
           </div>
           
-          <nav className="flex space-x-0">
+          <nav className="flex space-x-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname.startsWith(item.path);
@@ -2697,37 +2700,29 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
               const isPortfolio = item.path === '/portfolio';
 
               const activeIconClasses = isMetric
-                ? 'bg-blue-600 text-white'
+                ? 'text-primary-600'
                 : isA3
-                ? 'bg-purple-600 text-white'
+                ? 'text-purple-600'
                 : isPortfolio
-                ? 'bg-emerald-600 text-white'
-                : 'bg-blue-600 text-white';
-
-              const inactiveIconClasses = isMetric
-                ? 'bg-blue-50 text-blue-700'
-                : isA3
-                ? 'bg-purple-50 text-purple-700'
-                : isPortfolio
-                ? 'bg-emerald-50 text-emerald-700'
-                : 'bg-gray-100 text-gray-600';
+                ? 'text-emerald-600'
+                : 'text-primary-600';
 
               return (
                 <Link
                   key={item.path}
                   to={item.path}
                   className={clsx(
-                    'flex items-center px-1 md:px-1.5 py-1.5 rounded text-xs md:text-sm font-medium transition-all duration-200',
+                    'flex items-center px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-200 border border-transparent',
                     isActive
-                      ? 'bg-blue-50 text-blue-800'
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'bg-white text-slate-900 border-slate-200 shadow-sm ring-1 ring-slate-100'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
                   )}
                   title={item.label}
                 >
                   <span
                     className={clsx(
-                      'flex items-center justify-center w-6 h-6 rounded-md mr-0 md:mr-1 transition-colors',
-                      isActive ? activeIconClasses : inactiveIconClasses
+                      'flex items-center justify-center mr-1.5 transition-colors',
+                      isActive ? activeIconClasses : 'text-slate-400'
                     )}
                   >
                     <Icon className="w-4 h-4" />
@@ -2986,15 +2981,15 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
       <div className="flex flex-1">
         {/* Dynamic Sidebar */}
         <aside className={clsx(
-          "bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out relative",
+          "bg-white border-r border-slate-200/60 flex flex-col transition-all duration-300 ease-in-out relative shadow-[4px_0_24px_rgba(0,0,0,0.02)]",
           isSidebarOpen ? "w-64 absolute z-50 h-full md:relative" : "w-0 md:w-16",
           location.pathname.startsWith('/portfolio') ? "hidden md:hidden" : ""
         )}>
           <button
              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
              className={clsx(
-               "absolute -right-3 top-16 rounded-full p-1.5 shadow-sm border z-20 transition-colors",
-               "bg-blue-600 border-blue-700 text-white hover:bg-blue-700"
+               "absolute -right-3 top-16 rounded-full p-1.5 shadow-md border z-20 transition-all",
+               "bg-white border-slate-200 text-slate-500 hover:text-primary-600 hover:border-primary-200"
              )}
           >
              {isSidebarOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
@@ -3002,12 +2997,12 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
 
           <div className="flex flex-col w-full h-full overflow-hidden">
             <div className={clsx(
-              "p-4 border-b border-gray-100 flex items-center bg-gray-50/50 h-14 overflow-hidden flex-shrink-0",
+              "p-4 border-b border-slate-100 flex items-center bg-slate-50/50 backdrop-blur-sm h-14 overflow-hidden flex-shrink-0",
               isSidebarOpen ? "justify-between" : "justify-center"
             )}>
               {isSidebarOpen ? (
                 <>
-                  <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wider truncate">
+                  <h2 className="font-bold text-slate-500 text-xs uppercase tracking-wider truncate font-display">
                     {isMetricBowler ? 'Bowler Lists' : isMindmapPage ? 'Mindmap ideas' : 'A3 Cases'}
                   </h2>
                   <div className="flex items-center gap-1">
@@ -3018,8 +3013,8 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                           className={clsx(
                             "p-1 rounded-md border transition-colors",
                             isBowlerFilterOpen
-                              ? "bg-gray-200 border-gray-300 text-gray-800"
-                              : "bg-white border-gray-200 text-gray-500 hover:bg-gray-100"
+                              ? "bg-slate-200 border-slate-300 text-slate-800"
+                              : "bg-white border-slate-200 text-slate-500 hover:bg-slate-100"
                           )}
                           title="Filter Bowler lists by Team, Group, or Tag"
                         >
@@ -3027,7 +3022,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                         </button>
                         <button
                           onClick={() => setIsQuickDemoOpen(true)}
-                          className="p-1 rounded-md hover:bg-indigo-100 text-indigo-600 transition-colors"
+                          className="p-1 rounded-md hover:bg-indigo-50 text-indigo-600 transition-colors"
                           title="Sample metric"
                         >
                           <FlaskConical className="w-5 h-5" />
@@ -3036,7 +3031,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                     )}
                     <button 
                       onClick={handlePlusClick}
-                      className="p-1 rounded-md hover:bg-blue-100 text-blue-600 transition-colors"
+                      className="p-1 rounded-md hover:bg-primary-50 text-primary-600 transition-colors"
                       title="Add New"
                     >
                       <Plus className="w-5 h-5" />
@@ -3047,7 +3042,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                 <div className="flex items-center gap-1">
                   <button
                     onClick={handlePlusClick}
-                    className="p-1 rounded-md hover:bg-blue-100 text-blue-600 transition-colors"
+                    className="p-1 rounded-md hover:bg-primary-50 text-primary-600 transition-colors"
                     title="Add New"
                   >
                     <Plus className="w-5 h-5" />
@@ -3163,8 +3158,8 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                               "group flex items-center py-2.5 text-sm font-medium rounded-lg transition-all",
                                               isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
                                               location.pathname === `/metric-bowler/${bowler.id}`
-                                              ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                                              : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                                              ? "bg-primary-50 text-primary-700 ring-1 ring-primary-100 shadow-sm"
+                                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                                           )}
                                           title={!isSidebarOpen ? bowler.name : undefined}
                                       >
@@ -3194,11 +3189,11 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 <button
                                     onClick={() => toggleGroup(group)}
                                     className={clsx(
-                                        "flex items-center w-full text-xs font-semibold uppercase tracking-wider mb-1 transition-colors",
+                                        "flex items-center w-full text-xs font-bold uppercase tracking-wider mb-1 transition-colors font-display",
                                         isSidebarOpen ? "px-3 justify-between" : "justify-center",
                                         isGroupExpanded(group)
-                                          ? "text-blue-700"
-                                          : "text-gray-600 hover:text-gray-800"
+                                          ? "text-primary-700"
+                                          : "text-slate-500 hover:text-slate-700"
                                     )}
                                     title={group}
                                 >
@@ -3209,14 +3204,14 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                                     <ChevronDown
                                                         className={clsx(
                                                           "w-3 h-3 rounded-full p-0.5",
-                                                          "bg-blue-100 text-blue-700"
+                                                          "bg-primary-50 text-primary-600"
                                                         )}
                                                     />
                                                 ) : (
                                                     <ChevronRight
                                                         className={clsx(
                                                           "w-3 h-3 rounded-full p-0.5",
-                                                          "bg-blue-100 text-blue-700"
+                                                          "bg-primary-50 text-primary-600"
                                                         )}
                                                     />
                                                 )}
@@ -3229,14 +3224,14 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                                 <ChevronDown
                                                     className={clsx(
                                                       "w-3 h-3 rounded-full p-0.5",
-                                                      "bg-blue-100 text-blue-700"
+                                                      "bg-primary-50 text-primary-600"
                                                     )}
                                                 />
                                             ) : (
                                                 <ChevronRight
                                                     className={clsx(
                                                       "w-3 h-3 rounded-full p-0.5",
-                                                      "bg-blue-100 text-blue-700"
+                                                      "bg-primary-50 text-primary-600"
                                                     )}
                                                 />
                                             )}
@@ -3250,7 +3245,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                         <div 
                                           ref={provided.innerRef}
                                           {...provided.droppableProps}
-                                          className={clsx("space-y-1", isSidebarOpen && "pl-3 border-l-2 border-gray-100 ml-2")}
+                                          className={clsx("space-y-1", isSidebarOpen && "pl-3 border-l-2 border-slate-100 ml-2")}
                                         >
                                             {grouped[group].map((bowler, index) => (
                                                 <Draggable key={bowler.id} draggableId={bowler.id} index={index}>
@@ -3271,8 +3266,8 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                                               "group flex items-center py-2 text-sm font-medium rounded-lg transition-all",
                                                               isSidebarOpen ? "px-3 justify-between" : "px-0 justify-center",
                                                               location.pathname === `/metric-bowler/${bowler.id}`
-                                                              ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
-                                                              : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                                                              ? "bg-primary-50 text-primary-700 ring-1 ring-primary-100 shadow-sm"
+                                                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                                                           )}
                                                           title={!isSidebarOpen ? bowler.name : undefined}
                                                       >

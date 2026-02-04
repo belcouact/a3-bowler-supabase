@@ -2,10 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
-html {
-  scrollbar-gutter: stable;
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    @apply text-slate-800 bg-gray-50;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+  }
 }
 
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .glass {
+    @apply bg-white/70 backdrop-blur-lg border border-white/20 shadow-soft;
+  }
+  
+  .glass-dark {
+    @apply bg-slate-900/80 backdrop-blur-lg border border-white/10 shadow-medium;
+  }
+}
+
+/* Custom selection color */
+::selection {
+  @apply bg-primary-200 text-primary-900;
+}
+
+/* One-click summary glow effect (kept from original) */
 .one-click-summary-glow {
   position: relative;
 }
@@ -56,17 +90,6 @@ html {
   }
 }
 
-/* Hide scrollbar for Chrome, Safari and Opera */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-/* Hide scrollbar for IE, Edge and Firefox */
-.no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-
 @media print {
   @page {
     size: A4 landscape;
@@ -74,6 +97,7 @@ html {
 
   body {
     margin: 0;
+    @apply bg-white;
   }
 
   #root {
