@@ -1012,10 +1012,20 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
   };
 
   const handleGenerateSummaryForMessage = async () => {
+    if (!user || !user.username) {
+      toast.error('Please login to generate one-click summary');
+      return;
+    }
+
+    const rows = computeGroupPerformanceTableData(bowlers, a3Cases);
+    if (!rows || rows.length === 0) {
+      toast.info('No metric data available for AI summary. Please add metric data first.');
+      return;
+    }
+
     setIsAutoGenerating(true);
     try {
       const context = generateAIContext(bowlers, a3Cases);
-      const rows = computeGroupPerformanceTableData(bowlers, a3Cases);
 
       const failingMetricsForAI = rows.filter(row => row.fail2 || row.fail3);
 
