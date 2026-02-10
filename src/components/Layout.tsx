@@ -1796,6 +1796,16 @@ const Layout = () => {
   };
 
   const handleOneClickSummary = async () => {
+    if (!user || !user.username) {
+      toast.error('Please login to generate one-click summary');
+      return;
+    }
+
+    if (!groupPerformanceTableData || groupPerformanceTableData.length === 0) {
+      toast.info('No metric data available for AI summary. Please add metric data first.');
+      return;
+    }
+
     setIsGeneratingSummary(true);
     setSummaryContent('');
     setIsSummaryHiddenWhileLoading(false);
