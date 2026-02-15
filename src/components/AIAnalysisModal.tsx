@@ -116,64 +116,64 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({ isOpen, onClos
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
           
-          <div className="relative px-6 pt-8 pb-6 sm:px-8">
+          <div className="relative px-5 pt-6 pb-5 sm:px-6">
             {/* Header Content */}
-            <div className="flex items-center gap-4 mb-8">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-200">
-                <Sparkles className="h-6 w-6" />
+            <div className="flex items-center gap-3 mb-5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-200">
+                <Sparkles className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-slate-900 tracking-tight" id="modal-title">
+                <h3 className="text-lg font-bold text-slate-900 tracking-tight" id="modal-title">
                   AI Performance Analysis
                 </h3>
-                <p className="text-sm font-medium text-slate-500">
+                <p className="text-xs font-medium text-slate-500">
                   Analyzing <span className="text-indigo-600 font-semibold">{metricName}</span>
                 </p>
               </div>
             </div>
             
             {result ? (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 
                 {/* Summary Card */}
-                <div className="relative overflow-hidden rounded-xl bg-slate-50 border border-slate-100 p-5 shadow-sm group hover:shadow-md transition-all duration-300">
+                <div className="relative overflow-hidden rounded-xl bg-slate-50 border border-slate-100 p-3.5 shadow-sm group hover:shadow-md transition-all duration-300">
                   <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500" />
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5 p-1.5 bg-indigo-100 rounded-lg text-indigo-600 shrink-0">
-                        <Lightbulb className="h-4 w-4" />
+                  <div className="flex items-start gap-2.5">
+                    <div className="mt-0.5 p-1 bg-indigo-100 rounded-md text-indigo-600 shrink-0">
+                        <Lightbulb className="h-3.5 w-3.5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-bold text-slate-900">Executive Summary</h4>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wide">Executive Summary</h4>
                         <button 
                             onClick={handleCopy}
-                            className="text-slate-400 hover:text-indigo-600 transition-colors p-1.5 rounded-lg hover:bg-indigo-50 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none"
+                            className="text-slate-400 hover:text-indigo-600 transition-colors p-1 rounded hover:bg-indigo-50 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none"
                             title="Copy summary"
                         >
-                            {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                            {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                         </button>
                       </div>
-                      <p className="text-sm text-slate-600 leading-relaxed text-pretty">{result.summary}</p>
+                      <p className="text-xs text-slate-600 leading-relaxed text-pretty">{result.summary}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                     {/* Trend Card */}
-                    <div className={`rounded-xl border p-4 flex flex-col items-center justify-center text-center transition-all hover:shadow-md ${getTrendColor()}`}>
-                        <span className="text-xs font-bold uppercase tracking-wider opacity-70 mb-2">Current Trend</span>
-                        <div className="flex items-center gap-2">
+                    <div className={`rounded-xl border p-3 flex flex-col items-center justify-center text-center transition-all hover:shadow-md ${getTrendColor()}`}>
+                        <span className="text-[10px] font-bold uppercase tracking-wider opacity-70 mb-1">Current Trend</span>
+                        <div className="flex items-center gap-1.5">
                             {getTrendIcon()}
-                            <span className="text-lg font-bold">{getTrendLabel()}</span>
+                            <span className="text-sm font-bold">{getTrendLabel()}</span>
                         </div>
                     </div>
 
                     {/* Achievement Card */}
-                    <div className="rounded-xl border border-slate-100 bg-white p-4 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition-all">
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Target Achievement</span>
-                        <div className="flex items-center gap-2">
-                            <Target className={`w-5 h-5 ${result.achievementRate >= 80 ? 'text-emerald-500' : result.achievementRate >= 50 ? 'text-amber-500' : 'text-rose-500'}`} />
-                            <span className={`text-lg font-bold ${result.achievementRate >= 80 ? 'text-emerald-600' : result.achievementRate >= 50 ? 'text-amber-600' : 'text-rose-600'}`}>
+                    <div className="rounded-xl border border-slate-100 bg-white p-3 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition-all">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Target Achievement</span>
+                        <div className="flex items-center gap-1.5">
+                            <Target className={`w-4 h-4 ${result.achievementRate >= 80 ? 'text-emerald-500' : result.achievementRate >= 50 ? 'text-amber-500' : 'text-rose-500'}`} />
+                            <span className={`text-sm font-bold ${result.achievementRate >= 80 ? 'text-emerald-600' : result.achievementRate >= 50 ? 'text-amber-600' : 'text-rose-600'}`}>
                               {result.achievementRate.toFixed(1)}%
                             </span>
                         </div>
@@ -182,18 +182,18 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({ isOpen, onClos
 
                 {/* Suggestions Section */}
                 <div>
-                    <h4 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xs">
-                          <AlertTriangle className="w-3.5 h-3.5" />
+                    <h4 className="text-xs font-bold text-slate-900 mb-2 flex items-center gap-2">
+                        <div className="h-5 w-5 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
+                          <AlertTriangle className="w-3 h-3" />
                         </div>
                         Strategic Recommendations
                     </h4>
                     {result.suggestion.length > 0 ? (
-                        <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-4">
-                          <ul className="space-y-3">
+                        <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-3">
+                          <ul className="space-y-2">
                               {result.suggestion.map((item, index) => (
-                                  <li key={index} className="flex items-start gap-3 text-sm text-slate-700">
-                                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+                                  <li key={index} className="flex items-start gap-2.5 text-xs text-slate-700">
+                                      <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-amber-500" />
                                       <span className="leading-relaxed">{item}</span>
                                   </li>
                               ))}
