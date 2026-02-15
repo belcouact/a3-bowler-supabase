@@ -1011,9 +1011,9 @@ const MetricBowler = () => {
                     </div>
                   )}
 
-                  <div className="h-80 w-full relative">
+                  <div className="h-[500px] w-full relative">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={chartData} margin={{ top: 10, right: 5, bottom: 5, left: -25 }}>
+                      <LineChart data={chartData} margin={{ top: 10, right: 30, bottom: 5, left: -25 }}>
                         <defs>
                           <linearGradient id={`gradient-actual-${metric.id}`} x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#6366f1" stopOpacity={0.1}/>
@@ -1023,12 +1023,12 @@ const MetricBowler = () => {
                         <CartesianGrid strokeDasharray="8 8" vertical={false} stroke="#f1f5f9" />
                         <XAxis
                             dataKey="name"
-                            tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 700, fontVariant: 'small-caps' }}
+                            tick={{ fontSize: 12, fill: '#94a3b8', fontWeight: 700, fontVariant: 'small-caps' }}
                             axisLine={false}
                             tickLine={false}
                             dy={10}
                             interval={0}
-                            height={30}
+                            height={40}
                           />
                         <YAxis
                           tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 700 }}
