@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { X, FileText, Sparkles, Smartphone, Layers, Target, TrendingUp } from 'lucide-react';
+import { X, FileText, Sparkles, Smartphone, Layers, TrendingUp } from 'lucide-react';
 
 interface AppInfoModalProps {
   isOpen: boolean;
@@ -32,9 +32,6 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                 </button>
              </div>
              <div className="flex flex-col items-center text-center">
-                <div className="h-16 w-16 bg-white/20 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-md shadow-inner ring-1 ring-white/30">
-                  <Target className="h-8 w-8 text-white" />
-                </div>
                 <h2 className="text-2xl font-bold text-white tracking-tight">A3 Bowler</h2>
                 <p className="mt-2 text-primary-100 font-medium max-w-lg">
                   AI-Assisted Performance Tracker & A3 Problem Solving
@@ -105,6 +102,24 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                   </div>
                 </div>
 
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Technology Stack</h4>
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-2">
+                <div className="flex items-start">
+                  <span className="text-xs font-semibold text-slate-700 w-20">Frontend:</span>
+                  <span className="text-xs text-slate-600">React, TS, Tailwind</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="text-xs font-semibold text-slate-700 w-20">Backend:</span>
+                  <span className="text-xs text-slate-600">Cloudflare Workers</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="text-xs font-semibold text-slate-700 w-20">Database:</span>
+                  <span className="text-xs text-slate-600">Supabase postgresql</span>
+                </div>
               </div>
             </div>
             

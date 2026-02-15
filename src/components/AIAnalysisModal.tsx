@@ -104,7 +104,7 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({ isOpen, onClos
             ${isOpen ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-4 opacity-0 scale-95'}`}
         >
           {/* Decorative Header Background */}
-          <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-br from-brand-500/10 via-primary-500/5 to-transparent pointer-events-none" />
+          <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-br from-brand-500/10 via-primary-500/5 to-transparent pointer-events-none" />
           <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
           {/* Close Button */}
@@ -117,17 +117,17 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({ isOpen, onClos
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
           
-          <div className="relative px-6 pt-8 pb-6 sm:px-8">
+          <div className="relative px-6 pt-5 pb-4 sm:px-8">
             {/* Header Content */}
-            <div className="flex items-center gap-4 mb-8">
+            <div className="flex items-center gap-3 mb-4">
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-brand-600 to-primary-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-200" />
-                <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-white ring-1 ring-slate-900/5 shadow-sm">
-                    <Sparkles className="h-7 w-7 text-brand-600" />
+                <div className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-white ring-1 ring-slate-900/5 shadow-sm">
+                    <Sparkles className="h-5 w-5 text-brand-600" />
                 </div>
               </div>
               <div>
-                <h3 className="font-display text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent" id="modal-title">
+                <h3 className="font-display text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent" id="modal-title">
                   AI Analysis
                 </h3>
                 <p className="text-sm font-medium text-slate-500 mt-0.5">
@@ -137,12 +137,12 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({ isOpen, onClos
             </div>
             
             {result ? (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 
                 {/* Summary Card */}
-                <div className="group relative overflow-hidden rounded-2xl bg-slate-50 border border-slate-100 p-5 transition-all hover:shadow-md hover:border-brand-200/50">
+                <div className="group relative overflow-hidden rounded-2xl bg-slate-50 border border-slate-100 p-4 transition-all hover:shadow-md hover:border-brand-200/50">
                   <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-brand-500 to-primary-500" />
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start gap-3">
                     <div className="mt-1 p-2 bg-white rounded-xl shadow-sm ring-1 ring-slate-900/5 text-brand-600 shrink-0">
                         <Lightbulb className="h-4 w-4" />
                     </div>
@@ -162,24 +162,24 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({ isOpen, onClos
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                     {/* Trend Card */}
-                    <div className={`rounded-2xl p-4 flex flex-col items-center justify-center text-center ring-1 transition-all hover:shadow-md ${getTrendColor()}`}>
-                        <span className="text-[10px] font-bold uppercase tracking-wider opacity-60 mb-2">Current Trend</span>
+                    <div className={`rounded-2xl p-3 flex flex-col items-center justify-center text-center ring-1 transition-all hover:shadow-md ${getTrendColor()}`}>
+                        <span className="text-[10px] font-bold uppercase tracking-wider opacity-60 mb-1">Current Trend</span>
                         <div className="flex items-center gap-2">
                             {getTrendIcon()}
-                            <span className="font-display text-lg font-bold">{getTrendLabel()}</span>
+                            <span className="font-display text-base font-bold">{getTrendLabel()}</span>
                         </div>
                     </div>
 
                     {/* Achievement Card */}
-                    <div className="rounded-2xl bg-white p-4 flex flex-col items-center justify-center text-center ring-1 ring-slate-100 shadow-sm hover:shadow-md transition-all group">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Target Achievement</span>
+                    <div className="rounded-2xl bg-white p-3 flex flex-col items-center justify-center text-center ring-1 ring-slate-100 shadow-sm hover:shadow-md transition-all group">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Target Achievement</span>
                         <div className="flex items-center gap-2">
-                            <div className={`p-1.5 rounded-full ${result.achievementRate >= 80 ? 'bg-emerald-100 text-emerald-600' : result.achievementRate >= 50 ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600'}`}>
-                                <Target className="w-4 h-4" />
+                            <div className={`p-1 rounded-full ${result.achievementRate >= 80 ? 'bg-emerald-100 text-emerald-600' : result.achievementRate >= 50 ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600'}`}>
+                                <Target className="w-3.5 h-3.5" />
                             </div>
-                            <span className={`font-display text-lg font-bold ${result.achievementRate >= 80 ? 'text-emerald-600' : result.achievementRate >= 50 ? 'text-amber-600' : 'text-rose-600'}`}>
+                            <span className={`font-display text-base font-bold ${result.achievementRate >= 80 ? 'text-emerald-600' : result.achievementRate >= 50 ? 'text-amber-600' : 'text-rose-600'}`}>
                               {result.achievementRate.toFixed(1)}%
                             </span>
                         </div>
@@ -187,8 +187,8 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({ isOpen, onClos
                 </div>
 
                 {/* Suggestions Section */}
-                <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-                    <h4 className="font-display text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
+                    <h4 className="font-display text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
                         <div className="h-6 w-6 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center ring-1 ring-amber-100">
                           <Zap className="w-3.5 h-3.5" />
                         </div>
@@ -223,16 +223,6 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({ isOpen, onClos
                 </p>
               </div>
             )}
-            
-            <div className="mt-8 flex justify-end">
-              <button
-                type="button"
-                className="rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 hover:bg-slate-800 hover:shadow-xl hover:-translate-y-0.5 transition-all focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 active:scale-95 active:translate-y-0"
-                onClick={onClose}
-              >
-                Close Analysis
-              </button>
-            </div>
           </div>
         </div>
       </div>
