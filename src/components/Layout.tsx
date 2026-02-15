@@ -2680,12 +2680,8 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
 
             {isMobileMenuOpen && (
               <>
-                <div 
-                  className="fixed inset-0 z-30" 
-                  onClick={() => setIsMobileMenuOpen(false)}
-                />
-                <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl py-2 z-[100] border border-slate-100 p-1.5 animate-in fade-in slide-in-from-top-2">
-                  <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50 mb-1">
+                <div className="absolute right-0 mt-3 w-52 bg-white rounded-2xl shadow-xl py-1.5 z-[100] border border-slate-100 p-1 animate-in fade-in slide-in-from-top-2">
+                  <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50 mb-1">
                     Workspace Actions
                   </div>
                   <button
@@ -2693,9 +2689,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       handleExit();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-red-600 transition-all group"
+                    className="flex w-full items-center px-2 py-1.5 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-red-600 transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center mr-3 group-hover:bg-red-50 transition-all ring-1 ring-slate-200/50 group-hover:ring-red-200/50">
+                    <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center mr-2 group-hover:bg-red-50 transition-all ring-1 ring-slate-200/50 group-hover:ring-red-200/50">
                       <ExternalLink className="w-4 h-4" />
                     </div>
                     <span className="font-medium">Exit App</span>
@@ -2705,14 +2701,14 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       setIsImportModalOpen(true);
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-emerald-600 transition-all group"
+                    className="flex w-full items-center px-2 py-1.5 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-emerald-600 transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mr-3 group-hover:bg-emerald-100 transition-all shadow-sm ring-1 ring-emerald-200/50">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mr-2 group-hover:bg-emerald-100 transition-all shadow-sm ring-1 ring-emerald-200/50">
                       <Upload className="w-4 h-4" />
                     </div>
                     <div className="flex flex-col items-start">
                       <span className="font-bold">Import CSV</span>
-                      <span className="text-[10px] text-slate-400">Bulk metric upload</span>
+                      <span className="text-[10px] text-slate-400 leading-none mt-0.5">Bulk metric upload</span>
                     </div>
                   </button>
                   <button
@@ -2720,14 +2716,14 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       handleDownloadAllCSV();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-blue-600 transition-all group"
+                    className="flex w-full items-center px-2 py-1.5 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-blue-600 transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3 group-hover:bg-blue-100 transition-all shadow-sm ring-1 ring-blue-200/50">
+                    <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-2 group-hover:bg-blue-100 transition-all shadow-sm ring-1 ring-blue-200/50">
                       <Download className="w-4 h-4" />
                     </div>
                     <div className="flex flex-col items-start">
                       <span className="font-bold">Download</span>
-                      <span className="text-[10px] text-slate-400">Export workspace data</span>
+                      <span className="text-[10px] text-slate-400 leading-none mt-0.5">Export workspace data</span>
                     </div>
                   </button>
                   <button
@@ -2735,14 +2731,14 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       setIsDataChartingOpen(true);
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-all group"
+                    className="flex w-full items-center px-2 py-1.5 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3 group-hover:bg-indigo-100 transition-all shadow-sm ring-1 ring-indigo-200/50">
+                    <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-2 group-hover:bg-indigo-100 transition-all shadow-sm ring-1 ring-indigo-200/50">
                       <Activity className="w-4 h-4" />
                     </div>
                     <div className="flex flex-col items-start">
                       <span className="font-bold">Data Analysis</span>
-                      <span className="text-[10px] text-slate-400">AI data insights</span>
+                      <span className="text-[10px] text-slate-400 leading-none mt-0.5">AI data insights</span>
                     </div>
                   </button>
                   {isSuperAdmin && (
@@ -2751,9 +2747,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                         setIsAdminPanelOpen(true);
                         setIsMobileMenuOpen(false);
                       }}
-                      className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-slate-900 transition-all group"
+                      className="flex w-full items-center px-2 py-1.5 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-slate-900 transition-all group"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center mr-3 group-hover:bg-slate-100 transition-all ring-1 ring-slate-200/50">
+                      <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center mr-2 group-hover:bg-slate-100 transition-all ring-1 ring-slate-200/50">
                         <Users className="w-4 h-4" />
                       </div>
                       <span className="font-medium">User Mgmt</span>
@@ -2764,14 +2760,14 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       handleOpenConsolidateModal();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-purple-600 transition-all group"
+                    className="flex w-full items-center px-2 py-1.5 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-purple-600 transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mr-3 group-hover:bg-purple-100 transition-all shadow-sm ring-1 ring-purple-200/50">
+                    <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mr-2 group-hover:bg-purple-100 transition-all shadow-sm ring-1 ring-purple-200/50">
                       <Combine className="w-4 h-4" />
                     </div>
                     <div className="flex flex-col items-start">
                       <span className="font-bold">Consolidate</span>
-                      <span className="text-[10px] text-slate-400">Merge tagged data</span>
+                      <span className="text-[10px] text-slate-400 leading-none mt-0.5">Merge tagged data</span>
                     </div>
                   </button>
 
@@ -2780,12 +2776,13 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       setIsMobileMenuOpen(false);
                       await handleOpenAllA3Modal();
                     }}
-                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-brand-600 transition-all group"
+                    className="flex w-full items-center px-2 py-1.5 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-brand-600 transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center mr-3 group-hover:bg-brand-100 transition-all shadow-sm ring-1 ring-brand-200/50">
+                    <div className="w-7 h-7 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center mr-2 group-hover:bg-brand-100 transition-all shadow-sm ring-1 ring-brand-200/50">
                       <FileText className="w-4 h-4" />
                     </div>
-                    <span className="font-medium">All A3 Cases</span>
+                    <span className="font-bold">A3 Cases</span>
+                    <span className="text-[10px] text-slate-400 leading-none mt-0.5">Show all cases</span>
                   </button>
 
                   <button
@@ -2793,14 +2790,14 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       setIsEmailSettingsOpen(true);
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-rose-600 transition-all group"
+                    className="flex w-full items-center px-2 py-1.5 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-rose-600 transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center mr-3 group-hover:bg-rose-100 transition-all shadow-sm ring-1 ring-rose-200/50">
+                    <div className="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center mr-2 group-hover:bg-rose-100 transition-all shadow-sm ring-1 ring-rose-200/50">
                       <Mail className="w-4 h-4" />
                     </div>
                     <div className="flex flex-col items-start">
                       <span className="font-bold">Scheduling</span>
-                      <span className="text-[10px] text-slate-400">Auto email reports</span>
+                      <span className="text-[10px] text-slate-400 leading-none mt-0.5">Auto email reports</span>
                     </div>
                   </button>
                   <button
@@ -2808,14 +2805,14 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       setIsAIChatOpen(true);
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-all group"
+                    className="flex w-full items-center px-2 py-1.5 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3 group-hover:bg-indigo-100 transition-all shadow-sm ring-1 ring-indigo-200/50">
+                    <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-2 group-hover:bg-indigo-100 transition-all shadow-sm ring-1 ring-indigo-200/50">
                       <Sparkles className="w-4 h-4" />
                     </div>
                     <div className="flex flex-col items-start">
                       <span className="font-bold">Ask AI</span>
-                      <span className="text-[10px] text-slate-400">Intelligent coach</span>
+                      <span className="text-[10px] text-slate-400 leading-none mt-0.5">Intelligent coach</span>
                     </div>
                   </button>
                   <button
@@ -2823,37 +2820,23 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       navigate('/mindmap');
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-amber-600 transition-all group"
+                    className="flex w-full items-center px-2 py-1.5 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-amber-600 transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center mr-3 group-hover:bg-amber-100 transition-all shadow-sm ring-1 ring-amber-200/50">
+                    <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center mr-2 group-hover:bg-amber-100 transition-all shadow-sm ring-1 ring-amber-200/50">
                       <Lightbulb className="w-4 h-4" />
                     </div>
                     <div className="flex flex-col items-start">
                       <span className="font-bold">Map Ideas</span>
-                      <span className="text-[10px] text-slate-400">Visual brainstorming</span>
+                      <span className="text-[10px] text-slate-400 leading-none mt-0.5">Visual brainstorming</span>
                     </div>
                   </button>
 
-                  <div className="border-t border-slate-50 my-1 pt-1">
-                    <button
-                      onClick={() => {
-                        handleSaveData();
-                        setIsMobileMenuOpen(false);
-                      }}
-                      disabled={isSaving}
-                      className="flex w-full items-center px-3 py-2 text-sm text-emerald-600 rounded-lg hover:bg-emerald-50 transition-all group disabled:opacity-50"
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center mr-3 group-hover:bg-emerald-100 transition-colors shadow-sm ring-1 ring-emerald-100/50">
-                        {isSaving ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Save className="w-4 h-4" />
-                        )}
-                      </div>
-                      <span className="font-bold">Save Data</span>
-                    </button>
-                  </div>
+
                 </div>
+                <div 
+                  className="fixed inset-0 z-30" 
+                  onClick={() => setIsMobileMenuOpen(false)}
+                />
               </>
             )}
           </div>
@@ -2862,7 +2845,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
             onClick={handleSaveData}
             disabled={isSaving}
             className={clsx(
-                  "hidden md:inline-flex items-center justify-center w-9 h-9 rounded-xl text-sm font-bold transition-all shadow-sm disabled:opacity-50",
+                  "inline-flex items-center justify-center w-9 h-9 rounded-xl text-sm font-bold transition-all shadow-sm disabled:opacity-50",
                   isSaving 
                     ? "bg-slate-100 text-slate-400" 
                     : "bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-md hover:shadow-emerald-100 active:scale-95"
