@@ -1017,7 +1017,38 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
       return;
     }
 
-    const rows = computeGroupPerformanceTableData(bowlers, a3Cases);
+    let targetBowlers = bowlers;
+    let targetA3Cases = a3Cases;
+
+    // Handle consolidation if enabled
+    if (emailConsolidateEnabled) {
+      if (!emailConsolidateTags.trim()) {
+        toast.error('Please enter tags for consolidation');
+        return;
+      }
+      
+      const toastId = toast.loading('Consolidating data for summary...');
+      try {
+        const result = await dataService.consolidateBowlers(emailConsolidateTags);
+        toast.dismiss(toastId);
+        
+        if (result.success) {
+          targetBowlers = result.bowlers;
+          targetA3Cases = result.a3Cases;
+          toast.success(`Consolidated: ${targetBowlers.length} metrics, ${targetA3Cases.length} A3s`);
+        } else {
+          toast.error(result.error || 'Consolidation failed');
+          return;
+        }
+      } catch (error: any) {
+        toast.dismiss(toastId);
+        console.error('Consolidation error:', error);
+        toast.error('Failed to consolidate data for summary');
+        return;
+      }
+    }
+
+    const rows = computeGroupPerformanceTableData(targetBowlers, targetA3Cases);
     if (!rows || rows.length === 0) {
       toast.info('No metric data available for AI summary. Please add metric data first.');
       return;
@@ -1025,13 +1056,13 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
 
     setIsAutoGenerating(true);
     try {
-      const context = generateAIContext(bowlers, a3Cases);
+      const context = generateAIContext(targetBowlers, targetA3Cases);
 
       const failingMetricsForAI = rows.filter(row => row.fail2 || row.fail3);
 
       const statsForPrompt = JSON.stringify(
         failingMetricsForAI.map(row => {
-          const linked = a3Cases.filter(c => (c.linkedMetricIds || []).includes(row.metricId));
+          const linked = targetA3Cases.filter(c => (c.linkedMetricIds || []).includes(row.metricId));
           const completedCount = linked.filter(
             c => (c.status || '').trim().toLowerCase() === 'completed',
           ).length;
@@ -1321,28 +1352,32 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
         <div
           className={
             mode === 'email'
-              ? 'inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all w-full max-h-[calc(100vh-2rem)] max-w-5xl sm:align-middle overflow-y-auto'
-              : 'inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full'
+              ? 'inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all w-full max-h-[calc(100vh-2rem)] max-w-5xl sm:align-middle overflow-y-auto animate-in fade-in zoom-in-95 duration-200'
+              : 'inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full animate-in fade-in zoom-in-95 duration-200'
           }
         >
           
           {/* Header */}
-          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-gray-200 flex justify-between items-center">
-            <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+          <div className={`px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b flex justify-between items-center ${
+            mode === 'email' 
+              ? 'bg-gradient-to-r from-brand-600 to-brand-700 border-brand-500/20' 
+              : 'bg-white border-slate-200'
+          }`}>
+            <h3 className={`text-lg leading-6 font-bold ${mode === 'email' ? 'text-white' : 'text-slate-900'}`} id="modal-title">
               {mode === 'email' ? 'Email Scheduling' : 'Account Settings'}
             </h3>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
+            <button onClick={onClose} className={`${mode === 'email' ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-slate-600'} transition-colors`}>
               <X className="h-5 w-5" />
             </button>
           </div>
 
           {mode !== 'email' && (
-            <div className="flex border-b border-gray-200">
+            <div className="flex border-b border-slate-200">
               <button
-                className={`flex-1 py-3 text-sm font-medium text-center flex items-center justify-center space-x-2 ${
+                className={`flex-1 py-3 text-sm font-bold text-center flex items-center justify-center space-x-2 border-b-2 transition-colors ${
                   activeTab === 'password'
-                    ? 'border-b-2 border-blue-500 text-blue-600'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'border-brand-500 text-brand-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                 }`}
                 onClick={() => setActiveTab('password')}
               >
@@ -1350,10 +1385,10 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                 <span>Password</span>
               </button>
               <button
-                className={`flex-1 py-3 text-sm font-medium text-center flex items-center justify-center space-x-2 ${
+                className={`flex-1 py-3 text-sm font-bold text-center flex items-center justify-center space-x-2 border-b-2 transition-colors ${
                   activeTab === 'profile'
-                    ? 'border-b-2 border-blue-500 text-blue-600'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'border-brand-500 text-brand-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                 }`}
                 onClick={() => setActiveTab('profile')}
               >
@@ -1397,28 +1432,28 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">New Password</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">New Password</label>
                    <div className="relative">
-                     <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" /> 
+                     <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" /> 
                      <input
                         type="password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="Enter new password"
-                        className="pl-9 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                        className="pl-9 block w-full rounded-xl border-slate-200 bg-slate-50 focus:border-brand-500 focus:ring-brand-500 sm:text-sm transition-shadow shadow-sm p-3"
                      />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Confirm New Password</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Confirm New Password</label>
                    <div className="relative">
-                     <Check className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                     <Check className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                      <input
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="Confirm new password"
-                        className="pl-9 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                        className="pl-9 block w-full rounded-xl border-slate-200 bg-slate-50 focus:border-brand-500 focus:ring-brand-500 sm:text-sm transition-shadow shadow-sm p-3"
                      />
                   </div>
                 </div>
@@ -1428,21 +1463,21 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
             {mode === 'account' && activeTab === 'profile' && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Role</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Role</label>
                   <input
                     type="text"
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
-                    className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                    className="block w-full rounded-xl border-slate-200 bg-slate-50 focus:border-brand-500 focus:ring-brand-500 sm:text-sm transition-shadow shadow-sm p-3"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Region</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Region</label>
                     <select
                       value={country}
                       onChange={(e) => setCountry(e.target.value)}
-                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                      className="block w-full rounded-xl border-slate-200 bg-slate-50 focus:border-brand-500 focus:ring-brand-500 sm:text-sm transition-shadow shadow-sm p-3"
                     >
                       <option value="China">China</option>
                       <option value="US">US</option>
@@ -1451,11 +1486,11 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Plant/Office</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Plant/Office</label>
                     <select
                       value={plant}
                       onChange={(e) => setPlant(e.target.value)}
-                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                      className="block w-full rounded-xl border-slate-200 bg-slate-50 focus:border-brand-500 focus:ring-brand-500 sm:text-sm transition-shadow shadow-sm p-3"
                     >
                       <option value="BJ">BJ</option>
                       <option value="SH">SH</option>
@@ -1470,11 +1505,11 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   </div>
                 </div>
                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Functional Team</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Functional Team</label>
                     <select
                       value={team}
                       onChange={(e) => setTeam(e.target.value)}
-                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                      className="block w-full rounded-xl border-slate-200 bg-slate-50 focus:border-brand-500 focus:ring-brand-500 sm:text-sm transition-shadow shadow-sm p-3"
                     >
                       <option value="Commercial">Commercial</option>
                       <option value="SC">SC</option>
@@ -1483,14 +1518,14 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                 </div>
 
                 <div className="pt-2">
-                    <div className="border border-gray-200 rounded-md p-4 flex items-center justify-between">
+                    <div className="border border-slate-200 rounded-xl bg-slate-50/50 p-4 flex items-center justify-between shadow-sm">
                         <div>
-                            <h4 className="text-sm font-medium text-gray-900">Public Profile</h4>
-                            <p className="text-xs text-gray-500">Allow others to consolidate your bowlers</p>
+                            <h4 className="text-sm font-bold text-slate-900">Public Profile</h4>
+                            <p className="text-xs text-slate-500 font-medium">Allow others to consolidate your bowlers</p>
                         </div>
                         <button 
                             type="button"
-                            className={`${isPublic ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                            className={`${isPublic ? 'bg-brand-600' : 'bg-slate-200'} relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500`}
                             role="switch"
                             aria-checked={isPublic}
                             onClick={() => setIsPublic(!isPublic)}
@@ -1504,105 +1539,112 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
 
             {mode === 'email' && (
               <div className="space-y-4">
-            <div className="flex border-b border-gray-200">
+            <div className="flex bg-slate-100/80 p-1.5 gap-1.5 rounded-xl mb-6 ring-1 ring-slate-200/50">
               <button
                 type="button"
-                className={`flex-1 py-2 text-sm font-medium text-center ${
+                className={`flex-1 py-2.5 text-sm font-medium text-center rounded-lg transition-all duration-200 ${
                   emailTab === 'schedule'
-                    ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'bg-white text-brand-600 shadow-sm ring-1 ring-black/5 font-bold'
+                    : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
                 }`}
                 onClick={() => setEmailTab('schedule')}
               >
-                Schedule
+                Schedule New
               </button>
               <button
                 type="button"
-                className={`flex-1 py-2 text-sm font-medium text-center ${
+                className={`flex-1 py-2.5 text-sm font-medium text-center rounded-lg transition-all duration-200 ${
                   emailTab === 'active'
-                    ? 'border-b-2 border-amber-500 text-amber-600 bg-amber-50'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'bg-white text-brand-600 shadow-sm ring-1 ring-black/5 font-bold'
+                    : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
                 }`}
-                    onClick={() => setEmailTab('active')}
-                  >
-                    Active schedules
-                  </button>
-                </div>
+                onClick={() => setEmailTab('active')}
+              >
+                Active Schedules
+              </button>
+            </div>
 
                 {emailTab === 'schedule' && (
                   <>
                     <div>
-                      <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Recipients</label>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Recipients</label>
                       <textarea
                         value={emailRecipients}
                         onChange={(e) => setEmailRecipients(e.target.value)}
                         rows={2}
                         placeholder="user1@example.com, user2@example.com"
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                        className="block w-full rounded-xl border-slate-200 bg-slate-50 focus:border-brand-500 focus:ring-brand-500 sm:text-sm transition-shadow shadow-sm p-3"
                       />
-                      <p className="mt-1 text-xs text-gray-400">
+                      <p className="mt-1.5 text-xs text-slate-400 font-medium">
                         Separate multiple emails with commas or new lines.
                       </p>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Subject</label>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Subject</label>
                       <input
                         type="text"
                         value={emailSubject}
                         onChange={(e) => setEmailSubject(e.target.value)}
                         placeholder="Monthly A3 / metric summary"
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                        className="block w-full rounded-xl border-slate-200 bg-slate-50 focus:border-brand-500 focus:ring-brand-500 sm:text-sm transition-shadow shadow-sm p-3"
                       />
                     </div>
-                    <div className="mt-4 border rounded-md">
-                      <div className="flex flex-wrap text-xs font-medium border-b">
+                    <div className="mt-6">
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Scheduling Mode</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                         <button
                           type="button"
-                          className={`flex-1 px-3 py-2 text-center flex items-center justify-center space-x-2 ${
+                          className={`px-3 py-3 text-center flex flex-col items-center justify-center gap-2 rounded-xl border transition-all duration-200 ${
                             emailMode === 'autoSummary'
-                              ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-500'
-                            : 'text-gray-500 hover:text-gray-700'
+                              ? 'bg-brand-50/50 border-brand-200 text-brand-700 ring-1 ring-brand-200 shadow-sm'
+                              : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50'
                           }`}
                           onClick={() => setEmailMode('autoSummary')}
                         >
-                          <Repeat className="w-4 h-4" />
-                          <span>Schedule Auto Summary</span>
+                          <div className={`p-2 rounded-lg ${emailMode === 'autoSummary' ? 'bg-brand-100 text-brand-600' : 'bg-slate-100 text-slate-400'}`}>
+                            <Repeat className="w-5 h-5" />
+                          </div>
+                          <span className="text-xs font-bold">Auto Summary</span>
                         </button>
                         <button
                           type="button"
-                          className={`flex-1 px-3 py-2 text-center flex items-center justify-center space-x-2 ${
+                          className={`px-3 py-3 text-center flex flex-col items-center justify-center gap-2 rounded-xl border transition-all duration-200 ${
                             emailMode === 'manualRepeat'
-                              ? 'bg-emerald-50 text-emerald-700 border-b-2 border-emerald-500'
-                              : 'text-gray-500 hover:text-gray-700'
+                              ? 'bg-emerald-50/50 border-emerald-200 text-emerald-700 ring-1 ring-emerald-200 shadow-sm'
+                              : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50'
                           }`}
                           onClick={() => setEmailMode('manualRepeat')}
                         >
-                          <Repeat className="w-4 h-4" />
-                          <span>Schedule Manual Content</span>
+                          <div className={`p-2 rounded-lg ${emailMode === 'manualRepeat' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                            <Repeat className="w-5 h-5" />
+                          </div>
+                          <span className="text-xs font-bold">Manual Content</span>
                         </button>
                         <button
                           type="button"
-                          className={`flex-1 px-3 py-2 text-center flex items-center justify-center space-x-2 ${
+                          className={`px-3 py-3 text-center flex flex-col items-center justify-center gap-2 rounded-xl border transition-all duration-200 ${
                             emailMode === 'oneTime'
-                              ? 'bg-purple-50 text-purple-700 border-b-2 border-purple-500'
-                            : 'text-gray-500 hover:text-gray-700'
+                              ? 'bg-purple-50/50 border-purple-200 text-purple-700 ring-1 ring-purple-200 shadow-sm'
+                              : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50'
                           }`}
                           onClick={() => setEmailMode('oneTime')}
                         >
-                          <Clock3 className="w-4 h-4" />
-                          <span>One-time</span>
+                          <div className={`p-2 rounded-lg ${emailMode === 'oneTime' ? 'bg-purple-100 text-purple-600' : 'bg-slate-100 text-slate-400'}`}>
+                            <Clock3 className="w-5 h-5" />
+                          </div>
+                          <span className="text-xs font-bold">One-time Send</span>
                         </button>
                       </div>
-                      <div className="p-3 space-y-3">
+                      <div className="p-4 border border-slate-200 rounded-xl bg-slate-50/50 space-y-4 shadow-sm">
                         {(emailMode === 'autoSummary' || emailMode === 'manualRepeat') && (
                           <>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                               <div>
-                                <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Repeat</label>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Repeat</label>
                                 <select
                                   value={scheduleFrequency}
                                   onChange={(e) => setScheduleFrequency(e.target.value as EmailScheduleFrequency)}
-                                  className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                                  className="block w-full rounded-xl border-slate-200 bg-white focus:border-brand-500 focus:ring-brand-500 sm:text-sm transition-shadow shadow-sm p-2.5"
                                 >
                                   <option value="weekly">Every week</option>
                                   <option value="monthly">Every month</option>
@@ -1611,11 +1653,11 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                               <div>
                                 {scheduleFrequency === 'weekly' ? (
                                   <>
-                                    <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Day of Week</label>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Day of Week</label>
                                     <select
                                       value={scheduleDayOfWeek}
                                       onChange={(e) => setScheduleDayOfWeek(Number(e.target.value))}
-                                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                                      className="block w-full rounded-xl border-slate-200 bg-white focus:border-brand-500 focus:ring-brand-500 sm:text-sm transition-shadow shadow-sm p-2.5"
                                     >
                                       <option value={1}>Monday</option>
                                       <option value={2}>Tuesday</option>
@@ -1628,11 +1670,11 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                   </>
                                 ) : (
                                   <>
-                                    <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Date of Month</label>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date of Month</label>
                                     <select
                                       value={scheduleDayOfMonth}
                                       onChange={(e) => setScheduleDayOfMonth(Number(e.target.value))}
-                                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                                      className="block w-full rounded-xl border-slate-200 bg-white focus:border-brand-500 focus:ring-brand-500 sm:text-sm transition-shadow shadow-sm p-2.5"
                                     >
                                       {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
                                         <option key={day} value={day}>
@@ -1644,39 +1686,39 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 )}
                               </div>
                               <div>
-                                <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Time</label>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Time</label>
                                 <input
                                   type="time"
                                   value={scheduleTime}
                                   onChange={(e) => setScheduleTime(e.target.value)}
-                                  className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                                  className="block w-full rounded-xl border-slate-200 bg-white focus:border-brand-500 focus:ring-brand-500 sm:text-sm transition-shadow shadow-sm p-2.5"
                                 />
                               </div>
                             </div>
                             <div className="mt-3">
-                              <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Repeat Until (optional)</label>
+                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Repeat Until (optional)</label>
                               <input
                                 type="date"
                                 value={scheduleStopDate}
                                 onChange={e => setScheduleStopDate(e.target.value)}
-                                className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                                className="block w-full rounded-xl border-slate-200 bg-white focus:border-brand-500 focus:ring-brand-500 sm:text-sm transition-shadow shadow-sm p-2.5"
                               />
-                              <p className="mt-1 text-xs text-gray-400">
+                              <p className="mt-1.5 text-xs text-slate-400 font-medium">
                                 After this date, recurring emails will stop automatically.
                               </p>
                             </div>
                             {emailMode === 'autoSummary' && (
-                              <div className="mt-4 border-t border-gray-100 pt-3 space-y-2">
-                                <div className="flex items-start justify-between">
+                              <div className="mt-4 border-t border-slate-200 pt-4 space-y-3">
+                                <div className="flex items-start justify-between bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
                                   <div>
-                                    <h4 className="text-xs font-medium text-gray-700 uppercase mb-1">Consolidate before summary</h4>
-                                    <p className="text-xs text-gray-500">
+                                    <h4 className="text-sm font-bold text-slate-700 mb-0.5">Consolidate before summary</h4>
+                                    <p className="text-xs text-slate-500 font-medium">
                                       When enabled, consolidate tagged bowlers and A3 cases before generating the summary email.
                                     </p>
                                   </div>
                                   <button
                                     type="button"
-                                    className={`${emailConsolidateEnabled ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                                    className={`${emailConsolidateEnabled ? 'bg-brand-600' : 'bg-slate-200'} relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500`}
                                     role="switch"
                                     aria-checked={emailConsolidateEnabled}
                                     onClick={() => setEmailConsolidateEnabled(!emailConsolidateEnabled)}
@@ -1685,27 +1727,27 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                   </button>
                                 </div>
                                 <div>
-                                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Consolidate tags</label>
+                                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Consolidate tags</label>
                                   <input
                                     type="text"
                                     value={emailConsolidateTags}
                                     onChange={e => setEmailConsolidateTags(e.target.value)}
                                     placeholder="e.g. Technical, Q1, Portfolio"
-                                    className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                                    className="block w-full rounded-xl border-slate-200 bg-white focus:border-brand-500 focus:ring-brand-500 sm:text-sm transition-shadow shadow-sm p-2.5"
                                   />
-                                  <p className="mt-1 text-xs text-gray-400">
+                                  <p className="mt-1.5 text-xs text-slate-400 font-medium">
                                     Tags are matched during consolidation before each scheduled summary email.
                                   </p>
                                 </div>
                               </div>
                             )}
                             {emailMode === 'manualRepeat' && (
-                              <div className="mt-4 space-y-2 border-t border-gray-100 pt-3">
+                              <div className="mt-4 space-y-3 border-t border-slate-200 pt-4">
                                 <div className="flex items-center justify-between">
-                                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Message</label>
+                                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Message</label>
                                   <button
                                     type="button"
-                                    className="text-xs px-2 py-1 rounded border border-blue-500 text-blue-600 hover:bg-blue-50 disabled:opacity-60 disabled:cursor-not-allowed"
+                                    className="text-xs px-3 py-1.5 rounded-lg border border-brand-200 text-brand-600 bg-brand-50 hover:bg-brand-100 font-bold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                                     onClick={handleGenerateSummaryForMessage}
                                     disabled={isAutoGenerating || isScheduling || isSendingNow}
                                   >
@@ -1720,29 +1762,29 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                   }}
                                   rows={4}
                                   placeholder="Add the summary or message you want to email."
-                                  className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                                  className="block w-full rounded-xl border-slate-200 bg-white focus:border-brand-500 focus:ring-brand-500 sm:text-sm transition-shadow shadow-sm p-3"
                                 />
                               </div>
                             )}
                           </>
                         )}
                         {emailMode === 'oneTime' && (
-                          <div className="space-y-3">
+                          <div className="space-y-4">
                             <div>
-                              <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Send At</label>
+                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Send At</label>
                               <input
                                 type="datetime-local"
                                 value={emailSendAt}
                                 onChange={(e) => setEmailSendAt(e.target.value)}
-                                className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                                className="block w-full rounded-xl border-slate-200 bg-white focus:border-brand-500 focus:ring-brand-500 sm:text-sm transition-shadow shadow-sm p-2.5"
                               />
                             </div>
                             <div>
-                              <div className="flex items-center justify-between">
-                                <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Message</label>
+                              <div className="flex items-center justify-between mb-1.5">
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Message</label>
                                 <button
                                   type="button"
-                                  className="text-xs px-2 py-1 rounded border border-blue-500 text-blue-600 hover:bg-blue-50 disabled:opacity-60 disabled:cursor-not-allowed"
+                                  className="text-xs px-3 py-1.5 rounded-lg border border-brand-200 text-brand-600 bg-brand-50 hover:bg-brand-100 font-bold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                                   onClick={handleGenerateSummaryForMessage}
                                   disabled={isAutoGenerating || isScheduling || isSendingNow}
                                 >
@@ -1757,7 +1799,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 }}
                                 rows={4}
                                 placeholder="Add the summary or message you want to email."
-                                className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                                className="block w-full rounded-xl border-slate-200 bg-white focus:border-brand-500 focus:ring-brand-500 sm:text-sm transition-shadow shadow-sm p-3"
                               />
                             </div>
                           </div>
@@ -1776,12 +1818,12 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       <p className="text-sm text-gray-500">No active scheduled emails.</p>
                     )}
                     {!isLoadingSchedules && activeSchedules.length > 0 && (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="flex items-center gap-2 text-xs text-gray-600">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="flex items-center gap-2 text-xs font-bold text-slate-600">
                             <input
                               type="checkbox"
-                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                               checked={
                                 selectedScheduleIds.length > 0 &&
                                 selectedScheduleIds.length === activeSchedules.length
@@ -1796,41 +1838,51 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                             disabled={
                               selectedScheduleIds.length === 0 || isBulkCancellingSchedules
                             }
-                            className="inline-flex items-center px-3 py-1.5 rounded-md border border-red-600 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="inline-flex items-center px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50 text-xs font-bold text-rose-600 hover:bg-rose-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
                           >
                             {isBulkCancellingSchedules ? 'Cancelling...' : 'Cancel selected'}
                             {selectedScheduleIds.length > 0 && !isBulkCancellingSchedules && (
-                              <span className="ml-1">({selectedScheduleIds.length})</span>
+                              <span className="ml-1 bg-rose-200 px-1.5 rounded-full text-[10px]">
+                                {selectedScheduleIds.length}
+                              </span>
                             )}
                           </button>
                         </div>
                         {activeSchedules.map(item => (
                           <div
                             key={item.id}
-                            className="flex items-center justify-between gap-3 p-3 border border-gray-200 rounded-md"
+                            className={`flex items-center justify-between gap-3 p-4 border rounded-xl transition-all duration-200 group ${
+                              selectedScheduleIds.includes(item.id)
+                                ? 'bg-brand-50/30 border-brand-200 shadow-sm'
+                                : 'bg-white border-slate-200 hover:shadow-md hover:border-brand-200'
+                            }`}
                           >
                             <div className="flex items-center gap-3">
                               <input
                                 type="checkbox"
-                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                className="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 transition-colors cursor-pointer"
                                 checked={selectedScheduleIds.includes(item.id)}
                                 onChange={() => toggleScheduleSelection(item.id)}
                               />
                               <div>
-                                <p className="text-sm font-medium text-gray-900">{item.subject}</p>
-                                <p className="text-xs text-gray-500">
+                                <p className={`text-sm font-bold transition-colors ${
+                                  selectedScheduleIds.includes(item.id) ? 'text-brand-700' : 'text-slate-800 group-hover:text-brand-700'
+                                }`}>
+                                  {item.subject}
+                                </p>
+                                <p className="text-xs text-slate-500 font-medium mt-0.5">
                                   {item.mode === 'autoSummary'
                                     ? 'Auto summary (recurring)'
                                     : item.mode === 'manual' && item.recurring
                                       ? 'Manual (recurring)'
                                       : 'One-time'}{' '}
-                                  · Next run: {new Date(item.sendAt).toLocaleString()}
+                                  · <span className="text-slate-400">Next:</span> {new Date(item.sendAt).toLocaleString()}
                                 </p>
                               </div>
                             </div>
                             <button
                               type="button"
-                              className="inline-flex items-center justify-center rounded-full p-2 text-red-600 hover:bg-red-50 disabled:opacity-60 disabled:cursor-not-allowed"
+                              className="inline-flex items-center justify-center rounded-lg p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
                               onClick={() => handleCancelScheduleItem(item)}
                               disabled={isCancellingScheduleId === item.id || isBulkCancellingSchedules}
                             >
@@ -1851,7 +1903,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
             {mode === 'account' && activeTab === 'password' && (
               <button
                 type="button"
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                className="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2.5 bg-brand-600 text-base font-bold text-white hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 sm:ml-3 sm:w-auto sm:text-sm transition-all"
                 onClick={handleUpdatePassword}
                 disabled={isLoading}
               >
@@ -1862,7 +1914,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
             {mode === 'account' && activeTab === 'profile' && (
               <button
                 type="button"
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                className="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2.5 bg-brand-600 text-base font-bold text-white hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 sm:ml-3 sm:w-auto sm:text-sm transition-all"
                 onClick={handleUpdateProfile}
                 disabled={isLoading}
               >
@@ -1874,7 +1926,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
               <>
                 <button
                   type="button"
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                  className="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2.5 bg-brand-600 text-base font-bold text-white hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 sm:ml-3 sm:w-auto sm:text-sm transition-all"
                   onClick={handleScheduleEmail}
                   disabled={isScheduling || isSendingNow}
                 >
@@ -1889,7 +1941,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                 {emailMode === 'oneTime' && (
                   <button
                     type="button"
-                    className="mt-3 w-full inline-flex justify-center rounded-md border border-blue-600 shadow-sm px-4 py-2 bg-white text-base font-medium text-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                    className="mt-3 w-full inline-flex justify-center rounded-xl border border-brand-200 shadow-sm px-4 py-2.5 bg-white text-base font-bold text-brand-600 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-all"
                     onClick={handleSendEmailNow}
                     disabled={isSendingNow || isScheduling}
                   >
@@ -1901,7 +1953,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
             
             <button
               type="button"
-              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+              className="mt-3 w-full inline-flex justify-center rounded-xl border border-slate-200 shadow-sm px-4 py-2.5 bg-white text-base font-bold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-all"
               onClick={onClose}
             >
               {activeTab === 'password' ? 'Cancel' : 'Close'}

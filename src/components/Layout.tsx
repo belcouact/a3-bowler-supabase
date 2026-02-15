@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, Lightbulb, Filter, Users, X, Calendar, FlaskConical, Activity, Clock3, PieChart as PieChartIcon, AlertCircle, Combine, Pencil, Mail } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, Lightbulb, Filter, Users, X, Calendar, FlaskConical, Activity, Clock3, PieChart as PieChartIcon, AlertCircle, Combine, Pencil, Mail, Check, Search, Building2, LayoutGrid, Kanban, List } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
 import {
@@ -208,6 +208,7 @@ const Layout = () => {
     isPublicProfile: true,
   });
   const [isAllA3ModalOpen, setIsAllA3ModalOpen] = useState(false);
+  const [isAllA3KanbanView, setIsAllA3KanbanView] = useState(false);
   const [isAllA3Loading, setIsAllA3Loading] = useState(false);
   const [allA3Error, setAllA3Error] = useState<string | null>(null);
   const [allA3Cases, setAllA3Cases] = useState<GlobalA3Case[]>([]);
@@ -219,6 +220,7 @@ const Layout = () => {
   const [quickDemoMetricName, setQuickDemoMetricName] = useState('');
   const [isGeneratingQuickDemo, setIsGeneratingQuickDemo] = useState(false);
   const [a3BestPracticeOnly, setA3BestPracticeOnly] = useState(false);
+  const [a3SearchTerm, setA3SearchTerm] = useState('');
   const [isUpdatingBestPractice, setIsUpdatingBestPractice] = useState(false);
   const [isDataChartingOpen, setIsDataChartingOpen] = useState(false);
 
@@ -273,10 +275,148 @@ const Layout = () => {
         cases = cases.filter(a3 => !!a3.isBestPractice);
       }
 
+      if (a3SearchTerm.trim()) {
+        const lower = a3SearchTerm.toLowerCase().trim();
+        cases = cases.filter(
+          a3 =>
+            (a3.title || '').toLowerCase().includes(lower) ||
+            (a3.problemStatement || '').toLowerCase().includes(lower) ||
+            (a3.owner || '').toLowerCase().includes(lower) ||
+            (a3.plant || '').toLowerCase().includes(lower) ||
+            (a3.group || '').toLowerCase().includes(lower),
+        );
+      }
+
       return cases;
     },
-    [allA3Cases, isAdminOrSuperAdmin, userPlant, a3BestPracticeOnly],
+    [allA3Cases, isAdminOrSuperAdmin, userPlant, a3BestPracticeOnly, a3SearchTerm],
   );
+
+  const allA3KanbanColumns = useMemo(() => {
+    if (visibleAllA3Cases.length === 0) {
+      return [];
+    }
+
+    const statusConfig = [
+      {
+        key: 'Not Started',
+        label: 'Not Started',
+        headerClass: 'border-slate-200 bg-slate-50/80',
+        badgeClass: 'bg-white text-slate-600 border-slate-200 shadow-sm',
+        dotClass: 'bg-slate-400',
+      },
+      {
+        key: 'In Progress',
+        label: 'In Progress',
+        headerClass: 'border-brand-200 bg-brand-50/60',
+        badgeClass: 'bg-white text-brand-700 border-brand-200 shadow-sm',
+        dotClass: 'bg-brand-500',
+      },
+      {
+        key: 'Completed',
+        label: 'Completed',
+        headerClass: 'border-emerald-200 bg-emerald-50/60',
+        badgeClass: 'bg-white text-emerald-700 border-emerald-200 shadow-sm',
+        dotClass: 'bg-emerald-500',
+      },
+      {
+        key: 'On Hold',
+        label: 'On Hold',
+        headerClass: 'border-amber-200 bg-amber-50/60',
+        badgeClass: 'bg-white text-amber-700 border-amber-200 shadow-sm',
+        dotClass: 'bg-amber-500',
+      },
+      {
+        key: 'Cancelled',
+        label: 'Cancelled',
+        headerClass: 'border-rose-200 bg-rose-50/60',
+        badgeClass: 'bg-white text-rose-700 border-rose-200 shadow-sm',
+        dotClass: 'bg-rose-500',
+      },
+    ];
+
+    const labelColorPalette = [
+      'bg-blue-50 border-blue-100 text-blue-700',
+      'bg-emerald-50 border-emerald-100 text-emerald-700',
+      'bg-amber-50 border-amber-100 text-amber-700',
+      'bg-purple-50 border-purple-100 text-purple-700',
+      'bg-pink-50 border-pink-100 text-pink-700',
+      'bg-sky-50 border-sky-100 text-sky-700',
+      'bg-lime-50 border-lime-100 text-lime-700',
+      'bg-rose-50 border-rose-100 text-rose-700',
+    ];
+
+    const labelColorMap = new Map<string, string>();
+
+    const getLabelColorClass = (label: string) => {
+      if (labelColorMap.has(label)) {
+        return labelColorMap.get(label)!;
+      }
+      const index = labelColorMap.size % labelColorPalette.length;
+      const colorClass = labelColorPalette[index];
+      labelColorMap.set(label, colorClass);
+      return colorClass;
+    };
+
+    const getPriorityClass = (priority: string) => {
+      if (priority === 'High') {
+        return 'bg-rose-50 text-rose-700 border-rose-200';
+      }
+      if (priority === 'Low') {
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      }
+      return 'bg-amber-50 text-amber-700 border-amber-200';
+    };
+
+    const columns = statusConfig.map(config => ({
+      ...config,
+      items: [] as {
+        a3: any;
+        displayLabel: string;
+        priority: string;
+        priorityClass: string;
+        labelColorClass: string;
+      }[],
+    }));
+
+    const otherColumn = {
+      key: 'Other',
+      label: 'Other',
+      headerClass: 'border-gray-200 bg-white',
+      badgeClass: 'bg-gray-100 text-gray-600',
+      dotClass: 'bg-gray-400',
+      items: [] as typeof columns[0]['items'],
+    };
+
+    const columnByStatus: Record<string, typeof columns[number]> = {};
+    columns.forEach(col => {
+      columnByStatus[col.key] = col;
+    });
+
+    visibleAllA3Cases.forEach(a3 => {
+      const statusKey = (a3.status || 'Not Started').trim();
+      const priorityKey = (a3.priority || 'Medium').trim();
+      const groupLabel = (a3.group || 'Ungrouped').trim() || 'Ungrouped';
+      const displayLabel = groupLabel;
+      const labelColorClass = getLabelColorClass(displayLabel);
+
+      const targetColumn = columnByStatus[statusKey] || otherColumn;
+      targetColumn.items.push({
+        a3,
+        displayLabel,
+        priority: priorityKey,
+        priorityClass: getPriorityClass(priorityKey),
+        labelColorClass,
+      });
+    });
+
+    const filledColumns = columns.filter(col => col.items.length > 0);
+    if (otherColumn.items.length > 0) {
+      filledColumns.push(otherColumn);
+    }
+
+    return filledColumns;
+  }, [visibleAllA3Cases]);
 
   const loadAdminUsers = async () => {
     setIsLoadingAdminUsers(true);
@@ -1046,49 +1186,49 @@ const Layout = () => {
       {
         key: 'Not Started',
         label: 'Not Started',
-        headerClass: 'border-gray-200 bg-gray-50',
-        badgeClass: 'bg-gray-100 text-gray-700',
-        dotClass: 'bg-gray-400',
+        headerClass: 'border-slate-200 bg-slate-50/80',
+        badgeClass: 'bg-white text-slate-600 border-slate-200 shadow-sm',
+        dotClass: 'bg-slate-400',
       },
       {
         key: 'In Progress',
         label: 'In Progress',
-        headerClass: 'border-blue-200 bg-blue-50',
-        badgeClass: 'bg-blue-100 text-blue-700',
-        dotClass: 'bg-blue-500',
+        headerClass: 'border-brand-200 bg-brand-50/60',
+        badgeClass: 'bg-white text-brand-700 border-brand-200 shadow-sm',
+        dotClass: 'bg-brand-500',
       },
       {
         key: 'Completed',
         label: 'Completed',
-        headerClass: 'border-emerald-200 bg-emerald-50',
-        badgeClass: 'bg-emerald-100 text-emerald-700',
+        headerClass: 'border-emerald-200 bg-emerald-50/60',
+        badgeClass: 'bg-white text-emerald-700 border-emerald-200 shadow-sm',
         dotClass: 'bg-emerald-500',
       },
       {
         key: 'On Hold',
         label: 'On Hold',
-        headerClass: 'border-amber-200 bg-amber-50',
-        badgeClass: 'bg-amber-100 text-amber-700',
+        headerClass: 'border-amber-200 bg-amber-50/60',
+        badgeClass: 'bg-white text-amber-700 border-amber-200 shadow-sm',
         dotClass: 'bg-amber-500',
       },
       {
         key: 'Cancelled',
         label: 'Cancelled',
-        headerClass: 'border-red-200 bg-red-50',
-        badgeClass: 'bg-red-100 text-red-700',
-        dotClass: 'bg-red-500',
+        headerClass: 'border-rose-200 bg-rose-50/60',
+        badgeClass: 'bg-white text-rose-700 border-rose-200 shadow-sm',
+        dotClass: 'bg-rose-500',
       },
     ];
 
     const labelColorPalette = [
-      'bg-blue-50 border-blue-100',
-      'bg-emerald-50 border-emerald-100',
-      'bg-amber-50 border-amber-100',
-      'bg-purple-50 border-purple-100',
-      'bg-pink-50 border-pink-100',
-      'bg-sky-50 border-sky-100',
-      'bg-lime-50 border-lime-100',
-      'bg-rose-50 border-rose-100',
+      'bg-blue-50 border-blue-100 text-blue-700',
+      'bg-emerald-50 border-emerald-100 text-emerald-700',
+      'bg-amber-50 border-amber-100 text-amber-700',
+      'bg-purple-50 border-purple-100 text-purple-700',
+      'bg-pink-50 border-pink-100 text-pink-700',
+      'bg-sky-50 border-sky-100 text-sky-700',
+      'bg-lime-50 border-lime-100 text-lime-700',
+      'bg-rose-50 border-rose-100 text-rose-700',
     ];
 
     const labelColorMap = new Map<string, string>();
@@ -1105,7 +1245,7 @@ const Layout = () => {
 
     const getPriorityClass = (priority: string) => {
       if (priority === 'High') {
-        return 'bg-red-50 text-red-700 border-red-200';
+        return 'bg-rose-50 text-rose-700 border-rose-200';
       }
       if (priority === 'Low') {
         return 'bg-emerald-50 text-emerald-700 border-emerald-200';
@@ -1145,12 +1285,34 @@ const Layout = () => {
     });
 
     a3Cases.forEach(a3 => {
+      // 1. Filter by Group
       if (a3PortfolioGroupFilter) {
         const groupKey = (a3.group || 'Ungrouped').trim() || 'Ungrouped';
         if (groupKey !== a3PortfolioGroupFilter) {
           return;
         }
       }
+
+      // 2. Filter by Best Practice
+      if (a3BestPracticeOnly && !a3.isBestPractice) {
+        return;
+      }
+
+      // 3. Filter by Search Term
+      if (a3SearchTerm) {
+        const term = a3SearchTerm.toLowerCase();
+        const matches =
+          (a3.title || '').toLowerCase().includes(term) ||
+          (a3.owner || '').toLowerCase().includes(term) ||
+          (a3.group || '').toLowerCase().includes(term) ||
+          (a3.status || '').toLowerCase().includes(term) ||
+          (a3.priority || '').toLowerCase().includes(term);
+
+        if (!matches) {
+          return;
+        }
+      }
+
       const statusKey = (a3.status || 'Not Started').trim();
       const priorityKey = (a3.priority || 'Medium').trim();
 
@@ -1176,7 +1338,7 @@ const Layout = () => {
     }
 
     return filledColumns;
-  }, [a3Cases, bowlers, a3PortfolioGroupFilter]);
+  }, [a3Cases, bowlers, a3PortfolioGroupFilter, a3SearchTerm, a3BestPracticeOnly]);
 
   const a3Timeline = useMemo(() => {
     const parseDate = (value?: string) => {
@@ -4384,36 +4546,41 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                               <div
                                 key={column.key}
                                 className={clsx(
-                                  'flex flex-col rounded-lg border text-xs',
+                                  'flex flex-col rounded-xl border text-xs shadow-sm overflow-hidden h-full max-h-[600px] transition-all duration-300 hover:shadow-md',
                                   column.headerClass,
                                 )}
                               >
-                                <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100">
+                                <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-200/50 backdrop-blur-sm bg-white/40">
                                   <div className="flex items-center gap-2">
                                     <span
                                       className={clsx(
-                                        'h-2 w-2 rounded-full',
+                                        'h-2.5 w-2.5 rounded-full shadow-sm ring-2 ring-white',
                                         column.dotClass,
                                       )}
                                     />
-                                    <span className="font-semibold text-gray-800">
+                                    <span className="font-bold text-slate-800 tracking-tight">
                                       {column.label}
                                     </span>
                                   </div>
                                   <span
                                     className={clsx(
-                                      'px-2 py-0.5 rounded-full text-[10px] font-medium border',
+                                      'px-2 py-0.5 rounded-full text-[10px] font-bold border shadow-sm',
                                       column.badgeClass,
                                     )}
                                   >
                                     {column.items.length}
                                   </span>
                                 </div>
-                                <div className="flex-1 px-3 py-2 space-y-2 max-h-80 overflow-y-auto">
+                                <div className="flex-1 px-3 py-3 space-y-2.5 overflow-y-auto custom-scrollbar">
                                   {column.items.length === 0 ? (
-                                    <p className="text-[11px] text-gray-400 italic">
-                                      No cases in this column.
-                                    </p>
+                                    <div className="flex flex-col items-center justify-center py-10 text-center opacity-50">
+                                      <div className="w-10 h-10 rounded-xl bg-white/50 border border-white flex items-center justify-center mb-2 shadow-sm">
+                                        <LayoutGrid className="w-5 h-5 text-slate-400" />
+                                      </div>
+                                      <p className="text-[11px] font-medium text-slate-500">
+                                        No cases
+                                      </p>
+                                    </div>
                                   ) : (
                                     column.items.map(item => (
                                       <button
@@ -4425,38 +4592,38 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                           );
                                         }}
                                         className={clsx(
-                                          'w-full text-left rounded-md border px-2.5 py-2 shadow-sm hover:border-blue-200 hover:bg-blue-50/60 transition-colors',
-                                          item.labelColorClass,
+                                          'w-full text-left rounded-xl border px-3.5 py-3 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 group bg-white border-slate-200/60 hover:border-brand-300',
                                         )}
                                       >
-                                        <div className="flex items-start justify-between gap-2">
-                                          <div className="min-w-0">
-                                            <p className="text-[11px] font-semibold text-gray-900 leading-snug">
+                                        <div className="flex items-start justify-between gap-3">
+                                          <div className="min-w-0 flex-1">
+                                            <p className="text-[11px] font-bold text-slate-800 leading-snug line-clamp-2 mb-2 group-hover:text-brand-700 transition-colors">
                                               {item.a3.title}
                                             </p>
-                                            <p className="mt-0.5 text-[10px] text-gray-500 truncate">
-                                              Group:{' '}
-                                              <span className="font-medium text-gray-700">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                              <span className={clsx(
+                                                "inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold ring-1 ring-inset ring-gray-500/10",
+                                                item.labelColorClass
+                                              )}>
                                                 {item.displayLabel}
                                               </span>
-                                            </p>
+                                              {item.a3.startDate && (
+                                                <span className="text-[10px] text-slate-400 font-medium flex items-center gap-1">
+                                                  <Calendar className="w-3 h-3" />
+                                                  {new Date(item.a3.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                                </span>
+                                              )}
+                                            </div>
                                           </div>
                                           <span
                                             className={clsx(
-                                              'ml-1 inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium',
+                                              'shrink-0 inline-flex items-center rounded-md border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider',
                                               item.priorityClass,
                                             )}
                                           >
                                             {item.priority}
                                           </span>
                                         </div>
-                                        {item.a3.startDate && (
-                                          <p className="mt-1 text-[10px] text-gray-400">
-                                            {item.a3.endDate
-                                              ? `${item.a3.startDate} → ${item.a3.endDate}`
-                                              : `Start: ${item.a3.startDate}`}
-                                          </p>
-                                        )}
                                       </button>
                                     ))
                                   )}
@@ -5178,16 +5345,16 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
       )}
 
       {isAllA3ModalOpen && (
-        <div className="fixed inset-0 z-[140] bg-gray-900/80 flex flex-col">
+        <div className="fixed inset-0 z-[140] bg-slate-900/40 backdrop-blur-sm flex flex-col animate-in fade-in duration-200">
           <div className="flex-1 bg-white flex flex-col w-full h-full rounded-none shadow-2xl overflow-hidden print-summary-root">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-indigo-50 text-indigo-600">
-                  <Layers className="h-4 w-4" />
+            <div className="flex items-center justify-between px-6 py-4 border-b border-indigo-500/20 bg-gradient-to-r from-brand-600 to-accent-600">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-white shadow-sm ring-1 ring-white/20">
+                  <Layers className="h-5 w-5" />
                 </div>
                 <div className="flex flex-col">
-                  <h2 className="text-sm font-semibold text-gray-900">A3 Portfolio</h2>
-                  <p className="text-xs text-gray-500">
+                  <h2 className="text-base font-bold text-white tracking-tight">A3 Portfolio</h2>
+                  <p className="text-xs text-indigo-100 font-medium">
                     Review and filter A3 problem-solving cases across your portfolio.
                   </p>
                 </div>
@@ -5199,46 +5366,94 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   setAllA3Cases([]);
                   setAllA3Error(null);
                 }}
-                className="rounded-full p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+                className="rounded-full p-2 text-indigo-100 hover:bg-white/20 hover:text-white transition-all duration-200"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
             <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
               {isA3PortfolioSidebarOpen && (
-                <div className="w-full lg:w-1/2 border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col flex-1 min-h-0">
-                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-white">
+                <div className={clsx(
+                  "border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col flex-1 min-h-0 transition-all duration-300",
+                  isAllA3KanbanView ? "w-full" : "w-full lg:w-1/2"
+                )}>
+                <div className="px-5 py-4 border-b border-slate-200/60 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-20 shadow-sm">
                   <div>
-                    <p className="text-xs font-semibold tracking-wide text-gray-600 uppercase">
-                      {isAdminOrSuperAdmin || !userPlant
-                        ? 'A3 Portfolio (All Plants)'
-                        : `A3 Portfolio (${userPlant})`}
-                    </p>
-                    <p className="text-[11px] text-gray-500">
-                      {isAllA3Loading
-                        ? 'Loading cases from server...'
-                        : `${visibleAllA3Cases.length} case${visibleAllA3Cases.length === 1 ? '' : 's'} visible`}
-                    </p>
-                    <div className="mt-1">
-                      <label className="inline-flex items-center gap-1 text-[11px] text-gray-600">
+                    <div className="flex items-center gap-2.5 mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1 rounded-md bg-brand-50 text-brand-600">
+                          <LayoutGrid className="w-3.5 h-3.5" />
+                        </div>
+                        <p className="text-xs font-bold tracking-wide text-slate-800 uppercase">
+                          {isAdminOrSuperAdmin || !userPlant
+                            ? 'A3 Portfolio'
+                            : `A3 Portfolio (${userPlant})`}
+                        </p>
+                      </div>
+                      <span className="inline-flex items-center justify-center min-w-[1.5rem] h-5 rounded-full bg-slate-100 text-[10px] font-bold text-slate-600 border border-slate-200">
+                        {isAllA3Loading ? '...' : visibleAllA3Cases.length}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="relative group">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-hover:text-brand-500 transition-colors" />
                         <input
-                          type="checkbox"
-                          className="h-3 w-3 text-amber-600 border-gray-300 rounded"
-                          checked={a3BestPracticeOnly}
-                          onChange={e => setA3BestPracticeOnly(e.target.checked)}
+                          type="text"
+                          placeholder="Search cases..."
+                          value={a3SearchTerm}
+                          onChange={(e) => setA3SearchTerm(e.target.value)}
+                          className="pl-8 pr-7 py-1.5 text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 hover:border-brand-200 hover:bg-white transition-all w-32 sm:w-48 placeholder:text-slate-400"
                         />
-                        <span>Best practice only</span>
+                        {a3SearchTerm && (
+                          <button
+                            onClick={() => setA3SearchTerm('')}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                      <label className="inline-flex items-center gap-2 text-[11px] font-bold text-slate-600 cursor-pointer select-none group bg-slate-50 px-2 py-1 rounded-md border border-slate-200 hover:border-brand-200 hover:bg-brand-50/50 transition-all">
+                        <div className="relative flex items-center">
+                          <input
+                            type="checkbox"
+                            className="peer h-3.5 w-3.5 text-brand-600 border-slate-300 rounded focus:ring-brand-500 transition-all cursor-pointer"
+                            checked={a3BestPracticeOnly}
+                            onChange={e => setA3BestPracticeOnly(e.target.checked)}
+                          />
+                        </div>
+                        <span className="group-hover:text-brand-700 transition-colors flex items-center gap-1">
+                          <Lightbulb className={clsx("w-3 h-3", a3BestPracticeOnly ? "fill-amber-400 text-amber-500" : "text-slate-400")} />
+                          Best practice only
+                        </span>
                       </label>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsA3PortfolioSidebarOpen(false)}
-                    className="ml-3 inline-flex items-center rounded-full border border-gray-200 px-2 py-1 text-[11px] text-gray-600 hover:bg-gray-50"
-                    title="Collapse portfolio list"
-                  >
-                    <ChevronLeft className="w-3 h-3" />
-                  </button>
+                  <div className="flex items-center gap-2 ml-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsAllA3KanbanView(!isAllA3KanbanView)}
+                      className={clsx(
+                        "inline-flex items-center justify-center w-8 h-8 rounded-xl border transition-all shadow-sm",
+                        isAllA3KanbanView
+                          ? "bg-brand-50 text-brand-600 border-brand-200 ring-1 ring-brand-500/20"
+                          : "border-slate-200 text-slate-400 hover:text-brand-600 hover:border-brand-200 hover:bg-brand-50"
+                      )}
+                      title={isAllA3KanbanView ? "Switch to list view" : "Switch to Kanban board"}
+                    >
+                      {isAllA3KanbanView ? <List className="w-4 h-4" /> : <Kanban className="w-4 h-4" />}
+                    </button>
+                    {!isAllA3KanbanView && (
+                      <button
+                        type="button"
+                        onClick={() => setIsA3PortfolioSidebarOpen(false)}
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-xl border border-slate-200 text-slate-400 hover:text-brand-600 hover:border-brand-200 hover:bg-brand-50 transition-all shadow-sm"
+                        title="Collapse portfolio list"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex-1 overflow-auto bg-gray-50">
                   {allA3Error && (
@@ -5247,33 +5462,134 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                     </div>
                   )}
                   {isAllA3Loading ? (
-                    <div className="h-full flex items-center justify-center text-sm text-gray-500">
-                      <Loader2 className="w-4 h-4 animate-spin text-indigo-600 mr-2" />
-                      Loading A3 cases...
+                    <div className="h-full flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300">
+                      <div className="p-3 bg-brand-50 rounded-full mb-3">
+                        <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
+                      </div>
+                      <p className="text-sm font-medium text-slate-900">Syncing Portfolio</p>
+                      <p className="text-xs text-slate-500 mt-1">Fetching the latest A3 cases...</p>
                     </div>
                   ) : visibleAllA3Cases.length === 0 ? (
-                    <div className="h-full flex items-center justify-center text-sm text-gray-500">
-                      No public A3 cases found.
+                    <div className="h-full flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300">
+                      <div className="p-4 bg-slate-50 rounded-full border border-slate-100 mb-3 shadow-sm">
+                        <Layers className="w-8 h-8 text-slate-300" />
+                      </div>
+                      <h3 className="text-sm font-bold text-slate-900">No Cases Found</h3>
+                      <p className="text-xs text-slate-500 mt-1 max-w-[200px] leading-relaxed">
+                        {a3SearchTerm ? "No cases match your search criteria." : "There are no public A3 cases available in the portfolio yet."}
+                      </p>
+                      {a3SearchTerm && (
+                        <button 
+                          onClick={() => setA3SearchTerm('')}
+                          className="mt-3 text-xs font-bold text-brand-600 hover:text-brand-700 hover:underline"
+                        >
+                          Clear search
+                        </button>
+                      )}
+                    </div>
+                  ) : isAllA3KanbanView ? (
+                    <div className="h-full overflow-x-auto overflow-y-hidden p-6">
+                      <div className="flex h-full gap-6 min-w-max">
+                        {allA3KanbanColumns.map((column, colIndex) => (
+                          <div 
+                            key={column.key} 
+                            className="w-80 flex-shrink-0 flex flex-col h-full bg-slate-50/50 rounded-2xl border border-slate-200/60 shadow-sm backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-500"
+                            style={{ animationDelay: `${colIndex * 100}ms` }}
+                          >
+                            <div className={clsx("px-4 py-3 border-b flex items-center justify-between rounded-t-2xl transition-colors duration-300", column.headerClass)}>
+                              <div className="flex items-center gap-2">
+                                <div className={clsx("w-2 h-2 rounded-full ring-2 ring-white/50", column.dotClass)} />
+                                <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">{column.label}</span>
+                              </div>
+                              <span className={clsx("px-2 py-0.5 rounded-full text-[10px] font-bold shadow-sm", column.badgeClass)}>
+                                {column.items.length}
+                              </span>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
+                              {column.items.map((item, itemIndex) => (
+                                <button
+                                  key={`${item.a3.id}`}
+                                  onClick={() => {
+                                    setSelectedGlobalA3(item.a3);
+                                    setIsAllA3KanbanView(false);
+                                  }}
+                                  className="w-full text-left bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm hover:shadow-lg hover:border-brand-300 hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden animate-in fade-in zoom-in-95"
+                                  style={{ animationDelay: `${(colIndex * 50) + (itemIndex * 30)}ms` }}
+                                >
+                                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-slate-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                                  
+                                  <div className="flex items-start justify-between mb-2.5 relative z-10">
+                                    <span className={clsx("text-[10px] font-bold px-2 py-0.5 rounded-md border shadow-sm", item.priorityClass)}>
+                                      {item.priority}
+                                    </span>
+                                    {item.a3.endDate && (
+                                      <div className="flex items-center gap-1">
+                                        <Clock3 className="w-3 h-3 text-slate-400" />
+                                        <span className={clsx("text-[10px] font-medium", new Date(item.a3.endDate) < new Date() ? "text-rose-600 font-bold" : "text-slate-500")}>
+                                          {new Date(item.a3.endDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  
+                                  <h4 className="text-sm font-bold text-slate-800 mb-1.5 leading-snug group-hover:text-brand-600 transition-colors line-clamp-2 relative z-10">
+                                    {item.a3.title || 'Untitled A3'}
+                                  </h4>
+                                  
+                                  <p className="text-xs text-slate-500 line-clamp-2 mb-3.5 leading-relaxed opacity-80 group-hover:opacity-100 transition-opacity relative z-10">
+                                    {item.a3.problemStatement || item.a3.description || 'No details provided.'}
+                                  </p>
+                                  
+                                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 relative z-10">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600 border border-white shadow-sm ring-1 ring-slate-100">
+                                        {(item.a3.owner || 'U').charAt(0).toUpperCase()}
+                                      </div>
+                                      <div className="flex flex-col">
+                                        <span className="text-[10px] text-slate-700 font-semibold truncate max-w-[80px] leading-none mb-0.5">
+                                          {item.a3.owner || 'Unassigned'}
+                                        </span>
+                                        <span className="text-[9px] text-slate-400 leading-none">Owner</span>
+                                      </div>
+                                    </div>
+                                    <span className={clsx("text-[9px] font-bold px-2 py-0.5 rounded-full border shadow-sm tracking-tight", item.labelColorClass)}>
+                                      {item.displayLabel}
+                                    </span>
+                                  </div>
+                                  
+                                  {item.a3.isBestPractice && (
+                                    <div className="absolute -top-1 -right-1 p-1 z-20">
+                                      <div className="bg-amber-100 text-amber-600 rounded-bl-xl rounded-tr-xl p-1.5 shadow-sm border border-amber-200/50 group-hover:rotate-12 transition-transform duration-300">
+                                        <Lightbulb className="w-3.5 h-3.5 fill-amber-500" />
+                                      </div>
+                                    </div>
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ) : (
-                    <div className="p-3 space-y-2">
-                      <div className="hidden md:grid grid-cols-7 gap-2 text-[11px] font-semibold text-gray-500 px-2 py-1">
-                        <span className="col-span-2">A3 Title</span>
-                        <span>Owner</span>
-                        <span>Plant</span>
-                        <span>Due Date</span>
-                        <span>Status</span>
+                    <div className="p-3 space-y-3">
+                      <div className="hidden md:grid grid-cols-12 gap-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider px-4 py-2.5 bg-slate-50/80 backdrop-blur-sm rounded-lg border border-slate-100 mb-2 sticky top-0 z-10 shadow-sm">
+                        <span className="col-span-5">A3 Case Details</span>
+                        <span className="col-span-2">Owner</span>
+                        <span className="col-span-2">Plant</span>
+                        <span className="col-span-1">Due</span>
+                        <span className="col-span-2 text-right">Status</span>
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-3 pb-4">
                         {visibleAllA3Cases.map(a3 => {
                           const isSelected = selectedGlobalA3 && selectedGlobalA3.id === a3.id;
                           const status = (a3.status || 'Not Started').trim();
                           const statusColor =
                             status === 'Completed'
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-emerald-500/10 shadow-emerald-100'
                               : status === 'In Progress'
-                              ? 'bg-blue-50 text-blue-700 border-blue-200'
-                              : 'bg-gray-50 text-gray-600 border-gray-200';
+                              ? 'bg-blue-50 text-blue-700 border-blue-200 ring-blue-500/10 shadow-blue-100'
+                              : 'bg-slate-50 text-slate-600 border-slate-200 ring-slate-500/10';
                           const primaryMetricId = (a3.linkedMetricIds || [])[0];
                           const relatedMetricLabel =
                             primaryMetricId && metricLabelById.get(primaryMetricId);
@@ -5283,51 +5599,76 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                               type="button"
                               onClick={() => setSelectedGlobalA3(a3)}
                               className={clsx(
-                                'w-full text-left rounded-md border px-3 py-2 bg-white hover:bg-blue-50/40 transition-colors',
-                                isSelected ? 'border-blue-400 bg-blue-50/60' : 'border-gray-100',
+                                'w-full text-left rounded-xl border p-4 transition-all duration-300 group relative overflow-hidden',
+                                isSelected 
+                                  ? 'border-brand-500 bg-brand-50/30 shadow-md ring-1 ring-brand-500/20' 
+                                  : 'border-slate-200 bg-white hover:border-brand-300 hover:shadow-lg hover:shadow-brand-500/5 hover:-translate-y-0.5'
                               )}
                             >
-                              <div className="flex flex-col md:grid md:grid-cols-6 md:gap-2 md:items-center">
-                                <div className="md:col-span-2">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-[11px] inline-flex items-center rounded-full border px-1.5 py-0.5 font-medium bg-white text-gray-600">
+                              <div className="flex flex-col md:grid md:grid-cols-12 md:gap-4 md:items-center relative z-10">
+                                <div className="md:col-span-5 pr-2">
+                                  <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                                    <span className="text-[10px] inline-flex items-center rounded-md border px-1.5 py-0.5 font-bold bg-slate-100 text-slate-600 border-slate-200 shadow-sm">
                                       {a3.group || 'Ungrouped'}
                                     </span>
                                     {a3.isBestPractice && (
-                                      <span className="inline-flex items-center rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 border border-amber-200">
-                                        <Lightbulb className="w-3 h-3 mr-1" />
+                                      <span className="inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200 shadow-sm ring-1 ring-amber-500/10">
+                                        <Lightbulb className="w-3 h-3 mr-1 fill-amber-400 text-amber-500" />
                                         Best practice
                                       </span>
                                     )}
                                   </div>
-                                  <div className="mt-1 text-xs font-semibold text-indigo-700 underline decoration-dotted underline-offset-2">
+                                  <div className="text-sm font-bold text-slate-800 group-hover:text-brand-700 transition-colors line-clamp-1">
                                     {a3.title || 'Untitled A3'}
                                   </div>
                                   {relatedMetricLabel && (
-                                    <div className="mt-0.5 text-[11px] text-gray-600">
-                                      Related metric: {relatedMetricLabel}
+                                    <div className="mt-1 text-[11px] font-medium text-slate-500 flex items-center gap-1.5">
+                                      <div className="p-0.5 rounded bg-slate-100 text-slate-500">
+                                        <TrendingUp className="w-3 h-3" />
+                                      </div>
+                                      {relatedMetricLabel}
                                     </div>
                                   )}
-                                  <div className="mt-0.5 text-[11px] text-gray-500 line-clamp-2">
+                                  <div className="mt-1.5 text-[11px] text-slate-500 line-clamp-2 leading-relaxed opacity-80">
                                     {a3.problemStatement || a3.description || 'No problem statement recorded.'}
                                   </div>
                                 </div>
-                                <div className="mt-2 md:mt-0 text-[11px] text-gray-700">
-                                  {a3.owner || 'Unassigned'}
+                                <div className="mt-3 md:mt-0 md:col-span-2 flex items-center gap-2">
+                                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600 border border-white shadow-sm ring-1 ring-slate-200">
+                                    {(a3.owner || 'U').charAt(0).toUpperCase()}
+                                  </div>
+                                  <div className="flex flex-col min-w-0">
+                                    <span className="text-xs font-semibold text-slate-700 truncate">{a3.owner || 'Unassigned'}</span>
+                                    <span className="text-[10px] text-slate-400">Owner</span>
+                                  </div>
                                 </div>
-                                <div className="mt-1 md:mt-0 text-[11px] text-gray-700">
+                                <div className="mt-1 md:mt-0 md:col-span-2 text-xs font-medium text-slate-600 flex items-center gap-1.5">
+                                  <div className="p-1 rounded bg-slate-50 text-slate-400">
+                                    <Building2 className="w-3.5 h-3.5" />
+                                  </div>
                                   {a3.plant || '—'}
                                 </div>
-                                <div className="mt-1 md:mt-0 text-[11px] text-gray-700">
-                                  {a3.endDate || '—'}
+                                <div className="mt-1 md:mt-0 md:col-span-1 text-xs font-medium text-slate-600">
+                                  {a3.endDate ? (
+                                    <span className={clsx(
+                                      "px-1.5 py-0.5 rounded-md border",
+                                      new Date(a3.endDate) < new Date() && status !== 'Completed'
+                                        ? "bg-red-50 text-red-700 border-red-200"
+                                        : "bg-slate-50 text-slate-600 border-slate-200"
+                                    )}>
+                                      {new Date(a3.endDate).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' })}
+                                    </span>
+                                  ) : '—'}
                                 </div>
-                                <div className="mt-1 md:mt-0 text-[11px] text-gray-700">
+                                <div className="mt-2 md:mt-0 md:col-span-2 text-right">
                                   <span
                                     className={clsx(
-                                      'inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium',
+                                      'inline-flex items-center rounded-lg border px-2.5 py-1 text-[10px] font-bold shadow-sm ring-1 transition-all',
                                       statusColor,
                                     )}
                                   >
+                                    {status === 'Completed' && <Check className="w-3 h-3 mr-1" />}
+                                    {status === 'In Progress' && <Clock3 className="w-3 h-3 mr-1" />}
                                     {status || 'Not Started'}
                                   </span>
                                 </div>
@@ -5347,15 +5688,18 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   isA3PortfolioSidebarOpen ? 'lg:w-1/2' : 'lg:w-full',
                 )}
               >
-                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-white">
+                <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-white/50 backdrop-blur-sm sticky top-0 z-20">
                   <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs font-semibold tracking-wide text-gray-600 uppercase">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="p-1 rounded bg-brand-50 text-brand-600">
+                        <FileText className="w-3.5 h-3.5" />
+                      </div>
+                      <p className="text-xs font-bold tracking-wide text-slate-700 uppercase">
                         A3 Report Preview
                       </p>
                     </div>
-                    <p className="text-[11px] text-gray-500">
-                      Same structure as the Report tab of A3 Analysis.
+                    <p className="text-[11px] text-slate-500 font-medium ml-6">
+                      Executive summary view
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -5400,14 +5744,14 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                           }
                         }}
                         className={clsx(
-                          'inline-flex items-center rounded-full border px-2 py-1 text-[11px] font-medium',
+                          'inline-flex items-center rounded-xl border px-3 py-1.5 text-[11px] font-bold transition-all shadow-sm',
                           selectedGlobalA3.isBestPractice
-                            ? 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'
-                            : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50',
+                            ? 'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 ring-1 ring-amber-500/20'
+                            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900',
                         )}
                         disabled={isUpdatingBestPractice}
                       >
-                        <Lightbulb className="w-3 h-3 mr-1" />
+                        <Lightbulb className="w-3.5 h-3.5 mr-1.5" />
                         <span>
                           {selectedGlobalA3.isBestPractice
                             ? 'Best practice'
@@ -5419,100 +5763,114 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       <button
                         type="button"
                         onClick={() => setIsA3PortfolioSidebarOpen(true)}
-                        className="ml-1 inline-flex items-center rounded-full border border-gray-200 px-2 py-1 text-[11px] text-gray-600 hover:bg-gray-50"
+                        className="ml-2 inline-flex items-center justify-center rounded-xl border border-slate-200 px-3 py-1.5 text-[11px] font-bold text-slate-600 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-200 transition-all shadow-sm"
                         title="Show portfolio list"
                       >
-                        <ChevronRight className="w-3 h-3" />
-                        <span className="ml-1 hidden sm:inline">Portfolio</span>
+                        <ChevronRight className="w-3.5 h-3.5 mr-1.5" />
+                        <span className="hidden sm:inline">Show List</span>
                       </button>
                     )}
                   </div>
                 </div>
-                <div className="flex-1 overflow-auto p-4 bg-gray-50">
+                <div className="flex-1 overflow-auto p-6 bg-slate-50/50">
                   {!selectedGlobalA3 ? (
-                    <div className="h-full flex items-center justify-center text-sm text-gray-500">
-                      Select an A3 case from the list to view details.
+                    <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                      <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4 text-slate-300">
+                        <FileText className="w-8 h-8" />
+                      </div>
+                      <p className="text-sm font-bold text-slate-600">No A3 case selected</p>
+                      <p className="text-xs mt-1">Select a case from the list to view the report.</p>
                     </div>
                   ) : (
-                    <div className="space-y-6">
-                      <div className="space-y-1">
-                        <h3 className="text-lg font-bold text-gray-900">
-                          {selectedGlobalA3.title || 'A3 Problem Solving Report'}
-                        </h3>
-                        <div className="text-xs text-gray-500 space-x-3">
-                          <span>
-                            Owner:{' '}
-                            <span className="font-medium text-gray-700">
-                              {selectedGlobalA3.owner || 'Unassigned'}
-                            </span>
-                          </span>
-                          <span>
-                            Group:{' '}
-                            <span className="font-medium text-gray-700">
-                              {selectedGlobalA3.group || 'Ungrouped'}
-                            </span>
-                          </span>
-                          <span>
-                            Plant:{' '}
-                            <span className="font-medium text-gray-700">
-                              {selectedGlobalA3.plant || '—'}
-                            </span>
-                          </span>
-                          <span>
-                            Status:{' '}
-                            <span className="font-medium text-gray-700">
-                              {selectedGlobalA3.status || 'In Progress'}
-                            </span>
-                          </span>
-                          <span>
-                            Due:{' '}
-                            <span className="font-medium text-gray-700">
-                              {selectedGlobalA3.endDate || '—'}
-                            </span>
+                    <div className="space-y-6 max-w-5xl mx-auto">
+                      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm ring-1 ring-slate-100/50">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="text-xl font-bold text-slate-900 tracking-tight">
+                              {selectedGlobalA3.title || 'A3 Problem Solving Report'}
+                            </h3>
+                            <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500 font-medium">
+                              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-100">
+                                <span className="text-slate-400">Owner:</span>
+                                <span className="text-slate-700 font-bold">
+                                  {selectedGlobalA3.owner || 'Unassigned'}
+                                </span>
+                              </span>
+                              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-100">
+                                <span className="text-slate-400">Group:</span>
+                                <span className="text-slate-700 font-bold">
+                                  {selectedGlobalA3.group || 'Ungrouped'}
+                                </span>
+                              </span>
+                              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-100">
+                                <span className="text-slate-400">Plant:</span>
+                                <span className="text-slate-700 font-bold">
+                                  {selectedGlobalA3.plant || '—'}
+                                </span>
+                              </span>
+                              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-100">
+                                <span className="text-slate-400">Due:</span>
+                                <span className="text-slate-700 font-bold">
+                                  {selectedGlobalA3.endDate || '—'}
+                                </span>
+                              </span>
+                            </div>
+                          </div>
+                          <span className={clsx(
+                            'px-3 py-1 rounded-full text-xs font-bold border',
+                            (selectedGlobalA3.status || 'In Progress') === 'Completed'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : (selectedGlobalA3.status || 'In Progress') === 'In Progress'
+                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              : 'bg-slate-50 text-slate-600 border-slate-200'
+                          )}>
+                            {selectedGlobalA3.status || 'In Progress'}
                           </span>
                         </div>
                       </div>
 
                       <div className="space-y-6">
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">
-                            1. Problem Statement
+                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm ring-1 ring-slate-100/50 group hover:shadow-md transition-shadow">
+                          <h4 className="flex items-center gap-3 text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-100 pb-3">
+                            <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-brand-50 text-brand-600 text-xs shadow-sm ring-1 ring-brand-100">1</span>
+                            Problem Statement
                           </h4>
-                          <div className="text-sm text-gray-600 space-y-2">
+                          <div className="text-sm text-slate-600 space-y-2 leading-relaxed">
                             <p>
-                              <span className="font-medium text-gray-900">Problem:</span>{' '}
+                              <span className="font-bold text-slate-900">Problem:</span>{' '}
                               {selectedGlobalA3.problemStatement || 'Not defined'}
                             </p>
                           </div>
                           {selectedGlobalA3.isBestPractice && (
-                            <div className="mt-3 inline-flex items-center rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-medium text-amber-700">
-                              <Lightbulb className="w-3 h-3 mr-1" />
+                            <div className="mt-4 inline-flex items-center rounded-lg bg-amber-50 border border-amber-200 px-3 py-1.5 text-xs font-bold text-amber-700 shadow-sm">
+                              <Lightbulb className="w-3.5 h-3.5 mr-1.5 fill-amber-400 text-amber-500" />
                               Best practice case
                             </div>
                           )}
                         </div>
 
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">
-                            2. Data Analysis
+                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm ring-1 ring-slate-100/50 group hover:shadow-md transition-shadow">
+                          <h4 className="flex items-center gap-3 text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-100 pb-3">
+                            <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-brand-50 text-brand-600 text-xs shadow-sm ring-1 ring-brand-100">2</span>
+                            Data Analysis
                           </h4>
-                          <p className="text-xs text-gray-500 mt-2">
-                            <span className="font-semibold block mb-1">Observation:</span>
+                          <p className="text-sm text-slate-600 mt-2 leading-relaxed">
+                            <span className="font-bold text-slate-900 block mb-1">Observation:</span>
                             {selectedGlobalA3.dataAnalysisObservations ||
                               'No data observations recorded.'}
                           </p>
                           {Array.isArray(selectedGlobalA3.dataAnalysisImages) &&
                             selectedGlobalA3.dataAnalysisImages.length > 0 && (
-                              <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
                                 {selectedGlobalA3.dataAnalysisImages.map(image => (
                                   <div
                                     key={image.id}
-                                    className="border border-gray-200 rounded-md overflow-hidden bg-gray-50"
+                                    className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50 shadow-sm"
                                   >
                                     <img
                                       src={image.src}
                                       alt="Data analysis evidence"
-                                      className="w-full h-24 object-contain bg-white"
+                                      className="w-full h-32 object-contain bg-white hover:scale-105 transition-transform duration-300"
                                     />
                                   </div>
                                 ))}
@@ -5520,10 +5878,11 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                             )}
                         </div>
 
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                          <div className="flex items-center justify-between mb-2 border-b pb-1">
-                            <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-                              3. Root Cause Analysis (5 Whys)
+                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm ring-1 ring-slate-100/50 group hover:shadow-md transition-shadow">
+                          <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                            <h4 className="flex items-center gap-3 text-sm font-bold text-slate-800 uppercase tracking-wider">
+                              <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-brand-50 text-brand-600 text-xs shadow-sm ring-1 ring-brand-100">3</span>
+                              Root Cause Analysis (5 Whys)
                             </h4>
                             {selectedGlobalA3.mindMapNodes &&
                               selectedGlobalA3.mindMapNodes.length > 0 && (
@@ -5534,7 +5893,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                       globalRootCauseView === 'text' ? 'mindmap' : 'text',
                                     )
                                   }
-                                  className="px-2 py-1 rounded-md text-[11px] font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-brand-50 hover:text-brand-600 transition-all border border-slate-200"
                                 >
                                   {globalRootCauseView === 'text'
                                     ? 'Show mindmap snapshot'
@@ -5542,15 +5901,15 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 </button>
                               )}
                           </div>
-                          <div className="text-sm text-gray-600 space-y-4">
+                          <div className="text-sm text-slate-600 space-y-4">
                             {globalRootCauseView === 'text' ? (
                               <>
                                 {selectedGlobalA3.mindMapText && (
-                                  <div className="bg-gray-50 p-3 rounded border border-gray-100">
-                                    <h5 className="text-xs font-semibold text-gray-500 mb-1">
-                                      5 Whys Analysis:
+                                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/60">
+                                    <h5 className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">
+                                      5 Whys Analysis
                                     </h5>
-                                    <p className="whitespace-pre-wrap font-mono text-xs">
+                                    <p className="whitespace-pre-wrap font-mono text-xs text-slate-700 leading-relaxed bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
                                       {selectedGlobalA3.mindMapText}
                                     </p>
                                   </div>
@@ -5559,11 +5918,11 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                             ) : (
                               selectedGlobalA3.mindMapNodes &&
                               selectedGlobalA3.mindMapNodes.length > 0 && (
-                                <div className="bg-gray-50 p-3 rounded border border-gray-100">
-                                  <h5 className="text-xs font-semibold text-gray-500 mb-2">
-                                    5 Whys Mindmap Snapshot:
+                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/60">
+                                  <h5 className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">
+                                    5 Whys Mindmap Snapshot
                                   </h5>
-                                  <div className="pointer-events-none">
+                                  <div className="pointer-events-none rounded-lg overflow-hidden border border-slate-200 shadow-sm bg-white">
                                     <MindMap
                                       initialNodes={selectedGlobalA3.mindMapNodes}
                                       initialScale={selectedGlobalA3.mindMapScale}
@@ -5574,15 +5933,15 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                               )
                             )}
                             <div>
-                              <h5 className="text-xs font-semibold text-gray-500 mb-1">
-                                Identified Root Cause:
+                              <h5 className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">
+                                Identified Root Cause
                               </h5>
                               {selectedGlobalA3.rootCause ? (
-                                <p className="whitespace-pre-wrap">
+                                <div className="p-3 bg-red-50/50 border border-red-100 rounded-xl text-red-900 font-medium">
                                   {selectedGlobalA3.rootCause}
-                                </p>
+                                </div>
                               ) : (
-                                <p className="italic text-gray-500">
+                                <p className="italic text-slate-400">
                                   Root cause not identified yet.
                                 </p>
                               )}
@@ -5590,50 +5949,64 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                           </div>
                         </div>
 
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">
-                            4. Action Plan
+                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm ring-1 ring-slate-100/50 group hover:shadow-md transition-shadow">
+                          <h4 className="flex items-center gap-3 text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-100 pb-3">
+                            <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-brand-50 text-brand-600 text-xs shadow-sm ring-1 ring-brand-100">4</span>
+                            Action Plan
                           </h4>
-                          <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                              <thead className="bg-gray-50">
+                          <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm ring-1 ring-slate-100/50">
+                            <table className="min-w-full divide-y divide-slate-100">
+                              <thead className="bg-slate-50/80 backdrop-blur-sm">
                                 <tr>
-                                  <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                                  <th className="px-4 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                                     Task
                                   </th>
-                                  <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                                  <th className="px-4 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                                     Description
                                   </th>
-                                  <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                                  <th className="px-4 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                                     Owner
                                   </th>
-                                  <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                                  <th className="px-4 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                                     End Date
                                   </th>
-                                  <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                                  <th className="px-4 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                                     Status
                                   </th>
                                 </tr>
                               </thead>
-                              <tbody className="bg-white divide-y divide-gray-200">
+                              <tbody className="bg-white divide-y divide-slate-50">
                                 {selectedGlobalA3.actionPlanTasks &&
                                 selectedGlobalA3.actionPlanTasks.length > 0 ? (
                                   selectedGlobalA3.actionPlanTasks.map(task => (
-                                    <tr key={task.id}>
-                                      <td className="px-2 py-1 text-xs text-gray-900">
+                                    <tr key={task.id} className="group hover:bg-slate-50/80 transition-all duration-200">
+                                      <td className="px-4 py-3.5 text-sm font-bold text-slate-800 group-hover:text-brand-700 transition-colors">
                                         {task.name}
                                       </td>
-                                      <td className="px-2 py-1 text-xs text-gray-500">
+                                      <td className="px-4 py-3.5 text-sm text-slate-600 leading-relaxed">
                                         {task.description || ''}
                                       </td>
-                                      <td className="px-2 py-1 text-xs text-gray-500">
-                                        {task.owner}
+                                      <td className="px-4 py-3.5 text-sm text-slate-500">
+                                        <div className="flex items-center gap-2">
+                                          <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200 shadow-sm">
+                                            {(task.owner || 'U').charAt(0).toUpperCase()}
+                                          </div>
+                                          <span className="font-medium text-xs">{task.owner}</span>
+                                        </div>
                                       </td>
-                                      <td className="px-2 py-1 text-xs text-gray-500">
-                                        {task.endDate || ''}
+                                      <td className="px-4 py-3.5 text-xs font-mono font-medium text-slate-500 bg-slate-50/50 rounded-lg mx-2 my-1 inline-block">
+                                        {task.endDate || '—'}
                                       </td>
-                                      <td className="px-2 py-1 text-xs text-gray-600">
-                                        {task.status}
+                                      <td className="px-4 py-3.5 text-sm">
+                                        <span className={clsx(
+                                          "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border shadow-sm transition-all",
+                                          task.status === 'Completed' 
+                                            ? "bg-emerald-50 text-emerald-700 border-emerald-200 ring-1 ring-emerald-500/10 shadow-emerald-100" 
+                                            : "bg-slate-50 text-slate-600 border-slate-200 ring-1 ring-slate-500/10"
+                                        )}>
+                                          {task.status === 'Completed' && <Check className="w-3 h-3" />}
+                                          {task.status}
+                                        </span>
                                       </td>
                                     </tr>
                                   ))
@@ -5641,9 +6014,14 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                   <tr>
                                     <td
                                       colSpan={5}
-                                      className="px-2 py-4 text-xs text-center text-gray-500"
+                                      className="px-4 py-12 text-sm text-center text-slate-400 italic bg-slate-50/30"
                                     >
-                                      No actions defined.
+                                      <div className="flex flex-col items-center justify-center gap-2">
+                                        <div className="p-2 rounded-full bg-slate-100 text-slate-300">
+                                          <Calendar className="w-6 h-6" />
+                                        </div>
+                                        <span>No actions defined yet.</span>
+                                      </div>
                                     </td>
                                   </tr>
                                 )}
@@ -5652,13 +6030,14 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                           </div>
                         </div>
 
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">
-                            5. Results & Follow-up
+                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm ring-1 ring-slate-100/50 group hover:shadow-md transition-shadow">
+                          <h4 className="flex items-center gap-3 text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-100 pb-3">
+                            <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-brand-50 text-brand-600 text-xs shadow-sm ring-1 ring-brand-100">5</span>
+                            Results & Follow-up
                           </h4>
-                          <div className="text-sm text-gray-600 space-y-2">
+                          <div className="text-sm text-slate-600 space-y-2 leading-relaxed">
                             <p>
-                              <span className="font-medium text-gray-900">Outcome:</span>{' '}
+                              <span className="font-bold text-slate-900 block mb-1">Outcome:</span>
                               {selectedGlobalA3.results || 'No results recorded yet.'}
                             </p>
                           </div>
