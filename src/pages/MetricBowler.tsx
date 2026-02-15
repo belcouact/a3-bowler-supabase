@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, type ReactNode } from 'react';
+import { useState, useMemo, useEffect, Fragment } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { Info, Settings, HelpCircle, Sparkles, Loader2, Calendar, Zap } from 'lucide-react';
@@ -142,10 +142,6 @@ const MetricBowler = () => {
         metricStartDate: value,
       });
     }
-  };
-
-  const handleStopDateChange = (value: string) => {
-    setStopDate(value);
   };
 
   const handleBowlerSave = () => {
@@ -653,18 +649,6 @@ const MetricBowler = () => {
           </div>
         </div>
       </div>
-                <button 
-                  onClick={() => setIsHelpModalOpen(true)}
-                  className="w-11 h-11 flex items-center justify-center text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all border border-transparent hover:border-brand-100"
-                  title="Help & Documentation"
-                >
-                  <HelpCircle className="w-6 h-6" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Main Content Area */}
       <div className="bg-[#f8fafc] px-3 py-6 md:px-8 md:py-10 lg:px-10">
@@ -705,7 +689,7 @@ const MetricBowler = () => {
                       </tr>
                   ) : (
                       metrics.map((metric, metricIndex) => (
-                        <React.Fragment key={metric.id}>
+                        <Fragment key={metric.id}>
                         <tr
                           key={`${metric.id}-row1`}
                           className="hover:bg-slate-50/40 transition-colors border-b-0 group/row"
@@ -747,10 +731,10 @@ const MetricBowler = () => {
                                           <Info className="w-3.5 h-3.5 text-slate-300 hover:text-brand-500 cursor-help transition-colors" />
                                       </div>
                                   </div>
-                                  {metric.champion && (
+                                  {metric.owner && (
                                     <div className="mt-1 flex items-center gap-1.5 opacity-60">
                                       <div className="w-1 h-1 rounded-full bg-slate-400"></div>
-                                      <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">{metric.champion}</span>
+                                      <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">{metric.owner}</span>
                                     </div>
                                   )}
                               </div>
@@ -763,7 +747,7 @@ const MetricBowler = () => {
                           </td>
                           <td rowSpan={2} className="hidden md:table-cell px-3 py-6 align-top border-r border-slate-200/60 group-hover/row:bg-slate-50/40 transition-colors">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                              {metric.type || 'N/A'}
+                              {metric.attribute || 'N/A'}
                             </span>
                           </td>
                           <td className="px-3 py-3 whitespace-nowrap text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/30 border-b border-slate-100/80 h-10">
@@ -832,7 +816,7 @@ const MetricBowler = () => {
                        );
                      })}
                   </tr>
-                  </React.Fragment>
+                  </Fragment>
                 ))
             )}
           </tbody>
@@ -934,7 +918,7 @@ const MetricBowler = () => {
                     <div>
                         <h4 className="text-lg font-black text-slate-900 font-display tracking-tight mb-1 group-hover/card:text-brand-600 transition-colors">{metric.name}</h4>
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{metric.type || 'N/A'}</span>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{metric.attribute || 'N/A'}</span>
                             <div className="w-1 h-1 rounded-full bg-slate-200"></div>
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{metric.scope || 'N/A'}</span>
                         </div>
@@ -1177,6 +1161,9 @@ const MetricBowler = () => {
           </div>
         </div>
       )}
+
+      </div>
+    </div>
 
       <HelpModal
         isOpen={isHelpModalOpen} 
