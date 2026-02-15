@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { Link, Outlet, useLocation, useParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { useApp } from '../context/AppContext';
-import { AlertCircle, BarChart2, GitBranch, Calendar, CheckCircle, FileText, Bot } from 'lucide-react';
+import { AlertCircle, BarChart2, GitBranch, Calendar, CheckCircle, FileText, Bot, Zap } from 'lucide-react';
 
 const A3Analysis = () => {
   const location = useLocation();
@@ -46,7 +46,7 @@ const A3Analysis = () => {
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-lg shadow-brand-200">
-                <FileText className="w-5 h-5" />
+                <Zap className="w-5 h-5" />
               </div>
               <div>
                 <h1 className="text-xl md:text-2xl font-black text-slate-900 font-display tracking-tight leading-none">

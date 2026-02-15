@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, Fragment, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
-import { Info, Settings, HelpCircle, Sparkles, Loader2, Calendar, Zap, Pencil, LayoutGrid, Square } from 'lucide-react';
+import { Info, Settings, HelpCircle, Sparkles, Loader2, Calendar, Zap, Pencil, LayoutGrid, Square, TrendingUp } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Metric, MindMapNodeData, ActionPlanTaskData } from '../types';
 import { HelpModal } from '../components/HelpModal';
@@ -552,7 +552,7 @@ const MetricBowler = () => {
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div className="flex items-center gap-3 md:gap-4">
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-lg shadow-brand-100 shrink-0">
-                <Zap className="w-5 h-5 md:w-6 md:h-6" />
+                <TrendingUp className="w-5 h-5 md:w-6 md:h-6" />
               </div>
               <div 
                   onDoubleClick={() => {

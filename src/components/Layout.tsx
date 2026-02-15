@@ -2862,20 +2862,19 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
             onClick={handleSaveData}
             disabled={isSaving}
             className={clsx(
-              "hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm disabled:opacity-50",
-              isSaving 
-                ? "bg-slate-100 text-slate-400" 
-                : "bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-md hover:shadow-emerald-100 active:scale-95"
-            )}
-            title={isSaving ? "Saving..." : "Save Data"}
-          >
-            {isSaving ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4" />
-            )}
-            <span className="hidden lg:inline">Save</span>
-          </button>
+                  "hidden md:inline-flex items-center justify-center w-9 h-9 rounded-xl text-sm font-bold transition-all shadow-sm disabled:opacity-50",
+                  isSaving 
+                    ? "bg-slate-100 text-slate-400" 
+                    : "bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-md hover:shadow-emerald-100 active:scale-95"
+                )}
+                title={isSaving ? "Saving..." : "Save Data"}
+              >
+                {isSaving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+              </button>
 
           {user ? (
             <div className="flex items-center space-x-2 md:space-x-3">
