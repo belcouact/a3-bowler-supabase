@@ -1027,21 +1027,17 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
         return;
       }
       
-      const toastId = toast.loading('Consolidating data for summary...');
+      toast.info('Consolidating data for summary...');
       try {
-        const result = await dataService.consolidateBowlers(emailConsolidateTags);
-        toast.dismiss(toastId);
+        const tags = emailConsolidateTags.split(',').map(t => t.trim()).filter(Boolean);
+        const result = await dataService.consolidateBowlers(tags);
         
         if (result.success) {
-          targetBowlers = result.bowlers;
-          targetA3Cases = result.a3Cases;
+          targetBowlers = result.bowlers as any;
+          targetA3Cases = result.a3Cases as any;
           toast.success(`Consolidated: ${targetBowlers.length} metrics, ${targetA3Cases.length} A3s`);
-        } else {
-          toast.error(result.error || 'Consolidation failed');
-          return;
         }
       } catch (error: any) {
-        toast.dismiss(toastId);
         console.error('Consolidation error:', error);
         toast.error('Failed to consolidate data for summary');
         return;
