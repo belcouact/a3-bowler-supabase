@@ -943,8 +943,12 @@ const MetricBowler = () => {
                       <button
                         onClick={() => handleAIAnalysis(metric)}
                         disabled={analyzingMetrics[metric.id]}
-                        className="p-2.5 rounded-lg transition-all text-brand-500 hover:text-brand-600 hover:bg-white hover:shadow-sm disabled:opacity-50"
-                        title="AI Analysis"
+                        className={`p-2.5 rounded-lg transition-all disabled:opacity-50 ${
+                          analyzingMetrics[metric.id] 
+                            ? 'bg-indigo-50 text-indigo-400' 
+                            : 'bg-gradient-to-br from-indigo-50 to-purple-50 text-indigo-600 hover:from-indigo-100 hover:to-purple-100 hover:shadow-md hover:scale-105 ring-1 ring-indigo-200/50'
+                        }`}
+                        title="AI Performance Analysis"
                       >
                         {analyzingMetrics[metric.id] ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -1031,12 +1035,19 @@ const MetricBowler = () => {
                         <CartesianGrid strokeDasharray="8 8" vertical={false} stroke="#f1f5f9" />
                         <XAxis
                             dataKey="name"
-                            tick={{ fontSize: 12, fill: '#94a3b8', fontWeight: 700, fontVariant: 'small-caps' }}
+                            tick={{ 
+                              fontSize: isCompactView ? 10 : 12, 
+                              fill: '#94a3b8', 
+                              fontWeight: 700, 
+                              fontVariant: 'small-caps',
+                              angle: isCompactView ? -45 : 0,
+                              textAnchor: isCompactView ? 'end' : 'middle',
+                              dy: isCompactView ? 5 : 10
+                            }}
                             axisLine={false}
                             tickLine={false}
-                            dy={10}
                             interval={0}
-                            height={40}
+                            height={isCompactView ? 60 : 40}
                           />
                         <YAxis
                           tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 700 }}
