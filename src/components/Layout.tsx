@@ -9,10 +9,6 @@ import {
   MetricData,
   AIModelKey,
   GroupPerformanceRow,
-  A3Comment,
-  A3Reaction,
-  A3ReactionSection,
-  A3ReactionType,
 } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
@@ -218,24 +214,10 @@ const Layout = () => {
   const [selectedGlobalA3, setSelectedGlobalA3] = useState<GlobalA3Case | null>(null);
   const [globalRootCauseView, setGlobalRootCauseView] = useState<'text' | 'mindmap'>('text');
   const [lastAllA3LoadedAt, setLastAllA3LoadedAt] = useState<number | null>(null);
-  const [a3Comments, setA3Comments] = useState<A3Comment[]>([]);
-  const [a3CommentCounts, setA3CommentCounts] = useState<Record<string, number>>({});
-  const [isLoadingA3Comments, setIsLoadingA3Comments] = useState(false);
-  const [a3CommentsError, setA3CommentsError] = useState<string | null>(null);
-  const [newCommentText, setNewCommentText] = useState('');
-  const [activeCommentSection, setActiveCommentSection] = useState<
-    'all' | 'general' | 'problem' | 'data' | 'root' | 'action' | 'results'
-  >('general');
-  const [activeReplyToId, setActiveReplyToId] = useState<string | null>(null);
-  const [replyText, setReplyText] = useState('');
-  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
-  const [a3Reactions, setA3Reactions] = useState<A3Reaction[]>([]);
   const [isQuickDemoOpen, setIsQuickDemoOpen] = useState(false);
   const [isLogoPreviewOpen, setIsLogoPreviewOpen] = useState(false);
   const [quickDemoMetricName, setQuickDemoMetricName] = useState('');
   const [isGeneratingQuickDemo, setIsGeneratingQuickDemo] = useState(false);
-  const [isLoadingA3Reactions, setIsLoadingA3Reactions] = useState(false);
   const [a3BestPracticeOnly, setA3BestPracticeOnly] = useState(false);
   const [isUpdatingBestPractice, setIsUpdatingBestPractice] = useState(false);
   const [isDataChartingOpen, setIsDataChartingOpen] = useState(false);
@@ -269,247 +251,9 @@ const Layout = () => {
 
   useEffect(() => {
     if (!selectedGlobalA3) {
-      setA3Comments([]);
-      setA3CommentsError(null);
-      setNewCommentText('');
-       setActiveCommentSection('general');
-      setActiveReplyToId(null);
-      setReplyText('');
-      setA3Reactions([]);
       return;
     }
-
-    let isCancelled = false;
-
-    const loadComments = async () => {
-      setIsLoadingA3Comments(true);
-      setA3CommentsError(null);
-      try {
-        const comments = await dataService.loadA3Comments(selectedGlobalA3.id);
-        if (!isCancelled) {
-          setA3Comments(comments);
-          setA3CommentCounts(prev => {
-            const currentCount = comments.length;
-            const existing = prev[selectedGlobalA3.id];
-            if (existing === currentCount) {
-              return prev;
-            }
-            return {
-              ...prev,
-              [selectedGlobalA3.id]: currentCount,
-            };
-          });
-        }
-      } catch (error) {
-        if (!isCancelled) {
-          console.error('Failed to load A3 comments', error);
-          setA3CommentsError('Failed to load comments.');
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsLoadingA3Comments(false);
-        }
-      }
-    };
-
-    loadComments();
-
-    return () => {
-      isCancelled = true;
-    };
   }, [selectedGlobalA3]);
-
-  useEffect(() => {
-    if (!selectedGlobalA3) {
-      return;
-    }
-    let isCancelled = false;
-
-    const loadReactions = async () => {
-      setIsLoadingA3Reactions(true);
-      try {
-        const reactions = await dataService.loadA3Reactions(selectedGlobalA3.id);
-        if (!isCancelled) {
-          setA3Reactions(reactions);
-        }
-      } catch (error) {
-        if (!isCancelled) {
-          console.error('Failed to load A3 reactions', error);
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsLoadingA3Reactions(false);
-        }
-      }
-    };
-
-    loadReactions();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [selectedGlobalA3]);
-
-  const filteredA3Comments = useMemo(() => {
-    if (activeCommentSection === 'all') {
-      return a3Comments;
-    }
-    const sectionKey =
-      activeCommentSection === 'general' ? undefined : activeCommentSection;
-    return a3Comments.filter(comment => {
-      const value = comment.section || 'general';
-      if (!sectionKey) {
-        return value === 'general';
-      }
-      return value === sectionKey;
-    });
-  }, [a3Comments, activeCommentSection]);
-
-  const reactionOptionsBySection: Record<
-    A3ReactionSection,
-    { key: A3ReactionType; label: string }[]
-  > = {
-    problem: [
-      { key: 'like', label: 'Like' },
-      { key: 'helpful', label: 'Helpful' },
-      { key: 'me_too', label: 'Me too' },
-    ],
-    data: [
-      { key: 'data_clear', label: 'Clear' },
-      { key: 'data_missing', label: 'Needs more data' },
-      { key: 'data_confusing', label: 'Confusing' },
-    ],
-    root: [
-      { key: 'root_solid', label: 'Solid root cause' },
-      { key: 'root_weak', label: 'Weak root cause' },
-      { key: 'root_needs_5whys', label: 'Needs more 5 Whys' },
-    ],
-    action: [
-      { key: 'actions_strong', label: 'Strong actions' },
-      { key: 'actions_vague', label: 'Too vague' },
-      { key: 'actions_too_many', label: 'Too many actions' },
-    ],
-    results: [
-      { key: 'results_achieved', label: 'Achieved' },
-      { key: 'results_partial', label: 'Partially achieved' },
-      { key: 'results_not_achieved', label: 'Not achieved' },
-    ],
-  };
-
-  const getReactionButtonClasses = (
-    section: A3ReactionSection,
-    userReacted: boolean,
-  ) => {
-    const base =
-      'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px]';
-
-    if (section === 'problem') {
-      return clsx(
-        base,
-        userReacted
-          ? 'bg-indigo-100 border-indigo-300 text-indigo-800'
-          : 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100',
-      );
-    }
-
-    if (section === 'data') {
-      return clsx(
-        base,
-        userReacted
-          ? 'bg-amber-100 border-amber-300 text-amber-800'
-          : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100',
-      );
-    }
-
-    if (section === 'root') {
-      return clsx(
-        base,
-        userReacted
-          ? 'bg-teal-100 border-teal-300 text-teal-800'
-          : 'bg-teal-50 border-teal-200 text-teal-700 hover:bg-teal-100',
-      );
-    }
-
-    if (section === 'action') {
-      return clsx(
-        base,
-        userReacted
-          ? 'bg-sky-100 border-sky-300 text-sky-800'
-          : 'bg-sky-50 border-sky-200 text-sky-700 hover:bg-sky-100',
-      );
-    }
-
-    return clsx(
-      base,
-      userReacted
-        ? 'bg-emerald-100 border-emerald-300 text-emerald-800'
-        : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100',
-    );
-  };
-
-  const handleToggleReaction = async (
-    type: A3ReactionType,
-    section: A3ReactionSection,
-  ) => {
-    if (!selectedGlobalA3) {
-      return;
-    }
-    if (!user || !user.username) {
-      setIsLoginModalOpen(true);
-      return;
-    }
-    const existing = a3Reactions.find(reaction => {
-      const reactionSection =
-        (reaction.section as A3ReactionSection | undefined) ?? 'problem';
-      return (
-        reaction.type === type &&
-        reaction.userId === user.username &&
-        reactionSection === section
-      );
-    });
-    if (existing) {
-      setA3Reactions(prev => prev.filter(reaction => reaction.id !== existing.id));
-      try {
-        await dataService.removeA3Reaction({
-          a3Id: selectedGlobalA3.id,
-          type,
-          section,
-          userId: user.username,
-        });
-      } catch (error) {
-        console.error('Failed to remove reaction', error);
-        setA3Reactions(prev => [...prev, existing]);
-        toast.error('Failed to update reaction. Please try again.');
-      }
-      return;
-    }
-    const optimistic: A3Reaction = {
-      id: `${Date.now()}-${type}`,
-      a3Id: selectedGlobalA3.id,
-      userId: user.username,
-      username: user.username,
-      section,
-      type,
-      createdAt: new Date().toISOString(),
-    };
-    setA3Reactions(prev => [...prev, optimistic]);
-    try {
-      const created = await dataService.addA3Reaction({
-        a3Id: selectedGlobalA3.id,
-        type,
-        section,
-        userId: user.username,
-        username: user.username,
-      });
-      setA3Reactions(prev =>
-        prev.map(reaction => (reaction === optimistic ? created : reaction)),
-      );
-    } catch (error) {
-      console.error('Failed to add reaction', error);
-      setA3Reactions(prev => prev.filter(reaction => reaction !== optimistic));
-      toast.error('Failed to update reaction. Please try again.');
-    }
-  };
 
   const visibleAllA3Cases = useMemo(
     () => {
@@ -2649,18 +2393,6 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
         setSelectedGlobalA3(cases[0]);
       } else {
         setSelectedGlobalA3(null);
-      }
-      if (cases.length > 0) {
-        try {
-          const counts = await dataService.loadA3CommentCounts(
-            cases.map(a3 => a3.id),
-          );
-          setA3CommentCounts(counts);
-        } catch (error) {
-          console.error('Failed to load A3 comment counts', error);
-        }
-      } else {
-        setA3CommentCounts({});
       }
     } catch (error: any) {
       console.error('Failed to load global A3 cases', error);
@@ -5261,7 +4993,6 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                         <span>Plant</span>
                         <span>Due Date</span>
                         <span>Status</span>
-                        <span>Interactions</span>
                       </div>
                       <div className="space-y-1">
                         {visibleAllA3Cases.map(a3 => {
@@ -5286,7 +5017,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 isSelected ? 'border-blue-400 bg-blue-50/60' : 'border-gray-100',
                               )}
                             >
-                              <div className="flex flex-col md:grid md:grid-cols-7 md:gap-2 md:items-center">
+                              <div className="flex flex-col md:grid md:grid-cols-6 md:gap-2 md:items-center">
                                 <div className="md:col-span-2">
                                   <div className="flex items-center gap-2">
                                     <span className="text-[11px] inline-flex items-center rounded-full border px-1.5 py-0.5 font-medium bg-white text-gray-600">
@@ -5330,20 +5061,6 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                     {status || 'Not Started'}
                                   </span>
                                 </div>
-                                <div className="mt-1 md:mt-0 text-[11px] text-gray-500 md:text-right">
-                                  {(() => {
-                                    const commentCount = a3CommentCounts[a3.id] ?? 0;
-                                    const reactionCount =
-                                      selectedGlobalA3 && selectedGlobalA3.id === a3.id
-                                        ? a3Reactions.length
-                                        : 0;
-                                    return `${reactionCount} reaction${
-                                      reactionCount === 1 ? '' : 's'
-                                    }, ${commentCount} comment${
-                                      commentCount === 1 ? '' : 's'
-                                    }`;
-                                  })()}
-                                </div>
                               </div>
                             </button>
                           );
@@ -5366,18 +5083,6 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       <p className="text-xs font-semibold tracking-wide text-gray-600 uppercase">
                         A3 Report Preview
                       </p>
-                      {selectedGlobalA3 && (
-                        <span className="inline-flex flex-col items-start sm:flex-row sm:items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700 border border-blue-100">
-                          <span>
-                            {a3Reactions.length} reaction
-                            {a3Reactions.length === 1 ? '' : 's'},
-                          </span>
-                          <span className="sm:ml-1">
-                            {a3Comments.length} comment
-                            {a3Comments.length === 1 ? '' : 's'}
-                          </span>
-                        </span>
-                      )}
                     </div>
                     <p className="text-[11px] text-gray-500">
                       Same structure as the Report tab of A3 Analysis.
@@ -5509,52 +5214,6 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                               {selectedGlobalA3.problemStatement || 'Not defined'}
                             </p>
                           </div>
-                          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
-                            <span className="text-gray-500">Reactions:</span>
-                            {isLoadingA3Reactions && (
-                              <span className="text-gray-400">Loading...</span>
-                            )}
-                            {!isLoadingA3Reactions &&
-                              reactionOptionsBySection.problem.map(option => {
-                                const count = a3Reactions.filter(reaction => {
-                                  const section =
-                                    (reaction.section as A3ReactionSection | undefined) ??
-                                    'problem';
-                                  return (
-                                    reaction.type === option.key && section === 'problem'
-                                  );
-                                }).length;
-                                const userReacted =
-                                  !!user &&
-                                  !!user.username &&
-                                  a3Reactions.some(reaction => {
-                                    const section =
-                                      (reaction.section as
-                                        | A3ReactionSection
-                                        | undefined) ?? 'problem';
-                                    return (
-                                      reaction.type === option.key &&
-                                      reaction.userId === user.username &&
-                                      section === 'problem'
-                                    );
-                                  });
-                                return (
-                                  <button
-                                    key={option.key}
-                                    type="button"
-                                    className={getReactionButtonClasses('problem', userReacted)}
-                                    onClick={() =>
-                                      handleToggleReaction(option.key, 'problem')
-                                    }
-                                  >
-                                    <span>{option.label}</span>
-                                    <span className="text-[10px] text-gray-500">
-                                      {count}
-                                    </span>
-                                  </button>
-                                );
-                              })}
-                          </div>
                           {selectedGlobalA3.isBestPractice && (
                             <div className="mt-3 inline-flex items-center rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-medium text-amber-700">
                               <Lightbulb className="w-3 h-3 mr-1" />
@@ -5589,50 +5248,6 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 ))}
                               </div>
                             )}
-                          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
-                            <span className="text-gray-500">Reactions:</span>
-                            {isLoadingA3Reactions && (
-                              <span className="text-gray-400">Loading...</span>
-                            )}
-                            {!isLoadingA3Reactions &&
-                              reactionOptionsBySection.data.map(option => {
-                                const count = a3Reactions.filter(reaction => {
-                                  const section =
-                                    (reaction.section as A3ReactionSection | undefined) ??
-                                    'problem';
-                                  return reaction.type === option.key && section === 'data';
-                                }).length;
-                                const userReacted =
-                                  !!user &&
-                                  !!user.username &&
-                                  a3Reactions.some(reaction => {
-                                    const section =
-                                      (reaction.section as
-                                        | A3ReactionSection
-                                        | undefined) ?? 'problem';
-                                    return (
-                                      reaction.type === option.key &&
-                                      reaction.userId === user.username &&
-                                      section === 'data'
-                                    );
-                                  });
-                                return (
-                                  <button
-                                    key={option.key}
-                                    type="button"
-                                    className={getReactionButtonClasses('data', userReacted)}
-                                    onClick={() =>
-                                      handleToggleReaction(option.key, 'data')
-                                    }
-                                  >
-                                    <span>{option.label}</span>
-                                    <span className="text-[10px] text-gray-500">
-                                      {count}
-                                    </span>
-                                  </button>
-                                );
-                              })}
-                          </div>
                         </div>
 
                         <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
@@ -5703,50 +5318,6 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                               )}
                             </div>
                           </div>
-                          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
-                            <span className="text-gray-500">Reactions:</span>
-                            {isLoadingA3Reactions && (
-                              <span className="text-gray-400">Loading...</span>
-                            )}
-                            {!isLoadingA3Reactions &&
-                              reactionOptionsBySection.root.map(option => {
-                                const count = a3Reactions.filter(reaction => {
-                                  const section =
-                                    (reaction.section as A3ReactionSection | undefined) ??
-                                    'problem';
-                                  return reaction.type === option.key && section === 'root';
-                                }).length;
-                                const userReacted =
-                                  !!user &&
-                                  !!user.username &&
-                                  a3Reactions.some(reaction => {
-                                    const section =
-                                      (reaction.section as
-                                        | A3ReactionSection
-                                        | undefined) ?? 'problem';
-                                    return (
-                                      reaction.type === option.key &&
-                                      reaction.userId === user.username &&
-                                      section === 'root'
-                                    );
-                                  });
-                                return (
-                                  <button
-                                    key={option.key}
-                                    type="button"
-                                    className={getReactionButtonClasses('root', userReacted)}
-                                    onClick={() =>
-                                      handleToggleReaction(option.key, 'root')
-                                    }
-                                  >
-                                    <span>{option.label}</span>
-                                    <span className="text-[10px] text-gray-500">
-                                      {count}
-                                    </span>
-                                  </button>
-                                );
-                              })}
-                          </div>
                         </div>
 
                         <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
@@ -5809,52 +5380,6 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                               </tbody>
                             </table>
                           </div>
-                          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
-                            <span className="text-gray-500">Reactions:</span>
-                            {isLoadingA3Reactions && (
-                              <span className="text-gray-400">Loading...</span>
-                            )}
-                            {!isLoadingA3Reactions &&
-                              reactionOptionsBySection.action.map(option => {
-                                const count = a3Reactions.filter(reaction => {
-                                  const section =
-                                    (reaction.section as A3ReactionSection | undefined) ??
-                                    'problem';
-                                  return (
-                                    reaction.type === option.key && section === 'action'
-                                  );
-                                }).length;
-                                const userReacted =
-                                  !!user &&
-                                  !!user.username &&
-                                  a3Reactions.some(reaction => {
-                                    const section =
-                                      (reaction.section as
-                                        | A3ReactionSection
-                                        | undefined) ?? 'problem';
-                                    return (
-                                      reaction.type === option.key &&
-                                      reaction.userId === user.username &&
-                                      section === 'action'
-                                    );
-                                  });
-                                return (
-                                  <button
-                                    key={option.key}
-                                    type="button"
-                                    className={getReactionButtonClasses('action', userReacted)}
-                                    onClick={() =>
-                                      handleToggleReaction(option.key, 'action')
-                                    }
-                                  >
-                                    <span>{option.label}</span>
-                                    <span className="text-[10px] text-gray-500">
-                                      {count}
-                                    </span>
-                                  </button>
-                                );
-                              })}
-                          </div>
                         </div>
 
                         <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
@@ -5866,354 +5391,6 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                               <span className="font-medium text-gray-900">Outcome:</span>{' '}
                               {selectedGlobalA3.results || 'No results recorded yet.'}
                             </p>
-                          </div>
-                          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
-                            <span className="text-gray-500">Reactions:</span>
-                            {isLoadingA3Reactions && (
-                              <span className="text-gray-400">Loading...</span>
-                            )}
-                            {!isLoadingA3Reactions &&
-                              reactionOptionsBySection.results.map(option => {
-                                const count = a3Reactions.filter(reaction => {
-                                  const section =
-                                    (reaction.section as A3ReactionSection | undefined) ??
-                                    'problem';
-                                  return (
-                                    reaction.type === option.key && section === 'results'
-                                  );
-                                }).length;
-                                const userReacted =
-                                  !!user &&
-                                  !!user.username &&
-                                  a3Reactions.some(reaction => {
-                                    const section =
-                                      (reaction.section as
-                                        | A3ReactionSection
-                                        | undefined) ?? 'problem';
-                                    return (
-                                      reaction.type === option.key &&
-                                      reaction.userId === user.username &&
-                                      section === 'results'
-                                    );
-                                  });
-                                return (
-                                  <button
-                                    key={option.key}
-                                    type="button"
-                                    className={getReactionButtonClasses('results', userReacted)}
-                                    onClick={() =>
-                                      handleToggleReaction(option.key, 'results')
-                                    }
-                                  >
-                                    <span>{option.label}</span>
-                                    <span className="text-[10px] text-gray-500">
-                                      {count}
-                                    </span>
-                                  </button>
-                                );
-                              })}
-                          </div>
-                        </div>
-
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                          <div className="mb-2 flex items-center justify-between border-b pb-1">
-                            <div className="flex items-center gap-2">
-                              <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-                                Comments
-                              </h4>
-                              <span className="inline-flex items-center rounded-full bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-600 border border-gray-200">
-                                {filteredA3Comments.length} of {a3Comments.length} comment
-                                {a3Comments.length === 1 ? '' : 's'}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1 text-[10px]">
-                              {[
-                                { key: 'all', label: 'All' },
-                                { key: 'general', label: 'General' },
-                                { key: 'problem', label: 'Problem' },
-                                { key: 'data', label: 'Data' },
-                                { key: 'root', label: 'Root' },
-                                { key: 'action', label: 'Action' },
-                                { key: 'results', label: 'Results' },
-                              ].map(option => (
-                                <button
-                                  key={option.key}
-                                  type="button"
-                                  className={clsx(
-                                    'px-2 py-0.5 rounded-full border text-[10px]',
-                                    activeCommentSection === option.key
-                                      ? 'bg-blue-600 border-blue-600 text-white'
-                                      : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50',
-                                  )}
-                                  onClick={() =>
-                                    setActiveCommentSection(option.key as typeof activeCommentSection)
-                                  }
-                                >
-                                  {option.label}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="space-y-4">
-                            {isLoadingA3Comments ? (
-                              <div className="flex items-center text-xs text-gray-500">
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                <span>Loading comments...</span>
-                              </div>
-                            ) : (
-                              <>
-                                {a3CommentsError && (
-                                  <p className="text-xs text-red-500">{a3CommentsError}</p>
-                                )}
-                                {filteredA3Comments.length === 0 && !a3CommentsError && (
-                                  <p className="text-xs text-gray-500">
-                                    No comments yet. Be the first to share feedback on this A3.
-                                  </p>
-                                )}
-                                {filteredA3Comments.length > 0 && (
-                                  <div className="space-y-4">
-                                    {filteredA3Comments
-                                      .filter(comment => !comment.parentId)
-                                      .map(comment => {
-                                        const replies = filteredA3Comments.filter(
-                                          reply => reply.parentId === comment.id,
-                                        );
-                                        const isReplying = activeReplyToId === comment.id;
-                                        const createdAt = comment.createdAt
-                                          ? new Date(comment.createdAt)
-                                          : null;
-                                        return (
-                                          <div key={comment.id} className="text-xs text-gray-700">
-                                            <div className="flex items-center justify-between">
-                                              <span className="font-semibold text-gray-900">
-                                                {comment.username || comment.userId || 'Anonymous'}
-                                              </span>
-                                              {createdAt && (
-                                                <span className="text-[11px] text-gray-400">
-                                                  {createdAt.toLocaleString()}
-                                                </span>
-                                              )}
-                                            </div>
-                                            {comment.section && (
-                                              <span className="mt-0.5 inline-flex items-center rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600">
-                                                {comment.section === 'problem'
-                                                  ? 'Problem'
-                                                  : comment.section === 'data'
-                                                  ? 'Data'
-                                                  : comment.section === 'root'
-                                                  ? 'Root'
-                                                  : comment.section === 'action'
-                                                  ? 'Action'
-                                                  : comment.section === 'results'
-                                                  ? 'Results'
-                                                  : 'General'}
-                                              </span>
-                                            )}
-                                            <p className="mt-1 whitespace-pre-wrap text-gray-700">
-                                              {comment.content}
-                                            </p>
-                                            <button
-                                              type="button"
-                                              className="mt-1 text-[11px] font-medium text-blue-600 hover:text-blue-700"
-                                              onClick={() => {
-                                                if (isReplying) {
-                                                  setActiveReplyToId(null);
-                                                  setReplyText('');
-                                                } else {
-                                                  setActiveReplyToId(comment.id);
-                                                  setReplyText('');
-                                                }
-                                              }}
-                                            >
-                                              {isReplying ? 'Cancel reply' : 'Reply'}
-                                            </button>
-                                            {isReplying && (
-                                              <div className="mt-2">
-                                                <textarea
-                                                  className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                                                  rows={2}
-                                                  placeholder="Write your reply..."
-                                                  value={replyText}
-                                                  onChange={e => setReplyText(e.target.value)}
-                                                />
-                                                <div className="mt-1 flex justify-end gap-2">
-                                                  <button
-                                                    type="button"
-                                                    className="inline-flex items-center rounded-md border border-gray-300 px-2 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50"
-                                                    onClick={() => {
-                                                      setActiveReplyToId(null);
-                                                      setReplyText('');
-                                                    }}
-                                                    disabled={isSubmittingReply}
-                                                  >
-                                                    Cancel
-                                                  </button>
-                                                  <button
-                                                    type="button"
-                                                    className="inline-flex items-center rounded-md bg-blue-600 px-3 py-1 text-[11px] font-medium text-white hover:bg-blue-700 disabled:opacity-60"
-                                                    onClick={async () => {
-                                                      if (!selectedGlobalA3) {
-                                                        return;
-                                                      }
-                                                      if (!replyText.trim()) {
-                                                        return;
-                                                      }
-                                                      if (!user || !user.username) {
-                                                        setIsLoginModalOpen(true);
-                                                        return;
-                                                      }
-                                                      try {
-                                                        setIsSubmittingReply(true);
-                                                        const created = await dataService.addA3Comment({
-                                                          a3Id: selectedGlobalA3.id,
-                                                          content: replyText.trim(),
-                                                          section:
-                                                            comment.section || activeCommentSection,
-                                                          parentId: comment.id,
-                                                          userId: user.username,
-                                                          username: user.username,
-                                                        });
-                                                        setA3Comments(prev => [...prev, created]);
-                                                        setA3CommentCounts(prev => {
-                                                          const current =
-                                                            prev[selectedGlobalA3.id] ?? 0;
-                                                          return {
-                                                            ...prev,
-                                                            [selectedGlobalA3.id]: current + 1,
-                                                          };
-                                                        });
-                                                        setReplyText('');
-                                                        setActiveReplyToId(null);
-                                                      } catch (error) {
-                                                        console.error('Failed to post reply', error);
-                                                        toast.error(
-                                                          'Failed to post reply. Please try again.',
-                                                        );
-                                                      } finally {
-                                                        setIsSubmittingReply(false);
-                                                      }
-                                                    }}
-                                                    disabled={isSubmittingReply || !replyText.trim()}
-                                                  >
-                                                    {isSubmittingReply && (
-                                                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                                                    )}
-                                                    <span>Post reply</span>
-                                                  </button>
-                                                </div>
-                                              </div>
-                                            )}
-                                            {replies.length > 0 && (
-                                              <div className="mt-2 border-l border-gray-200 pl-3 space-y-2">
-                                                {replies.map(reply => {
-                                                  const replyCreatedAt = reply.createdAt
-                                                    ? new Date(reply.createdAt)
-                                                    : null;
-                                                  return (
-                                                    <div key={reply.id} className="text-xs">
-                                                      <div className="flex items-center justify-between">
-                                                        <span className="font-semibold text-gray-900">
-                                                          {reply.username ||
-                                                            reply.userId ||
-                                                            'Anonymous'}
-                                                        </span>
-                                                        {replyCreatedAt && (
-                                                          <span className="text-[11px] text-gray-400">
-                                                            {replyCreatedAt.toLocaleString()}
-                                                          </span>
-                                                        )}
-                                                      </div>
-                                                      <p className="mt-1 whitespace-pre-wrap text-gray-700">
-                                                        {reply.content}
-                                                      </p>
-                                                    </div>
-                                                  );
-                                                })}
-                                              </div>
-                                            )}
-                                          </div>
-                                        );
-                                      })}
-                                  </div>
-                                )}
-                              </>
-                            )}
-
-                            <div className="border-t border-gray-100 pt-3 mt-2">
-                              <p className="text-[11px] text-gray-500 mb-2">
-                                Share feedback or questions about this A3 report.
-                              </p>
-                              <textarea
-                                className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                                rows={3}
-                                placeholder={
-                                  user
-                                    ? 'Write a comment...'
-                                    : 'Log in to comment on this A3 report.'
-                                }
-                                value={newCommentText}
-                                onChange={e => setNewCommentText(e.target.value)}
-                              />
-                              <div className="mt-2 flex items-center justify-between">
-                                {!user && (
-                                  <span className="text-[11px] text-gray-500">
-                                    You need to log in to post comments.
-                                  </span>
-                                )}
-                                <button
-                                  type="button"
-                                  className="ml-auto inline-flex items-center rounded-md bg-blue-600 px-3 py-1 text-[11px] font-medium text-white hover:bg-blue-700 disabled:opacity-60"
-                                  onClick={async () => {
-                                    if (!selectedGlobalA3) {
-                                      return;
-                                    }
-                                    if (!newCommentText.trim()) {
-                                      return;
-                                    }
-                                    if (!user || !user.username) {
-                                      setIsLoginModalOpen(true);
-                                      return;
-                                    }
-                                    try {
-                                      setIsSubmittingComment(true);
-                                      const created = await dataService.addA3Comment({
-                                        a3Id: selectedGlobalA3.id,
-                                        content: newCommentText.trim(),
-                                        section:
-                                          activeCommentSection === 'all'
-                                            ? 'general'
-                                            : activeCommentSection,
-                                        userId: user.username,
-                                        username: user.username,
-                                      });
-                                      setA3Comments(prev => [...prev, created]);
-                                      setA3CommentCounts(prev => {
-                                        const current =
-                                          prev[selectedGlobalA3.id] ?? 0;
-                                        return {
-                                          ...prev,
-                                          [selectedGlobalA3.id]: current + 1,
-                                        };
-                                      });
-                                      setNewCommentText('');
-                                    } catch (error) {
-                                      console.error('Failed to post comment', error);
-                                      toast.error(
-                                        'Failed to post comment. Please try again.',
-                                      );
-                                    } finally {
-                                      setIsSubmittingComment(false);
-                                    }
-                                  }}
-                                  disabled={isSubmittingComment || !newCommentText.trim()}
-                                >
-                                  {isSubmittingComment && (
-                                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                                  )}
-                                  <span>Post comment</span>
-                                </button>
-                              </div>
-                            </div>
                           </div>
                         </div>
                       </div>

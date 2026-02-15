@@ -130,46 +130,6 @@ export interface A3Case {
   isBestPractice?: boolean;
 }
 
-export interface A3Comment {
-  id: string;
-  a3Id: string;
-  section?: string;
-  parentId?: string;
-  userId?: string;
-  username?: string;
-  content: string;
-  createdAt: string;
-}
-
-export type A3ReactionSection = 'problem' | 'data' | 'root' | 'action' | 'results';
-
-export type A3ReactionType =
-  | 'like'
-  | 'helpful'
-  | 'me_too'
-  | 'data_clear'
-  | 'data_missing'
-  | 'data_confusing'
-  | 'root_solid'
-  | 'root_weak'
-  | 'root_needs_5whys'
-  | 'actions_strong'
-  | 'actions_vague'
-  | 'actions_too_many'
-  | 'results_achieved'
-  | 'results_partial'
-  | 'results_not_achieved';
-
-export interface A3Reaction {
-  id: string;
-  a3Id: string;
-  userId?: string;
-  username?: string;
-  section?: A3ReactionSection;
-  type: A3ReactionType;
-  createdAt: string;
-}
-
 export interface GroupPerformanceRow {
   groupName: string;
   metricId: string;
