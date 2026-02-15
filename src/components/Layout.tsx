@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, Lightbulb, Filter, Users, X, Calendar, FlaskConical, Activity, Clock3, PieChart as PieChartIcon, AlertCircle, Combine, Pencil, Mail, Check, Search, Building2, LayoutGrid, Kanban, List } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, Lightbulb, Filter, Users, X, Calendar, FlaskConical, Activity, Clock3, PieChart as PieChartIcon, AlertCircle, Combine, Pencil, Mail, Check, Search, Building2, LayoutGrid, Kanban, List, Target } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
 import {
@@ -2601,24 +2601,20 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
           <div className="flex items-center space-x-3">
             <div className="relative group">
               <div className="absolute inset-0 bg-primary-500 rounded-lg blur opacity-20 group-hover:opacity-30 transition-opacity"></div>
-              <img
-                src={`${import.meta.env.BASE_URL}logo.png`}
-                alt="A3 Bowler logo"
-                className="relative w-8 h-8 rounded-lg bg-white object-contain cursor-pointer shadow-sm border border-slate-100"
+              <div
+                className="relative w-8 h-8 rounded-lg bg-white flex items-center justify-center cursor-pointer shadow-sm border border-slate-100 text-primary-600"
                 onClick={() => setIsLogoPreviewOpen(true)}
-              />
+              >
+                <Target className="w-5 h-5" />
+              </div>
             </div>
             <div className="relative flex items-center">
-              <h1 className="text-lg font-bold text-slate-900 tracking-tight hidden md:block pr-5 font-display">
+              <h1 
+                className="text-lg font-bold text-slate-900 tracking-tight hidden md:block pr-5 font-display cursor-pointer hover:text-primary-600 transition-colors"
+                onClick={() => setIsAppInfoOpen(true)}
+              >
                 A3 Bowler
               </h1>
-              <button
-                onClick={() => setIsAppInfoOpen(true)}
-                className="inline-flex md:absolute md:-top-1.5 md:right-0 items-center justify-center w-4 h-4 rounded-full border border-primary-500 text-primary-600 italic text-[9px] font-semibold bg-white hover:bg-primary-50 transition-colors shadow-sm"
-                title="About this app"
-              >
-                <span>i</span>
-              </button>
             </div>
           </div>
           

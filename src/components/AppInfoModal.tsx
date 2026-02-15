@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { X, LayoutDashboard, FileText, Sparkles, Upload, Download, Smartphone, Lightbulb, Inbox, Layers, CalendarDays } from 'lucide-react';
+import { X, LayoutDashboard, FileText, Sparkles, Upload, Download, Smartphone, Lightbulb, Inbox, Layers, Target, TrendingUp } from 'lucide-react';
 
 interface AppInfoModalProps {
   isOpen: boolean;
@@ -12,36 +12,40 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 z-[70] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={onClose}></div>
+        <div 
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
+          aria-hidden="true" 
+          onClick={onClose}
+        ></div>
 
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 sm:px-6 flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <img
-                src={`${import.meta.env.BASE_URL}logo.png`}
-                alt="A3 Bowler logo"
-                className="w-8 h-8 rounded-md bg-white object-contain"
-              />
-              <h3 className="text-sm font-medium text-gray-900" id="modal-title">
-                About A3 Bowler
-              </h3>
-            </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-500 transition-colors">
-              <X className="w-5 h-5" />
-            </button>
+        <div className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full border border-slate-100">
+          {/* Header */}
+          <div className="relative bg-gradient-to-r from-primary-600 to-indigo-600 px-6 py-6 sm:px-8">
+             <div className="absolute top-4 right-4">
+                <button 
+                  onClick={onClose} 
+                  className="rounded-full p-1 text-white/70 hover:bg-white/20 hover:text-white transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+             </div>
+             <div className="flex flex-col items-center text-center">
+                <div className="h-16 w-16 bg-white/20 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-md shadow-inner ring-1 ring-white/30">
+                  <Target className="h-8 w-8 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-white tracking-tight">A3 Bowler</h2>
+                <p className="mt-2 text-primary-100 font-medium max-w-lg">
+                  AI-Assisted Performance Tracker & A3 Problem Solving
+                </p>
+             </div>
           </div>
 
-          <div className="bg-white px-4 pt-5 pb-6 sm:px-8 sm:pt-8 sm:pb-8">
-            <div className="mb-6 text-center flex flex-col items-center">
-              <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">A3 Bowler</h2>
-              <p className="mt-1 text-sm text-gray-500">AI-Assisted Performance Tracker &amp; A3 Problem Solving</p>
-            </div>
-
-            <div className="border-t border-gray-100 pt-6">
-              <h4 className="text-sm font-semibold text-gray-900 mb-2">Overview</h4>
-              <p className="text-sm text-gray-600 leading-relaxed">
+          <div className="px-6 py-6 sm:px-8 bg-white">
+            <div className="mb-8">
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Overview</h4>
+              <p className="text-sm text-slate-600 leading-relaxed">
                 A3 Bowler is a lightweight performance management tool designed to help teams track metrics,
                 visualize trends, and drive problem solving using the A3 methodology. It combines a monthly
                 bowler chart with A3 analysis, enhanced by AI to summarize patterns and support root cause
@@ -49,147 +53,70 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
               </p>
             </div>
 
-            <div className="border-t border-gray-100 pt-6 mt-6">
-              <h4 className="text-sm font-semibold text-gray-900 mb-4">Key Features</h4>
+            <div>
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Key Features</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-                <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-blue-50/80">
-                  <div className="h-9 w-9 shrink-0 rounded-lg bg-blue-500 flex items-center justify-center">
-                    <div className="flex">
-                        <Upload className="h-3 w-3 text-white mr-0.5" />
-                        <Download className="h-3 w-3 text-white" />
-                    </div>
+                <div className="group flex items-start p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-primary-100 hover:shadow-md transition-all duration-200">
+                  <div className="h-10 w-10 shrink-0 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-primary-200 group-hover:text-primary-600 transition-colors">
+                    <TrendingUp className="h-5 w-5 text-slate-500 group-hover:text-primary-600" />
                   </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">Import & Export</p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Import metrics from CSV or export all data for backup and analysis.
+                  <div className="ml-4">
+                    <p className="text-sm font-semibold text-slate-900 group-hover:text-primary-700">Metric Tracking</p>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      Visualize performance trends with interactive bowler charts and color-coded status indicators.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-indigo-50/80">
-                  <div className="h-9 w-9 shrink-0 rounded-lg bg-indigo-500 flex items-center justify-center">
-                    <LayoutDashboard className="h-5 w-5 text-white" />
+                <div className="group flex items-start p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-indigo-100 hover:shadow-md transition-all duration-200">
+                  <div className="h-10 w-10 shrink-0 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-indigo-200 group-hover:text-indigo-600 transition-colors">
+                    <FileText className="h-5 w-5 text-slate-500 group-hover:text-indigo-600" />
                   </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">Bowler & A3 Views</p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Switch between metric bowler charts, A3 analysis, and inetgrated views to align objectives and actions.
+                  <div className="ml-4">
+                    <p className="text-sm font-semibold text-slate-900 group-hover:text-indigo-700">A3 Problem Solving</p>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      Structured workflow for problem statements, root causes, and countermeasures on a single page.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-orange-50/80">
-                  <div className="h-9 w-9 shrink-0 rounded-lg bg-orange-500 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-white" />
+                <div className="group flex items-start p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-purple-100 hover:shadow-md transition-all duration-200">
+                  <div className="h-10 w-10 shrink-0 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-purple-200 group-hover:text-purple-600 transition-colors">
+                    <Sparkles className="h-5 w-5 text-slate-500 group-hover:text-purple-600" />
                   </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">Structured A3 Problem Solving</p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Capture problem statements, root causes, countermeasures, and follow-up on a single A3.
+                  <div className="ml-4">
+                    <p className="text-sm font-semibold text-slate-900 group-hover:text-purple-700">AI Assistance</p>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      Intelligent analysis of data patterns and suggestions for problem solving steps.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-purple-50/80">
-                  <div className="h-9 w-9 shrink-0 rounded-lg bg-purple-500 flex items-center justify-center">
-                    <Inbox className="h-5 w-5 text-white" />
+                <div className="group flex items-start p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-emerald-100 hover:shadow-md transition-all duration-200">
+                  <div className="h-10 w-10 shrink-0 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-emerald-200 group-hover:text-emerald-600 transition-colors">
+                    <Layers className="h-5 w-5 text-slate-500 group-hover:text-emerald-600" />
                   </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">Consolidate Bowlers & A3</p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Allow adminstrator to consolidate all public accounts' bowler & A3 data to one view with one click.
+                  <div className="ml-4">
+                    <p className="text-sm font-semibold text-slate-900 group-hover:text-emerald-700">Portfolio View</p>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      Consolidated view of all bowlers and A3s to align organizational objectives.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-emerald-50/80">
-                  <div className="h-9 w-9 shrink-0 rounded-lg bg-emerald-500 flex items-center justify-center">
-                    <Layers className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">Integrated View</p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      See a combined portfolio of key bowlers and A3s for a single, aligned overview.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-teal-50/80">
-                  <div className="h-9 w-9 shrink-0 rounded-lg bg-teal-500 flex items-center justify-center">
-                    <CalendarDays className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">Auto Scheduling Updates</p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Schedule automatic data consolidation and email summaries so stakeholders receive fresh updates without manual steps.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-green-50/80">
-                  <div className="h-9 w-9 shrink-0 rounded-lg bg-green-500 flex items-center justify-center">
-                    <Sparkles className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">AI Assistant</p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Ask AI to analyze metric trends or refine A3 problem statements and root cause analysis.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-indigo-50/80">
-                  <div className="h-9 w-9 shrink-0 rounded-lg bg-indigo-500 flex items-center justify-center">
-                    <Lightbulb className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">AI Mindmap</p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Use AI to turn any idea into an interactive mindmap for exploration and planning.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start p-3 rounded-lg border border-gray-100 bg-sky-50/80">
-                  <div className="h-9 w-9 shrink-0 rounded-lg bg-sky-500 flex items-center justify-center">
-                    <Smartphone className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">Optimized for Mobile</p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Use the same Bowler & A3 views seamlessly on phones and tablets, just like on desktop.
-                    </p>
-                  </div>
-                </div>
               </div>
             </div>
-
-            <div className="border-t border-gray-100 pt-6 mt-6">
-              <h4 className="text-sm font-semibold text-gray-900 mb-3">Technology Stack</h4>
-              <ul className="space-y-1 text-sm text-gray-700">
-                <li className="flex items-center">
-                  <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
-                  <span>Frontend: React, TypeScript, Tailwind CSS</span>
-                </li>
-                <li className="flex items-center">
-                  <div className="w-2 h-2 rounded-full bg-indigo-500 mr-2"></div>
-                  <span>Backend: Cloudflare Workers (serverless API)</span>
-                </li>
-                <li className="flex items-center">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 mr-2"></div>
-                  <span>Storage: Data – Supabase PostgreSQL; Images – Supabase Storage bucket</span>
-                </li>
-              </ul>
+            
+            <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+               <div className="flex items-center gap-2 text-xs text-slate-400">
+                  <Smartphone className="w-4 h-4" />
+                  <span>Mobile Optimized</span>
+               </div>
+               <div className="text-xs text-slate-400">
+                  v1.2.0 • Build 2024.10
+               </div>
             </div>
-
-            <div className="border-t border-gray-100 pt-6 mt-6 text-center">
-                 <p className="text-xs text-gray-400">
-                    Designed by Alex Luo. Created with Gemini-3-Pro-Preview & GPT-5.1.
-                 </p>
-            </div>
-
           </div>
         </div>
       </div>
