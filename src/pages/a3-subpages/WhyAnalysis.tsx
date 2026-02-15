@@ -343,141 +343,103 @@ Under each heading, list concise, actionable bullet points. Focus on actions tha
 
   if (!currentCase) {
     return (
-      <div className="flex items-center justify-center py-16">
+      <div className="flex items-center justify-center py-24">
         <div className="flex flex-col items-center">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          <p className="mt-3 text-base font-medium text-gray-700">Loading application data...</p>
+          <Loader2 className="w-10 h-10 animate-spin text-brand-600" />
+          <p className="mt-4 text-slate-500 font-medium animate-pulse">Loading analysis data...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 w-full flex flex-col">
-      <div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">5 Whys Analysis</h3>
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-gray-500 mr-4">
-            Interactive Root Cause Analysis. Start with the problem and drill down by adding "Why" nodes.
-          </p>
-          <button
-            type="button"
-            onClick={handleGenerateWhyAnalysis}
-            disabled={
-              isGeneratingWhy ||
-              !currentCase.problemStatement ||
-              !(currentCase.dataAnalysisObservations || currentCase.mindMapNodes?.length)
-            }
-            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isGeneratingWhy ? (
-              <>
-                <Loader2 className="animate-spin -ml-0.5 mr-2 h-3 w-3" />
-                <span className="hidden sm:inline">Analyzing whys...</span>
-              </>
-            ) : (
-              <>
-                <Sparkles className="-ml-0.5 mr-0 sm:mr-2 h-3 w-3" />
-                <span className="hidden sm:inline">AI Why Analysis</span>
-              </>
-            )}
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-brand-50 rounded-lg text-brand-600">
+            <Lightbulb className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900 font-display">Root Cause Analysis</h2>
+            <p className="text-sm text-slate-500 mt-0.5">Explore the "Why" behind the problem to find real solutions.</p>
+          </div>
+        </div>
+        
+        <button
+          onClick={handleGenerateWhyAnalysis}
+          disabled={isGeneratingWhy || !currentCase?.problemStatement}
+          className="group relative inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none"
+        >
+          {isGeneratingWhy ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Analyzing...</span>
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4 transition-transform group-hover:rotate-12" />
+              <span>AI Cause Analysis</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {whyError && (
+        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-100 text-red-700 rounded-xl animate-in fade-in slide-in-from-top-4">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <p className="text-sm font-medium">{whyError}</p>
+          <button onClick={() => setWhyError(null)} className="ml-auto p-1 hover:bg-red-100 rounded-lg transition-colors">
+            <X className="w-4 h-4" />
           </button>
         </div>
-        {whyError && (
-          <div className="mb-3 rounded-md bg-red-50 p-3">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <AlertCircle className="h-4 w-4 text-red-400" />
-              </div>
-              <div className="ml-2 text-xs text-red-700">
-                {whyError}
-              </div>
-            </div>
-          </div>
-        )}
-        <div className="mt-2 flex flex-col">
-          <MindMap
-            initialNodes={currentCase.mindMapNodes}
+      )}
+
+      {/* Mind Map Canvas */}
+      <div className="bg-slate-50 rounded-3xl border-2 border-slate-200/50 overflow-hidden shadow-inner relative min-h-[500px]">
+        <MindMap 
+            initialNodes={currentCase?.mindMapNodes}
             onChange={handleNodesChange}
-            initialScale={currentCase.mindMapScale}
-            fixedHeight={currentCase.mindMapCanvasHeight ?? 750}
             onViewChange={handleViewChange}
-          />
+            initialScale={currentCase?.mindMapScale}
+            fixedHeight={currentCase?.mindMapCanvasHeight ?? 500}
+        />
+        
+        {/* Help Tip */}
+        <div className="absolute bottom-4 left-4 right-4 sm:right-auto pointer-events-none">
+          <div className="bg-white/90 backdrop-blur-sm px-4 py-2.5 rounded-xl border border-slate-200/60 shadow-sm flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
+            <p className="text-xs font-medium text-slate-600">
+              Drag nodes to move • Double-click to edit • Use <span className="inline-flex items-center px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 text-slate-900">+</span> to expand
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Conversion Section Removed */}
-
-      <div className="mt-6">
-        <div className="flex items-center justify-between mb-2">
-          <label htmlFor="rootCause" className="block text-sm font-medium text-gray-700">
-            Identified Root Cause
-          </label>
-          <button
-            type="button"
-            onClick={handleGenerateActions}
-            disabled={
-              isGeneratingActions ||
-              !currentCase.problemStatement ||
-              !(rootCause || currentCase.rootCause)
-            }
-            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isGeneratingActions ? (
-              <>
-                <Loader2 className="animate-spin -ml-0.5 mr-2 h-3 w-3" />
-                <span className="hidden sm:inline">Generating actions...</span>
-              </>
-            ) : (
-              <>
-                <Lightbulb className="-ml-0.5 mr-0 sm:mr-2 h-3 w-3" />
-                <span className="hidden sm:inline">AI Improvement Actions</span>
-              </>
-            )}
-          </button>
-        </div>
-        <textarea
-            id="rootCause"
-            rows={8}
-            className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
-            placeholder="Summarize the root cause identified from the analysis..."
+      {/* Final Root Cause Summary */}
+      <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200/60 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-50 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110 duration-700 opacity-50" />
+        
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-brand-50 rounded-lg text-brand-600">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900">Determined Root Cause</h3>
+          </div>
+          
+          <textarea
             value={rootCause}
             onChange={handleRootCauseChange}
-        />
-        {actionsError && (
-          <div className="mt-3 rounded-md bg-red-50 p-3">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <AlertCircle className="h-4 w-4 text-red-400" aria-hidden="true" />
-              </div>
-              <div className="ml-2 text-sm text-red-700">
-                {actionsError}
-              </div>
-            </div>
+            placeholder="Summarize the ultimate root cause identified through your 'Why' analysis..."
+            className="w-full min-h-[120px] p-5 bg-slate-50 border-2 border-slate-200/60 rounded-2xl text-slate-700 focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all resize-none placeholder:text-slate-400"
+          />
+          
+          <div className="mt-4 flex items-center justify-between text-xs text-slate-400 font-medium">
+            <p>This summary will be used to generate your Action Plan.</p>
+            <p>{rootCause.length} characters</p>
           </div>
-        )}
-        {actionsPlan && (
-          <div className="mt-4 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-            <div className="bg-blue-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="text-xs font-bold text-blue-900 flex items-center">
-                <Sparkles className="h-4 w-4 mr-2 text-blue-600" />
-                AI Improvement Actions
-              </h3>
-              <button
-                type="button"
-                className="text-gray-400 hover:text-gray-500"
-                onClick={() => setActionsPlan(null)}
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="p-4">
-              <div className="prose prose-sm max-w-none text-gray-700 bg-gray-50 p-3 rounded-md text-sm whitespace-pre-wrap">
-                {actionsPlan}
-              </div>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

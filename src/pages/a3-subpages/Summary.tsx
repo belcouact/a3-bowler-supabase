@@ -23,90 +23,107 @@ const Summary = () => {
 
   if (!currentCase) {
     return (
-      <div className="flex items-center justify-center py-16">
+      <div className="flex items-center justify-center py-24">
         <div className="flex flex-col items-center">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          <p className="mt-3 text-base font-medium text-gray-700">Loading application data...</p>
+          <Loader2 className="w-10 h-10 animate-spin text-brand-600" />
+          <p className="mt-4 text-slate-500 font-medium animate-pulse">Preparing summary report...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 print-summary-root" ref={contentRef}>
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-bold text-gray-900">A3 Problem Solving Report</h3>
+    <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500 print-summary-root" ref={contentRef}>
+      <div className="flex justify-between items-end border-b border-slate-200 pb-8">
+        <div className="space-y-2">
+          <h2 className="text-3xl font-black text-slate-900 font-display tracking-tight">A3 Problem Solving Report</h2>
+          <p className="text-slate-500 text-lg">Integrated view of the complete problem solving lifecycle</p>
+        </div>
         <button 
           onClick={handlePrintToPDF}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium flex items-center print:hidden"
+          className="px-6 py-2.5 bg-brand-600 text-white rounded-xl hover:bg-brand-700 text-sm font-bold flex items-center shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 print:hidden"
         >
           <Printer className="w-4 h-4 mr-2" />
           Print to PDF
         </button>
       </div>
       
-      <div className="space-y-6">
-        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">
-            1. Problem Statement
-          </h4>
-          <div className="text-sm text-gray-600 space-y-2">
-            <p>
-              {currentCase.problemStatement || 'Not defined'}
+      <div className="grid grid-cols-1 gap-12">
+        {/* 1. Problem Statement */}
+        <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+            <h4 className="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+              <span className="w-6 h-6 rounded bg-brand-100 text-brand-600 flex items-center justify-center text-[10px]">1</span>
+              Problem Statement
+            </h4>
+          </div>
+          <div className="p-8">
+            <p className="text-xl text-slate-800 leading-relaxed font-medium">
+              {currentCase.problemStatement || <span className="text-slate-300 italic">Not defined yet</span>}
             </p>
           </div>
-        </div>
+        </section>
 
-        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">
-            2. Data Analysis
-          </h4>
-          {currentCase.dataAnalysisImages && currentCase.dataAnalysisImages.length > 0 && (
-            <div className="mb-4">
-              <h5 className="text-xs font-semibold text-gray-600 mb-2">Evidence</h5>
-              <div
-                className="relative w-full bg-white border-2 border-dashed border-gray-300 rounded-lg overflow-hidden"
-                style={{
-                  height:
-                    currentCase.dataAnalysisCanvasHeight && currentCase.dataAnalysisCanvasHeight > 0
-                      ? currentCase.dataAnalysisCanvasHeight
-                      : 500,
-                }}
-              >
-                <div className="w-full h-full relative">
-                  {currentCase.dataAnalysisImages.map(img => (
-                    <div
-                      key={img.id}
-                      style={{
-                        position: 'absolute',
-                        left: img.x,
-                        top: img.y,
-                        width: img.width,
-                        height: img.height,
-                      }}
-                    >
-                      <img
-                        src={img.src}
-                        alt="evidence"
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-                  ))}
+        {/* 2. Data Analysis */}
+        <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+            <h4 className="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+              <span className="w-6 h-6 rounded bg-brand-100 text-brand-600 flex items-center justify-center text-[10px]">2</span>
+              Data Analysis & Observations
+            </h4>
+          </div>
+          <div className="p-8 space-y-8">
+            {currentCase.dataAnalysisImages && currentCase.dataAnalysisImages.length > 0 && (
+              <div className="space-y-4">
+                <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Evidence Gallery</h5>
+                <div
+                  className="relative w-full bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden shadow-inner"
+                  style={{
+                    height:
+                      currentCase.dataAnalysisCanvasHeight && currentCase.dataAnalysisCanvasHeight > 0
+                        ? currentCase.dataAnalysisCanvasHeight
+                        : 500,
+                  }}
+                >
+                  <div className="w-full h-full relative">
+                    {currentCase.dataAnalysisImages.map(img => (
+                      <div
+                        key={img.id}
+                        style={{
+                          position: 'absolute',
+                          left: img.x,
+                          top: img.y,
+                          width: img.width,
+                          height: img.height,
+                        }}
+                      >
+                        <img
+                          src={img.src}
+                          alt="evidence"
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
+            )}
+
+            <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+              <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Key Observations</h5>
+              <p className="text-slate-700 leading-relaxed">
+                {currentCase.dataAnalysisObservations || <span className="text-slate-300 italic">No observations recorded</span>}
+              </p>
             </div>
-          )}
+          </div>
+        </section>
 
-          <p className="text-xs text-gray-500 mt-2">
-            <span className="font-semibold block mb-1">Observation:</span>
-            {currentCase.dataAnalysisObservations || 'No data observations recorded.'}
-          </p>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between mb-2 border-b pb-1">
-            <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-              3. Root Cause Analysis (5 Whys)
+        {/* 3. Root Cause Analysis */}
+        <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <h4 className="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+              <span className="w-6 h-6 rounded bg-brand-100 text-brand-600 flex items-center justify-center text-[10px]">3</span>
+              Root Cause Analysis
             </h4>
             {currentCase.mindMapNodes && currentCase.mindMapNodes.length > 0 && (
               <button
@@ -114,158 +131,149 @@ const Summary = () => {
                 onClick={() =>
                   setRootCauseView(rootCauseView === 'text' ? 'mindmap' : 'text')
                 }
-                className="px-2 py-1 rounded-md text-[11px] font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all shadow-sm print:hidden"
               >
-                {rootCauseView === 'text' ? 'Show mindmap snapshot' : 'Show text summary'}
+                {rootCauseView === 'text' ? 'Show Mindmap' : 'Show Text Summary'}
               </button>
             )}
           </div>
-          <div className="text-sm text-gray-600 space-y-4">
-            {rootCauseView === 'text' ? (
-              <>
-                {currentCase.mindMapText && (
-                  <div className="bg-gray-50 p-3 rounded border border-gray-100">
-                    <h5 className="text-xs font-semibold text-gray-500 mb-1">
-                      5 Whys Analysis:
-                    </h5>
-                    <p className="whitespace-pre-wrap font-mono text-xs">
-                      {currentCase.mindMapText}
-                    </p>
-                  </div>
-                )}
-              </>
-            ) : (
-              currentCase.mindMapNodes &&
-              currentCase.mindMapNodes.length > 0 && (
-                <div className="bg-gray-50 p-3 rounded border border-gray-100">
-                  <h5 className="text-xs font-semibold text-gray-500 mb-2">
-                    5 Whys Mindmap Snapshot:
-                  </h5>
-                  <div className="pointer-events-none">
+          <div className="p-8 space-y-8">
+            <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+              <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Final Root Cause</h5>
+              <p className="text-xl text-brand-900 font-bold">
+                {currentCase.rootCause || <span className="text-slate-300 italic font-medium">Root cause not identified yet</span>}
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Analysis Detail</h5>
+              {rootCauseView === 'text' ? (
+                <div className="bg-white rounded-2xl p-6 border border-slate-100 font-mono text-sm text-slate-600 whitespace-pre-wrap leading-relaxed shadow-sm">
+                  {currentCase.mindMapText || <span className="text-slate-300 italic font-sans">No detailed analysis recorded</span>}
+                </div>
+              ) : (
+                currentCase.mindMapNodes &&
+                currentCase.mindMapNodes.length > 0 && (
+                  <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm pointer-events-none">
                     <MindMap
                       initialNodes={currentCase.mindMapNodes}
                       initialScale={currentCase.mindMapScale}
                       fixedHeight={currentCase.mindMapCanvasHeight}
                     />
                   </div>
-                </div>
-              )
-            )}
-            <div>
-              <h5 className="text-xs font-semibold text-gray-500 mb-1">
-                Identified Root Cause:
-              </h5>
-              {currentCase.rootCause ? (
-                <p className="whitespace-pre-wrap">{currentCase.rootCause}</p>
-              ) : (
-                <p className="italic text-gray-500">Root cause not identified yet.</p>
+                )
               )}
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">
-            4. Action Plan
-          </h4>
+        {/* 4. Action Plan */}
+        <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+            <h4 className="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+              <span className="w-6 h-6 rounded bg-brand-100 text-brand-600 flex items-center justify-center text-[10px]">4</span>
+              Action Plan
+            </h4>
+          </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-slate-100">
+              <thead className="bg-slate-50/50">
                 <tr>
-                  <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase">
-                    Task
-                  </th>
-                  <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase">
-                    Description
-                  </th>
-                  <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase">
-                    Owner
-                  </th>
-                  <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase">
-                    End Date
-                  </th>
-                  <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase">
-                    Status
-                  </th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Task</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Description</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Owner</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Due Date</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-slate-100">
                 {currentCase.actionPlanTasks && currentCase.actionPlanTasks.length > 0 ? (
                   currentCase.actionPlanTasks.map(task => (
-                    <tr key={task.id}>
-                      <td className="px-2 py-1 text-xs text-gray-900">{task.name}</td>
-                      <td className="px-2 py-1 text-xs text-gray-500">
-                        {task.description || ''}
+                    <tr key={task.id} className="hover:bg-slate-50/30 transition-colors">
+                      <td className="px-6 py-4 text-sm font-bold text-slate-900">{task.name}</td>
+                      <td className="px-6 py-4 text-sm text-slate-500 max-w-xs truncate">
+                        {task.description || '-'}
                       </td>
-                      <td className="px-2 py-1 text-xs text-gray-500">{task.owner}</td>
-                      <td className="px-2 py-1 text-xs text-gray-500">
-                        {task.endDate || ''}
+                      <td className="px-6 py-4 text-sm font-medium text-slate-600">{task.owner}</td>
+                      <td className="px-6 py-4 text-sm font-medium text-slate-600">
+                        {task.endDate || '-'}
                       </td>
-                      <td className="px-2 py-1 text-xs text-gray-600">{task.status}</td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          task.status === 'completed' ? 'bg-accent-100 text-accent-700' :
+                          task.status === 'in-progress' ? 'bg-brand-100 text-brand-700' :
+                          'bg-slate-100 text-slate-600'
+                        }`}>
+                          {task.status}
+                        </span>
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td
-                      colSpan={5}
-                      className="px-2 py-4 text-xs text-center text-gray-500"
-                    >
-                      No actions defined.
+                    <td colSpan={5} className="px-6 py-12 text-sm text-center text-slate-400 font-medium">
+                      No actions defined yet.
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-        </div>
+        </section>
 
-        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">
-            5. Results & Follow-up
-          </h4>
-          {currentCase.resultImages && currentCase.resultImages.length > 0 && (
-            <div className="mb-4">
-              <h5 className="text-xs font-semibold text-gray-600 mb-2">Result Evidence</h5>
-              <div
-                className="relative w-full bg-white border-2 border-dashed border-gray-300 rounded-lg overflow-hidden"
-                style={{
-                  height:
-                    currentCase.resultCanvasHeight && currentCase.resultCanvasHeight > 0
-                      ? currentCase.resultCanvasHeight
-                      : 500,
-                }}
-              >
-                <div className="w-full h-full relative">
-                  {currentCase.resultImages.map(img => (
-                    <div
-                      key={img.id}
-                      style={{
-                        position: 'absolute',
-                        left: img.x,
-                        top: img.y,
-                        width: img.width,
-                        height: img.height,
-                      }}
-                    >
-                      <img
-                        src={img.src}
-                        alt="result evidence"
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-                  ))}
+        {/* 5. Results & Follow-up */}
+        <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+            <h4 className="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+              <span className="w-6 h-6 rounded bg-brand-100 text-brand-600 flex items-center justify-center text-[10px]">5</span>
+              Results & Follow-up
+            </h4>
+          </div>
+          <div className="p-8 space-y-8">
+            {currentCase.resultImages && currentCase.resultImages.length > 0 && (
+              <div className="space-y-4">
+                <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Result Evidence</h5>
+                <div
+                  className="relative w-full bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden shadow-inner"
+                  style={{
+                    height:
+                      currentCase.resultCanvasHeight && currentCase.resultCanvasHeight > 0
+                        ? currentCase.resultCanvasHeight
+                        : 500,
+                  }}
+                >
+                  <div className="w-full h-full relative">
+                    {currentCase.resultImages.map(img => (
+                      <div
+                        key={img.id}
+                        style={{
+                          position: 'absolute',
+                          left: img.x,
+                          top: img.y,
+                          width: img.width,
+                          height: img.height,
+                        }}
+                      >
+                        <img
+                          src={img.src}
+                          alt="result evidence"
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <div className="text-sm text-gray-600 space-y-2">
-            <p>
-              <span className="font-medium text-gray-900">Outcome:</span>{' '}
-              {currentCase.results || 'No results recorded yet.'}
-            </p>
+            <div className="bg-accent-50 rounded-2xl p-6 border border-accent-100">
+              <h5 className="text-xs font-bold text-accent-700/50 uppercase tracking-widest mb-3">Outcome Summary</h5>
+              <p className="text-lg text-accent-900 font-medium leading-relaxed">
+                {currentCase.results || <span className="text-accent-300 italic font-normal">No results recorded yet</span>}
+              </p>
+            </div>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );

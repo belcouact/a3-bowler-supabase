@@ -130,147 +130,176 @@ const ProblemStatement = () => {
 
   if (!currentCase) {
     return (
-      <div className="flex items-center justify-center py-16">
+      <div className="flex items-center justify-center py-24">
         <div className="flex flex-col items-center">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          <p className="mt-3 text-base font-medium text-gray-700">Loading application data...</p>
+          <Loader2 className="w-10 h-10 animate-spin text-brand-600" />
+          <p className="mt-4 text-slate-500 font-medium animate-pulse">Loading workspace data...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Problem Statement</h3>
-        <p className="text-gray-500 mb-4">Clearly define the gap between the current state and the desired state.</p>
-        
-        <div className="space-y-4">
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <label htmlFor="problem" className="block text-sm font-medium text-gray-700">
-                What is the problem?
+    <div className="max-w-4xl mx-auto space-y-10">
+      <div className="space-y-2">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-brand-50 rounded-lg text-brand-600">
+            <ClipboardList className="w-6 h-6" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900 font-display">Problem Statement</h2>
+        </div>
+        <p className="text-slate-500 text-lg leading-relaxed max-w-2xl">
+          Clearly define the gap between the current state and the desired state. A well-defined problem is half-solved.
+        </p>
+      </div>
+      
+      <div className="space-y-6">
+        {/* Main Textarea Card */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all duration-300 focus-within:ring-4 focus-within:ring-brand-50 focus-within:border-brand-300">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <label htmlFor="problem" className="text-sm font-bold text-slate-700 uppercase tracking-wider">
+              Problem Description
+            </label>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsContextOpen(prev => !prev)}
+                className={clsx(
+                  "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all",
+                  isContextOpen 
+                    ? "bg-slate-200 text-slate-700" 
+                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                )}
+              >
+                {isContextOpen ? 'Hide context' : 'Add context'}
+              </button>
+            </div>
+          </div>
+          
+          <textarea
+            ref={textareaRef}
+            id="problem"
+            rows={8}
+            className="w-full px-6 py-4 text-slate-700 placeholder-slate-400 border-none focus:ring-0 resize-none text-lg leading-relaxed"
+            placeholder="Describe the problem in detail. Consider: What is happening? Who is affected? When did it start?"
+            defaultValue={currentCase.problemStatement || ''}
+            onBlur={handleBlur}
+          />
+
+          {isContextOpen && (
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/30">
+              <label htmlFor="problemContext" className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
+                Additional Context
               </label>
-              <div className="flex items-center space-x-2">
-                <button
-                  type="button"
-                  onClick={() => setIsContextOpen(prev => !prev)}
-                  className="inline-flex items-center px-3 py-1.5 border border-gray-200 text-xs font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  {isContextOpen ? 'Hide context' : 'Add context'}
-                </button>
-                <button
-                  onClick={handleAssess}
-                  disabled={isAssessing || !currentCase.problemStatement}
-                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isAssessing ? (
-                    <>
-                      <Loader2 className="animate-spin -ml-0.5 mr-2 h-3 w-3" />
-                      <span className="hidden sm:inline">Assessing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <ClipboardList className="-ml-0.5 mr-0 sm:mr-2 h-3 w-3" />
-                      <span className="hidden sm:inline">AI Assessment</span>
-                    </>
-                  )}
-                </button>
+              <textarea
+                id="problemContext"
+                rows={3}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-600 placeholder-slate-400 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-sm"
+                placeholder="Add background, constraints, or any context that helps AI understand the problem."
+                value={problemContext}
+                onChange={handleContextChange}
+              />
+            </div>
+          )}
+
+          {/* AI Assessment Trigger */}
+          <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex justify-end">
+            <button
+              onClick={handleAssess}
+              disabled={isAssessing || !currentCase.problemStatement}
+              className="group relative inline-flex items-center gap-2 px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none"
+            >
+              {isAssessing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Analyzing...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 transition-transform group-hover:rotate-12" />
+                  <span>AI Assessment</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {error && (
+          <div className="rounded-2xl bg-red-50 border border-red-100 p-4 animate-in fade-in slide-in-from-top-4">
+            <div className="flex gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+              <div>
+                <h3 className="text-sm font-bold text-red-800">Assessment Error</h3>
+                <p className="text-sm text-red-700 mt-1">{error}</p>
               </div>
             </div>
-            <textarea
-              ref={textareaRef}
-              id="problem"
-              rows={8}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border"
-              placeholder="Describe the problem..."
-              defaultValue={currentCase.problemStatement || ''}
-              onBlur={handleBlur}
-            />
-            {isContextOpen && (
-              <div className="mt-3">
-                <label htmlFor="problemContext" className="block text-xs font-medium text-gray-700 mb-1">
-                  Additional context (optional)
-                </label>
-                <textarea
-                  id="problemContext"
-                  rows={4}
-                  className="w-full rounded-md border-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-xs p-2 border"
-                  placeholder="Add background, constraints, or any context that helps AI understand the problem."
-                  value={problemContext}
-                  onChange={handleContextChange}
-                />
-              </div>
-            )}
           </div>
+        )}
 
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <AlertCircle className="h-5 w-5 text-red-400" aria-hidden="true" />
+        {assessmentResult && (
+          <div className="bg-white rounded-2xl border-2 border-brand-100 shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-500">
+            <div className="bg-brand-600 px-6 py-4 flex justify-between items-center">
+              <div className="flex items-center gap-2 text-white">
+                <div className="p-1.5 bg-white/20 rounded-lg">
+                  <Sparkles className="w-4 h-4" />
                 </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">Error</h3>
-                  <div className="mt-2 text-sm text-red-700">
-                    <p>{error}</p>
+                <h3 className="text-sm font-bold uppercase tracking-wider">AI Coach Feedback</h3>
+              </div>
+              <button 
+                onClick={() => setAssessmentResult(null)}
+                className="text-white/70 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-8">
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-brand-500" />
+                  Deep Analysis
+                </h4>
+                <div className="prose prose-slate prose-sm max-w-none text-slate-700 bg-slate-50 p-6 rounded-2xl border border-slate-100 leading-relaxed italic">
+                  {assessmentResult.critique}
+                </div>
+              </div>
+              
+              {assessmentResult.improved_version && (
+                <div className="space-y-4">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-accent-500" />
+                    Recommended Version
+                  </h4>
+                  <div className="relative group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-brand-500 to-accent-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-1000"></div>
+                    <div className="relative bg-white border border-accent-100 p-6 rounded-2xl text-slate-900 font-medium leading-relaxed shadow-sm">
+                      {assessmentResult.improved_version}
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => {
+                        updateA3Case({ ...currentCase, problemStatement: assessmentResult.improved_version });
+                        if (textareaRef.current) {
+                          textareaRef.current.value = assessmentResult.improved_version;
+                        }
+                      }}
+                      className="inline-flex items-center gap-2 px-6 py-2.5 bg-accent-50 text-accent-700 hover:bg-accent-100 text-sm font-bold rounded-xl transition-all border border-accent-200"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Apply Improved Statement
+                    </button>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
-          )}
-
-          {assessmentResult && (
-            <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden mt-4">
-                <div className="bg-indigo-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
-                    <h3 className="text-sm font-bold text-indigo-900 flex items-center">
-                        <Sparkles className="h-4 w-4 mr-2 text-indigo-600" />
-                        AI Assessment Result
-                    </h3>
-                    <button 
-                        onClick={() => setAssessmentResult(null)}
-                        className="text-gray-400 hover:text-gray-500"
-                    >
-                        <X className="h-4 w-4" />
-                    </button>
-                </div>
-                <div className="p-4 space-y-4">
-                    <div>
-                        <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Critique</h4>
-                        <div className="prose prose-sm max-w-none text-gray-700 bg-gray-50 p-3 rounded-md text-sm whitespace-pre-wrap font-mono">
-                            {assessmentResult.critique}
-                        </div>
-                    </div>
-                    
-                    {assessmentResult.improved_version && (
-                        <div>
-                            <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center">
-                                <CheckCircle className="h-4 w-4 mr-1 text-green-500" />
-                                Suggested Improvement
-                            </h4>
-                            <div className="bg-green-50 border border-green-100 p-3 rounded-md text-sm text-gray-800 font-medium whitespace-pre-wrap">
-                                {assessmentResult.improved_version}
-                            </div>
-                            <button
-                                onClick={() => {
-                                    updateA3Case({ ...currentCase, problemStatement: assessmentResult.improved_version });
-                                    if (textareaRef.current) {
-                                        textareaRef.current.value = assessmentResult.improved_version;
-                                    }
-                                }}
-                                className="mt-2 text-xs text-indigo-600 hover:text-indigo-800 font-medium"
-                            >
-                                Apply this version
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
+
 };
 
 export default ProblemStatement;

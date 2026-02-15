@@ -280,10 +280,10 @@ For each bullet, be specific and actionable, but concise.`
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-16">
+      <div className="flex items-center justify-center py-24">
         <div className="flex flex-col items-center">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          <p className="mt-3 text-base font-medium text-gray-700">Loading A3 Data Analysis...</p>
+          <Loader2 className="w-10 h-10 animate-spin text-brand-600" />
+          <p className="mt-4 text-slate-500 font-medium animate-pulse">Loading analysis data...</p>
         </div>
       </div>
     );
@@ -291,168 +291,165 @@ For each bullet, be specific and actionable, but concise.`
 
   if (!currentCase) {
     return (
-      <div className="flex items-center justify-center py-16">
+      <div className="flex items-center justify-center py-24">
         <div className="flex flex-col items-center text-center">
-          <p className="mt-3 text-base font-medium text-gray-800">A3 case could not be found.</p>
-          <p className="mt-1 text-sm text-gray-500">It may have been deleted or the link is invalid.</p>
+          <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4">
+            <AlertCircle className="w-8 h-8" />
+          </div>
+          <p className="text-xl font-bold text-slate-900">Case not found</p>
+          <p className="mt-2 text-slate-500 max-w-xs">The A3 case you are looking for may have been deleted or moved.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Data Analysis</h3>
-        <p className="text-gray-500 mb-4">Visualize the data to understand the magnitude and trend of the problem.</p>
-
-        {planError && (
-          <div className="mb-4 rounded-md bg-red-50 p-3">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <AlertCircle className="h-4 w-4 text-red-400" aria-hidden="true" />
-              </div>
-              <div className="ml-2 text-xs text-red-700">
-                {planError}
-              </div>
-            </div>
+    <div className="max-w-6xl mx-auto space-y-12">
+      <div className="space-y-2">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-brand-50 rounded-lg text-brand-600">
+            <BarChart3 className="w-6 h-6" />
           </div>
-        )}
+          <h2 className="text-2xl font-bold text-slate-900 font-display">Data Analysis</h2>
+        </div>
+        <p className="text-slate-500 text-lg leading-relaxed max-w-2xl">
+          Visualize facts and evidence. Break down the problem using charts, photos, and objective observations.
+        </p>
+      </div>
 
-        {/* Evidence Canvas */}
-        <ImageCanvas
-          images={images}
-          onImagesChange={saveImages}
-          height={canvasHeight}
-          onHeightChange={saveCanvasHeight}
-          leftControls={
-            <button
-              type="button"
-              onClick={handleGeneratePlan}
-              disabled={isGeneratingPlan || !currentCase.problemStatement}
-              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isGeneratingPlan ? (
-                <>
-                  <Loader2 className="animate-spin -ml-0.5 mr-2 h-3 w-3" />
-                  <span className="hidden sm:inline">Generating plan...</span>
-                </>
-              ) : (
-                <>
-                  <Route className="-ml-0.5 mr-0 sm:mr-2 h-3 w-3" />
-                  <span className="hidden sm:inline">AI Troubleshooting Plan</span>
-                </>
-              )}
-            </button>
-          }
-          onUploadImage={uploadImage}
-        />
-        
-        <div className="mt-6">
-          <div className="flex items-center justify-between mb-2">
-            <label htmlFor="observations" className="block text-sm font-medium text-gray-700">
-              Key Observations from Data
+      <div className="space-y-8">
+        {/* Visual Evidence Section */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Visual Evidence & Charts</h3>
+            <span className="text-xs text-slate-400 font-medium">Drag and drop images to annotate</span>
+          </div>
+          <div className="p-1">
+            <ImageCanvas
+              images={images}
+              onImagesChange={saveImages}
+              height={canvasHeight}
+              onHeightChange={saveCanvasHeight}
+              onUploadImage={uploadImage}
+            />
+          </div>
+        </div>
+
+        {/* Observations Section */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all duration-300 focus-within:ring-4 focus-within:ring-brand-50 focus-within:border-brand-300">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <label htmlFor="observations" className="text-sm font-bold text-slate-700 uppercase tracking-wider">
+              Key Observations
             </label>
-            <button
-              type="button"
-              onClick={handleAnalyzeData}
-              disabled={
-                isAnalyzing ||
-                !currentCase.problemStatement ||
-                !(textareaRef.current?.value || currentCase.dataAnalysisObservations)
-              }
-              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isAnalyzing ? (
-                <>
-                  <Loader2 className="animate-spin -ml-0.5 mr-2 h-3 w-3" />
-                  <span className="hidden sm:inline">Analyzing...</span>
-                </>
-              ) : (
-                <>
-                  <BarChart3 className="-ml-0.5 mr-0 sm:mr-2 h-3 w-3" />
-                  <span className="hidden sm:inline">AI Evidence Review</span>
-                </>
-              )}
-            </button>
           </div>
           <textarea
             ref={textareaRef}
             id="observations"
-            rows={8}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border"
-            placeholder="What patterns or insights do you see in the data?"
+            rows={6}
+            className="w-full px-6 py-4 text-slate-700 placeholder-slate-400 border-none focus:ring-0 resize-none text-lg leading-relaxed"
+            placeholder="What does the data tell us? List facts, trends, and anomalies observed..."
             defaultValue={currentCase.dataAnalysisObservations || ''}
             onBlur={handleBlur}
           />
-          {analysisError && (
-            <div className="mt-3 rounded-md bg-red-50 p-3">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <AlertCircle className="h-4 w-4 text-red-400" aria-hidden="true" />
-                </div>
-                <div className="ml-2 text-sm text-red-700">
-                  {analysisError}
-                </div>
-              </div>
-            </div>
-          )}
-          {analysisResult && (
-            <div className="mt-4 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-              <div className="bg-indigo-50 px-4 py-2 border-b border-gray-200">
-                <h3 className="text-xs font-bold text-indigo-900 flex items-center">
-                  <Sparkles className="h-4 w-4 mr-2 text-indigo-600" />
-                  AI Evidence Adequacy & Cause Insight
-                </h3>
-              </div>
-              <div className="p-4">
-                <div className="prose prose-sm max-w-none text-gray-700 bg-gray-50 p-3 rounded-md text-sm whitespace-pre-wrap">
-                  {analysisResult}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+          
+          <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex flex-wrap gap-3 justify-end">
+            <button
+              onClick={handleAnalyzeData}
+              disabled={isAnalyzing || !currentCase.problemStatement}
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none"
+            >
+              {isAnalyzing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Analyzing...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  <span>Analyze Data</span>
+                </>
+              )}
+            </button>
 
-      {troubleshootingPlan && (
-        <div className="fixed inset-0 z-[70] overflow-y-auto">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div
-              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-              aria-hidden="true"
-              onClick={() => setTroubleshootingPlan(null)}
-            ></div>
-
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
-              &#8203;
-            </span>
-
-            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6">
-              <div className="absolute top-0 right-0 pt-4 pr-4">
-                <button
-                  type="button"
-                  className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  onClick={() => setTroubleshootingPlan(null)}
-                >
-                  <span className="sr-only">Close</span>
-                  <X className="h-6 w-6" />
-                </button>
-              </div>
-
-              <div className="mt-2">
-                <h3 className="text-sm leading-6 font-semibold text-gray-900 mb-3 flex items-center">
-                  <Sparkles className="h-4 w-4 mr-2 text-blue-600" />
-                  AI Troubleshooting Plan
-                </h3>
-                <div className="prose prose-sm max-w-none text-gray-700 bg-gray-50 p-3 rounded-md text-sm whitespace-pre-wrap">
-                  {troubleshootingPlan}
-                </div>
-              </div>
-            </div>
+            <button
+              onClick={handleGeneratePlan}
+              disabled={isGeneratingPlan || !currentCase.problemStatement}
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-white text-brand-600 hover:bg-brand-50 border-2 border-brand-100 text-sm font-bold rounded-xl transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:translate-y-0"
+            >
+              {isGeneratingPlan ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Generating...</span>
+                </>
+              ) : (
+                <>
+                  <Route className="w-4 h-4" />
+                  <span>Troubleshooting Plan</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
-      )}
+
+        {/* Results Section */}
+        {(analysisResult || analysisError || troubleshootingPlan || planError) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-6 duration-500">
+            {/* Analysis Result */}
+            {(analysisResult || analysisError) && (
+              <div className="bg-white rounded-2xl border-2 border-brand-100 shadow-xl overflow-hidden flex flex-col">
+                <div className="bg-brand-600 px-6 py-4 flex justify-between items-center shrink-0">
+                  <div className="flex items-center gap-2 text-white">
+                    <Sparkles className="w-4 h-4" />
+                    <h3 className="text-sm font-bold uppercase tracking-wider">AI Data Insights</h3>
+                  </div>
+                  <button onClick={() => setAnalysisResult(null)} className="text-white/70 hover:text-white">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="p-6 flex-grow">
+                  {analysisError ? (
+                    <div className="flex items-center gap-2 text-red-600 bg-red-50 p-4 rounded-xl">
+                      <AlertCircle className="w-5 h-5" />
+                      <p className="text-sm font-medium">{analysisError}</p>
+                    </div>
+                  ) : (
+                    <div className="prose prose-slate prose-sm max-w-none text-slate-700 leading-relaxed whitespace-pre-wrap">
+                      {analysisResult}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Troubleshooting Plan */}
+            {(troubleshootingPlan || planError) && (
+              <div className="bg-white rounded-2xl border-2 border-accent-100 shadow-xl overflow-hidden flex flex-col">
+                <div className="bg-accent-600 px-6 py-4 flex justify-between items-center shrink-0">
+                  <div className="flex items-center gap-2 text-white">
+                    <Route className="w-4 h-4" />
+                    <h3 className="text-sm font-bold uppercase tracking-wider">Troubleshooting Plan</h3>
+                  </div>
+                  <button onClick={() => setTroubleshootingPlan(null)} className="text-white/70 hover:text-white">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="p-6 flex-grow">
+                  {planError ? (
+                    <div className="flex items-center gap-2 text-red-600 bg-red-50 p-4 rounded-xl">
+                      <AlertCircle className="w-5 h-5" />
+                      <p className="text-sm font-medium">{planError}</p>
+                    </div>
+                  ) : (
+                    <div className="prose prose-slate prose-sm max-w-none text-slate-700 leading-relaxed whitespace-pre-wrap">
+                      {troubleshootingPlan}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

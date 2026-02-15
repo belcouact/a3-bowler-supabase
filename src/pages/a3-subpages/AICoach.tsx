@@ -189,37 +189,35 @@ Keep your answers specific, practical, and focused on this A3 only.`,
 
   if (!currentCase) {
     return (
-      <div className="flex items-center justify-center py-16">
+      <div className="flex items-center justify-center py-24">
         <div className="flex flex-col items-center">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          <p className="mt-3 text-base font-medium text-gray-700">
-            Loading A3 data for coaching...
-          </p>
+          <Loader2 className="w-10 h-10 animate-spin text-brand-600" />
+          <p className="mt-4 text-slate-500 font-medium animate-pulse">Loading coaching session...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full min-h-[480px] space-y-4">
-      <div className="flex-1 flex flex-col rounded-lg border border-gray-200 bg-gray-50 overflow-hidden">
-        <div className="flex-1 p-4 overflow-y-auto">
+    <div className="flex flex-col h-full min-h-[500px] space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex-1 flex flex-col rounded-2xl border border-slate-200 bg-slate-50/30 overflow-hidden shadow-sm">
+        <div className="flex-1 p-6 overflow-y-auto space-y-4">
           {messages.map((msg, idx) => (
             <div
               key={idx}
-              className={`mb-4 flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
             >
               <div
-                className={`max-w-[85%] rounded-lg px-4 py-3 shadow-sm ${
+                className={`max-w-[85%] rounded-2xl px-5 py-3.5 shadow-sm ${
                   msg.role === 'user'
-                    ? 'bg-indigo-600 text-white rounded-br-none'
-                    : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'
+                    ? 'bg-brand-600 text-white rounded-br-none shadow-brand-200/50'
+                    : 'bg-white text-slate-800 border border-slate-200 rounded-bl-none'
                 }`}
               >
                 {msg.role === 'user' ? (
-                  <div className="whitespace-pre-wrap text-sm">{msg.content}</div>
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed font-medium">{msg.content}</div>
                 ) : (
-                  <div className="text-sm">
+                  <div className="text-sm leading-relaxed prose prose-slate prose-sm max-w-none">
                     <MarkdownRenderer content={msg.content} />
                   </div>
                 )}
@@ -228,21 +226,21 @@ Keep your answers specific, practical, and focused on this A3 only.`,
           ))}
 
           {isLoading && (
-            <div className="flex justify-start mb-4">
-              <div className="bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm rounded-bl-none flex items-center">
-                <Loader2 className="w-4 h-4 animate-spin text-indigo-600 mr-2" />
-                <span className="text-sm text-gray-500">Thinking...</span>
+            <div className="flex justify-start animate-pulse">
+              <div className="bg-white border border-slate-200 rounded-2xl px-5 py-3.5 shadow-sm rounded-bl-none flex items-center gap-3">
+                <Loader2 className="w-4 h-4 animate-spin text-brand-600" />
+                <span className="text-sm text-slate-500 font-medium">Thinking...</span>
               </div>
             </div>
           )}
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="border-t border-gray-200 bg-white px-4 py-3">
-          <div className="flex items-center space-x-3">
+        <div className="border-t border-slate-200 bg-white px-6 py-4">
+          <div className="flex items-center gap-3">
             <input
               type="text"
-              className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+              className="flex-1 bg-slate-50 rounded-xl border-slate-200 text-sm py-2.5 px-4 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all placeholder-slate-400"
               placeholder="Ask the coach about this A3..."
               value={input}
               onChange={e => setInput(e.target.value)}
@@ -258,7 +256,7 @@ Keep your answers specific, practical, and focused on this A3 only.`,
               type="button"
               onClick={handleSend}
               disabled={isLoading || !input.trim()}
-              className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-300"
+              className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-brand-600 text-white hover:bg-brand-700 transition-all shadow-md hover:shadow-lg disabled:bg-slate-300 disabled:shadow-none shrink-0"
             >
               <Send className="h-5 w-5" />
             </button>
@@ -267,11 +265,10 @@ Keep your answers specific, practical, and focused on this A3 only.`,
       </div>
 
       {!currentCase.problemStatement && (
-        <div className="mt-1 rounded-md bg-yellow-50 border border-yellow-200 px-3 py-2 text-xs text-yellow-800 flex items-start">
-          <AlertTriangle className="h-4 w-4 mr-2 mt-0.5" />
-          <p>
-            Tip: The coach works best when the problem statement, analysis, and action plan are
-            filled in.
+        <div className="rounded-xl bg-accent-50 border border-accent-100 px-4 py-3 flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-accent-600 shrink-0 mt-0.5" />
+          <p className="text-sm text-accent-900 font-medium">
+            Tip: The coach works best when the problem statement, analysis, and action plan are filled in.
           </p>
         </div>
       )}

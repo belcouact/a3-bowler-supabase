@@ -11,11 +11,11 @@ const DEFAULT_HEIGHT = 80;
 
 const COLORS = [
   { name: 'White', value: '#ffffff', border: '#e2e8f0' },
-  { name: 'Blue', value: '#eff6ff', border: '#bfdbfe' },
-  { name: 'Green', value: '#f0fdf4', border: '#bbf7d0' },
+  { name: 'Brand', value: '#faf5ff', border: '#e9d5ff' }, // Purple
+  { name: 'Accent', value: '#f0fdf4', border: '#bbf7d0' }, // Green
   { name: 'Yellow', value: '#fefce8', border: '#fef08a' },
   { name: 'Red', value: '#fef2f2', border: '#fecaca' },
-  { name: 'Purple', value: '#faf5ff', border: '#e9d5ff' },
+  { name: 'Blue', value: '#eff6ff', border: '#bfdbfe' },
 ];
 
 const MindMapNode = ({ 
@@ -131,13 +131,18 @@ const MindMapNode = ({
         transform: `translate(${node.x}px, ${node.y}px)`,
         width: node.customWidth || DEFAULT_WIDTH,
         height: node.customHeight,
-        backgroundColor: node.color || (node.type === 'root' ? '#eff6ff' : '#ffffff'),
+        backgroundColor: node.color || (node.type === 'root' ? '#faf5ff' : '#ffffff'),
         borderColor: node.color ? COLORS.find(c => c.value === node.color)?.border : undefined,
       }}
       className={clsx(
-        "absolute flex flex-col p-3 rounded-lg shadow-sm border transition-shadow group select-none",
-        !node.color && (node.type === 'root' ? "bg-blue-50 border-blue-200" : "bg-white border-slate-200 hover:border-blue-300")
-      )}
+                "absolute flex flex-col p-3 rounded-xl shadow-sm border transition-all group select-none",
+                !node.color && (
+                  node.type === 'root' 
+                    ? "bg-brand-50 border-brand-200 text-brand-900" 
+                    : "bg-white border-slate-200 hover:border-brand-300"
+                ),
+                node.id === selectedNodeId && "ring-2 ring-brand-500 ring-offset-2"
+              )}
     >
       {/* Header / Drag Handle */}
       <div 
@@ -192,7 +197,7 @@ const MindMapNode = ({
             )}
             <button 
                 onClick={() => onAdd(node.id, 'right')}
-                className="p-1 hover:bg-blue-50 text-slate-400 hover:text-blue-500 rounded"
+                className="p-1 hover:bg-brand-50 text-slate-400 hover:text-brand-500 rounded"
                 title="Add next Why (Right)"
             >
                 <Plus className="w-3 h-3" />
@@ -209,7 +214,7 @@ const MindMapNode = ({
             resize: 'none'
         }}
         className={clsx(
-            "w-full text-sm bg-transparent border-none focus:ring-0 p-0 text-slate-700 font-medium overflow-hidden",
+            "w-full text-sm bg-transparent border-none focus:ring-0 p-0 text-slate-700 font-bold overflow-hidden",
             node.customHeight ? "flex-1" : ""
         )}
         rows={1}
@@ -228,7 +233,7 @@ const MindMapNode = ({
 
       {/* Add Below Button */}
       <button 
-        className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-white border border-slate-200 rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-50 text-slate-400 hover:text-blue-500 z-10"
+        className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-white border border-slate-200 rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-brand-50 text-slate-400 hover:text-brand-500 z-10"
         onClick={() => onAdd(node.id, 'bottom')}
         title="Add Why below"
       >

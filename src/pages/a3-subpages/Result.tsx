@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useApp, DataAnalysisImage } from '../../context/AppContext';
 import ImageCanvas from '../../components/ImageCanvas';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trophy, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { dataService } from '../../services/dataService';
 
@@ -130,10 +130,10 @@ const Result = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-16">
+      <div className="flex items-center justify-center py-24">
         <div className="flex flex-col items-center">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          <p className="mt-3 text-base font-medium text-gray-700">Loading A3 Results & Follow-up...</p>
+          <Loader2 className="w-10 h-10 animate-spin text-brand-600" />
+          <p className="mt-4 text-slate-500 font-medium animate-pulse">Loading results data...</p>
         </div>
       </div>
     );
@@ -141,44 +141,61 @@ const Result = () => {
 
   if (!currentCase) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <div className="flex flex-col items-center text-center">
-          <p className="mt-3 text-base font-medium text-gray-800">A3 case could not be found.</p>
-          <p className="mt-1 text-sm text-gray-500">It may have been deleted or the link is invalid.</p>
+      <div className="flex items-center justify-center py-24 text-center">
+        <div className="max-w-md space-y-4">
+          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
+            <X className="w-8 h-8" />
+          </div>
+          <h3 className="text-xl font-bold text-slate-900">A3 Case Not Found</h3>
+          <p className="text-slate-500">It may have been deleted or the link is invalid.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Results & Follow-up</h3>
-        <p className="text-gray-500 mb-4">Document the results achieved after implementing the action plan.</p>
-        
-        <ImageCanvas 
-          images={images}
-          onImagesChange={saveImages}
-          height={canvasHeight}
-          onHeightChange={saveCanvasHeight}
-          label="Result Evidence (Paste or Upload Images)"
-          onUploadImage={uploadImage}
-        />
+    <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="space-y-2">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-brand-50 rounded-lg text-brand-600">
+            <Trophy className="w-6 h-6" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900 font-display">Results & Follow-up</h2>
+        </div>
+        <p className="text-slate-500 text-lg leading-relaxed max-w-2xl">
+          Document the tangible outcomes and evidence achieved after implementing your action plan.
+        </p>
+      </div>
 
-        <div className="space-y-4 mt-6">
-          <div>
-            <label htmlFor="results" className="block text-sm font-medium text-gray-700 mb-1">
-              Actual Results
+      <div className="grid grid-cols-1 gap-8">
+        <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden p-1 bg-slate-50/30">
+          <ImageCanvas 
+            images={images}
+            onImagesChange={saveImages}
+            height={canvasHeight}
+            onHeightChange={saveCanvasHeight}
+            label="Result Evidence (Paste or Upload Images)"
+            onUploadImage={uploadImage}
+          />
+        </div>
+
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all duration-300 focus-within:ring-4 focus-within:ring-brand-50 focus-within:border-brand-300">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+            <label htmlFor="results" className="text-sm font-bold text-slate-700 uppercase tracking-wider">
+              Actual Results & Key Learnings
             </label>
-            <textarea
-              ref={textareaRef}
-              id="results"
-              rows={8}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border"
-              placeholder="Describe what happened after actions were taken..."
-              defaultValue={currentCase.results || ''}
-              onBlur={handleBlur}
-            />
+          </div>
+          <textarea
+            ref={textareaRef}
+            id="results"
+            rows={8}
+            className="w-full px-6 py-6 text-slate-700 placeholder-slate-400 border-none focus:ring-0 resize-none text-lg leading-relaxed font-medium"
+            placeholder="Describe what happened after actions were taken. What did you learn? Was the target met?"
+            defaultValue={currentCase.results || ''}
+            onBlur={handleBlur}
+          />
+          <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center">
+            <span className="text-xs text-slate-400 font-medium">Changes are saved automatically on blur</span>
           </div>
         </div>
       </div>

@@ -740,19 +740,19 @@ Return JSON ONLY with this structure:
 
 
   return (
-    <div className="flex flex-col h-full bg-white shadow border border-gray-200 overflow-auto">
+    <div className="flex flex-col h-full bg-slate-50 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header Controls */}
-      <div className="flex justify-start gap-4 items-center p-4 border-b border-gray-200 bg-white z-20 sticky left-0">
-        <div className="flex items-center space-x-4">
+      <div className="flex justify-between items-center p-4 border-b border-brand-100 bg-white/80 backdrop-blur-md z-20 sticky left-0">
+        <div className="flex items-center gap-6">
             {/* View Presets */}
-            <div className="flex bg-gray-100 rounded-md p-1">
+            <div className="flex bg-slate-100 rounded-xl p-1 shadow-inner border border-slate-200">
                 <button
                     onClick={() => handleSetViewMode('month')}
                     className={clsx(
-                        "px-3 py-1 text-xs font-medium rounded transition-all",
+                        "px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 uppercase tracking-wider",
                         timeScale === 'month' 
-                            ? "bg-white text-gray-900 shadow-sm" 
-                            : "text-gray-500 hover:text-gray-700 hover:bg-white/50"
+                            ? "bg-white text-brand-600 shadow-md ring-1 ring-slate-200" 
+                            : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
                     )}
                 >
                     Month
@@ -760,10 +760,10 @@ Return JSON ONLY with this structure:
                 <button
                     onClick={() => handleSetViewMode('week')}
                     className={clsx(
-                        "px-3 py-1 text-xs font-medium rounded transition-all",
+                        "px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 uppercase tracking-wider",
                         timeScale === 'week' 
-                            ? "bg-white text-gray-900 shadow-sm" 
-                            : "text-gray-500 hover:text-gray-700 hover:bg-white/50"
+                            ? "bg-white text-brand-600 shadow-md ring-1 ring-slate-200" 
+                            : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
                     )}
                 >
                     Week
@@ -771,25 +771,31 @@ Return JSON ONLY with this structure:
             </div>
 
             {/* Date Range Picker with Navigation */}
-            <div className="flex items-center space-x-2 bg-gray-100 rounded-md p-1">
-                <div className="hidden sm:flex items-center space-x-2 px-2">
-                    <input 
-                        type="date" 
-                        value={dateRange.start}
-                        onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                        className="text-xs bg-transparent border-none focus:ring-0 p-0 w-24 text-center font-medium text-gray-700 cursor-pointer"
-                    />
-                    <span className="text-gray-400">-</span>
-                    <input 
-                        type="date" 
-                        value={dateRange.end}
-                        onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                        className="text-xs bg-transparent border-none focus:ring-0 p-0 w-24 text-center font-medium text-gray-700 cursor-pointer"
-                    />
+            <div className="flex items-center gap-3 bg-slate-100 rounded-xl p-1 shadow-inner border border-slate-200">
+                <div className="hidden sm:flex items-center gap-3 px-3">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase leading-none mb-1">Start</span>
+                      <input 
+                          type="date" 
+                          value={dateRange.start}
+                          onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                          className="text-xs bg-transparent border-none focus:ring-0 p-0 w-24 font-bold text-slate-700 cursor-pointer"
+                      />
+                    </div>
+                    <div className="w-px h-6 bg-slate-200"></div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase leading-none mb-1">End</span>
+                      <input 
+                          type="date" 
+                          value={dateRange.end}
+                          onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                          className="text-xs bg-transparent border-none focus:ring-0 p-0 w-24 font-bold text-slate-700 cursor-pointer"
+                      />
+                    </div>
                 </div>
-                <div className="flex sm:hidden items-center space-x-1 px-1">
+                <div className="flex sm:hidden items-center gap-2 px-1">
                     <label className="relative inline-flex items-center">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-white text-gray-700 shadow-sm border border-gray-200">
+                        <span className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-white text-slate-700 shadow-sm border border-slate-200 hover:border-brand-300 transition-colors">
                             <Calendar className="w-4 h-4" />
                         </span>
                         <input 
@@ -799,9 +805,11 @@ Return JSON ONLY with this structure:
                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         />
                     </label>
-                    <span className="text-gray-400">-</span>
+                    <span className="text-slate-300">
+                      <ChevronRight className="w-4 h-4" />
+                    </span>
                     <label className="relative inline-flex items-center">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-white text-gray-700 shadow-sm border border-gray-200">
+                        <span className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-white text-slate-700 shadow-sm border border-slate-200 hover:border-brand-300 transition-colors">
                             <Calendar className="w-4 h-4" />
                         </span>
                         <input 
@@ -815,14 +823,14 @@ Return JSON ONLY with this structure:
             </div>
         </div>
 
-        <div className="flex items-center space-x-3">
-             <div className="flex items-center bg-gray-100 rounded-md p-1">
-                <button onClick={() => setZoomLevel(Math.max(0.5, zoomLevel - 0.25))} className="p-1 hover:bg-white rounded shadow-sm">
-                    <ZoomOut className="w-4 h-4 text-gray-600" />
+        <div className="flex items-center gap-4">
+             <div className="flex items-center bg-slate-100 rounded-xl p-1 shadow-inner border border-slate-200">
+                <button onClick={() => setZoomLevel(Math.max(0.5, zoomLevel - 0.25))} className="p-1.5 hover:bg-white rounded-lg transition-colors group">
+                    <ZoomOut className="w-4 h-4 text-slate-500 group-hover:text-brand-600" />
                 </button>
-                <span className="text-xs text-gray-500 w-8 text-center">{Math.round(zoomLevel * 100)}%</span>
-                <button onClick={() => setZoomLevel(Math.min(2, zoomLevel + 0.25))} className="p-1 hover:bg-white rounded shadow-sm">
-                    <ZoomIn className="w-4 h-4 text-gray-600" />
+                <span className="text-xs font-bold text-slate-600 w-12 text-center">{Math.round(zoomLevel * 100)}%</span>
+                <button onClick={() => setZoomLevel(Math.min(2, zoomLevel + 0.25))} className="p-1.5 hover:bg-white rounded-lg transition-colors group">
+                    <ZoomIn className="w-4 h-4 text-slate-500 group-hover:text-brand-600" />
                 </button>
              </div>
 
@@ -836,49 +844,49 @@ Return JSON ONLY with this structure:
                  !currentCase.dataAnalysisObservations ||
                  !currentCase.rootCause
                }
-               className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+               className="inline-flex items-center px-4 py-2 border border-transparent text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg text-white bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95"
              >
                {isGeneratingAI ? (
                  <>
-                   <Loader2 className="animate-spin -ml-0.5 mr-2 h-3 w-3" />
+                   <Loader2 className="animate-spin -ml-0.5 mr-2 h-4 w-4" />
                    <span className="hidden sm:inline">AI planning...</span>
                  </>
                ) : (
                  <>
-                   <Sparkles className="-ml-0.5 mr-0 sm:mr-2 h-3 w-3" />
+                   <Sparkles className="-ml-0.5 mr-0 sm:mr-2 h-4 w-4" />
                    <span className="hidden sm:inline">AI Action Plan</span>
                  </>
                )}
              </button>
-
         </div>
       </div>
 
       {aiError && (
-        <div className="px-4 pt-2 text-xs text-red-600">
-          {aiError}
+        <div className="px-4 py-2 bg-red-50 border-b border-red-100 flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
+          <span className="text-xs font-bold text-red-600 uppercase tracking-tight">{aiError}</span>
         </div>
       )}
 
       {/* Gantt Chart Container */}
-      <div className="flex-1 relative select-none">
-        <div className="flex min-w-max">
+      <div className="flex-1 relative select-none overflow-hidden">
+        <div className="flex min-w-max h-full">
             <div
-              className="sticky left-0 z-40 bg-white border-r border-gray-200 shadow-sm flex-shrink-0 relative"
+              className="sticky left-0 z-40 bg-white border-r border-slate-200 shadow-xl flex-shrink-0 flex flex-col h-full"
               style={{ width: sidebarWidth }}
             >
-                <div className="h-[60px] border-b border-gray-200 bg-gray-50 flex items-center justify-between px-4 font-semibold text-xs text-gray-500 uppercase tracking-wider sticky top-0 z-30">
-                    <span>Task Details</span>
+                <div className="h-[60px] border-b border-slate-200 bg-slate-50/80 backdrop-blur-sm flex items-center justify-between px-6 font-black text-[10px] text-slate-400 uppercase tracking-[0.2em] sticky top-0 z-30">
+                    <span>Task Catalog</span>
                     <button
                       onClick={handleAddTask}
-                      className="p-1.5 rounded-full bg-blue-600 text-white hover:bg-blue-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500"
+                      className="p-2 rounded-xl bg-accent-600 text-white hover:bg-accent-700 shadow-md hover:shadow-accent-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-500 transition-all duration-200 active:scale-90 group"
                       title="Add Task"
                     >
-                      <Plus className="w-3 h-3" />
+                      <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-300" />
                     </button>
                 </div>
                 <div
-                  className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize bg-transparent hover:bg-gray-200"
+                  className="absolute top-0 right-0 h-full w-1 cursor-col-resize bg-transparent hover:bg-brand-400 transition-colors z-50"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     setIsResizingSidebar(true);
@@ -886,150 +894,152 @@ Return JSON ONLY with this structure:
                     setSidebarStartWidth(sidebarWidth);
                   }}
                 />
-                <DragDropContext onDragEnd={onDragEnd}>
-                  {(() => {
-                    const buckets: Record<string, ActionTask[]> = { ungrouped: [] };
-                    const ungrouped = tasks.filter(t => !t.group);
-                    buckets.ungrouped = [...ungrouped];
-                    const grouped = tasks.filter(t => !!t.group).reduce((acc, task) => {
-                      const group = task.group!;
-                      if (!acc[group]) acc[group] = [];
-                      acc[group].push(task);
-                      return acc;
-                    }, {} as Record<string, ActionTask[]>);
-                    const groupKeys = Object.keys(grouped);
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                  <DragDropContext onDragEnd={onDragEnd}>
+                    {(() => {
+                      const buckets: Record<string, ActionTask[]> = { ungrouped: [] };
+                      const ungrouped = tasks.filter(t => !t.group);
+                      buckets.ungrouped = [...ungrouped];
+                      const grouped = tasks.filter(t => !!t.group).reduce((acc, task) => {
+                        const group = task.group!;
+                        if (!acc[group]) acc[group] = [];
+                        acc[group].push(task);
+                        return acc;
+                      }, {} as Record<string, ActionTask[]>);
+                      const groupKeys = Object.keys(grouped);
 
-                    return (
-                      <>
-                        <Droppable droppableId="ungrouped">
-                          {(provided) => (
-                            <div ref={provided.innerRef} {...provided.droppableProps}>
-                              {buckets.ungrouped.map((task, index) => (
-                                <Draggable key={task.id} draggableId={task.id} index={index}>
-                                  {(provided) => (
-                                    <div
-                                      ref={provided.innerRef}
-                                      {...provided.draggableProps}
-                                      className="h-[48px] border-b border-gray-100 flex items-center px-4 hover:bg-gray-50 group cursor-pointer bg-white"
-                                      onDoubleClick={(e) => handleTaskDoubleClick(e, task)}
-                                      title={task.description}
-                                    >
-                                        <div 
-                                          {...provided.dragHandleProps}
-                                          className="mr-2 text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-600"
-                                        >
-                                          <GripVertical className="w-4 h-4" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center justify-between gap-2">
-                                              <div className="text-sm font-medium text-gray-900 truncate">
-                                                {task.name || 'Untitled Task'}
+                      return (
+                        <>
+                          <Droppable droppableId="ungrouped">
+                            {(provided) => (
+                              <div ref={provided.innerRef} {...provided.droppableProps}>
+                                {buckets.ungrouped.map((task, index) => (
+                                  <Draggable key={task.id} draggableId={task.id} index={index}>
+                                    {(provided) => (
+                                      <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        className="h-[56px] border-b border-slate-50 flex items-center px-4 hover:bg-brand-50/30 group cursor-pointer bg-white transition-colors"
+                                        onDoubleClick={(e) => handleTaskDoubleClick(e, task)}
+                                        title={task.description}
+                                      >
+                                          <div 
+                                            {...provided.dragHandleProps}
+                                            className="mr-3 text-slate-300 cursor-grab active:cursor-grabbing hover:text-brand-400 transition-colors"
+                                          >
+                                            <GripVertical className="w-4 h-4" />
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                              <div className="flex items-center justify-between gap-3">
+                                                <div className="text-sm font-bold text-slate-700 truncate group-hover:text-brand-700 transition-colors">
+                                                  {task.name || 'Untitled Task'}
+                                                </div>
+                                                <div className="flex items-center gap-2 flex-shrink-0">
+                                                  <span className="text-[10px] font-black text-slate-400 group-hover:text-brand-500">
+                                                    {Math.round(task.progress)}%
+                                                  </span>
+                                                  <div
+                                                    className={clsx(
+                                                      "w-2.5 h-2.5 rounded-full flex-shrink-0 ring-2 ring-white shadow-sm",
+                                                      task.status === 'Completed'
+                                                        ? "bg-accent-500"
+                                                        : task.status === 'In Progress'
+                                                        ? "bg-brand-500 animate-pulse"
+                                                        : "bg-slate-300"
+                                                    )}
+                                                  />
+                                                </div>
                                               </div>
-                                              <div className="flex items-center gap-1 flex-shrink-0">
-                                                <span className="text-[11px] text-gray-500">
-                                                  {Math.round(task.progress)}%
-                                                </span>
-                                                <div
-                                                  className={clsx(
-                                                    "w-2 h-2 rounded-full flex-shrink-0",
-                                                    task.status === 'Completed'
-                                                      ? "bg-green-500"
-                                                      : task.status === 'In Progress'
-                                                      ? "bg-blue-500"
-                                                      : "bg-gray-300"
-                                                  )}
-                                                />
-                                              </div>
-                                            </div>
-                                            <div className="text-xs text-gray-500 truncate">{task.owner}</div>
-                                        </div>
-                                    </div>
+                                              <div className="text-[10px] font-medium text-slate-400 uppercase tracking-wide truncate mt-0.5">{task.owner}</div>
+                                          </div>
+                                      </div>
+                                    )}
+                                  </Draggable>
+                                ))}
+                                {provided.placeholder}
+                              </div>
+                            )}
+                          </Droppable>
+
+                          {groupKeys.map(group => (
+                              <div key={group}>
+                                  <div 
+                                      className="h-[40px] border-y border-slate-100 flex items-center px-4 bg-slate-50/50 hover:bg-slate-100 cursor-pointer transition-colors"
+                                      onClick={() => toggleGroup(group)}
+                                  >
+                                      {expandedGroups[group] !== false ? <ChevronDown className="w-3.5 h-3.5 mr-2 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 mr-2 text-slate-400" />}
+                                      <span className="text-[10px] font-black text-brand-600 uppercase tracking-widest">{group}</span>
+                                  </div>
+                                  
+                                  {expandedGroups[group] !== false && (
+                                      <Droppable droppableId={`group-${group}`}>
+                                        {(provided) => (
+                                          <div ref={provided.innerRef} {...provided.droppableProps}>
+                                              {grouped[group].map((task, index) => (
+                                                  <Draggable key={task.id} draggableId={task.id} index={index}>
+                                                    {(provided) => (
+                                                      <div
+                                                        ref={provided.innerRef}
+                                                        {...provided.draggableProps}
+                                                        className="h-[56px] border-b border-slate-50 flex items-center px-4 hover:bg-brand-50/30 group cursor-pointer bg-white transition-colors"
+                                                        onDoubleClick={(e) => handleTaskDoubleClick(e, task)}
+                                                        title={task.description}
+                                                      >
+                                                          <div 
+                                                            {...provided.dragHandleProps}
+                                                            className="mr-3 text-slate-300 cursor-grab active:cursor-grabbing hover:text-brand-400 transition-colors"
+                                                          >
+                                                            <GripVertical className="w-4 h-4" />
+                                                          </div>
+                                                          <div className="flex-1 min-w-0">
+                                                              <div className="flex items-center justify-between gap-3">
+                                                                <div className="text-sm font-bold text-slate-700 truncate group-hover:text-brand-700 transition-colors">
+                                                                  {task.name || 'Untitled Task'}
+                                                                </div>
+                                                                <div className="flex items-center gap-2 flex-shrink-0">
+                                                                  <span className="text-[10px] font-black text-slate-400 group-hover:text-brand-500">
+                                                                    {Math.round(task.progress)}%
+                                                                  </span>
+                                                                  <div
+                                                                    className={clsx(
+                                                                      "w-2.5 h-2.5 rounded-full flex-shrink-0 ring-2 ring-white shadow-sm",
+                                                                      task.status === 'Completed'
+                                                                        ? "bg-accent-500"
+                                                                        : task.status === 'In Progress'
+                                                                        ? "bg-brand-500 animate-pulse"
+                                                                        : "bg-slate-300"
+                                                                    )}
+                                                                  />
+                                                                </div>
+                                                              </div>
+                                                              <div className="text-[10px] font-medium text-slate-400 uppercase tracking-wide truncate mt-0.5">{task.owner}</div>
+                                                          </div>
+                                                      </div>
+                                                    )}
+                                                  </Draggable>
+                                              ))}
+                                              {provided.placeholder}
+                                          </div>
+                                        )}
+                                      </Droppable>
                                   )}
-                                </Draggable>
-                              ))}
-                              {provided.placeholder}
-                            </div>
-                          )}
-                        </Droppable>
-
-                        {groupKeys.map(group => (
-                            <div key={group}>
-                                <div 
-                                    className="h-[32px] border-b border-gray-100 flex items-center px-4 bg-gray-100 hover:bg-gray-200 cursor-pointer"
-                                    onClick={() => toggleGroup(group)}
-                                >
-                                    {expandedGroups[group] !== false ? <ChevronDown className="w-3 h-3 mr-2 text-gray-600" /> : <ChevronRight className="w-3 h-3 mr-2 text-gray-600" />}
-                                    <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">{group}</span>
-                                </div>
-                                
-                                {expandedGroups[group] !== false && (
-                                    <Droppable droppableId={`group-${group}`}>
-                                      {(provided) => (
-                                        <div ref={provided.innerRef} {...provided.droppableProps}>
-                                            {grouped[group].map((task, index) => (
-                                                <Draggable key={task.id} draggableId={task.id} index={index}>
-                                                  {(provided) => (
-                                                    <div
-                                                      ref={provided.innerRef}
-                                                      {...provided.draggableProps}
-                                                      className="h-[48px] border-b border-gray-100 flex items-center px-4 hover:bg-gray-50 group cursor-pointer bg-white"
-                                                      onDoubleClick={(e) => handleTaskDoubleClick(e, task)}
-                                                      title={task.description}
-                                                    >
-                                                        <div 
-                                                          {...provided.dragHandleProps}
-                                                          className="mr-2 text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-600"
-                                                        >
-                                                          <GripVertical className="w-4 h-4" />
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="flex items-center justify-between gap-2">
-                                                              <div className="text-sm font-medium text-gray-900 truncate">
-                                                                {task.name || 'Untitled Task'}
-                                                              </div>
-                                                              <div className="flex items-center gap-1 flex-shrink-0">
-                                                                <span className="text-[11px] text-gray-500">
-                                                                  {Math.round(task.progress)}%
-                                                                </span>
-                                                                <div
-                                                                  className={clsx(
-                                                                    "w-2 h-2 rounded-full flex-shrink-0",
-                                                                    task.status === 'Completed'
-                                                                      ? "bg-green-500"
-                                                                      : task.status === 'In Progress'
-                                                                      ? "bg-blue-500"
-                                                                      : "bg-gray-300"
-                                                                  )}
-                                                                />
-                                                              </div>
-                                                            </div>
-                                                            <div className="text-xs text-gray-500 truncate">{task.owner}</div>
-                                                        </div>
-                                                    </div>
-                                                  )}
-                                                </Draggable>
-                                            ))}
-                                            {provided.placeholder}
-                                        </div>
-                                      )}
-                                    </Droppable>
-                                )}
-                            </div>
-                        ))}
-                      </>
-                    );
-                  })()}
-                </DragDropContext>
-                 {/* Empty rows filler */}
-                 {Array.from({ length: Math.max(0, 10 - tasks.length) }).map((_, i) => (
-                    <div key={`empty-${i}`} className="h-[48px] border-b border-gray-50 bg-gray-50/10"></div>
-                 ))}
+                              </div>
+                          ))}
+                        </>
+                      );
+                    })()}
+                  </DragDropContext>
+                   {/* Empty rows filler */}
+                   {Array.from({ length: Math.max(0, 10 - tasks.length) }).map((_, i) => (
+                      <div key={`empty-${i}`} className="h-[56px] border-b border-slate-50 bg-slate-50/10"></div>
+                   ))}
+                </div>
             </div>
 
             {/* Right: Timeline Grid */}
-            <div className="relative">
+            <div className="relative flex-1 overflow-auto custom-scrollbar">
                 {/* Header: Dates */}
-                <div className="flex h-[60px] border-b border-gray-200 bg-gray-50 sticky top-0 z-20">
+                <div className="flex h-[60px] border-b border-slate-200 bg-slate-50/80 backdrop-blur-sm sticky top-0 z-20">
                     {gridColumns.map((col, i) => {
                         const isToday = timeScale === 'day' ? formatDate(col.date) === formatDate(new Date()) : false;
                         
@@ -1037,22 +1047,25 @@ Return JSON ONLY with this structure:
                             <div 
                                 key={i} 
                                 className={clsx(
-                                    "flex-shrink-0 border-r border-gray-200 flex flex-col items-center justify-center overflow-hidden px-0.5",
-                                    isToday ? "bg-blue-50" : ""
+                                    "flex-shrink-0 border-r border-slate-200 flex flex-col items-center justify-center overflow-hidden px-0.5 transition-colors",
+                                    isToday ? "bg-brand-50/50" : ""
                                 )}
                                 style={{ width: cellWidth }}
                                 title={col.fullLabel}
                             >
                                 <span className={clsx(
-                                    "font-semibold text-gray-700 whitespace-nowrap",
-                                    cellWidth < 45 ? "text-[10px]" : "text-xs"
+                                    "font-black text-slate-600 uppercase tracking-tighter whitespace-nowrap",
+                                    cellWidth < 45 ? "text-[9px]" : "text-[10px]"
                                 )}>
                                     {cellWidth < 40 && timeScale === 'week' 
                                         ? `${col.date.getMonth() + 1}/${col.date.getDate()}` 
                                         : col.label}
                                 </span>
                                 {timeScale === 'day' && cellWidth >= 30 && (
-                                    <span className="text-gray-400 text-[10px]">{col.date.toLocaleDateString('en-US', { weekday: 'narrow' })}</span>
+                                    <span className="text-slate-400 font-bold text-[8px] uppercase tracking-widest">{col.date.toLocaleDateString('en-US', { weekday: 'narrow' })}</span>
+                                )}
+                                {isToday && (
+                                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-brand-500"></div>
                                 )}
                             </div>
                         )
@@ -1065,7 +1078,7 @@ Return JSON ONLY with this structure:
                     <div className="absolute inset-0 flex pointer-events-none">
                         {gridColumns.map((_, i) => (
                             <div key={i} className={clsx(
-                                "flex-shrink-0 border-r border-gray-100 h-full",
+                                "flex-shrink-0 border-r border-slate-100 h-full",
                                 // Highlight weekends in day view only if we were showing them, but we aren't.
                             )} style={{ width: cellWidth }}></div>
                         ))}
@@ -1075,7 +1088,7 @@ Return JSON ONLY with this structure:
                     {groupedTasks.map((row) => {
                          if (row.type === 'group') {
                              return (
-                                 <div key={row.id} className="h-[32px] border-b border-gray-100 bg-gray-50/50"></div>
+                                 <div key={row.id} className="h-[40px] border-b border-slate-100 bg-slate-50/30"></div>
                              );
                          }
 
@@ -1085,10 +1098,10 @@ Return JSON ONLY with this structure:
                          // Render empty row if not visible to maintain alignment
                          if (!metrics) {
                              return (
-                                <div key={task.id} className="h-[48px] border-b border-gray-100 relative group">
+                                <div key={task.id} className="h-[56px] border-b border-slate-50 relative group">
                                      {/* Clickable background for adding task */}
                                     <div 
-                                        className="absolute inset-0 z-0" 
+                                        className="absolute inset-0 z-0 hover:bg-brand-50/10 transition-colors" 
                                         onClick={(e) => {
                                             const rect = e.currentTarget.getBoundingClientRect();
                                             const clickX = e.clientX - rect.left;
@@ -1105,10 +1118,10 @@ Return JSON ONLY with this structure:
                          const { left, width } = metrics;
                          
                          return (
-                            <div key={task.id} className="h-[48px] border-b border-gray-100 relative group">
+                            <div key={task.id} className="h-[56px] border-b border-slate-50 relative group">
                                 {/* Clickable row background for "Add" */}
                                 <div 
-                                    className="absolute inset-0 z-0" 
+                                    className="absolute inset-0 z-0 hover:bg-brand-50/10 transition-colors" 
                                     onClick={(e) => {
                                         const rect = e.currentTarget.getBoundingClientRect();
                                         const clickX = e.clientX - rect.left;
@@ -1122,10 +1135,10 @@ Return JSON ONLY with this structure:
                                 {/* The Bar */}
                                 <div
                                     className={clsx(
-                                        "absolute top-2.5 h-7 rounded-md shadow-sm border border-opacity-20 flex items-start justify-start px-2 text-xs text-white overflow-hidden cursor-move z-10 transition-colors text-left",
-                                        task.status === 'Completed' ? "bg-green-500 border-green-700" :
-                                        task.status === 'In Progress' ? "bg-blue-500 border-blue-700" : "bg-gray-400 border-gray-600",
-                                        draggingId === task.id ? "ring-2 ring-offset-1 ring-blue-400 opacity-90" : "hover:brightness-110"
+                                        "absolute top-3 h-8 rounded-lg shadow-lg border-2 flex items-center justify-start px-3 text-[10px] font-bold text-white overflow-hidden cursor-move z-10 transition-all duration-200 group-hover:scale-[1.02] group-hover:z-20",
+                                        task.status === 'Completed' ? "bg-accent-500 border-accent-600/20" :
+                                        task.status === 'In Progress' ? "bg-brand-500 border-brand-600/20" : "bg-slate-400 border-slate-500/20",
+                                        draggingId === task.id ? "ring-4 ring-brand-400/30 opacity-90 scale-105 z-30" : ""
                                     )}
                                     style={{ left: Math.max(0, left), width: Math.max(cellWidth, width) }}
                                     onMouseDown={(e) => handleMouseDown(e, task, 'move')}
@@ -1133,15 +1146,22 @@ Return JSON ONLY with this structure:
                                 >
                                     {/* Left Resize Handle */}
                                     <div 
-                                        className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-black/10"
+                                        className="absolute left-0 top-0 bottom-0 w-2.5 cursor-ew-resize hover:bg-white/20 transition-colors"
                                         onMouseDown={(e) => handleMouseDown(e, task, 'resize-left')}
                                     ></div>
 
-                                    <span className="drop-shadow-md font-medium pl-1 break-words text-left">{task.name}</span>
+                                    <div className="flex flex-col min-w-0 overflow-hidden">
+                                      <span className="truncate drop-shadow-sm uppercase tracking-wider">{task.name}</span>
+                                      {width > 120 && (
+                                        <div className="h-1 bg-white/30 rounded-full mt-0.5 overflow-hidden">
+                                          <div className="h-full bg-white transition-all duration-500" style={{ width: `${task.progress}%` }}></div>
+                                        </div>
+                                      )}
+                                    </div>
 
                                     {/* Right Resize Handle */}
                                     <div 
-                                        className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-black/10"
+                                        className="absolute right-0 top-0 bottom-0 w-2.5 cursor-ew-resize hover:bg-white/20 transition-colors"
                                         onMouseDown={(e) => handleMouseDown(e, task, 'resize-right')}
                                     ></div>
                                 </div>
@@ -1150,9 +1170,9 @@ Return JSON ONLY with this structure:
                     })}
                      {/* Empty rows filler for clicking */}
                      {Array.from({ length: Math.max(0, 10 - tasks.length) }).map((_, i) => (
-                        <div key={`empty-row-${i}`} className="h-[48px] border-b border-gray-50 bg-gray-50/10 relative">
+                        <div key={`empty-row-${i}`} className="h-[56px] border-b border-slate-50 bg-slate-50/10 relative">
                              <div 
-                                    className="absolute inset-0 z-0" 
+                                    className="absolute inset-0 z-0 hover:bg-brand-50/5 transition-colors" 
                                     onClick={(e) => {
                                         const rect = e.currentTarget.getBoundingClientRect();
                                         const clickX = e.clientX - rect.left;
@@ -1168,7 +1188,7 @@ Return JSON ONLY with this structure:
             </div>
         </div>
       </div>
-
+      
       <ActionModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

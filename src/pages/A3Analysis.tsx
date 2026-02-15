@@ -73,96 +73,117 @@ const A3Analysis = () => {
   }
 
   return (
-    <div className="p-4 md:p-6">
-      <div className="bg-white p-5 md:p-6 shadow-soft border border-slate-100 rounded-t-xl">
-        <div className="mb-4 md:mb-6 space-y-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <h2 className="text-xl md:text-2xl font-bold text-slate-900 font-display tracking-tight">{title}</h2>
-              <div className="mt-1 text-xs text-slate-500 space-x-3">
-                <span>Owner: <span className="font-medium text-slate-700">{selectedCase.owner || 'Unassigned'}</span></span>
-                <span>Group: <span className="font-medium text-slate-700">{selectedCase.group || 'Ungrouped'}</span></span>
+    <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-6">
+      {/* Header Section */}
+      <div className="bg-white rounded-3xl shadow-soft border border-slate-100 overflow-hidden">
+        <div className="p-6 md:p-10">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-brand-600 flex items-center justify-center text-white shadow-lg shadow-brand-200">
+                <FileText className="w-7 h-7" />
+              </div>
+              <div>
+                <h1 className="text-2xl md:text-4xl font-black text-slate-900 font-display tracking-tight leading-none">
+                  {title}
+                </h1>
+                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-500 font-medium">
+                  <span className="flex items-center gap-2 px-2 py-1 bg-slate-50 rounded-lg">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                    Owner: <span className="font-bold text-slate-700">{selectedCase.owner || 'Unassigned'}</span>
+                  </span>
+                  <span className="flex items-center gap-2 px-2 py-1 bg-slate-50 rounded-lg">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                    Group: <span className="font-bold text-slate-700">{selectedCase.group || 'Ungrouped'}</span>
+                  </span>
+                </div>
               </div>
             </div>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-50 text-primary-700 ring-1 ring-primary-100">
-              {selectedCase.status || 'In Progress'}
-            </span>
+            
+            <div className="flex items-center gap-3">
+              <div className={clsx(
+                "px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest border-2 transition-all shadow-sm",
+                selectedCase.status === 'Completed' 
+                  ? "bg-accent-50 text-accent-700 border-accent-100 shadow-accent-100" 
+                  : "bg-brand-50 text-brand-700 border-brand-100 shadow-brand-100"
+              )}>
+                {selectedCase.status || 'In Progress'}
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="relative border-b border-slate-100">
-          <button
-            type="button"
-            onClick={() => handleScrollTabs('left')}
-            disabled={!canScrollLeft}
-            className={clsx(
-              'absolute left-0 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-lg ring-1 ring-slate-200 text-primary-600 hover:text-primary-700 hover:bg-slate-50 transition-all hover:scale-105',
-              !canScrollLeft && 'opacity-0 cursor-default pointer-events-none'
-            )}
-            aria-label="Scroll tabs left"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <div
-            ref={tabsContainerRef}
-            className="scrollbar-hide flex space-x-1 overflow-x-auto px-10 scroll-smooth"
-          >
-            {tabs.map(tab => {
-              const isActive = location.pathname.includes(tab.path);
-              return (
-                <Link
-                  key={tab.path}
-                  to={tab.path}
-                  className={clsx(
-                    'py-3 px-4 md:py-3 md:px-6 border-b-2 font-medium text-sm transition-all duration-200 whitespace-nowrap flex items-center',
-                    isActive
-                      ? 'border-primary-500 text-primary-700 bg-primary-50/40'
-                      : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-                  )}
-                  title={tab.label}
-                >
-                  <tab.icon className={clsx('w-5 h-5 md:w-4 md:h-4 md:mr-2', isActive ? 'text-primary-600' : 'text-slate-400')} />
-                  <span className="hidden md:inline">{tab.label}</span>
-                </Link>
-              );
-            })}
+        {/* Stepper Navigation */}
+        <div className="bg-slate-50/50 border-t border-slate-100 px-6 py-12 md:px-12">
+          <div className="relative">
+            {/* Connector Line */}
+            <div className="absolute top-1/2 left-0 w-full h-1 bg-slate-200 -translate-y-1/2 rounded-full" />
+            
+            <div className="relative flex justify-between items-center gap-2 max-w-4xl mx-auto">
+              {tabs.map((tab, index) => {
+                const activeIndex = tabs.findIndex(t => location.pathname.includes(t.path));
+                const isActive = activeIndex === index;
+                const isPast = activeIndex > index;
+                
+                return (
+                  <Link
+                    key={tab.path}
+                    to={tab.path}
+                    className="group relative flex flex-col items-center z-10"
+                  >
+                    <div className={clsx(
+                      "w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center transition-all duration-500 ring-8 ring-white shadow-md",
+                      isActive 
+                        ? "bg-brand-600 text-white scale-110 shadow-xl shadow-brand-200 -translate-y-1" 
+                        : isPast 
+                          ? "bg-accent-500 text-white" 
+                          : "bg-white text-slate-400 border-2 border-slate-100 group-hover:border-brand-200 group-hover:text-brand-500 group-hover:-translate-y-0.5"
+                    )}>
+                      {isPast ? (
+                        <CheckCircle className="w-6 h-6 md:w-7 md:h-7" />
+                      ) : (
+                        <tab.icon className="w-6 h-6 md:w-7 md:h-7" />
+                      )}
+                    </div>
+                    <div className="absolute -bottom-10 flex flex-col items-center">
+                      <span className={clsx(
+                        "whitespace-nowrap text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300",
+                        isActive ? "text-brand-700 translate-y-0 opacity-100" : "text-slate-400 group-hover:text-slate-600 translate-y-1 opacity-0 group-hover:opacity-100 md:opacity-100 md:translate-y-0"
+                      )}>
+                        {tab.label}
+                      </span>
+                      {isActive && (
+                        <div className="w-1 h-1 rounded-full bg-brand-600 mt-1 animate-ping" />
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={() => handleScrollTabs('right')}
-            disabled={!canScrollRight}
-            className={clsx(
-              'absolute right-0 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-lg ring-1 ring-slate-200 text-primary-600 hover:text-primary-700 hover:bg-slate-50 transition-all hover:scale-105',
-              !canScrollRight && 'opacity-0 cursor-default pointer-events-none'
-            )}
-            aria-label="Scroll tabs right"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
         </div>
       </div>
-      
-      {location.pathname.includes('action-plan') ? (
-        <div className="h-[calc(100vh-14rem)] border border-t-0 border-slate-100 bg-white rounded-b-xl overflow-hidden">
-          <Suspense fallback={
-            <div className="flex items-center justify-center h-full">
-              <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+
+      {/* Content Area */}
+      <div className="bg-white rounded-[2.5rem] shadow-medium border border-slate-100 overflow-hidden min-h-[600px] relative">
+        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-600 to-accent-500 opacity-10" />
+        <Suspense fallback={
+          <div className="flex items-center justify-center h-96">
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative">
+                <div className="w-12 h-12 rounded-xl border-4 border-brand-100 border-t-brand-600 animate-spin" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-2 h-2 rounded-full bg-brand-600 animate-pulse" />
+                </div>
+              </div>
+              <p className="text-slate-400 text-sm font-bold uppercase tracking-widest animate-pulse">Initializing Workspace</p>
             </div>
-          }>
+          </div>
+        }>
+          <div className="p-6 md:p-12 lg:p-16">
             <Outlet />
-          </Suspense>
-        </div>
-      ) : (
-        <div className="bg-white p-5 md:p-8 shadow-soft border border-slate-100 border-t-0 rounded-b-xl min-h-[500px]">
-          <Suspense fallback={
-            <div className="flex items-center justify-center h-64">
-              <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
-            </div>
-          }>
-            <Outlet />
-          </Suspense>
-        </div>
-      )}
+          </div>
+        </Suspense>
+      </div>
     </div>
   );
 };
