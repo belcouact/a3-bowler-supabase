@@ -672,7 +672,7 @@ const MetricBowler = () => {
           
           {/* Table Section */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden transition-all duration-300 hover:shadow-md">
-            <div className="overflow-x-auto overflow-y-hidden scrollbar-hide">
+            <div className="overflow-x-auto overflow-y-hidden custom-scrollbar">
               <table className="min-w-full divide-y divide-slate-100 table-auto border-collapse">
                 <thead className="bg-slate-50/50">
                   <tr>
@@ -877,7 +877,8 @@ const MetricBowler = () => {
                 const actual = !isNaN(actualVal) ? actualVal : null;
 
                 return {
-                  name: month.label.split('/')[1],
+                  name: month.label,
+                  shortName: month.label.split('/')[1],
                   fullLabel: month.label,
                   target,
                   minTarget,
@@ -1021,7 +1022,7 @@ const MetricBowler = () => {
 
                   <div className="h-80 w-full relative">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={chartData} margin={{ top: 20, right: 10, bottom: 0, left: -20 }}>
+                      <LineChart data={chartData} margin={{ top: 20, right: 10, bottom: 20, left: -20 }}>
                         <defs>
                           <linearGradient id={`gradient-actual-${metric.id}`} x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#6366f1" stopOpacity={0.1}/>
@@ -1030,12 +1031,14 @@ const MetricBowler = () => {
                         </defs>
                         <CartesianGrid strokeDasharray="8 8" vertical={false} stroke="#f1f5f9" />
                         <XAxis
-                          dataKey="name"
-                          tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 700, fontVariant: 'small-caps' }}
-                          axisLine={false}
-                          tickLine={false}
-                          dy={15}
-                        />
+                            dataKey="name"
+                            tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 700, fontVariant: 'small-caps' }}
+                            axisLine={false}
+                            tickLine={false}
+                            dy={15}
+                            interval={0}
+                            height={50}
+                          />
                         <YAxis
                           tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 700 }}
                           axisLine={false}

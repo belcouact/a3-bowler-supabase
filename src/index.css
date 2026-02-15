@@ -32,6 +32,23 @@
   .glass-dark {
     @apply bg-slate-900/80 backdrop-blur-lg border border-white/10 shadow-medium;
   }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-slate-50 rounded-full;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-200 rounded-full border-2 border-slate-50;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-300;
+  }
 }
 
 /* Custom selection color */

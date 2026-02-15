@@ -374,6 +374,19 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
                                                         />
                                                     </div>
                                                     <div>
+                                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Data Type</label>
+                                                        <select
+                                                            className="w-full bg-slate-50/50 border border-slate-100 rounded-xl py-2 px-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
+                                                            value={metric.attribute || ''}
+                                                            onChange={(e) => handleUpdateMetric(metric.id, 'attribute', e.target.value)}
+                                                        >
+                                                            <option value="">Select Type</option>
+                                                            <option value="Accumulative">Accumulative</option>
+                                                            <option value="Individual data">Individual data</option>
+                                                            <option value="Moving average">Moving average</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
                                                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Target Logic</label>
                                                         <select
                                                             className="w-full bg-slate-50/50 border border-slate-100 rounded-xl py-2 px-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
@@ -382,6 +395,7 @@ const BowlerModal = ({ isOpen, onClose, onSave, onDelete, initialData }: BowlerM
                                                         >
                                                             <option value="gte">Higher is better (≥)</option>
                                                             <option value="lte">Lower is better (≤)</option>
+                                                            <option value="within_range">Within Range</option>
                                                         </select>
                                                     </div>
                                                 </div>

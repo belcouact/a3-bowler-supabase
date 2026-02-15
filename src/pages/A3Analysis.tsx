@@ -79,7 +79,7 @@ const A3Analysis = () => {
         </div>
 
         {/* Stepper Navigation */}
-        <div className="bg-slate-50/50 border-t border-slate-100 px-6 pt-4 pb-12 md:px-12 mb-4">
+        <div className="bg-slate-50/50 border-t border-slate-100 px-6 pt-4 pb-8 md:px-12 mb-0">
           <div className="relative">
             {/* Connector Line */}
             <div className="absolute top-1/2 left-0 w-full h-0.5 bg-slate-200 -translate-y-1/2 rounded-full" />
