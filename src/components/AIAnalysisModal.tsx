@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, TrendingUp, TrendingDown, Minus, Activity, AlertTriangle, Award, XCircle, Sparkles, Lightbulb, Target, Copy, Check } from 'lucide-react';
+import { X, TrendingUp, TrendingDown, Minus, Activity, Award, XCircle, Sparkles, Lightbulb, Target, Copy, Check, ArrowRight, Zap } from 'lucide-react';
 import { AnalysisResult } from '../services/aiService';
 
 interface AIAnalysisModalProps {
@@ -74,16 +74,16 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({ isOpen, onClos
       case 'capable':
       case 'improving':
       case 'increasing':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-100';
+        return 'bg-emerald-50/50 text-emerald-700 ring-emerald-100';
       case 'degrading':
       case 'decreasing':
       case 'incapable':
-        return 'bg-rose-50 text-rose-700 border-rose-100';
+        return 'bg-rose-50/50 text-rose-700 ring-rose-100';
       case 'unstable':
       case 'fluctuating':
-        return 'bg-amber-50 text-amber-700 border-amber-100';
+        return 'bg-amber-50/50 text-amber-700 ring-amber-100';
       default:
-        return 'bg-slate-50 text-slate-700 border-slate-100';
+        return 'bg-slate-50/50 text-slate-700 ring-slate-100';
     }
   };
 
@@ -93,87 +93,93 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({ isOpen, onClos
         
         {/* Backdrop */}
         <div 
-          className={`fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 ease-out ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+          className={`fixed inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity duration-300 ease-out ${isOpen ? 'opacity-100' : 'opacity-0'}`}
           aria-hidden="true" 
           onClick={onClose}
         />
 
         {/* Modal Panel */}
         <div 
-          className={`relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all duration-300 ease-out sm:w-full sm:max-w-2xl
+          className={`relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all duration-300 ease-out sm:w-full sm:max-w-2xl border border-white/20
             ${isOpen ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-4 opacity-0 scale-95'}`}
         >
           {/* Decorative Header Background */}
-          <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 opacity-10" />
+          <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-br from-brand-500/10 via-primary-500/5 to-transparent pointer-events-none" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
           {/* Close Button */}
           <button
             type="button"
-            className="absolute top-4 right-4 z-10 rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            className="absolute top-4 right-4 z-10 rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
             onClick={onClose}
           >
             <span className="sr-only">Close</span>
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
           
-          <div className="relative px-5 pt-6 pb-5 sm:px-6">
+          <div className="relative px-6 pt-8 pb-6 sm:px-8">
             {/* Header Content */}
-            <div className="flex items-center gap-3 mb-5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-200">
-                <Sparkles className="h-5 w-5" />
+            <div className="flex items-center gap-4 mb-8">
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-brand-600 to-primary-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-200" />
+                <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-white ring-1 ring-slate-900/5 shadow-sm">
+                    <Sparkles className="h-7 w-7 text-brand-600" />
+                </div>
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-900 tracking-tight" id="modal-title">
-                  AI Performance Analysis
+                <h3 className="font-display text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent" id="modal-title">
+                  AI Analysis
                 </h3>
-                <p className="text-xs font-medium text-slate-500">
-                  Analyzing <span className="text-indigo-600 font-semibold">{metricName}</span>
+                <p className="text-sm font-medium text-slate-500 mt-0.5">
+                  Insights for <span className="text-brand-600 font-semibold">{metricName}</span>
                 </p>
               </div>
             </div>
             
             {result ? (
-              <div className="space-y-4">
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 
                 {/* Summary Card */}
-                <div className="relative overflow-hidden rounded-xl bg-slate-50 border border-slate-100 p-3.5 shadow-sm group hover:shadow-md transition-all duration-300">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500" />
-                  <div className="flex items-start gap-2.5">
-                    <div className="mt-0.5 p-1 bg-indigo-100 rounded-md text-indigo-600 shrink-0">
-                        <Lightbulb className="h-3.5 w-3.5" />
+                <div className="group relative overflow-hidden rounded-2xl bg-slate-50 border border-slate-100 p-5 transition-all hover:shadow-md hover:border-brand-200/50">
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-brand-500 to-primary-500" />
+                  <div className="flex items-start gap-4">
+                    <div className="mt-1 p-2 bg-white rounded-xl shadow-sm ring-1 ring-slate-900/5 text-brand-600 shrink-0">
+                        <Lightbulb className="h-4 w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wide">Executive Summary</h4>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-display text-sm font-bold text-slate-900">Executive Summary</h4>
                         <button 
                             onClick={handleCopy}
-                            className="text-slate-400 hover:text-indigo-600 transition-colors p-1 rounded hover:bg-indigo-50 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none"
+                            className="text-slate-400 hover:text-brand-600 transition-colors p-1.5 rounded-lg hover:bg-brand-50 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none"
                             title="Copy summary"
                         >
-                            {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                            {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                         </button>
                       </div>
-                      <p className="text-xs text-slate-600 leading-relaxed text-pretty">{result.summary}</p>
+                      <p className="text-sm text-slate-600 leading-relaxed">{result.summary}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                     {/* Trend Card */}
-                    <div className={`rounded-xl border p-3 flex flex-col items-center justify-center text-center transition-all hover:shadow-md ${getTrendColor()}`}>
-                        <span className="text-[10px] font-bold uppercase tracking-wider opacity-70 mb-1">Current Trend</span>
-                        <div className="flex items-center gap-1.5">
+                    <div className={`rounded-2xl p-4 flex flex-col items-center justify-center text-center ring-1 transition-all hover:shadow-md ${getTrendColor()}`}>
+                        <span className="text-[10px] font-bold uppercase tracking-wider opacity-60 mb-2">Current Trend</span>
+                        <div className="flex items-center gap-2">
                             {getTrendIcon()}
-                            <span className="text-sm font-bold">{getTrendLabel()}</span>
+                            <span className="font-display text-lg font-bold">{getTrendLabel()}</span>
                         </div>
                     </div>
 
                     {/* Achievement Card */}
-                    <div className="rounded-xl border border-slate-100 bg-white p-3 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition-all">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Target Achievement</span>
-                        <div className="flex items-center gap-1.5">
-                            <Target className={`w-4 h-4 ${result.achievementRate >= 80 ? 'text-emerald-500' : result.achievementRate >= 50 ? 'text-amber-500' : 'text-rose-500'}`} />
-                            <span className={`text-sm font-bold ${result.achievementRate >= 80 ? 'text-emerald-600' : result.achievementRate >= 50 ? 'text-amber-600' : 'text-rose-600'}`}>
+                    <div className="rounded-2xl bg-white p-4 flex flex-col items-center justify-center text-center ring-1 ring-slate-100 shadow-sm hover:shadow-md transition-all group">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Target Achievement</span>
+                        <div className="flex items-center gap-2">
+                            <div className={`p-1.5 rounded-full ${result.achievementRate >= 80 ? 'bg-emerald-100 text-emerald-600' : result.achievementRate >= 50 ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600'}`}>
+                                <Target className="w-4 h-4" />
+                            </div>
+                            <span className={`font-display text-lg font-bold ${result.achievementRate >= 80 ? 'text-emerald-600' : result.achievementRate >= 50 ? 'text-amber-600' : 'text-rose-600'}`}>
                               {result.achievementRate.toFixed(1)}%
                             </span>
                         </div>
@@ -181,41 +187,39 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({ isOpen, onClos
                 </div>
 
                 {/* Suggestions Section */}
-                <div>
-                    <h4 className="text-xs font-bold text-slate-900 mb-2 flex items-center gap-2">
-                        <div className="h-5 w-5 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
-                          <AlertTriangle className="w-3 h-3" />
+                <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+                    <h4 className="font-display text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <div className="h-6 w-6 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center ring-1 ring-amber-100">
+                          <Zap className="w-3.5 h-3.5" />
                         </div>
                         Strategic Recommendations
                     </h4>
                     {result.suggestion.length > 0 ? (
-                        <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-3">
-                          <ul className="space-y-2">
-                              {result.suggestion.map((item, index) => (
-                                  <li key={index} className="flex items-start gap-2.5 text-xs text-slate-700">
-                                      <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-amber-500" />
-                                      <span className="leading-relaxed">{item}</span>
-                                  </li>
-                              ))}
-                          </ul>
-                        </div>
+                        <ul className="space-y-3">
+                            {result.suggestion.map((item, index) => (
+                                <li key={index} className="flex items-start gap-3 text-sm text-slate-600 group">
+                                    <ArrowRight className="w-4 h-4 text-amber-500 mt-0.5 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                                    <span className="leading-relaxed">{item}</span>
+                                </li>
+                            ))}
+                        </ul>
                     ) : (
-                        <p className="text-sm text-slate-500 italic px-4">No specific suggestions detected at this time.</p>
+                        <p className="text-sm text-slate-500 italic px-4 text-center py-2">No specific suggestions detected at this time.</p>
                     )}
                 </div>
 
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                <div className="relative mb-6">
-                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-indigo-100 border-t-indigo-600" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <Sparkles className="w-6 h-6 text-indigo-600 animate-pulse" />
+              <div className="flex flex-col items-center justify-center py-16 text-slate-400">
+                <div className="relative mb-8">
+                    <div className="absolute inset-0 bg-brand-500/20 blur-xl rounded-full animate-pulse" />
+                    <div className="relative bg-white rounded-2xl p-4 shadow-lg ring-1 ring-slate-100">
+                        <Sparkles className="w-8 h-8 text-brand-600 animate-pulse" />
                     </div>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2 animate-pulse">Analyzing Metric Performance...</h3>
+                <h3 className="font-display text-lg font-bold text-slate-900 mb-2">Analyzing Performance</h3>
                 <p className="text-sm text-slate-500 max-w-xs text-center leading-relaxed">
-                    Our AI is identifying trends, calculating achievements, and generating strategic insights for you.
+                    Our AI is crunching the numbers to generate actionable insights...
                 </p>
               </div>
             )}
@@ -223,7 +227,7 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({ isOpen, onClos
             <div className="mt-8 flex justify-end">
               <button
                 type="button"
-                className="rounded-xl bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-200 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 transition-all active:scale-95"
+                className="rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 hover:bg-slate-800 hover:shadow-xl hover:-translate-y-0.5 transition-all focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 active:scale-95 active:translate-y-0"
                 onClick={onClose}
               >
                 Close Analysis
