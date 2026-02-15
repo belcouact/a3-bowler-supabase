@@ -548,11 +548,11 @@ const MetricBowler = () => {
     <div className="w-full">
       {/* Header Section */}
       <div className="bg-white border-b border-slate-100 overflow-hidden">
-        <div className="px-4 py-6 md:p-8">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="flex items-start gap-4 md:gap-5">
-              <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-brand-600 flex items-center justify-center text-white shadow-xl shadow-brand-100 shrink-0">
-                <Zap className="w-6 h-6 md:w-7 md:h-7" />
+        <div className="px-4 py-4 md:px-6 md:py-5">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-lg shadow-brand-100 shrink-0">
+                <Zap className="w-5 h-5 md:w-6 md:h-6" />
               </div>
               <div 
                   onDoubleClick={() => {
@@ -592,7 +592,7 @@ const MetricBowler = () => {
                      </div>
                  ) : (
                      <div>
-                         <h1 className="text-2xl md:text-4xl font-black text-slate-900 font-display tracking-tight leading-tight group flex items-center gap-3 truncate">
+                         <h1 className="text-xl md:text-2xl font-black text-slate-900 font-display tracking-tight leading-tight group flex items-center gap-2 truncate">
                              {title}
                              <button
                                onClick={() => {
@@ -634,7 +634,7 @@ const MetricBowler = () => {
                   />
                 </div>
                 <div className="w-px h-5 bg-slate-300 mx-1 hidden sm:block"></div>
-                <div className="flex items-center gap-2.5 px-3 py-1.5 bg-white rounded-lg shadow-sm border border-slate-200/50 flex-1 sm:flex-none opacity-60">
+                <div className="flex items-center gap-2 px-2 py-1 bg-white rounded-md shadow-sm border border-slate-200/50 flex-1 sm:flex-none opacity-60">
                   <input 
                     type="month" 
                     value={stopDate}
@@ -647,17 +647,17 @@ const MetricBowler = () => {
               <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <button 
                   onClick={() => setIsCompactView(!isCompactView)}
-                  className="w-11 h-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-brand-600 hover:border-brand-200 transition-all active:scale-95 bg-white shadow-sm"
+                  className="w-9 h-9 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-brand-600 hover:border-brand-200 transition-all active:scale-95 bg-white shadow-sm"
                   title={isCompactView ? "Switch to Large View" : "Switch to Compact View"}
                 >
-                  {isCompactView ? <Square className="w-5 h-5" /> : <LayoutGrid className="w-5 h-5" />}
+                  {isCompactView ? <Square className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
                 </button>
                 <button 
                   onClick={() => setIsHelpModalOpen(true)}
-                  className="w-11 h-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-brand-600 hover:border-brand-200 transition-all active:scale-95 bg-white shadow-sm"
+                  className="w-9 h-9 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-brand-600 hover:border-brand-200 transition-all active:scale-95 bg-white shadow-sm"
                   title="How to use"
                 >
-                  <HelpCircle className="w-5 h-5" />
+                  <HelpCircle className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -666,8 +666,8 @@ const MetricBowler = () => {
       </div>
 
       {/* Main Content Area */}
-      <div className="bg-[#f8fafc] px-3 py-6 md:px-8 md:py-10 lg:px-10">
-        <div className="max-w-[1600px] mx-auto space-y-10 md:space-y-16">
+      <div className="bg-[#f8fafc] px-2 py-4 md:px-6 md:py-6">
+        <div className="max-w-[1600px] mx-auto space-y-6 md:space-y-8">
           
           {/* Table Section */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden transition-all duration-300 hover:shadow-md">
@@ -675,20 +675,20 @@ const MetricBowler = () => {
               <table className="min-w-full divide-y divide-slate-100 table-auto border-collapse">
                 <thead className="bg-slate-50/50">
                   <tr>
-                    <th scope="col" className="px-4 md:px-6 py-5 text-left text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] sticky left-0 bg-slate-50/95 z-20 border-r border-slate-200/60 w-48 md:w-64 font-display">
+                    <th scope="col" className="px-3 md:px-4 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] sticky left-0 bg-slate-50/95 z-20 border-r border-slate-200/60 w-48 md:w-64 font-display">
                       Metric Name
                     </th>
-                    <th scope="col" className="hidden sm:table-cell px-3 py-5 text-left text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] w-28 border-r border-slate-200/60 font-display">
+                    <th scope="col" className="hidden sm:table-cell px-2 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] w-28 border-r border-slate-200/60 font-display">
                       Scope
                     </th>
-                    <th scope="col" className="hidden md:table-cell px-3 py-5 text-left text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] w-24 border-r border-slate-200/60 font-display">
+                    <th scope="col" className="hidden md:table-cell px-2 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] w-24 border-r border-slate-200/60 font-display">
                       Type
                     </th>
                     {displayMonths.map((month) => (
                       <th
                         key={month.key}
                         scope="col"
-                        className="px-2 py-5 text-center text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] whitespace-normal break-words min-w-[4rem] border-r border-slate-200/60 font-display"
+                        className="px-1 py-3 text-center text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] whitespace-normal break-words min-w-[4rem] border-r border-slate-200/60 font-display"
                       >
                         {month.label.replace('/', ' ')}
                       </th>
@@ -709,7 +709,7 @@ const MetricBowler = () => {
                           key={`${metric.id}-row1`}
                           className="hover:bg-slate-50/40 transition-colors border-b-0 group/row"
                         >
-                          <td rowSpan={2} className="px-4 md:px-6 py-6 text-sm font-semibold text-slate-800 sticky left-0 bg-white z-10 group-hover/row:bg-slate-50/40 border-r border-slate-200/60 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.05)] align-top break-words transition-colors">
+                          <td rowSpan={2} className="px-3 md:px-4 py-3 text-sm font-semibold text-slate-800 sticky left-0 bg-white z-10 group-hover/row:bg-slate-50/40 border-r border-slate-200/60 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.05)] align-top break-words transition-colors">
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex flex-col min-w-0">
                                   <div className="flex items-center flex-wrap gap-2">
@@ -755,24 +755,24 @@ const MetricBowler = () => {
                               </div>
                             </div>
                           </td>
-                          <td rowSpan={2} className="hidden sm:table-cell px-3 py-6 align-top border-r border-slate-200/60 group-hover/row:bg-slate-50/40 transition-colors">
+                          <td rowSpan={2} className="hidden sm:table-cell px-2 py-3 align-top border-r border-slate-200/60 group-hover/row:bg-slate-50/40 transition-colors">
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200/50 uppercase tracking-wide">
                               {metric.scope || 'N/A'}
                             </span>
                           </td>
-                          <td rowSpan={2} className="hidden md:table-cell px-3 py-6 align-top border-r border-slate-200/60 group-hover/row:bg-slate-50/40 transition-colors">
+                          <td rowSpan={2} className="hidden md:table-cell px-2 py-3 align-top border-r border-slate-200/60 group-hover/row:bg-slate-50/40 transition-colors">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                               {metric.attribute || 'N/A'}
                             </span>
                           </td>
-                          <td className="px-3 py-3 whitespace-nowrap text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/30 border-b border-slate-100/80 h-10">
+                          <td className="px-2 py-2 whitespace-nowrap text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/30 border-b border-slate-100/80 h-8">
                             Target
                           </td>
 
                     {displayMonths.map((month, monthIndex) => (
                       <td
                         key={`${month.key}-target`}
-                        className="px-0 py-0 whitespace-nowrap text-xs text-slate-500 bg-slate-50/30 border-b border-r border-slate-100/80 h-10 p-0 relative group/cell"
+                        className="px-0 py-0 whitespace-nowrap text-xs text-slate-500 bg-slate-50/30 border-b border-r border-slate-100/80 h-8 p-0 relative group/cell"
                         onContextMenu={(e) => handleRightClick(e, metric.id, month.key, 'target', metric.monthlyData?.[month.key]?.targetNote || '')}
                       >
                         <input
@@ -793,7 +793,7 @@ const MetricBowler = () => {
                   </tr>
 
                   <tr key={`${metric.id}-row2`} className="hover:bg-slate-50/40 transition-colors group/row">
-                     <td className="px-3 py-3 whitespace-nowrap text-[11px] font-bold text-slate-400 uppercase tracking-wider h-10 border-b border-r border-slate-100/80">
+                     <td className="px-2 py-2 whitespace-nowrap text-[11px] font-bold text-slate-400 uppercase tracking-wider h-8 border-b border-r border-slate-100/80">
                         Actual
                      </td>
                      {displayMonths.map((month, monthIndex) => {
@@ -805,7 +805,7 @@ const MetricBowler = () => {
                        return (
                        <td
                          key={`${month.key}-actual`}
-                         className="px-0 py-0 whitespace-nowrap text-xs text-slate-500 h-10 p-0 relative group/cell border-b border-r border-slate-100/80"
+                         className="px-0 py-0 whitespace-nowrap text-xs text-slate-500 h-8 p-0 relative group/cell border-b border-r border-slate-100/80"
                          onContextMenu={(e) => handleRightClick(e, metric.id, month.key, 'actual', metric.monthlyData?.[month.key]?.actualNote || '')}
                        >
                          <input
@@ -840,14 +840,14 @@ const MetricBowler = () => {
     </div>
 
       {metrics.length > 0 && (
-        <div className="space-y-10 md:space-y-12">
+        <div className="space-y-6 md:space-y-8">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl md:text-2xl font-black text-slate-900 font-display tracking-tight flex items-center gap-4">
-              <div className="w-2 h-8 bg-brand-600 rounded-full shadow-sm shadow-brand-100"></div>
+            <h3 className="text-lg md:text-xl font-black text-slate-900 font-display tracking-tight flex items-center gap-3">
+              <div className="w-1.5 h-6 bg-brand-600 rounded-full shadow-sm shadow-brand-100"></div>
               Metric Trends
             </h3>
           </div>
-          <div className={`grid gap-8 md:gap-10 ${isCompactView ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
+          <div className={`grid gap-6 md:gap-8 ${isCompactView ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
             {metrics.map(metric => {
               const chartData = displayMonths.map(month => {
                 const rawTarget = metric.monthlyData?.[month.key]?.target;
@@ -929,10 +929,10 @@ const MetricBowler = () => {
               ];
 
               return (
-                <div key={`${metric.id}-chart`} className="bg-white p-5 md:p-8 rounded-2xl shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-slate-200/40 transition-all duration-500 group/card">
-                  <div className="flex justify-between items-start mb-8">
+                <div key={`${metric.id}-chart`} className="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-slate-200/40 transition-all duration-500 group/card">
+                  <div className="flex justify-between items-start mb-4">
                     <div>
-                        <h4 className="text-lg font-black text-slate-900 font-display tracking-tight mb-1 group-hover/card:text-brand-600 transition-colors">{metric.name}</h4>
+                        <h4 className="text-base font-black text-slate-900 font-display tracking-tight mb-0.5 group-hover/card:text-brand-600 transition-colors">{metric.name}</h4>
                         <div className="flex items-center gap-2">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{metric.attribute || 'N/A'}</span>
                             <div className="w-1 h-1 rounded-full bg-slate-200"></div>
@@ -1023,9 +1023,9 @@ const MetricBowler = () => {
                     </div>
                   )}
 
-                  <div className={`w-full relative transition-all duration-300 ${isCompactView ? 'h-[300px]' : 'h-[500px]'}`}>
+                  <div className={`w-full relative transition-all duration-300 ${isCompactView ? 'h-[250px]' : 'h-[400px]'}`}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={chartData} margin={{ top: 10, right: 30, bottom: 5, left: -25 }}>
+                      <LineChart data={chartData} margin={{ top: 10, right: 20, bottom: 5, left: -20 }}>
                         <defs>
                           <linearGradient id={`gradient-actual-${metric.id}`} x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#6366f1" stopOpacity={0.1}/>
