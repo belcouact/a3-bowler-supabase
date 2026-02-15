@@ -6,7 +6,6 @@ import ImageCanvas from '../../components/ImageCanvas';
 import { Sparkles, Loader2, AlertCircle, BarChart3, Route, X, Upload, Microscope, BrainCircuit, ArrowRight, Lightbulb } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { dataService } from '../../services/dataService';
-import clsx from 'clsx';
 
 const DataAnalysis = () => {
   const { id } = useParams();

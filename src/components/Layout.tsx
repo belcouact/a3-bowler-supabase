@@ -2784,9 +2784,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       setIsMobileMenuOpen(false);
                       await handleOpenAllA3Modal();
                     }}
-                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-slate-900 transition-all group"
+                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-brand-600 transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center mr-3 group-hover:bg-slate-100 transition-all shadow-sm ring-1 ring-slate-200/50">
+                    <div className="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center mr-3 group-hover:bg-brand-100 transition-all shadow-sm ring-1 ring-brand-200/50">
                       <FileText className="w-4 h-4" />
                     </div>
                     <span className="font-medium">All A3 Cases</span>
