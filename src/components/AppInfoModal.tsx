@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { X, FileText, Sparkles, Smartphone, Layers, TrendingUp } from 'lucide-react';
+import { X, FileText, Sparkles, Smartphone, Layers, TrendingUp, Code, Server, Database } from 'lucide-react';
 
 interface AppInfoModalProps {
   isOpen: boolean;
@@ -107,19 +107,44 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
 
             <div className="mt-8">
               <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Technology Stack</h4>
-              <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-2">
-                <div className="flex items-start">
-                  <span className="text-xs font-semibold text-slate-700 w-20">Frontend:</span>
-                  <span className="text-xs text-slate-600">React, TS, Tailwind</span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                
+                <div className="group flex flex-col items-center text-center p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-blue-100 hover:shadow-md transition-all duration-200">
+                  <div className="h-10 w-10 shrink-0 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-blue-200 group-hover:text-blue-600 transition-colors mb-3">
+                    <Code className="h-5 w-5 text-slate-500 group-hover:text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900 group-hover:text-blue-700">Frontend</p>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      React, TypeScript, Tailwind CSS
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-start">
-                  <span className="text-xs font-semibold text-slate-700 w-20">Backend:</span>
-                  <span className="text-xs text-slate-600">Cloudflare Workers</span>
+
+                <div className="group flex flex-col items-center text-center p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-orange-100 hover:shadow-md transition-all duration-200">
+                  <div className="h-10 w-10 shrink-0 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-orange-200 group-hover:text-orange-600 transition-colors mb-3">
+                    <Server className="h-5 w-5 text-slate-500 group-hover:text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900 group-hover:text-orange-700">Backend</p>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      Cloudflare Workers
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-start">
-                  <span className="text-xs font-semibold text-slate-700 w-20">Database:</span>
-                  <span className="text-xs text-slate-600">Supabase postgresql</span>
+
+                <div className="group flex flex-col items-center text-center p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-teal-100 hover:shadow-md transition-all duration-200">
+                  <div className="h-10 w-10 shrink-0 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-teal-200 group-hover:text-teal-600 transition-colors mb-3">
+                    <Database className="h-5 w-5 text-slate-500 group-hover:text-teal-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900 group-hover:text-teal-700">Database</p>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      Supabase PostgreSQL
+                    </p>
+                  </div>
                 </div>
+
               </div>
             </div>
             

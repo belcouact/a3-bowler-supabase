@@ -117,7 +117,7 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({ isOpen, onClos
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
           
-          <div className="relative px-6 pt-5 pb-4 sm:px-8">
+          <div className="relative px-6 pt-5 pb-4 sm:px-8 overflow-y-auto flex-1">
             {/* Header Content */}
             <div className="flex items-center gap-3 mb-4">
               <div className="relative group">
