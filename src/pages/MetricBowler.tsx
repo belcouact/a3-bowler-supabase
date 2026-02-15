@@ -615,11 +615,6 @@ const MetricBowler = () => {
                                   </span>
                                 </div>
                             )}
-                            {selectedBowler?.description && (
-                                <p className="text-sm text-slate-500 font-medium max-w-2xl leading-relaxed truncate">
-                                    {selectedBowler.description}
-                                </p>
-                            )}
                          </div>
                      </div>
                  )}
@@ -655,10 +650,6 @@ const MetricBowler = () => {
                   title="How to use"
                 >
                   <HelpCircle className="w-5 h-5" />
-                </button>
-                <button className="h-11 px-5 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200 flex items-center gap-2 flex-1 sm:flex-none justify-center">
-                  <Settings className="w-4 h-4" />
-                  <span>Settings</span>
                 </button>
               </div>
             </div>
