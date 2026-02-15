@@ -1073,7 +1073,7 @@ Return JSON ONLY with this structure:
                 </div>
 
                 {/* Grid Body */}
-                <div className="relative">
+                <div className="relative" style={{ minWidth: gridColumns.length * cellWidth }}>
                     {/* Vertical Lines Background */}
                     <div className="absolute inset-0 flex pointer-events-none">
                         {gridColumns.map((_, i) => (

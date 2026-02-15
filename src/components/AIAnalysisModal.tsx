@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, TrendingUp, TrendingDown, Minus, Activity, AlertTriangle, CheckCircle, Award, XCircle, Sparkles, Lightbulb, Target, Copy, Check } from 'lucide-react';
+import { X, TrendingUp, TrendingDown, Minus, Activity, AlertTriangle, Award, XCircle, Sparkles, Lightbulb, Target, Copy, Check } from 'lucide-react';
 import { AnalysisResult } from '../services/aiService';
 
 interface AIAnalysisModalProps {

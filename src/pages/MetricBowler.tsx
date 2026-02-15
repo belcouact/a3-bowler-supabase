@@ -1040,10 +1040,10 @@ const MetricBowler = () => {
                               fill: '#94a3b8', 
                               fontWeight: 700, 
                               fontVariant: 'small-caps',
-                              angle: isCompactView ? -45 : 0,
                               textAnchor: isCompactView ? 'end' : 'middle',
                               dy: isCompactView ? 5 : 10
                             }}
+                            angle={isCompactView ? -45 : 0}
                             axisLine={false}
                             tickLine={false}
                             interval={0}
