@@ -79,7 +79,7 @@ const A3Analysis = () => {
         </div>
 
         {/* Stepper Navigation */}
-        <div className="bg-slate-50/50 border-t border-slate-100 px-6 py-4 md:px-12">
+        <div className="bg-slate-50/50 border-t border-slate-100 px-6 pt-4 pb-8 md:px-12">
           <div className="relative">
             {/* Connector Line */}
             <div className="absolute top-1/2 left-0 w-full h-0.5 bg-slate-200 -translate-y-1/2 rounded-full" />
@@ -110,7 +110,7 @@ const A3Analysis = () => {
                         <tab.icon className="w-4 h-4 md:w-5 md:h-5" />
                       )}
                     </div>
-                    <div className="absolute -bottom-6 flex flex-col items-center">
+                    <div className="absolute -bottom-7 flex flex-col items-center">
                       <span className={clsx(
                         "whitespace-nowrap text-[8px] md:text-[9px] font-black uppercase tracking-wider transition-all duration-300",
                         isActive ? "text-brand-700 translate-y-0 opacity-100" : "text-slate-400 group-hover:text-slate-600 translate-y-1 opacity-0 group-hover:opacity-100 md:opacity-100 md:translate-y-0"
