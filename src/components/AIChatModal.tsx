@@ -97,90 +97,143 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initi
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-[70] overflow-hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose}></div>
+        <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
 
         <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
-          <div className="pointer-events-auto w-screen max-w-md">
-            <div className="flex h-full flex-col overflow-y-scroll bg-white shadow-xl">
-              <div className="bg-blue-600 px-4 py-6 sm:px-6">
+          <div className="pointer-events-auto w-screen max-w-xl transform transition-transform duration-300 ease-in-out">
+            <div className="flex h-full flex-col overflow-hidden bg-white shadow-2xl">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-brand-600 to-accent-600 px-6 py-5">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-medium text-white flex items-center" id="modal-title">
-                    <Sparkles className="w-5 h-5 mr-2" />
-                    AI Assistant
-                  </h2>
-                  <div className="flex items-center space-x-2">
-                    <button
-                        type="button"
-                        className="rounded-md text-blue-200 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
-                        onClick={onClose}
-                    >
-                        <span className="sr-only">Close panel</span>
-                        <X className="h-6 w-6" />
-                    </button>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm border border-white/10">
+                      <Sparkles className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-white tracking-tight" id="modal-title">
+                        AI Coach
+                      </h2>
+                      <p className="text-xs text-brand-50 font-medium opacity-90">
+                        Analyzing your Bowler metrics & A3 cases
+                      </p>
+                    </div>
                   </div>
+                  <button
+                    type="button"
+                    className="rounded-lg p-2 text-white/70 hover:text-white hover:bg-white/10 transition-all focus:outline-none focus:ring-2 focus:ring-white/50"
+                    onClick={onClose}
+                  >
+                    <span className="sr-only">Close panel</span>
+                    <X className="h-5 w-5" />
+                  </button>
                 </div>
-                <p className="mt-1 text-sm text-blue-200">
-                  Ask questions about your metrics and A3 cases.
-                </p>
               </div>
 
-              <div className="flex-1 flex flex-col p-4 overflow-y-auto bg-gray-50">
+              {/* Chat Area */}
+              <div className="flex-1 flex flex-col p-6 overflow-y-auto bg-slate-50 scroll-smooth custom-scrollbar">
                  {messages.length === 0 && (
-                    <div className="text-center text-gray-500 mt-10">
-                        <Bot className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                        <p>Hello! I have access to your current Bowler and A3 data.</p>
-                        <p className="text-sm mt-2">Try asking: "What is the trend for Safety metric?" or "Summarize my open A3 cases".</p>
+                    <div className="flex flex-col items-center justify-center h-full text-center p-8 opacity-0 animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-forwards">
+                        <div className="w-20 h-20 bg-white rounded-3xl shadow-lg shadow-brand-100 flex items-center justify-center mb-6 ring-1 ring-slate-100">
+                          <Bot className="w-10 h-10 text-brand-500" />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-800 mb-2">How can I help you today?</h3>
+                        <p className="text-sm text-slate-500 max-w-xs mx-auto leading-relaxed">
+                          I have access to your performance data. Ask me to analyze trends, summarize A3s, or suggest countermeasures.
+                        </p>
+                        
+                        <div className="grid grid-cols-1 gap-2 mt-8 w-full max-w-xs">
+                          <button 
+                            onClick={() => sendMessage("What are my top failing metrics?")}
+                            className="text-xs text-left px-4 py-3 bg-white hover:bg-brand-50 hover:text-brand-700 text-slate-600 rounded-xl border border-slate-200 hover:border-brand-200 transition-all shadow-sm"
+                          >
+                            What are my top failing metrics?
+                          </button>
+                          <button 
+                            onClick={() => sendMessage("Summarize my open A3 cases")}
+                            className="text-xs text-left px-4 py-3 bg-white hover:bg-brand-50 hover:text-brand-700 text-slate-600 rounded-xl border border-slate-200 hover:border-brand-200 transition-all shadow-sm"
+                          >
+                            Summarize my open A3 cases
+                          </button>
+                        </div>
                     </div>
                  )}
                  
+                 <div className="space-y-6">
                  {messages.map((msg, idx) => (
-                    <div key={idx} className={`mb-4 flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[85%] rounded-lg px-4 py-3 shadow-sm ${
+                    <div key={idx} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+                        <div className={`flex max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} gap-3`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                             msg.role === 'user' 
-                            ? 'bg-blue-600 text-white rounded-br-none' 
-                            : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'
-                        }`}>
-                            {msg.role === 'user' ? (
-                                <div className="whitespace-pre-wrap">{msg.content}</div>
-                            ) : (
-                                <MarkdownRenderer content={msg.content} />
-                            )}
+                              ? 'bg-brand-100 text-brand-600' 
+                              : 'bg-accent-100 text-accent-600'
+                          }`}>
+                            {msg.role === 'user' ? <div className="text-xs font-bold">You</div> : <Bot className="w-4 h-4" />}
+                          </div>
+
+                          <div className={`rounded-2xl px-5 py-4 shadow-sm text-sm leading-relaxed ${
+                              msg.role === 'user' 
+                              ? 'bg-brand-600 text-white rounded-tr-none' 
+                              : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none shadow-slate-100'
+                          }`}>
+                              {msg.role === 'user' ? (
+                                  <div className="whitespace-pre-wrap">{msg.content}</div>
+                              ) : (
+                                  <div className="prose prose-sm prose-slate max-w-none prose-p:my-1 prose-headings:text-slate-800 prose-headings:font-bold prose-strong:text-slate-800 prose-ul:my-2 prose-li:my-0.5">
+                                    <MarkdownRenderer content={msg.content} />
+                                  </div>
+                              )}
+                          </div>
                         </div>
                     </div>
                  ))}
                  
                  {isLoading && (
-                    <div className="flex justify-start mb-4">
-                        <div className="bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm rounded-bl-none flex items-center">
-                            <Loader2 className="w-4 h-4 animate-spin text-blue-600 mr-2" />
-                            <span className="text-sm text-gray-500">Thinking...</span>
+                    <div className="flex justify-start w-full animate-in fade-in slide-in-from-bottom-2">
+                        <div className="flex max-w-[85%] flex-row gap-3">
+                          <div className="w-8 h-8 rounded-full bg-accent-100 text-accent-600 flex items-center justify-center flex-shrink-0">
+                            <Bot className="w-4 h-4" />
+                          </div>
+                          <div className="bg-white border border-slate-100 rounded-2xl rounded-tl-none px-5 py-4 shadow-sm flex items-center gap-3">
+                              <Loader2 className="w-4 h-4 animate-spin text-accent-500" />
+                              <span className="text-sm font-medium text-slate-500">Analyzing data...</span>
+                          </div>
                         </div>
                     </div>
                  )}
-                 <div ref={messagesEndRef} />
+                 <div ref={messagesEndRef} className="h-4" />
+                 </div>
               </div>
 
-              <div className="border-t border-gray-200 px-4 py-4 bg-white">
-                <div className="flex items-center space-x-3">
-                    <input
-                        type="text"
-                        className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
-                        placeholder="Type your message..."
+              {/* Input Area */}
+              <div className="p-4 bg-white border-t border-slate-100">
+                <div className="relative flex items-end gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-200 focus-within:border-brand-300 focus-within:ring-4 focus-within:ring-brand-50 transition-all">
+                    <textarea
+                        className="flex-1 bg-transparent border-0 focus:ring-0 text-slate-800 placeholder:text-slate-400 text-sm resize-none py-2.5 px-3 max-h-32 min-h-[44px]"
+                        placeholder="Ask a question about your metrics..."
+                        rows={1}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSend();
+                          }
+                        }}
                         disabled={isLoading}
                     />
                     <button
                         onClick={handleSend}
                         disabled={isLoading || !input.trim()}
-                        className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-300"
+                        className="mb-1 mr-1 p-2 rounded-xl bg-brand-600 text-white hover:bg-brand-700 disabled:bg-slate-200 disabled:text-slate-400 transition-all shadow-sm active:scale-95 flex items-center justify-center"
                     >
-                        <Send className="h-5 w-5" />
+                        <Send className="h-4 w-4" />
                     </button>
                 </div>
+                <p className="text-[10px] text-center text-slate-400 mt-3 font-medium">
+                  AI can make mistakes. Verify important information.
+                </p>
               </div>
             </div>
           </div>

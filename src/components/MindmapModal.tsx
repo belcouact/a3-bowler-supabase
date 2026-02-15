@@ -153,149 +153,149 @@ export const MindmapModal = ({ isOpen, onClose, mode }: MindmapModalProps) => {
     <div className="fixed inset-0 z-[70] overflow-y-auto" aria-labelledby="mindmap-modal-title" role="dialog" aria-modal="true">
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         <div className="fixed inset-0 transition-opacity" aria-hidden="true" onClick={onClose}>
-          <div className="absolute inset-0 bg-gray-500 opacity-75" />
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" />
         </div>
 
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
           &#8203;
         </span>
 
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
-          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-start gap-3">
-                <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-md">
-                  <Lightbulb className="w-5 h-5" />
+        <div className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full animate-in fade-in zoom-in-95 duration-200 border border-white/20 ring-1 ring-black/5">
+          
+          {/* Header */}
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-4">
+                <div className="p-2.5 bg-white/20 rounded-xl backdrop-blur-sm border border-white/10 shadow-inner">
+                  <Lightbulb className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg leading-6 font-semibold text-gray-900" id="mindmap-modal-title">
-                    Mindmap ideas
+                  <h3 className="text-xl font-bold text-white tracking-tight" id="mindmap-modal-title">
+                    {mode === 'create' ? 'New Mindmap' : 'Edit Mindmap'}
                   </h3>
-                  <p className="mt-1 text-xs text-gray-500">Add a title and markdown content for your mindmap.</p>
+                  <p className="text-indigo-100 text-xs font-medium opacity-90 mt-0.5">
+                    {mode === 'create' ? 'Brainstorm ideas with AI assistance' : 'Refine your mindmap structure'}
+                  </p>
                 </div>
               </div>
               <button
                 onClick={onClose}
-                className="ml-4 rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
+                className="rounded-full p-2 text-white/70 hover:bg-white/20 hover:text-white transition-colors"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
+          </div>
 
-            <div className="mb-4 flex items-start gap-2 rounded-md border border-indigo-50 bg-indigo-50/80 px-3 py-2 text-xs text-indigo-800">
-              <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-indigo-500" />
-              <p>
-                Use AI to draft your mindmap quickly, or switch to manual to fine-tune the markdown.
-              </p>
-            </div>
-
-            <div className="mb-4">
-              <div className="inline-flex rounded-md bg-gray-100 p-1">
+          <div className="bg-white px-6 py-6">
+            <div className="flex justify-center mb-6">
+              <div className="inline-flex rounded-xl bg-slate-100 p-1.5 shadow-inner ring-1 ring-slate-200">
                 <button
                   type="button"
                   onClick={() => setActiveTab('ai')}
                   className={
                     activeTab === 'ai'
-                      ? 'inline-flex items-center px-3 py-1.5 text-xs font-medium rounded bg-indigo-50 text-indigo-700 shadow-sm'
-                      : 'inline-flex items-center px-3 py-1.5 text-xs font-medium rounded text-gray-600 hover:text-gray-800 hover:bg-white/60'
+                      ? 'inline-flex items-center px-4 py-2 text-sm font-bold rounded-lg bg-white text-indigo-600 shadow-sm ring-1 ring-black/5 transition-all'
+                      : 'inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 transition-all'
                   }
                 >
-                  <Sparkles className="w-3 h-3 mr-1.5" />
-                  AI Assist
+                  <Sparkles className={`w-4 h-4 mr-2 ${activeTab === 'ai' ? 'text-indigo-500' : 'text-slate-400'}`} />
+                  AI Assistant
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab('manual')}
                   className={
                     activeTab === 'manual'
-                      ? 'inline-flex items-center px-3 py-1.5 text-xs font-medium rounded bg-amber-50 text-amber-800 shadow-sm'
-                      : 'inline-flex items-center px-3 py-1.5 text-xs font-medium rounded text-gray-600 hover:text-gray-800 hover:bg-white/60'
+                      ? 'inline-flex items-center px-4 py-2 text-sm font-bold rounded-lg bg-white text-indigo-600 shadow-sm ring-1 ring-black/5 transition-all'
+                      : 'inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 transition-all'
                   }
                 >
-                  <FileText className="w-3 h-3 mr-1.5" />
-                  Manual
+                  <FileText className={`w-4 h-4 mr-2 ${activeTab === 'manual' ? 'text-indigo-500' : 'text-slate-400'}`} />
+                  Manual Editor
                 </button>
               </div>
             </div>
 
             {activeTab === 'ai' ? (
-              <div className="space-y-3 rounded-lg border border-gray-100 bg-gray-50/60 p-3">
-                <div>
-                  <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase">
-                    Idea for AI
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="bg-indigo-50/50 rounded-xl border border-indigo-100 p-4">
+                  <label className="block text-xs font-bold tracking-wide text-indigo-900 uppercase mb-2">
+                    What's on your mind?
                   </label>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Describe the topic or problem. AI will decide structure and formatting for the mindmap.
+                  <p className="text-sm text-slate-600 mb-3">
+                    Describe your topic or problem. Our AI will structure it into a comprehensive mindmap for you.
                   </p>
                   <textarea
                     rows={6}
-                    className="mt-2 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    className="block w-full border-slate-200 rounded-xl shadow-sm py-3 px-4 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
                     value={aiIdea}
                     onChange={(e) => setAiIdea(e.target.value)}
-                    placeholder="e.g. Improving on-time delivery performance for our factory"
+                    placeholder="e.g. Strategies for improving on-time delivery performance in our factory..."
                   />
                 </div>
+                
                 {aiError && (
-                  <div className="text-xs text-red-600">
+                  <div className="p-3 rounded-lg bg-red-50 border border-red-100 text-xs font-medium text-red-600 flex items-center gap-2">
+                    <Info className="w-4 h-4" />
                     {aiError}
                   </div>
                 )}
-                <div className="flex justify-end">
+
+                <div className="flex justify-end pt-2">
                   <button
                     type="button"
                     onClick={handleGenerateAIMap}
-                    disabled={isGeneratingAI}
-                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isGeneratingAI || !aiIdea.trim()}
+                    className="inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-bold rounded-xl shadow-lg shadow-indigo-500/20 text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] active:scale-[0.98]"
                   >
                     {isGeneratingAI ? (
                       <>
-                        <Sparkles className="w-3 h-3 mr-1.5 animate-pulse" />
-                        Generating...
+                        <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                        Generating Ideas...
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-3 h-3 mr-1.5" />
-                        Generate mindmap
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Generate Mindmap
                       </>
                     )}
                   </button>
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-3 rounded-lg border border-gray-100 bg-gray-50/60 p-3">
+              <form onSubmit={handleSubmit} className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="grid grid-cols-1 gap-5">
                   <div>
-                    <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Title</label>
-                    <p className="mt-1 text-xs text-gray-500">Short, descriptive name for this mindmap.</p>
+                    <label className="block text-xs font-bold tracking-wide text-slate-500 uppercase mb-1.5">Title</label>
                     <input
                       type="text"
-                      className="mt-2 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      className="block w-full border-slate-200 rounded-xl shadow-sm py-2.5 px-4 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      placeholder="Quarterly performance review ideas"
+                      placeholder="Mindmap Title"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Description</label>
-                    <p className="mt-1 text-xs text-gray-500">Optional context or notes about this mindmap.</p>
+                    <label className="block text-xs font-bold tracking-wide text-slate-500 uppercase mb-1.5">Description</label>
                     <textarea
-                      rows={3}
-                      className="mt-2 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      rows={2}
+                      className="block w-full border-slate-200 rounded-xl shadow-sm py-2.5 px-4 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="e.g. Ideas for quarterly performance review workshop"
+                      placeholder="Brief description of this mindmap..."
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Mindmap Text</label>
-                    <p className="mt-1 text-xs text-gray-500">
-                      This markdown text drives the nodes in the mindmap. You can refine it anytime.
-                    </p>
+                    <div className="flex items-center justify-between mb-1.5">
+                        <label className="block text-xs font-bold tracking-wide text-slate-500 uppercase">Markdown Content</label>
+                        <span className="text-[10px] font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Markdown Supported</span>
+                    </div>
                     <textarea
                       rows={12}
-                      className="mt-2 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 font-mono text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      className="block w-full border-slate-200 rounded-xl shadow-sm py-3 px-4 font-mono text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                       value={text}
                       onChange={(e) => setText(e.target.value)}
                       placeholder="# Main topic&#10;- Key point&#10;  - Sub point"
@@ -306,34 +306,36 @@ export const MindmapModal = ({ isOpen, onClose, mode }: MindmapModalProps) => {
             )}
           </div>
 
-          <div className="bg-gray-50 px-4 py-3 sm:px-6 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
+          <div className="bg-slate-50 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-3 border-t border-slate-100">
             <div className="order-2 sm:order-1 w-full sm:w-auto">
               {mode === 'edit' && activeMindmapId && dashboardMindmaps.length > 0 && (
                 <button
                   type="button"
-                  className="w-full sm:w-auto inline-flex justify-center items-center rounded-md border border-transparent px-4 py-2 text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm font-medium"
+                  className="w-full sm:w-auto inline-flex justify-center items-center rounded-xl border border-transparent px-4 py-2.5 text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 text-sm font-bold transition-colors"
                   onClick={handleDelete}
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
+                  Delete Mindmap
                 </button>
               )}
             </div>
-            <div className="order-1 sm:order-2 flex flex-col sm:flex-row-reverse w-full sm:w-auto">
-              <button
-                type="submit"
-                onClick={handleSubmit}
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
-              >
-                {mode === 'edit' ? 'Save Changes' : 'Create Mindmap'}
-              </button>
+            <div className="order-1 sm:order-2 flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={onClose}
-                className="mt-3 sm:mt-0 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:w-auto sm:text-sm"
+                className="w-full sm:w-auto inline-flex justify-center rounded-xl border border-slate-200 shadow-sm px-5 py-2.5 bg-white text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all"
               >
                 Cancel
               </button>
+              {(activeTab === 'manual' || (activeTab === 'ai' && !isGeneratingAI)) && (
+                  <button
+                    type="submit"
+                    onClick={handleSubmit}
+                    className="w-full sm:w-auto inline-flex justify-center rounded-xl border border-transparent shadow-lg shadow-indigo-500/20 px-6 py-2.5 bg-indigo-600 text-sm font-bold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    {mode === 'edit' ? 'Save Changes' : 'Create Mindmap'}
+                  </button>
+              )}
             </div>
           </div>
         </div>

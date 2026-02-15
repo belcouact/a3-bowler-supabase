@@ -1022,7 +1022,7 @@ const MetricBowler = () => {
 
                   <div className="h-80 w-full relative">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={chartData} margin={{ top: 20, right: 10, bottom: 20, left: -20 }}>
+                      <LineChart data={chartData} margin={{ top: 10, right: 5, bottom: 5, left: -25 }}>
                         <defs>
                           <linearGradient id={`gradient-actual-${metric.id}`} x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#6366f1" stopOpacity={0.1}/>
@@ -1035,9 +1035,9 @@ const MetricBowler = () => {
                             tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 700, fontVariant: 'small-caps' }}
                             axisLine={false}
                             tickLine={false}
-                            dy={15}
+                            dy={10}
                             interval={0}
-                            height={50}
+                            height={30}
                           />
                         <YAxis
                           tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 700 }}
