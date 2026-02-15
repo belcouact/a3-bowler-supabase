@@ -3,9 +3,10 @@ import { useParams } from 'react-router-dom';
 import { useApp, DataAnalysisImage } from '../../context/AppContext';
 import { useState, useEffect, useRef } from 'react';
 import ImageCanvas from '../../components/ImageCanvas';
-import { Sparkles, Loader2, AlertCircle, BarChart3, Route, X } from 'lucide-react';
+import { Sparkles, Loader2, AlertCircle, BarChart3, Route, X, Upload, Microscope, BrainCircuit, ArrowRight, Lightbulb } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { dataService } from '../../services/dataService';
+import clsx from 'clsx';
 
 const DataAnalysis = () => {
   const { id } = useParams();
@@ -280,176 +281,246 @@ For each bullet, be specific and actionable, but concise.`
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-24">
-        <div className="flex flex-col items-center">
-          <Loader2 className="w-10 h-10 animate-spin text-brand-600" />
-          <p className="mt-4 text-slate-500 font-medium animate-pulse">Loading analysis data...</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+        <div className="relative">
+          <div className="absolute inset-0 bg-brand-200 rounded-full animate-ping opacity-20"></div>
+          <div className="relative bg-white p-4 rounded-full shadow-xl border border-brand-100">
+            <Loader2 className="w-8 h-8 animate-spin text-brand-600" />
+          </div>
         </div>
+        <p className="text-slate-500 font-medium animate-pulse">Loading analysis data...</p>
       </div>
     );
   }
 
   if (!currentCase) {
     return (
-      <div className="flex items-center justify-center py-24">
-        <div className="flex flex-col items-center text-center">
-          <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4">
-            <AlertCircle className="w-8 h-8" />
-          </div>
-          <p className="text-xl font-bold text-slate-900">Case not found</p>
-          <p className="mt-2 text-slate-500 max-w-xs">The A3 case you are looking for may have been deleted or moved.</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 text-center px-4">
+        <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mb-4 shadow-sm border border-red-100 rotate-3">
+          <AlertCircle className="w-10 h-10" />
         </div>
+        <div className="space-y-2">
+          <h3 className="text-2xl font-bold text-slate-900">Case not found</h3>
+          <p className="text-slate-500 max-w-md mx-auto">The A3 case you are looking for may have been deleted or you don't have permission to view it.</p>
+        </div>
+        <button 
+          onClick={() => window.history.back()}
+          className="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
+        >
+          Go Back
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-12">
-      <div className="space-y-2">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-brand-50 rounded-lg text-brand-600">
-            <BarChart3 className="w-6 h-6" />
+    <div className="max-w-[1600px] mx-auto space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200/60 pb-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-gradient-to-br from-brand-50 to-white border border-brand-100 rounded-xl text-brand-600 shadow-sm">
+              <Microscope className="w-6 h-6" />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 font-display tracking-tight">Data Analysis</h2>
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 font-display">Data Analysis</h2>
+          <p className="text-slate-500 text-base leading-relaxed max-w-2xl pl-1">
+            Visualize facts and evidence. Break down the problem using charts, photos, and objective observations.
+          </p>
         </div>
-        <p className="text-slate-500 text-lg leading-relaxed max-w-2xl">
-          Visualize facts and evidence. Break down the problem using charts, photos, and objective observations.
-        </p>
       </div>
 
-      <div className="space-y-8">
-        {/* Visual Evidence Section */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-            <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Visual Evidence & Charts</h3>
-            <span className="text-xs text-slate-400 font-medium">Drag and drop images to annotate</span>
-          </div>
-          <div className="p-1">
-            <ImageCanvas
-              images={images}
-              onImagesChange={saveImages}
-              height={canvasHeight}
-              onHeightChange={saveCanvasHeight}
-              onUploadImage={uploadImage}
-            />
-          </div>
-        </div>
-
-        {/* Observations Section */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all duration-300 focus-within:ring-4 focus-within:ring-brand-50 focus-within:border-brand-300">
-          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-            <label htmlFor="observations" className="text-sm font-bold text-slate-700 uppercase tracking-wider">
-              Key Observations
-            </label>
-          </div>
-          <textarea
-            ref={textareaRef}
-            id="observations"
-            rows={6}
-            className="w-full px-6 py-4 text-slate-700 placeholder-slate-400 border-none focus:ring-0 resize-none text-lg leading-relaxed"
-            placeholder="What does the data tell us? List facts, trends, and anomalies observed..."
-            defaultValue={currentCase.dataAnalysisObservations || ''}
-            onBlur={handleBlur}
-          />
-          
-          <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex flex-wrap gap-3 justify-end">
-            <button
-              onClick={handleAnalyzeData}
-              disabled={isAnalyzing || !currentCase.problemStatement}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none"
-            >
-              {isAnalyzing ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Analyzing...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  <span>Analyze Data</span>
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={handleGeneratePlan}
-              disabled={isGeneratingPlan || !currentCase.problemStatement}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-white text-brand-600 hover:bg-brand-50 border-2 border-brand-100 text-sm font-bold rounded-xl transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:translate-y-0"
-            >
-              {isGeneratingPlan ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Generating...</span>
-                </>
-              ) : (
-                <>
-                  <Route className="w-4 h-4" />
-                  <span>Troubleshooting Plan</span>
-                </>
-              )}
-            </button>
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+        {/* Left Column: Visual Evidence (Canvas) */}
+        <div className="xl:col-span-8 space-y-6">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden group hover:shadow-md transition-shadow duration-500">
+            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center backdrop-blur-sm">
+              <div className="flex items-center gap-2.5">
+                <BarChart3 className="w-4 h-4 text-brand-500" />
+                <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Visual Evidence & Charts</h3>
+              </div>
+              <div className="flex items-center gap-2 text-xs font-medium text-slate-500 bg-white px-2.5 py-1 rounded-full border border-slate-200 shadow-sm">
+                <Upload className="w-3 h-3" />
+                <span>Drag & Drop enabled</span>
+              </div>
+            </div>
+            <div className="p-1.5 bg-slate-100/50">
+              <div className="bg-white rounded-2xl border border-slate-200/60 overflow-hidden relative">
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/graphy.png')] opacity-[0.03] pointer-events-none mix-blend-multiply"></div>
+                <ImageCanvas
+                  images={images}
+                  onImagesChange={saveImages}
+                  height={canvasHeight}
+                  onHeightChange={saveCanvasHeight}
+                  onUploadImage={uploadImage}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Results Section */}
-        {(analysisResult || analysisError || troubleshootingPlan || planError) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-6 duration-500">
-            {/* Analysis Result */}
-            {(analysisResult || analysisError) && (
-              <div className="bg-white rounded-2xl border-2 border-brand-100 shadow-xl overflow-hidden flex flex-col">
-                <div className="bg-brand-600 px-6 py-4 flex justify-between items-center shrink-0">
-                  <div className="flex items-center gap-2 text-white">
+        {/* Right Column: Observations & AI Tools */}
+        <div className="xl:col-span-4 space-y-6">
+          {/* Observations Input */}
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[600px] xl:h-auto xl:min-h-[500px] group hover:shadow-md transition-all duration-300 focus-within:ring-2 focus-within:ring-brand-500/10 focus-within:border-brand-400">
+            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+              <div className="flex items-center gap-2.5">
+                <Microscope className="w-4 h-4 text-brand-500" />
+                <label htmlFor="observations" className="text-sm font-bold text-slate-700 uppercase tracking-wider">
+                  Key Observations
+                </label>
+              </div>
+              <span className="text-xs text-slate-400 font-medium px-2">Markdown supported</span>
+            </div>
+            
+            <div className="flex-grow relative bg-white">
+              <textarea
+                ref={textareaRef}
+                id="observations"
+                className="w-full h-full p-6 text-slate-700 placeholder-slate-400 border-none focus:ring-0 resize-none text-base leading-relaxed font-mono bg-transparent"
+                placeholder="What does the data tell us?
+• List facts
+• Note trends
+• Identify anomalies..."
+                defaultValue={currentCase.dataAnalysisObservations || ''}
+                onBlur={handleBlur}
+              />
+              <div className="absolute bottom-4 right-4 pointer-events-none opacity-10">
+                <Microscope className="w-24 h-24 text-slate-900" />
+              </div>
+            </div>
+            
+            <div className="px-6 py-4 bg-slate-50/80 border-t border-slate-100 flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={handleAnalyzeData}
+                disabled={isAnalyzing || !currentCase.problemStatement}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none group/btn relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000"></div>
+                {isAnalyzing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Analyzing...</span>
+                  </>
+                ) : (
+                  <>
                     <Sparkles className="w-4 h-4" />
-                    <h3 className="text-sm font-bold uppercase tracking-wider">AI Data Insights</h3>
+                    <span>Analyze Data</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={handleGeneratePlan}
+                disabled={isGeneratingPlan || !currentCase.problemStatement}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-white text-slate-700 hover:text-brand-700 hover:bg-brand-50 border border-slate-200 hover:border-brand-200 text-sm font-bold rounded-xl transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 disabled:opacity-50 disabled:translate-y-0"
+              >
+                {isGeneratingPlan ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Generating...</span>
+                  </>
+                ) : (
+                  <>
+                    <BrainCircuit className="w-4 h-4" />
+                    <span>Generate Plan</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Results Section - Full Width */}
+      {(analysisResult || analysisError || troubleshootingPlan || planError) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+          {/* Analysis Result */}
+          {(analysisResult || analysisError) && (
+            <div className="group relative">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-brand-500 to-indigo-500 rounded-3xl opacity-20 blur group-hover:opacity-40 transition duration-500"></div>
+              <div className="relative bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden flex flex-col h-full">
+                <div className="bg-gradient-to-r from-brand-600 to-indigo-600 px-6 py-4 flex justify-between items-center shrink-0">
+                  <div className="flex items-center gap-2.5 text-white">
+                    <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
+                      <Lightbulb className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-shadow-sm">AI Data Insights</h3>
                   </div>
-                  <button onClick={() => setAnalysisResult(null)} className="text-white/70 hover:text-white">
+                  <button 
+                    onClick={() => setAnalysisResult(null)} 
+                    className="p-1.5 text-white/70 hover:text-white hover:bg-white/20 rounded-lg transition-all"
+                  >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="p-6 flex-grow">
+                <div className="p-8 flex-grow">
                   {analysisError ? (
-                    <div className="flex items-center gap-2 text-red-600 bg-red-50 p-4 rounded-xl">
-                      <AlertCircle className="w-5 h-5" />
+                    <div className="flex items-center gap-3 text-red-600 bg-red-50 p-6 rounded-2xl border border-red-100">
+                      <AlertCircle className="w-6 h-6 shrink-0" />
                       <p className="text-sm font-medium">{analysisError}</p>
                     </div>
                   ) : (
-                    <div className="prose prose-slate prose-sm max-w-none text-slate-700 leading-relaxed whitespace-pre-wrap">
-                      {analysisResult}
+                    <div className="prose prose-slate prose-sm max-w-none text-slate-600 leading-relaxed">
+                      <div className="whitespace-pre-wrap">{analysisResult}</div>
                     </div>
                   )}
                 </div>
+                <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 text-xs text-slate-400 font-medium flex justify-between items-center">
+                   <span>Generated by AI Coach</span>
+                   <div className="flex gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                   </div>
+                </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Troubleshooting Plan */}
-            {(troubleshootingPlan || planError) && (
-              <div className="bg-white rounded-2xl border-2 border-accent-100 shadow-xl overflow-hidden flex flex-col">
-                <div className="bg-accent-600 px-6 py-4 flex justify-between items-center shrink-0">
-                  <div className="flex items-center gap-2 text-white">
-                    <Route className="w-4 h-4" />
-                    <h3 className="text-sm font-bold uppercase tracking-wider">Troubleshooting Plan</h3>
+          {/* Troubleshooting Plan */}
+          {(troubleshootingPlan || planError) && (
+            <div className="group relative">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-3xl opacity-20 blur group-hover:opacity-40 transition duration-500"></div>
+              <div className="relative bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden flex flex-col h-full">
+                <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4 flex justify-between items-center shrink-0">
+                  <div className="flex items-center gap-2.5 text-white">
+                    <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
+                      <Route className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-shadow-sm">Troubleshooting Plan</h3>
                   </div>
-                  <button onClick={() => setTroubleshootingPlan(null)} className="text-white/70 hover:text-white">
+                  <button 
+                    onClick={() => setTroubleshootingPlan(null)} 
+                    className="p-1.5 text-white/70 hover:text-white hover:bg-white/20 rounded-lg transition-all"
+                  >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="p-6 flex-grow">
+                <div className="p-8 flex-grow">
                   {planError ? (
-                    <div className="flex items-center gap-2 text-red-600 bg-red-50 p-4 rounded-xl">
-                      <AlertCircle className="w-5 h-5" />
+                    <div className="flex items-center gap-3 text-red-600 bg-red-50 p-6 rounded-2xl border border-red-100">
+                      <AlertCircle className="w-6 h-6 shrink-0" />
                       <p className="text-sm font-medium">{planError}</p>
                     </div>
                   ) : (
-                    <div className="prose prose-slate prose-sm max-w-none text-slate-700 leading-relaxed whitespace-pre-wrap">
-                      {troubleshootingPlan}
+                    <div className="prose prose-slate prose-sm max-w-none text-slate-600 leading-relaxed">
+                      <div className="whitespace-pre-wrap">{troubleshootingPlan}</div>
                     </div>
                   )}
                 </div>
+                <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 text-xs text-slate-400 font-medium flex justify-between items-center">
+                   <span>Suggested Action Plan</span>
+                   <div className="flex gap-2 items-center text-emerald-600 font-bold cursor-pointer hover:underline">
+                      <span>View Details</span>
+                      <ArrowRight className="w-3 h-3" />
+                   </div>
+                </div>
               </div>
-            )}
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
