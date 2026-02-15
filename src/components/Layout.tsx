@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, NotepadText, Lightbulb, Filter, Inbox, Users, X, Calendar, FlaskConical, Activity, Clock3 } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, Lightbulb, Filter, Inbox, Users, X, Calendar, FlaskConical, Activity, Clock3, PieChart as PieChartIcon, AlertCircle } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
 import {
@@ -3266,70 +3266,85 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
         <main className="flex-1 bg-gray-50 min-w-0">
           {location.pathname.startsWith('/portfolio') ? (
             <div className="p-4 md:p-6">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                  <div>
-                    <h2 className="text-base md:text-lg font-semibold text-gray-900">
-                      Integrated View
-                    </h2>
-                    <p className="mt-0.5 text-xs text-gray-500">
-                      Connect underperforming Bowler metrics to A3 problem solving.
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div
+              <div className="bg-white rounded-xl shadow-md border border-slate-200/60 overflow-hidden">
+                <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/30 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-emerald-100 text-emerald-600 rounded-lg shadow-sm group-hover:scale-105 transition-transform">
+                        <Layers className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h2 className="text-lg md:text-xl font-bold text-slate-900 font-display tracking-tight group-hover:text-emerald-700 transition-colors">
+                          Integrated View
+                        </h2>
+                        <p className="mt-0.5 text-xs text-slate-500 font-medium">
+                          Connect underperforming Bowler metrics to A3 problem solving.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="hidden sm:flex items-center px-3 py-1.5 bg-slate-100 rounded-full border border-slate-200">
+                        <div className="flex -space-x-2">
+                          {[...new Set(bowlers.map(b => b.group).filter(Boolean))].slice(0, 3).map((g, i) => (
+                            <div key={i} className="w-6 h-6 rounded-full bg-white border border-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-400 shadow-sm" title={g}>
+                              {g?.charAt(0)}
+                            </div>
+                          ))}
+                        </div>
+                        <span className="ml-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                          {new Set(bowlers.map(b => b.group).filter(Boolean)).size} Groups
+                        </span>
+                      </div>
+                      <div
+                        className={clsx(
+                          'one-click-summary-glow',
+                          isGeneratingSummary && 'one-click-summary-glow-active',
+                        )}
+                      >
+                        <button
+                          onClick={handleOneClickSummary}
+                          className="one-click-summary-glow-inner inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg shadow-md hover:bg-emerald-700 hover:shadow-lg transition-all duration-200 active:scale-95 border border-emerald-500/50"
+                          title="One Click Summary"
+                        >
+                          {isGeneratingSummary ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Sparkles className="w-4 h-4" />
+                          )}
+                          <span className="hidden md:inline text-xs font-bold uppercase tracking-wide">
+                            AI Summary
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                </div>
+                <div className="p-4 md:p-6 space-y-6">
+                  <div className="flex p-1 bg-slate-100/80 rounded-xl w-fit mb-2">
+                    <button
+                      type="button"
+                      onClick={() => setPortfolioTab('bowler')}
                       className={clsx(
-                        'one-click-summary-glow',
-                        isGeneratingSummary && 'one-click-summary-glow-active',
+                        'whitespace-nowrap py-2 px-4 text-xs md:text-sm font-semibold inline-flex items-center gap-2 rounded-lg transition-all duration-200',
+                        portfolioTab === 'bowler'
+                          ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-slate-200'
+                          : 'text-slate-500 hover:text-slate-700 hover:bg-white/50',
                       )}
                     >
-                      <button
-                        onClick={handleOneClickSummary}
-                        className="one-click-summary-glow-inner inline-flex items-center gap-2 px-2.5 py-2 bg-teal-600 text-white rounded-md shadow-sm hover:bg-teal-700 transition-colors"
-                        title="One Click Summary"
-                      >
-                        {isGeneratingSummary ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <NotepadText className="w-4 h-4" />
-                        )}
-                        <span className="hidden md:inline text-xs font-medium">
-                          One Click Summary
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 md:p-6 space-y-4">
-                  <div className="border-b border-gray-200 mb-3">
-                    <nav className="-mb-px flex space-x-4">
-                      <button
-                        type="button"
-                        onClick={() => setPortfolioTab('bowler')}
-                        className={clsx(
-                          'whitespace-nowrap py-2 px-2 border-b-2 text-xs md:text-sm font-medium inline-flex items-center gap-1.5 rounded-t-md transition-colors',
-                          portfolioTab === 'bowler'
-                            ? 'border-blue-500 text-blue-700 bg-blue-50'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200 hover:bg-gray-50',
-                        )}
-                      >
-                        <TrendingUp className="w-3 h-3 md:w-4 md:h-4" />
-                        <span>Bowler Overview</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPortfolioTab('a3')}
-                        className={clsx(
-                          'whitespace-nowrap py-2 px-2 border-b-2 text-xs md:text-sm font-medium inline-flex items-center gap-1.5 rounded-t-md transition-colors',
-                          portfolioTab === 'a3'
-                            ? 'border-indigo-500 text-indigo-700 bg-indigo-50'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200 hover:bg-gray-50',
-                        )}
-                      >
-                        <Layers className="w-3 h-3 md:w-4 md:h-4" />
-                        <span>A3 Portfolio</span>
-                      </button>
-                    </nav>
+                      <TrendingUp className={clsx("w-4 h-4", portfolioTab === 'bowler' ? "text-emerald-500" : "text-slate-400")} />
+                      <span>Bowler Overview</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPortfolioTab('a3')}
+                      className={clsx(
+                        'whitespace-nowrap py-2 px-4 text-xs md:text-sm font-semibold inline-flex items-center gap-2 rounded-lg transition-all duration-200',
+                        portfolioTab === 'a3'
+                          ? 'bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200'
+                          : 'text-slate-500 hover:text-slate-700 hover:bg-white/50',
+                      )}
+                    >
+                      <Layers className={clsx("w-4 h-4", portfolioTab === 'a3' ? "text-indigo-500" : "text-slate-400")} />
+                      <span>A3 Portfolio</span>
+                    </button>
                   </div>
                   {a3PortfolioStats.total === 0 && portfolioTab === 'a3' ? (
                     <div className="py-8 text-center text-sm text-gray-500">
@@ -3371,204 +3386,248 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                             </div>
                           </div>
                           {bowlerDashboardStats && (
-                            <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
+                            <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
                               <div
-                                className="rounded-lg border border-green-100 bg-green-50 px-3 py-3"
+                                className="group rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 transition-all duration-200 hover:shadow-sm hover:bg-emerald-50"
                                 title="Share of metrics with latest month meeting target, among metrics that have latest data."
                               >
-                                <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
-                                  Metrics green (latest)
-                                </p>
-                                <p className="mt-1 text-lg font-semibold text-gray-900">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <div className="p-1.5 bg-emerald-100 text-emerald-600 rounded-lg group-hover:scale-110 transition-transform">
+                                    <TrendingUp className="w-4 h-4" />
+                                  </div>
+                                  <p className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">
+                                    Metrics Green
+                                  </p>
+                                </div>
+                                <p className="text-2xl font-bold text-slate-900">
                                   {bowlerDashboardStats.pctGreen != null
                                     ? `${bowlerDashboardStats.pctGreen.toFixed(0)}%`
                                     : '—'}
                                 </p>
-                                <p className="mt-0.5 text-[11px] text-gray-500">
-                                  {bowlerDashboardStats.metricsWithLatestData} metrics with latest data
+                                <p className="mt-1 text-[11px] text-emerald-700/70 font-medium">
+                                  {bowlerDashboardStats.metricsWithLatestData} metrics on target
                                 </p>
                               </div>
+
                               <div
-                                className="rounded-lg border border-red-100 bg-red-50 px-3 py-3"
+                                className="group rounded-xl border border-rose-100 bg-rose-50/50 p-4 transition-all duration-200 hover:shadow-sm hover:bg-rose-50"
                                 title="Share of metrics failing in the last 2 or 3 months, among metrics that have latest data."
                               >
-                                <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
-                                  Failing 2–3 months
-                                </p>
-                                <p className="mt-1 text-lg font-semibold text-gray-900">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <div className="p-1.5 bg-rose-100 text-rose-600 rounded-lg group-hover:scale-110 transition-transform">
+                                    <Activity className="w-4 h-4" />
+                                  </div>
+                                  <p className="text-[11px] font-bold text-rose-800 uppercase tracking-wider">
+                                    At Risk
+                                  </p>
+                                </div>
+                                <p className="text-2xl font-bold text-slate-900">
                                   {bowlerDashboardStats.pctFailing2or3 != null
                                     ? `${bowlerDashboardStats.pctFailing2or3.toFixed(0)}%`
                                     : '—'}
                                 </p>
-                                <p className="mt-0.5 text-[11px] text-gray-500">
-                                  Based on latest low-performing rules
+                                <p className="mt-1 text-[11px] text-rose-700/70 font-medium">
+                                  Recent performance gaps
                                 </p>
                               </div>
+
                               <div
-                                className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-3"
+                                className="group rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 transition-all duration-200 hover:shadow-sm hover:bg-indigo-50"
                                 title="Share of metrics linked to at least one active A3."
                               >
-                                <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
-                                  With active A3
-                                </p>
-                                <p className="mt-1 text-lg font-semibold text-gray-900">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <div className="p-1.5 bg-indigo-100 text-indigo-600 rounded-lg group-hover:scale-110 transition-transform">
+                                    <Zap className="w-4 h-4" />
+                                  </div>
+                                  <p className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider">
+                                    A3 Coverage
+                                  </p>
+                                </div>
+                                <p className="text-2xl font-bold text-slate-900">
                                   {bowlerDashboardStats.pctWithActiveA3.toFixed(0)}%
                                 </p>
-                                <p className="mt-0.5 text-[11px] text-gray-500">
-                                  {bowlerDashboardStats.totalMetrics} metrics with any history
+                                <p className="mt-1 text-[11px] text-indigo-700/70 font-medium">
+                                  {bowlerDashboardStats.totalMetrics} metrics tracked
                                 </p>
                               </div>
+
                               <div
-                                className="rounded-lg border border-orange-100 bg-orange-50 px-3 py-3"
+                                className="group rounded-xl border border-amber-100 bg-amber-50/50 p-4 transition-all duration-200 hover:shadow-sm hover:bg-amber-50"
                                 title="Average age in days of active A3s linked to these metrics."
                               >
-                                <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
-                                  Avg age of active A3s
-                                </p>
-                                <p className="mt-1 text-lg font-semibold text-gray-900">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <div className="p-1.5 bg-amber-100 text-amber-600 rounded-lg group-hover:scale-110 transition-transform">
+                                    <Clock3 className="w-4 h-4" />
+                                  </div>
+                                  <p className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">
+                                    Avg A3 Age
+                                  </p>
+                                </div>
+                                <p className="text-2xl font-bold text-slate-900">
                                   {bowlerDashboardStats.avgActiveA3AgeDays != null
-                                    ? `${Math.round(bowlerDashboardStats.avgActiveA3AgeDays)} days`
+                                    ? `${Math.round(bowlerDashboardStats.avgActiveA3AgeDays)}d`
                                     : '—'}
                                 </p>
-                                <p className="mt-0.5 text-[11px] text-gray-500">
-                                  From A3 start date to today
+                                <p className="mt-1 text-[11px] text-amber-700/70 font-medium">
+                                  Since case initiation
                                 </p>
                               </div>
                             </div>
                           )}
-                          <div className="overflow-x-auto">
-                            <table className="min-w-full text-xs md:text-sm">
-                              <thead className="bg-gray-50">
+                          <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-md">
+                            <table className="min-w-full divide-y divide-slate-200 text-xs md:text-sm">
+                              <thead className="bg-slate-50/90 backdrop-blur-md sticky top-0 z-10">
                                 <tr>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-normal md:whitespace-nowrap">
+                                  <th className="px-4 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                                     Group
                                   </th>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-normal md:whitespace-nowrap">
+                                  <th className="px-4 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                                     Metric
                                   </th>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-normal md:whitespace-nowrap">
-                                    Latest month
+                                  <th className="px-4 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                    Latest
                                   </th>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-normal md:whitespace-nowrap">
-                                    Last 2 months
+                                  <th className="px-4 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                    Trend (2m)
                                   </th>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-normal md:whitespace-nowrap">
-                                    Last 3 months
+                                  <th className="px-4 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                    Trend (3m)
                                   </th>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-normal md:whitespace-nowrap">
+                                  <th className="px-4 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                                     Linked A3s
                                   </th>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-normal md:whitespace-nowrap">
-                                    <span className="inline-flex items-center gap-1">
-                                      <span>Overall target achieving %</span>
+                                  <th className="px-4 py-4 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                    <span className="inline-flex items-center gap-1.5 justify-end w-full">
+                                      <span>Achievement</span>
                                       <button
                                         type="button"
-                                        className="text-gray-400 hover:text-gray-600"
-                                        title="Cells are highlighted when achievement is 66% or lower."
+                                        className="text-slate-400 hover:text-emerald-500 transition-colors"
+                                        title="Achievement percentage against target. Red if ≤66%."
                                       >
-                                        <Info className="w-3 h-3" />
+                                        <Info className="w-3.5 h-3.5" />
                                       </button>
                                     </span>
                                   </th>
                                 </tr>
-                                <tr>
-                                  <th className="px-3 pb-2">
-                                    <select
-                                      className="w-full rounded border border-gray-200 bg-white px-2 py-1 text-[11px] md:text-xs text-gray-700"
-                                      value={groupFilter}
-                                      onChange={e => setGroupFilter(e.target.value)}
-                                    >
-                                      <option value="">All</option>
-                                      {groupFilterOptions.map(name => (
-                                        <option key={name} value={name}>
-                                          {name}
-                                        </option>
-                                      ))}
-                                    </select>
+                                <tr className="bg-white border-b border-slate-100 shadow-sm">
+                                  <th className="px-4 pb-3">
+                                    <div className="relative group">
+                                      <select
+                                        className="w-full appearance-none rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2 text-[11px] md:text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none pr-8"
+                                        value={groupFilter}
+                                        onChange={e => setGroupFilter(e.target.value)}
+                                      >
+                                        <option value="">All Groups</option>
+                                        {groupFilterOptions.map(name => (
+                                          <option key={name} value={name}>
+                                            {name}
+                                          </option>
+                                        ))}
+                                      </select>
+                                      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none group-hover:text-emerald-500 transition-colors" />
+                                    </div>
                                   </th>
-                                  <th className="px-3 pb-2">
-                                    <select
-                                      className="w-full rounded border border-gray-200 bg-white px-2 py-1 text-[11px] md:text-xs text-gray-700"
-                                      value={metricFilter}
-                                      onChange={e => setMetricFilter(e.target.value)}
-                                    >
-                                      <option value="">All</option>
-                                      {metricFilterOptions.map(name => (
-                                        <option key={name} value={name}>
-                                          {name}
-                                        </option>
-                                      ))}
-                                    </select>
+                                  <th className="px-4 pb-3">
+                                    <div className="relative group">
+                                      <select
+                                        className="w-full appearance-none rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2 text-[11px] md:text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none pr-8"
+                                        value={metricFilter}
+                                        onChange={e => setMetricFilter(e.target.value)}
+                                      >
+                                        <option value="">All Metrics</option>
+                                        {metricFilterOptions.map(name => (
+                                          <option key={name} value={name}>
+                                            {name}
+                                          </option>
+                                        ))}
+                                      </select>
+                                      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none group-hover:text-emerald-500 transition-colors" />
+                                    </div>
                                   </th>
-                                  <th className="px-3 pb-2">
-                                    <select
-                                      className="w-full rounded border border-gray-200 bg-white px-2 py-1 text-[11px] md:text-xs text-gray-700"
-                                      value={latestFilter}
-                                      onChange={e => setLatestFilter(e.target.value as 'all' | 'ok' | 'fail' | 'no-data')}
-                                    >
-                                      <option value="all">All</option>
-                                      <option value="ok">Ok</option>
-                                      <option value="fail">Fail</option>
-                                      <option value="no-data">No data</option>
-                                    </select>
+                                  <th className="px-4 pb-3">
+                                    <div className="relative group">
+                                      <select
+                                        className="w-full appearance-none rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2 text-[11px] md:text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none pr-8"
+                                        value={latestFilter}
+                                        onChange={e => setLatestFilter(e.target.value as 'all' | 'ok' | 'fail' | 'no-data')}
+                                      >
+                                        <option value="all">Status</option>
+                                        <option value="ok">Ok</option>
+                                        <option value="fail">Fail</option>
+                                        <option value="no-data">None</option>
+                                      </select>
+                                      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none group-hover:text-emerald-500 transition-colors" />
+                                    </div>
                                   </th>
-                                  <th className="px-3 pb-2">
-                                    <select
-                                      className="w-full rounded border border-gray-200 bg-white px-2 py-1 text-[11px] md:text-xs text-gray-700"
-                                      value={fail2Filter}
-                                      onChange={e => setFail2Filter(e.target.value as 'all' | 'yes' | 'no')}
-                                    >
-                                      <option value="all">All</option>
-                                      <option value="yes">Failing</option>
-                                      <option value="no">Not failing</option>
-                                    </select>
+                                  <th className="px-4 pb-3">
+                                    <div className="relative group">
+                                      <select
+                                        className="w-full appearance-none rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2 text-[11px] md:text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none pr-8"
+                                        value={fail2Filter}
+                                        onChange={e => setFail2Filter(e.target.value as 'all' | 'yes' | 'no')}
+                                      >
+                                        <option value="all">Trend</option>
+                                        <option value="yes">Failing</option>
+                                        <option value="no">Stable</option>
+                                      </select>
+                                      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none group-hover:text-emerald-500 transition-colors" />
+                                    </div>
                                   </th>
-                                  <th className="px-3 pb-2">
-                                    <select
-                                      className="w-full rounded border border-gray-200 bg-white px-2 py-1 text-[11px] md:text-xs text-gray-700"
-                                      value={fail3Filter}
-                                      onChange={e => setFail3Filter(e.target.value as 'all' | 'yes' | 'no')}
-                                    >
-                                      <option value="all">All</option>
-                                      <option value="yes">Failing</option>
-                                      <option value="no">Not failing</option>
-                                    </select>
+                                  <th className="px-4 pb-3">
+                                    <div className="relative group">
+                                      <select
+                                        className="w-full appearance-none rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2 text-[11px] md:text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none pr-8"
+                                        value={fail3Filter}
+                                        onChange={e => setFail3Filter(e.target.value as 'all' | 'yes' | 'no')}
+                                      >
+                                        <option value="all">Trend</option>
+                                        <option value="yes">Failing</option>
+                                        <option value="no">Stable</option>
+                                      </select>
+                                      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none group-hover:text-emerald-500 transition-colors" />
+                                    </div>
                                   </th>
-                                  <th className="px-3 pb-2">
-                                    <select
-                                      className="w-full rounded border border-gray-200 bg-white px-2 py-1 text-[11px] md:text-xs text-gray-700"
-                                      value={a3LinkFilter}
-                                      onChange={e =>
-                                        setA3LinkFilter(
-                                          e.target.value as 'all' | 'missing' | 'present' | 'not-needed',
-                                        )
-                                      }
-                                    >
-                                      <option value="all">All</option>
-                                      <option value="missing">A3 needed, none</option>
-                                      <option value="present">A3 needed, with A3</option>
-                                      <option value="not-needed">A3 not needed</option>
-                                    </select>
+                                  <th className="px-4 pb-3">
+                                    <div className="relative group">
+                                      <select
+                                        className="w-full appearance-none rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2 text-[11px] md:text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none pr-8"
+                                        value={a3LinkFilter}
+                                        onChange={e =>
+                                          setA3LinkFilter(
+                                            e.target.value as 'all' | 'missing' | 'present' | 'not-needed',
+                                          )
+                                        }
+                                      >
+                                        <option value="all">A3 Status</option>
+                                        <option value="missing">Needed</option>
+                                        <option value="present">Linked</option>
+                                        <option value="not-needed">N/A</option>
+                                      </select>
+                                      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none group-hover:text-emerald-500 transition-colors" />
+                                    </div>
                                   </th>
-                                  <th className="px-3 pb-2">
-                                    <select
-                                      className="w-full rounded border border-gray-200 bg-white px-2 py-1 text-[11px] md:text-xs text-gray-700"
-                                      value={achievementFilter}
-                                      onChange={e =>
-                                        setAchievementFilter(
-                                          e.target.value as 'all' | 'lt50' | '50to80' | 'gte80',
-                                        )
-                                      }
-                                    >
-                                      <option value="all">All</option>
-                                      <option value="lt50">&lt; 50%</option>
-                                      <option value="50to80">50–79%</option>
-                                      <option value="gte80">≥ 80%</option>
-                                    </select>
+                                  <th className="px-4 pb-3">
+                                    <div className="relative group">
+                                      <select
+                                        className="w-full appearance-none rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2 text-[11px] md:text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none pr-8"
+                                        value={achievementFilter}
+                                        onChange={e =>
+                                          setAchievementFilter(
+                                            e.target.value as 'all' | 'lt50' | '50to80' | 'gte80',
+                                          )
+                                        }
+                                      >
+                                        <option value="all">Goal %</option>
+                                        <option value="lt50">&lt; 50%</option>
+                                        <option value="50to80">50–79%</option>
+                                        <option value="gte80">≥ 80%</option>
+                                      </select>
+                                      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none group-hover:text-emerald-500 transition-colors" />
+                                    </div>
                                   </th>
                                 </tr>
                               </thead>
-                              <tbody className="divide-y divide-gray-100">
+                              <tbody className="divide-y divide-slate-100 bg-white">
                                 {filteredGroupPerformanceTableData.map(row => {
                                   const isAtRisk = row.fail2 || row.fail3;
                                   const linkedA3Count = isAtRisk
@@ -3576,14 +3635,17 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                     : 0;
 
                                   return (
-                                    <tr key={`${row.groupName}-${row.metricId}`}>
-                                      <td className="px-3 py-2 font-medium text-gray-900">
+                                    <tr 
+                                      key={`${row.groupName}-${row.metricId}`}
+                                      className="hover:bg-slate-50/80 transition-colors group/row border-b border-slate-50 last:border-0"
+                                    >
+                                      <td className="px-4 py-3 text-[11px] md:text-xs font-semibold text-slate-700">
                                         {row.groupName}
                                       </td>
-                                      <td className="px-3 py-2 text-gray-700">
+                                      <td className="px-4 py-3">
                                         <button
                                           type="button"
-                                          className="text-[11px] md:text-xs font-medium text-blue-700 hover:text-blue-900 hover:underline"
+                                          className="text-[11px] md:text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline text-left transition-colors"
                                           onClick={() => {
                                             if (row.bowlerId) {
                                               navigate(`/metric-bowler/${row.bowlerId}`);
@@ -3593,71 +3655,82 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                           {row.metricName}
                                         </button>
                                       </td>
-                                      <td className="px-3 py-2 text-gray-700">
+                                      <td className="px-4 py-3">
                                         {row.latestMet === null || !row.latestActual ? (
-                                          <span>—</span>
+                                          <span className="text-slate-300">—</span>
                                         ) : (
                                           <span
                                             className={clsx(
-                                              'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border',
+                                              'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border shadow-sm',
                                               row.latestMet === false
-                                                ? 'bg-red-50 text-red-700 border-red-200'
-                                                : 'bg-green-50 text-green-700 border-green-200',
+                                                ? 'bg-red-50 text-red-700 border-red-100'
+                                                : 'bg-emerald-50 text-emerald-700 border-emerald-100',
                                             )}
                                           >
                                             {row.latestActual}
                                           </span>
                                         )}
                                       </td>
-                                      <td className="px-3 py-2 text-gray-700">
+                                      <td className="px-4 py-3">
                                         {row.fail2 ? (
-                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">
-                                            <span className="mr-1 h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100 shadow-sm">
+                                            <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
                                             Failing
                                           </span>
                                         ) : (
-                                          <span>—</span>
+                                          <span className="text-slate-300">—</span>
                                         )}
                                       </td>
-                                      <td className="px-3 py-2 text-gray-700">
+                                      <td className="px-4 py-3">
                                         {row.fail3 ? (
-                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100">
-                                            <span className="mr-1 h-1.5 w-1.5 rounded-full bg-red-500" />
+                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100 shadow-sm">
+                                            <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
                                             Failing
                                           </span>
                                         ) : (
-                                          <span>—</span>
+                                          <span className="text-slate-300">—</span>
                                         )}
                                       </td>
-                                      <td className="px-3 py-2 text-gray-700">
+                                      <td className="px-4 py-3 text-center">
                                         {isAtRisk ? (
                                           linkedA3Count === 0 ? (
-                                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-semibold bg-red-50 text-red-700 border border-red-200">
+                                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold bg-red-50 text-red-600 border border-red-200 shadow-sm ring-2 ring-red-500/10">
                                               0
                                             </span>
                                           ) : (
-                                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-semibold bg-green-50 text-green-700 border border-green-200">
+                                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 shadow-sm">
                                               {linkedA3Count}
                                             </span>
                                           )
                                         ) : (
-                                          <span>—</span>
+                                          <span className="text-slate-300">—</span>
                                         )}
                                       </td>
-                                      <td className="px-3 py-2 text-gray-700">
+                                      <td className="px-4 py-3">
                                         {row.achievementRate != null ? (
-                                          <span
-                                            className={clsx(
-                                              'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border',
-                                              row.achievementRate < (2 / 3) * 100
-                                                ? 'bg-red-50 text-red-700 border-red-200'
-                                                : 'bg-green-50 text-green-700 border-green-200',
-                                            )}
-                                          >
-                                            {row.achievementRate.toFixed(0)}%
-                                          </span>
+                                          <div className="flex items-center gap-2">
+                                            <div className="flex-1 h-1.5 w-12 bg-slate-100 rounded-full overflow-hidden hidden sm:block">
+                                              <div 
+                                                className={clsx(
+                                                  "h-full rounded-full transition-all duration-500",
+                                                  row.achievementRate < (2 / 3) * 100 ? "bg-red-500" : "bg-emerald-500"
+                                                )}
+                                                style={{ width: `${Math.min(100, row.achievementRate)}%` }}
+                                              />
+                                            </div>
+                                            <span
+                                              className={clsx(
+                                                'text-[10px] font-bold min-w-[32px] text-right',
+                                                row.achievementRate < (2 / 3) * 100
+                                                  ? 'text-red-600'
+                                                  : 'text-emerald-600',
+                                              )}
+                                            >
+                                              {row.achievementRate.toFixed(0)}%
+                                            </span>
+                                          </div>
                                         ) : (
-                                          '—'
+                                          <span className="text-slate-300">—</span>
                                         )}
                                       </td>
                                     </tr>
@@ -3672,20 +3745,23 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       {portfolioTab === 'a3' && (
                         <>
                           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[11px] text-gray-500">Group</span>
-                              <select
-                                className="rounded border border-gray-200 bg-white px-2 py-1 text-[11px] md:text-xs text-gray-700"
-                                value={a3PortfolioGroupFilter}
-                                onChange={e => setA3PortfolioGroupFilter(e.target.value)}
-                              >
-                                <option value="">All groups</option>
-                                {a3PortfolioGroupOptions.map(name => (
-                                  <option key={name} value={name}>
-                                    {name}
-                                  </option>
-                                ))}
-                              </select>
+                            <div className="flex items-center gap-3">
+                              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Filter by Group</span>
+                              <div className="relative group min-w-[160px]">
+                                <select
+                                  className="w-full appearance-none rounded-lg border-slate-200 bg-white px-3 py-1.5 text-[11px] md:text-xs text-slate-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none pr-8 shadow-sm"
+                                  value={a3PortfolioGroupFilter}
+                                  onChange={e => setA3PortfolioGroupFilter(e.target.value)}
+                                >
+                                  <option value="">All Groups</option>
+                                  {a3PortfolioGroupOptions.map(name => (
+                                    <option key={name} value={name}>
+                                      {name}
+                                    </option>
+                                  ))}
+                                </select>
+                                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none group-hover:text-emerald-500 transition-colors" />
+                              </div>
                             </div>
                           </div>
                           <div className="mt-4">
@@ -3697,39 +3773,47 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                             </p>
                           </div>
                           <div className="mt-2 pt-4 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-                        <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
-                              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                                Metric A3 Coverage
-                              </p>
-                              <div className="mt-2 h-40">
-                                <ResponsiveContainer width="100%" height="100%">
-                                  <PieChart>
-                                    <Pie
-                                      data={metricA3Coverage.pieData}
-                                      dataKey="value"
-                                      nameKey="name"
-                                      innerRadius={30}
-                                      outerRadius={55}
-                                      paddingAngle={2}
-                                      label={renderPieLabel}
-                                      labelLine
-                                    >
-                                      {metricA3Coverage.pieData.map((entry, index) => (
-                                        <Cell
-                                          key={`metric-coverage-cell-${index}`}
-                                          fill={entry.color}
-                                        />
-                                      ))}
-                                    </Pie>
-                                    <Tooltip content={renderPieTooltip} />
-                                  </PieChart>
-                                </ResponsiveContainer>
+                            <div className="group rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-emerald-200">
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                  Metric A3 Coverage
+                                </p>
+                                <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100 transition-colors">
+                                  <PieChartIcon className="w-4 h-4" />
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-center">
+                                <div className="h-40 w-full">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                      <Pie
+                                        data={metricA3Coverage.pieData}
+                                        dataKey="value"
+                                        nameKey="name"
+                                        innerRadius={35}
+                                        outerRadius={55}
+                                        paddingAngle={4}
+                                        label={renderPieLabel}
+                                        labelLine
+                                      >
+                                        {metricA3Coverage.pieData.map((entry, index) => (
+                                          <Cell
+                                            key={`metric-coverage-cell-${index}`}
+                                            fill={entry.color}
+                                            className="outline-none"
+                                          />
+                                        ))}
+                                      </Pie>
+                                      <Tooltip content={renderPieTooltip} />
+                                    </PieChart>
+                                  </ResponsiveContainer>
+                                </div>
                               </div>
                               <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-gray-500">
-                                <label className="inline-flex items-center gap-1">
+                                <label className="inline-flex items-center gap-1 cursor-pointer group/label">
                                   <input
                                     type="checkbox"
-                                    className="h-3 w-3 text-blue-600 border-gray-300 rounded"
+                                    className="h-3 w-3 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500/20"
                                     checked={a3LowPerfRule.latestFail}
                                     onChange={e =>
                                       setA3LowPerfRule({
@@ -3738,12 +3822,12 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                       })
                                     }
                                   />
-                                  <span>Latest fail</span>
+                                  <span className="group-hover/label:text-slate-900 transition-colors">Latest fail</span>
                                 </label>
-                                <label className="inline-flex items-center gap-1">
+                                <label className="inline-flex items-center gap-1 cursor-pointer group/label">
                                   <input
                                     type="checkbox"
-                                    className="h-3 w-3 text-blue-600 border-gray-300 rounded"
+                                    className="h-3 w-3 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500/20"
                                     checked={a3LowPerfRule.fail2}
                                     onChange={e =>
                                       setA3LowPerfRule({
@@ -3752,12 +3836,12 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                       })
                                     }
                                   />
-                                  <span>Failing 2 months</span>
+                                  <span className="group-hover/label:text-slate-900 transition-colors">Fail 2m</span>
                                 </label>
-                                <label className="inline-flex items-center gap-1">
+                                <label className="inline-flex items-center gap-1 cursor-pointer group/label">
                                   <input
                                     type="checkbox"
-                                    className="h-3 w-3 text-blue-600 border-gray-300 rounded"
+                                    className="h-3 w-3 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500/20"
                                     checked={a3LowPerfRule.fail3}
                                     onChange={e =>
                                       setA3LowPerfRule({
@@ -3766,113 +3850,145 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                       })
                                     }
                                   />
-                                  <span>Failing 3 months</span>
+                                  <span className="group-hover/label:text-slate-900 transition-colors">Fail 3m</span>
                                 </label>
                               </div>
-                              <p className="mt-2 text-[11px] text-gray-500">
-                                At-risk metrics: {metricA3Coverage.totalAtRisk} · With A3:{' '}
-                                {metricA3Coverage.withA3}, Without A3: {metricA3Coverage.withoutA3}
-                              </p>
-                            </div>
-                            <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
-                              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                                A3 Duration
-                              </p>
-                              <div className="mt-2 h-40">
-                                <ResponsiveContainer width="100%" height="100%">
-                                  <PieChart>
-                                    <Pie
-                                      data={durationPieData}
-                                      dataKey="value"
-                                      nameKey="name"
-                                      innerRadius={30}
-                                      outerRadius={55}
-                                      paddingAngle={2}
-                                      label={renderPieLabel}
-                                      labelLine
-                                    >
-                                      {durationPieData.map((entry, index) => (
-                                        <Cell
-                                          key={`duration-cell-${index}`}
-                                          fill={entry.color}
-                                        />
-                                      ))}
-                                    </Pie>
-                                    <Tooltip content={renderPieTooltip} />
-                                  </PieChart>
-                                </ResponsiveContainer>
+                              <div className="mt-3 pt-3 border-t border-slate-50 flex flex-col gap-1 text-[11px]">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-slate-500">At-risk:</span>
+                                  <b className="text-slate-900">{metricA3Coverage.totalAtRisk}</b>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-slate-500">With A3:</span>
+                                  <b className="text-emerald-600">{metricA3Coverage.withA3}</b>
+                                </div>
                               </div>
                             </div>
-                            <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
-                              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                                Status
-                              </p>
-                              <div className="mt-2 h-40">
-                                <ResponsiveContainer width="100%" height="100%">
-                                  <PieChart>
-                                    <Pie
-                                      data={statusPieData}
-                                      dataKey="value"
-                                      nameKey="name"
-                                      innerRadius={30}
-                                      outerRadius={55}
-                                      paddingAngle={2}
-                                      label={renderPieLabel}
-                                      labelLine
-                                    >
-                                      {statusPieData.map((entry, index) => (
-                                        <Cell
-                                          key={`status-cell-${index}`}
-                                          fill={entry.color}
-                                        />
-                                      ))}
-                                    </Pie>
-                                    <Tooltip content={renderPieTooltip} />
-                                  </PieChart>
-                                </ResponsiveContainer>
+
+                            <div className="group rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-blue-200">
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                  A3 Duration
+                                </p>
+                                <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors">
+                                  <Clock3 className="w-4 h-4" />
+                                </div>
                               </div>
-                              <p className="mt-2 text-[11px] text-gray-500">
-                                Total:{' '}
-                                <span className="font-semibold text-gray-900">
-                                  {a3PortfolioStats.total}
-                                </span>{' '}
-                                · Active {a3PortfolioStats.active}, Completed{' '}
-                                {a3PortfolioStats.completed}
-                              </p>
+                              <div className="flex flex-col items-center">
+                                <div className="h-40 w-full">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                      <Pie
+                                        data={durationPieData}
+                                        dataKey="value"
+                                        nameKey="name"
+                                        innerRadius={35}
+                                        outerRadius={55}
+                                        paddingAngle={4}
+                                        label={renderPieLabel}
+                                        labelLine
+                                      >
+                                        {durationPieData.map((entry, index) => (
+                                          <Cell
+                                            key={`duration-cell-${index}`}
+                                            fill={entry.color}
+                                            className="outline-none"
+                                          />
+                                        ))}
+                                      </Pie>
+                                      <Tooltip content={renderPieTooltip} />
+                                    </PieChart>
+                                  </ResponsiveContainer>
+                                </div>
+                              </div>
+                              <div className="mt-3 pt-3 border-t border-slate-50 text-center">
+                                <span className="text-[11px] text-slate-500 italic">Distribution by lifecycle stage</span>
+                              </div>
                             </div>
-                            <div className="rounded-lg border border-gray-100 bg-white px-3 py-3">
-                              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                                Priority
-                              </p>
-                              <div className="mt-2 h-40">
-                                <ResponsiveContainer width="100%" height="100%">
-                                  <PieChart>
-                                    <Pie
-                                      data={priorityPieData}
-                                      dataKey="value"
-                                      nameKey="name"
-                                      innerRadius={30}
-                                      outerRadius={55}
-                                      paddingAngle={2}
-                                      label={renderPieLabel}
-                                      labelLine
-                                    >
-                                      {priorityPieData.map((entry, index) => (
-                                        <Cell
-                                          key={`priority-cell-${index}`}
-                                          fill={entry.color}
-                                        />
-                                      ))}
-                                    </Pie>
-                                    <Tooltip content={renderPieTooltip} />
-                                  </PieChart>
-                                </ResponsiveContainer>
+
+                            <div className="group rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-indigo-200">
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                  A3 Status
+                                </p>
+                                <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100 transition-colors">
+                                  <Activity className="w-4 h-4" />
+                                </div>
                               </div>
-                              <p className="mt-2 text-[11px] text-gray-500">
-                                High {a3PortfolioStats.priorityCounts['High'] || 0}, Medium{' '}
-                                {a3PortfolioStats.priorityCounts['Medium'] || 0}, Low{' '}
-                                {a3PortfolioStats.priorityCounts['Low'] || 0}
-                              </p>
+                              <div className="flex flex-col items-center">
+                                <div className="h-40 w-full">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                      <Pie
+                                        data={statusPieData}
+                                        dataKey="value"
+                                        nameKey="name"
+                                        innerRadius={35}
+                                        outerRadius={55}
+                                        paddingAngle={4}
+                                        label={renderPieLabel}
+                                        labelLine
+                                      >
+                                        {statusPieData.map((entry, index) => (
+                                          <Cell
+                                            key={`status-cell-${index}`}
+                                            fill={entry.color}
+                                            className="outline-none"
+                                          />
+                                        ))}
+                                      </Pie>
+                                      <Tooltip content={renderPieTooltip} />
+                                    </PieChart>
+                                  </ResponsiveContainer>
+                                </div>
+                              </div>
+                              <div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between text-[11px]">
+                                <span className="text-slate-500">Active: <b className="text-slate-900">{a3PortfolioStats.active}</b></span>
+                                <span className="text-slate-500">Done: <b className="text-slate-900">{a3PortfolioStats.completed}</b></span>
+                              </div>
+                            </div>
+
+                            <div className="group rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-amber-200">
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                  A3 Priority
+                                </p>
+                                <div className="p-1.5 rounded-lg bg-amber-50 text-amber-600 group-hover:bg-amber-100 transition-colors">
+                                  <AlertCircle className="w-4 h-4" />
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-center">
+                                <div className="h-40 w-full">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                      <Pie
+                                        data={priorityPieData}
+                                        dataKey="value"
+                                        nameKey="name"
+                                        innerRadius={35}
+                                        outerRadius={55}
+                                        paddingAngle={4}
+                                        label={renderPieLabel}
+                                        labelLine
+                                      >
+                                        {priorityPieData.map((entry, index) => (
+                                          <Cell
+                                            key={`priority-cell-${index}`}
+                                            fill={entry.color}
+                                            className="outline-none"
+                                          />
+                                        ))}
+                                      </Pie>
+                                      <Tooltip content={renderPieTooltip} />
+                                    </PieChart>
+                                  </ResponsiveContainer>
+                                </div>
+                              </div>
+                              <div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-center gap-3 text-[10px]">
+                                <span className="px-1.5 py-0.5 rounded bg-red-50 text-red-700 font-medium">H: {a3PortfolioStats.priorityCounts['High'] || 0}</span>
+                                <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-medium">M: {a3PortfolioStats.priorityCounts['Medium'] || 0}</span>
+                                <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-medium">L: {a3PortfolioStats.priorityCounts['Low'] || 0}</span>
+                              </div>
                             </div>
                           </div>
                           {a3Timeline && (
@@ -3886,16 +4002,16 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                     View cases on a time axis, grouped by portfolio group.
                                   </p>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[11px] text-gray-500">View by</span>
-                                  <div className="inline-flex rounded-md border border-gray-200 bg-white p-0.5">
+                                <div className="flex items-center gap-3">
+                                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">View by</span>
+                                  <div className="inline-flex rounded-lg border border-slate-200 bg-slate-100/50 p-1 shadow-inner">
                                     <button
                                       type="button"
                                       className={clsx(
-                                        'px-2 py-0.5 text-[11px] rounded-sm',
+                                        'px-3 py-1 text-[11px] font-bold rounded-md transition-all duration-200',
                                         a3TimelineView === 'week'
-                                          ? 'bg-blue-600 text-white shadow-sm'
-                                          : 'text-gray-600 hover:bg-gray-50',
+                                          ? 'bg-white text-emerald-600 shadow-sm ring-1 ring-slate-200'
+                                          : 'text-slate-500 hover:text-slate-700 hover:bg-white/50',
                                       )}
                                       onClick={() => setA3TimelineView('week')}
                                     >
@@ -3904,10 +4020,10 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                     <button
                                       type="button"
                                       className={clsx(
-                                        'px-2 py-0.5 text-[11px] rounded-sm',
+                                        'px-3 py-1 text-[11px] font-bold rounded-md transition-all duration-200',
                                         a3TimelineView === 'month'
-                                          ? 'bg-blue-600 text-white shadow-sm'
-                                          : 'text-gray-600 hover:bg-gray-50',
+                                          ? 'bg-white text-emerald-600 shadow-sm ring-1 ring-slate-200'
+                                          : 'text-slate-500 hover:text-slate-700 hover:bg-white/50',
                                       )}
                                       onClick={() => setA3TimelineView('month')}
                                     >
@@ -3916,168 +4032,173 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                   </div>
                                 </div>
                               </div>
-                              <div className="mt-3 border border-gray-100 rounded-lg bg-white overflow-hidden">
-                                <div className="flex flex-col lg:flex-row">
-                                  <div
-                                    className="relative w-full lg:flex-shrink-0 border-b lg:border-b-0 lg:border-r border-gray-100 bg-gray-50/80"
-                                    style={{ width: a3TimelineSidebarWidth }}
-                                  >
-                                    <div className="h-[60px] border-b border-gray-200 bg-gray-50 flex items-center justify-between px-4 font-semibold text-xs text-gray-500 uppercase tracking-wider">
-                                      <p className="truncate">
-                                        A3 List
-                                      </p>
-                                      <span className="text-[10px] text-gray-500 font-normal">
-                                        {a3Timeline.rows.reduce(
-                                          (acc, row) => acc + row.items.length,
-                                          0,
-                                        )}{' '}
-                                        items
-                                      </span>
+                              <div className="mt-3 border border-slate-200 rounded-xl bg-white overflow-hidden shadow-sm">
+                            <div className="flex flex-col lg:flex-row">
+                              <div
+                                className="relative w-full lg:flex-shrink-0 border-b lg:border-b-0 lg:border-r border-slate-100 bg-slate-50/50 backdrop-blur-sm"
+                                style={{ width: a3TimelineSidebarWidth }}
+                              >
+                                <div className="h-[60px] border-b border-slate-200 bg-slate-100/50 flex items-center justify-between px-4 font-bold text-[11px] text-slate-500 uppercase tracking-wider">
+                                  <div className="flex items-center gap-2">
+                                    <div className="p-1 rounded bg-white shadow-sm border border-slate-200">
+                                      <FileText className="w-3 h-3 text-slate-400" />
                                     </div>
-                                    <div>
-                                      {a3Timeline.rows.length === 0 && (
-                                        <p className="px-3 py-3 text-[11px] text-gray-400 italic">
-                                          No dated cases available.
-                                        </p>
-                                      )}
-                                      {a3Timeline.rows.map(row => {
-                                        const isExpanded =
-                                          a3TimelineExpandedGroups[row.groupName] !== false;
+                                    <p className="truncate">A3 Case List</p>
+                                  </div>
+                                  <span className="text-[10px] bg-slate-200/50 px-2 py-0.5 rounded-full text-slate-600 font-medium">
+                                    {a3Timeline.rows.reduce(
+                                      (acc, row) => acc + row.items.length,
+                                      0,
+                                    )}{' '}
+                                    cases
+                                  </span>
+                                </div>
+                                <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+                                  {a3Timeline.rows.length === 0 && (
+                                    <p className="px-3 py-8 text-center text-[11px] text-slate-400 italic">
+                                      No dated cases available.
+                                    </p>
+                                  )}
+                                  {a3Timeline.rows.map(row => {
+                                    const isExpanded =
+                                      a3TimelineExpandedGroups[row.groupName] !== false;
 
-                                        return (
-                                          <div key={row.groupName} className="border-b border-gray-100">
+                                    return (
+                                      <div key={row.groupName} className="border-b border-slate-100 last:border-b-0">
+                                        <button
+                                          type="button"
+                                          className="h-[36px] w-full flex items-center justify-between px-4 bg-slate-50 hover:bg-slate-100 transition-colors text-[11px] text-slate-700 group/row"
+                                          onClick={() => {
+                                            setA3TimelineExpandedGroups(prev => ({
+                                              ...prev,
+                                              [row.groupName]: !(prev[row.groupName] !== false),
+                                            }));
+                                          }}
+                                        >
+                                          <div className="flex items-center gap-2 min-w-0">
+                                            <div className={clsx(
+                                              "transition-transform duration-200",
+                                              isExpanded ? "rotate-0" : "-rotate-90"
+                                            )}>
+                                              <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover/row:text-slate-600" />
+                                            </div>
+                                            <span className="truncate font-bold text-slate-600 uppercase tracking-wide">
+                                              {row.groupName}
+                                            </span>
+                                          </div>
+                                          <span className="ml-2 text-[10px] text-slate-400 font-medium">
+                                            {row.items.length}
+                                          </span>
+                                        </button>
+                                        {isExpanded &&
+                                          row.items.map(item => (
                                             <button
+                                              key={item.id}
                                               type="button"
-                                              className="h-[32px] w-full flex items-center justify-between px-4 bg-gray-100 hover:bg-gray-200 text-[11px] text-gray-700"
+                                              className="h-[52px] w-full flex items-center justify-between px-4 text-[11px] bg-white hover:bg-blue-50/50 transition-all border-b border-slate-50 last:border-b-0 group/item"
                                               onClick={() => {
-                                                setA3TimelineExpandedGroups(prev => ({
-                                                  ...prev,
-                                                  [row.groupName]: !(prev[row.groupName] !== false),
-                                                }));
+                                                navigate(
+                                                  `/a3-analysis/${item.id}/problem-statement`,
+                                                );
                                               }}
                                             >
-                                              <div className="flex items-center gap-1 min-w-0">
-                                                {isExpanded ? (
-                                                  <ChevronDown className="w-3 h-3 text-gray-600" />
-                                                ) : (
-                                                  <ChevronRight className="w-3 h-3 text-gray-600" />
-                                                )}
-                                                <span className="truncate font-semibold text-blue-700 uppercase tracking-wider">
-                                                  {row.groupName}
+                                              <div className="flex flex-col items-start min-w-0 pr-2">
+                                                <span className="text-slate-900 font-medium text-[11px] leading-snug truncate w-full text-left group-hover/item:text-blue-700">
+                                                  {item.title}
+                                                </span>
+                                                <span className="mt-0.5 text-[10px] text-slate-400 truncate w-full text-left flex items-center gap-1">
+                                                  <Calendar className="w-2.5 h-2.5" />
+                                                  {item.startDate && item.endDate
+                                                    ? `${item.startDate} → ${item.endDate}`
+                                                    : item.startDate || item.endDate || 'No dates'}
                                                 </span>
                                               </div>
-                                              <span className="ml-2 text-[10px] text-gray-500">
-                                                {row.items.length}
-                                              </span>
-                                            </button>
-                                            {isExpanded &&
-                                              row.items.map(item => (
-                                                <button
-                                                  key={item.id}
-                                                  type="button"
-                                                  className="h-[48px] w-full flex items-center justify-between px-4 text-[11px] bg-white hover:bg-gray-50"
-                                                  onClick={() => {
-                                                    navigate(
-                                                      `/a3-analysis/${item.id}/problem-statement`,
-                                                    );
-                                                  }}
-                                                >
-                                                  <div className="flex flex-col items-start min-w-0">
-                                                    <span className="text-gray-900 text-[11px] leading-snug truncate w-full text-left">
-                                                      {item.title}
-                                                    </span>
-                                                    <span className="mt-0.5 text-[10px] text-gray-500 truncate w-full text-left">
-                                                      {item.startDate && item.endDate
-                                                        ? `${item.startDate} → ${item.endDate}`
-                                                        : item.startDate || item.endDate || ''}
-                                                    </span>
-                                                  </div>
-                                                  <div
-                                                    className={clsx(
-                                                      'ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full border text-[10px] font-medium',
-                                                      item.status === 'Completed'
-                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                                        : item.status === 'In Progress'
-                                                        ? 'bg-blue-50 text-blue-700 border-blue-200'
-                                                        : 'bg-gray-50 text-gray-600 border-gray-200',
-                                                    )}
-                                                  >
-                                                    {item.status || 'Not Started'}
-                                                  </div>
-                                                </button>
-                                              ))}
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                    <div
-                                      className="hidden lg:block absolute top-0 right-0 h-full w-1.5 cursor-col-resize bg-transparent hover:bg-gray-200"
-                                      onMouseDown={event => {
-                                        event.preventDefault();
-                                        setIsResizingA3TimelineSidebar(true);
-                                        setA3TimelineSidebarDragStartX(event.clientX);
-                                        setA3TimelineSidebarStartWidth(a3TimelineSidebarWidth);
-                                      }}
-                                    />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex h-[60px] border-b border-gray-200 bg-gray-50">
-                                      {a3Timeline.periods.map(period => (
-                                        <div
-                                          key={period.key}
-                                          className="flex-1 flex-shrink-0 border-r border-gray-200 flex flex-col items-center justify-center overflow-hidden px-0.5"
-                                          title={period.label}
-                                        >
-                                          <span className="font-semibold text-gray-700 whitespace-nowrap text-[10px]">
-                                            {period.label}
-                                          </span>
-                                        </div>
-                                      ))}
-                                    </div>
-                                    <div className="divide-y divide-gray-100">
-                                      {a3Timeline.rows.map(row => {
-                                        const isExpanded =
-                                          a3TimelineExpandedGroups[row.groupName] !== false;
-
-                                        return (
-                                          <div key={row.groupName}>
-                                            <div className="h-[32px] border-b border-gray-100 bg-gray-50/50" />
-                                            {isExpanded && row.items.length === 0 && (
-                                              <div className="h-[48px] border-b border-gray-100 flex items-center px-3 text-[10px] text-gray-400 italic">
-                                                No dated cases in this group.
+                                              <div
+                                                className={clsx(
+                                                  'ml-2 flex-shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-md border text-[9px] font-bold uppercase tracking-tight transition-colors',
+                                                  item.status === 'Completed'
+                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-100 group-hover/item:bg-emerald-100'
+                                                    : item.status === 'In Progress'
+                                                    ? 'bg-blue-50 text-blue-700 border-blue-100 group-hover/item:bg-blue-100'
+                                                    : 'bg-slate-50 text-slate-500 border-slate-100 group-hover/item:bg-slate-100',
+                                                )}
+                                              >
+                                                {item.status || 'Draft'}
                                               </div>
-                                            )}
-                                            {isExpanded &&
-                                              row.items.map(item => (
-                                                <div
-                                                  key={item.id}
-                                                  className="h-[48px] border-b border-gray-100 relative group"
-                                                >
-                                                  <div className="absolute inset-y-2 left-0 right-0 pointer-events-none">
-                                                    <div className="flex h-full gap-px">
-                                                      {a3Timeline.periods.map(period => (
-                                                        <div
-                                                          key={period.key}
-                                                          className="flex-1 border-l border-dashed border-gray-200 last:border-r"
-                                                        />
-                                                      ))}
-                                                    </div>
-                                                  </div>
-                                                  <div className="relative h-full">
-                                                    <button
-                                                      type="button"
-                                                      className={clsx(
-                                                        'absolute top-2.5 h-7 rounded-md shadow-sm border border-opacity-20 flex items-start justify-start px-2 text-xs text-white overflow-hidden cursor-pointer z-10 transition-colors text-left',
-                                                        item.status === 'Completed'
-                                                          ? 'bg-green-500 border-green-700'
-                                                          : item.status === 'In Progress'
-                                                          ? 'bg-blue-500 border-blue-700'
-                                                          : 'bg-gray-400 border-gray-600',
-                                                      )}
-                                                      style={{
-                                                        left: `${item.left}%`,
-                                                        width: `${Math.max(item.width, 2)}%`,
-                                                        maxWidth: '100%',
+                                            </button>
+                                          ))}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                                <div
+                                  className="hidden lg:block absolute top-0 right-0 h-full w-1.5 cursor-col-resize bg-transparent hover:bg-slate-200 transition-colors"
+                                  onMouseDown={event => {
+                                    event.preventDefault();
+                                    setIsResizingA3TimelineSidebar(true);
+                                    setA3TimelineSidebarDragStartX(event.clientX);
+                                    setA3TimelineSidebarStartWidth(a3TimelineSidebarWidth);
+                                  }}
+                                />
+                              </div>
+                              <div className="flex-1 min-w-0 bg-white">
+                                <div className="flex h-[60px] border-b border-slate-200 bg-slate-50/50">
+                                  {a3Timeline.periods.map(period => (
+                                    <div
+                                      key={period.key}
+                                      className="flex-1 flex-shrink-0 border-r border-slate-100 last:border-r-0 flex flex-col items-center justify-center overflow-hidden px-1"
+                                      title={period.label}
+                                    >
+                                      <span className="font-bold text-slate-500 whitespace-nowrap text-[9px] uppercase tracking-tighter">
+                                        {period.label}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="divide-y divide-slate-50 max-h-[500px] overflow-y-auto custom-scrollbar">
+                                  {a3Timeline.rows.map(row => {
+                                    const isExpanded =
+                                      a3TimelineExpandedGroups[row.groupName] !== false;
+
+                                    return (
+                                      <div key={row.groupName}>
+                                        <div className="h-[36px] border-b border-slate-100 bg-slate-50/30" />
+                                        {isExpanded && row.items.length === 0 && (
+                                          <div className="h-[52px] border-b border-slate-100 flex items-center px-3 text-[10px] text-slate-300 italic">
+                                            -
+                                          </div>
+                                        )}
+                                        {isExpanded &&
+                                          row.items.map(item => (
+                                            <div
+                                              key={item.id}
+                                              className="h-[52px] border-b border-slate-100 relative group/track"
+                                            >
+                                              <div className="absolute inset-y-2 left-0 right-0 pointer-events-none">
+                                                <div className="flex h-full gap-px opacity-[0.03]">
+                                                  {a3Timeline.periods.map(period => (
+                                                    <div
+                                                      key={period.key}
+                                                      className="flex-1 border-l border-slate-900 last:border-r"
+                                                    />
+                                                  ))}
+                                                </div>
+                                              </div>
+                                              <div className="relative h-full">
+                                                <button
+                                                  type="button"
+                                                  className={clsx(
+                                                    'absolute top-3 h-6 rounded-lg shadow-sm border flex items-center justify-start px-2.5 text-[10px] font-bold text-white overflow-hidden cursor-pointer z-10 transition-all hover:scale-[1.02] active:scale-[0.98] text-left uppercase tracking-tight',
+                                                    item.status === 'Completed'
+                                                      ? 'bg-emerald-500 border-emerald-600 shadow-emerald-200/50 hover:bg-emerald-600'
+                                                      : item.status === 'In Progress'
+                                                      ? 'bg-blue-500 border-blue-600 shadow-blue-200/50 hover:bg-blue-600'
+                                                      : 'bg-slate-400 border-slate-500 shadow-slate-200/50 hover:bg-slate-500',
+                                                  )}
+                                                  style={{
+                                                    left: `${item.left}%`,
+                                                    width: `${Math.max(item.width, 2)}%`,
+                                                    maxWidth: '100%',
                                                       }}
                                                       onClick={() => {
                                                         navigate(
