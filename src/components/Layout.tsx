@@ -983,22 +983,34 @@ const Layout = () => {
   const pieLabelRadian = Math.PI / 180;
 
   const renderPieLabel = (props: any) => {
-    const { cx, cy, midAngle, outerRadius, name, value } = props;
-    const radius = outerRadius + 18;
+    const { cx, cy, midAngle, outerRadius, name, value, percent } = props;
+    const radius = outerRadius + 22;
     const x = cx + radius * Math.cos(-midAngle * pieLabelRadian);
     const y = cy + radius * Math.sin(-midAngle * pieLabelRadian);
 
     return (
-      <text
-        x={x}
-        y={y}
-        fill="#374151"
-        textAnchor={x > cx ? 'start' : 'end'}
-        dominantBaseline="central"
-        fontSize={10}
-      >
-        {`${name} (${value})`}
-      </text>
+      <g>
+        <text
+          x={x}
+          y={y}
+          fill="#475569"
+          textAnchor={x > cx ? 'start' : 'end'}
+          dominantBaseline="central"
+          className="text-[10px] font-bold tracking-tight"
+        >
+          {`${name}`}
+        </text>
+        <text
+          x={x}
+          y={y + 12}
+          fill="#94a3b8"
+          textAnchor={x > cx ? 'start' : 'end'}
+          dominantBaseline="central"
+          className="text-[9px] font-medium"
+        >
+          {`${value} (${(percent * 100).toFixed(0)}%)`}
+        </text>
+      </g>
     );
   };
 
@@ -1009,10 +1021,18 @@ const Layout = () => {
     const entry = payload[0];
     const name = entry.name ?? entry.payload?.name;
     const value = entry.value;
+    const color = entry.payload?.color || entry.color;
 
     return (
-      <div className="rounded border border-gray-200 bg-white px-2 py-1 text-[10px] text-gray-700 shadow-sm">
-        {`${name} (${value})`}
+      <div className="rounded-xl border border-slate-200 bg-white/95 backdrop-blur-md px-3 py-2 text-[11px] shadow-xl animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: color }} />
+          <span className="font-bold text-slate-800">{name}</span>
+        </div>
+        <div className="flex items-center justify-between gap-4 text-slate-500 font-medium">
+          <span>Count:</span>
+          <span className="text-slate-900">{value}</span>
+        </div>
       </div>
     );
   };
@@ -1532,11 +1552,18 @@ const Layout = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'all_bowlers_metrics.csv';
+    
+    // Improved filename with date
+    const dateStr = new Date().toISOString().split('T')[0];
+    link.download = `a3_bowler_export_${dateStr}.csv`;
+    
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+    
+    // Add success toast for better feedback
+    toast.success('Workspace data exported successfully');
   };
 
   const handleOneClickSummary = async () => {
@@ -2508,9 +2535,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       handleExit();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-red-600 transition-colors group"
+                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-red-600 transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center mr-3 group-hover:bg-red-50 transition-colors">
+                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center mr-3 group-hover:bg-red-50 transition-all ring-1 ring-slate-200/50 group-hover:ring-red-200/50">
                       <ExternalLink className="w-4 h-4" />
                     </div>
                     <span className="font-medium">Exit App</span>
@@ -2520,9 +2547,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       setIsImportModalOpen(true);
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-emerald-600 transition-colors group"
+                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-emerald-600 transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mr-3 group-hover:bg-emerald-100 transition-colors shadow-sm">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mr-3 group-hover:bg-emerald-100 transition-all shadow-sm ring-1 ring-emerald-200/50">
                       <Upload className="w-4 h-4" />
                     </div>
                     <div className="flex flex-col items-start">
@@ -2535,9 +2562,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       handleDownloadAllCSV();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-blue-600 transition-colors group"
+                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-blue-600 transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3 group-hover:bg-blue-100 transition-colors shadow-sm">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3 group-hover:bg-blue-100 transition-all shadow-sm ring-1 ring-blue-200/50">
                       <Download className="w-4 h-4" />
                     </div>
                     <div className="flex flex-col items-start">
@@ -2550,9 +2577,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       setIsDataChartingOpen(true);
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors group"
+                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3 group-hover:bg-indigo-100 transition-colors shadow-sm">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3 group-hover:bg-indigo-100 transition-all shadow-sm ring-1 ring-indigo-200/50">
                       <Activity className="w-4 h-4" />
                     </div>
                     <div className="flex flex-col items-start">
@@ -2566,9 +2593,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                         setIsAdminPanelOpen(true);
                         setIsMobileMenuOpen(false);
                       }}
-                      className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-slate-900 transition-colors group"
+                      className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-slate-900 transition-all group"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center mr-3 group-hover:bg-slate-100 transition-colors">
+                      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center mr-3 group-hover:bg-slate-100 transition-all ring-1 ring-slate-200/50">
                         <Users className="w-4 h-4" />
                       </div>
                       <span className="font-medium">User Mgmt</span>
@@ -2579,9 +2606,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       handleOpenConsolidateModal();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-purple-600 transition-colors group"
+                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-purple-600 transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mr-3 group-hover:bg-purple-100 transition-colors shadow-sm">
+                    <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mr-3 group-hover:bg-purple-100 transition-all shadow-sm ring-1 ring-purple-200/50">
                       <Combine className="w-4 h-4" />
                     </div>
                     <div className="flex flex-col items-start">
@@ -2595,9 +2622,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       setIsMobileMenuOpen(false);
                       await handleOpenAllA3Modal();
                     }}
-                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-slate-900 transition-colors group"
+                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-slate-900 transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center mr-3 group-hover:bg-slate-100 transition-colors">
+                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center mr-3 group-hover:bg-slate-100 transition-all shadow-sm ring-1 ring-slate-200/50">
                       <FileText className="w-4 h-4" />
                     </div>
                     <span className="font-medium">All A3 Cases</span>
@@ -2608,9 +2635,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       setIsEmailSettingsOpen(true);
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-rose-600 transition-colors group"
+                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-rose-600 transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center mr-3 group-hover:bg-rose-100 transition-colors shadow-sm">
+                    <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center mr-3 group-hover:bg-rose-100 transition-all shadow-sm ring-1 ring-rose-200/50">
                       <Mail className="w-4 h-4" />
                     </div>
                     <div className="flex flex-col items-start">
@@ -2623,9 +2650,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       setIsAIChatOpen(true);
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors group"
+                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3 group-hover:bg-indigo-100 transition-colors shadow-sm">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3 group-hover:bg-indigo-100 transition-all shadow-sm ring-1 ring-indigo-200/50">
                       <Sparkles className="w-4 h-4" />
                     </div>
                     <div className="flex flex-col items-start">
@@ -2638,9 +2665,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       navigate('/mindmap');
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-amber-600 transition-colors group"
+                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-amber-600 transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center mr-3 group-hover:bg-amber-100 transition-colors shadow-sm">
+                    <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center mr-3 group-hover:bg-amber-100 transition-all shadow-sm ring-1 ring-amber-200/50">
                       <Lightbulb className="w-4 h-4" />
                     </div>
                     <div className="flex flex-col items-start">
@@ -2656,9 +2683,9 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                         setIsMobileMenuOpen(false);
                       }}
                       disabled={isSaving}
-                      className="flex w-full items-center px-3 py-2 text-sm text-emerald-600 rounded-lg hover:bg-emerald-50 transition-colors group disabled:opacity-50"
+                      className="flex w-full items-center px-3 py-2 text-sm text-emerald-600 rounded-lg hover:bg-emerald-50 transition-all group disabled:opacity-50"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center mr-3 group-hover:bg-emerald-100 transition-colors">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center mr-3 group-hover:bg-emerald-100 transition-colors shadow-sm ring-1 ring-emerald-100/50">
                         {isSaving ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
@@ -3893,10 +3920,10 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                           <div className="mt-2 pt-4 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                             <div className="group rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-emerald-200">
                               <div className="flex items-center justify-between mb-2">
-                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                                   Metric A3 Coverage
                                 </p>
-                                <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100 transition-colors">
+                                <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100 transition-colors shadow-sm ring-1 ring-emerald-100/50">
                                   <PieChartIcon className="w-4 h-4" />
                                 </div>
                               </div>
@@ -3908,17 +3935,18 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                         data={metricA3Coverage.pieData}
                                         dataKey="value"
                                         nameKey="name"
-                                        innerRadius={35}
-                                        outerRadius={55}
-                                        paddingAngle={4}
+                                        innerRadius={38}
+                                        outerRadius={58}
+                                        paddingAngle={5}
                                         label={renderPieLabel}
-                                        labelLine
+                                        labelLine={false}
+                                        stroke="none"
                                       >
                                         {metricA3Coverage.pieData.map((entry, index) => (
                                           <Cell
                                             key={`metric-coverage-cell-${index}`}
                                             fill={entry.color}
-                                            className="outline-none"
+                                            className="outline-none transition-opacity hover:opacity-80"
                                           />
                                         ))}
                                       </Pie>
@@ -3928,10 +3956,10 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                 </div>
                               </div>
                               <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-gray-500">
-                                <label className="inline-flex items-center gap-1 cursor-pointer group/label">
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer group/label">
                                   <input
                                     type="checkbox"
-                                    className="h-3 w-3 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500/20"
+                                    className="h-3.5 w-3.5 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500/20 transition-all cursor-pointer"
                                     checked={a3LowPerfRule.latestFail}
                                     onChange={e =>
                                       setA3LowPerfRule({
@@ -3940,12 +3968,12 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                       })
                                     }
                                   />
-                                  <span className="group-hover/label:text-slate-900 transition-colors">Latest fail</span>
+                                  <span className="group-hover/label:text-slate-900 transition-colors font-medium">Latest fail</span>
                                 </label>
-                                <label className="inline-flex items-center gap-1 cursor-pointer group/label">
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer group/label">
                                   <input
                                     type="checkbox"
-                                    className="h-3 w-3 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500/20"
+                                    className="h-3.5 w-3.5 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500/20 transition-all cursor-pointer"
                                     checked={a3LowPerfRule.fail2}
                                     onChange={e =>
                                       setA3LowPerfRule({
@@ -3954,12 +3982,12 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                       })
                                     }
                                   />
-                                  <span className="group-hover/label:text-slate-900 transition-colors">Fail 2m</span>
+                                  <span className="group-hover/label:text-slate-900 transition-colors font-medium">Fail 2m</span>
                                 </label>
-                                <label className="inline-flex items-center gap-1 cursor-pointer group/label">
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer group/label">
                                   <input
                                     type="checkbox"
-                                    className="h-3 w-3 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500/20"
+                                    className="h-3.5 w-3.5 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500/20 transition-all cursor-pointer"
                                     checked={a3LowPerfRule.fail3}
                                     onChange={e =>
                                       setA3LowPerfRule({
@@ -3968,27 +3996,27 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                       })
                                     }
                                   />
-                                  <span className="group-hover/label:text-slate-900 transition-colors">Fail 3m</span>
+                                  <span className="group-hover/label:text-slate-900 transition-colors font-medium">Fail 3m</span>
                                 </label>
                               </div>
-                              <div className="mt-3 pt-3 border-t border-slate-50 flex flex-col gap-1 text-[11px]">
+                              <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col gap-1.5 text-[11px]">
                                 <div className="flex items-center justify-between">
-                                  <span className="text-slate-500">At-risk:</span>
-                                  <b className="text-slate-900">{metricA3Coverage.totalAtRisk}</b>
+                                  <span className="text-slate-500 font-medium">At-risk:</span>
+                                  <b className="text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded shadow-sm">{metricA3Coverage.totalAtRisk}</b>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                  <span className="text-slate-500">With A3:</span>
-                                  <b className="text-emerald-600">{metricA3Coverage.withA3}</b>
+                                  <span className="text-slate-500 font-medium">With A3:</span>
+                                  <b className="text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded shadow-sm ring-1 ring-emerald-100/50">{metricA3Coverage.withA3}</b>
                                 </div>
                               </div>
                             </div>
 
                             <div className="group rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-blue-200">
                               <div className="flex items-center justify-between mb-2">
-                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                                   A3 Duration
                                 </p>
-                                <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors">
+                                <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors shadow-sm ring-1 ring-blue-100/50">
                                   <Clock3 className="w-4 h-4" />
                                 </div>
                               </div>
@@ -4000,17 +4028,18 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                         data={durationPieData}
                                         dataKey="value"
                                         nameKey="name"
-                                        innerRadius={35}
-                                        outerRadius={55}
-                                        paddingAngle={4}
+                                        innerRadius={38}
+                                        outerRadius={58}
+                                        paddingAngle={5}
                                         label={renderPieLabel}
-                                        labelLine
+                                        labelLine={false}
+                                        stroke="none"
                                       >
                                         {durationPieData.map((entry, index) => (
                                           <Cell
                                             key={`duration-cell-${index}`}
                                             fill={entry.color}
-                                            className="outline-none"
+                                            className="outline-none transition-opacity hover:opacity-80"
                                           />
                                         ))}
                                       </Pie>
@@ -4019,17 +4048,17 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                   </ResponsiveContainer>
                                 </div>
                               </div>
-                              <div className="mt-3 pt-3 border-t border-slate-50 text-center">
-                                <span className="text-[11px] text-slate-500 italic">Distribution by lifecycle stage</span>
+                              <div className="mt-4 pt-3 border-t border-slate-100 text-center">
+                                <span className="text-[10px] font-medium text-slate-400 italic px-2 py-0.5 bg-slate-50 rounded-full border border-slate-100">Distribution by lifecycle stage</span>
                               </div>
                             </div>
 
                             <div className="group rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-indigo-200">
                               <div className="flex items-center justify-between mb-2">
-                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                                   A3 Status
                                 </p>
-                                <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100 transition-colors">
+                                <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100 transition-colors shadow-sm ring-1 ring-indigo-100/50">
                                   <Activity className="w-4 h-4" />
                                 </div>
                               </div>
@@ -4041,17 +4070,18 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                         data={statusPieData}
                                         dataKey="value"
                                         nameKey="name"
-                                        innerRadius={35}
-                                        outerRadius={55}
-                                        paddingAngle={4}
+                                        innerRadius={38}
+                                        outerRadius={58}
+                                        paddingAngle={5}
                                         label={renderPieLabel}
-                                        labelLine
+                                        labelLine={false}
+                                        stroke="none"
                                       >
                                         {statusPieData.map((entry, index) => (
                                           <Cell
                                             key={`status-cell-${index}`}
                                             fill={entry.color}
-                                            className="outline-none"
+                                            className="outline-none transition-opacity hover:opacity-80"
                                           />
                                         ))}
                                       </Pie>
@@ -4060,18 +4090,18 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                   </ResponsiveContainer>
                                 </div>
                               </div>
-                              <div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between text-[11px]">
-                                <span className="text-slate-500">Active: <b className="text-slate-900">{a3PortfolioStats.active}</b></span>
-                                <span className="text-slate-500">Done: <b className="text-slate-900">{a3PortfolioStats.completed}</b></span>
+                              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                                <span className="text-slate-500 font-medium">Active: <b className="text-slate-900 bg-slate-100 px-2 py-0.5 rounded shadow-sm">{a3PortfolioStats.active}</b></span>
+                                <span className="text-slate-500 font-medium">Done: <b className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded shadow-sm ring-1 ring-indigo-100/50">{a3PortfolioStats.completed}</b></span>
                               </div>
                             </div>
 
                             <div className="group rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-amber-200">
                               <div className="flex items-center justify-between mb-2">
-                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                                   A3 Priority
                                 </p>
-                                <div className="p-1.5 rounded-lg bg-amber-50 text-amber-600 group-hover:bg-amber-100 transition-colors">
+                                <div className="p-1.5 rounded-lg bg-amber-50 text-amber-600 group-hover:bg-amber-100 transition-colors shadow-sm ring-1 ring-amber-100/50">
                                   <AlertCircle className="w-4 h-4" />
                                 </div>
                               </div>
@@ -4083,17 +4113,18 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                         data={priorityPieData}
                                         dataKey="value"
                                         nameKey="name"
-                                        innerRadius={35}
-                                        outerRadius={55}
-                                        paddingAngle={4}
+                                        innerRadius={38}
+                                        outerRadius={58}
+                                        paddingAngle={5}
                                         label={renderPieLabel}
-                                        labelLine
+                                        labelLine={false}
+                                        stroke="none"
                                       >
                                         {priorityPieData.map((entry, index) => (
                                           <Cell
                                             key={`priority-cell-${index}`}
                                             fill={entry.color}
-                                            className="outline-none"
+                                            className="outline-none transition-opacity hover:opacity-80"
                                           />
                                         ))}
                                       </Pie>
@@ -4102,10 +4133,10 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                   </ResponsiveContainer>
                                 </div>
                               </div>
-                              <div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-center gap-3 text-[10px]">
-                                <span className="px-1.5 py-0.5 rounded bg-red-50 text-red-700 font-medium">H: {a3PortfolioStats.priorityCounts['High'] || 0}</span>
-                                <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-medium">M: {a3PortfolioStats.priorityCounts['Medium'] || 0}</span>
-                                <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-medium">L: {a3PortfolioStats.priorityCounts['Low'] || 0}</span>
+                              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-center gap-3 text-[10px]">
+                                <span className="px-2 py-0.5 rounded-md bg-red-50 text-red-700 font-bold shadow-sm ring-1 ring-red-100/50">H: {a3PortfolioStats.priorityCounts['High'] || 0}</span>
+                                <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 font-bold shadow-sm ring-1 ring-amber-100/50">M: {a3PortfolioStats.priorityCounts['Medium'] || 0}</span>
+                                <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-bold shadow-sm ring-1 ring-blue-100/50">L: {a3PortfolioStats.priorityCounts['Low'] || 0}</span>
                               </div>
                             </div>
                           </div>

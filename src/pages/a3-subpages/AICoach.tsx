@@ -199,7 +199,7 @@ Keep your answers specific, practical, and focused on this A3 only.`,
   }
 
   return (
-    <div className="flex flex-col h-full min-h-[500px] space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-7xl mx-auto flex flex-col h-full min-h-[500px] space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex-1 flex flex-col rounded-2xl border border-slate-200 bg-slate-50/30 overflow-hidden shadow-sm">
         <div className="flex-1 p-6 overflow-y-auto space-y-4">
           {messages.map((msg, idx) => (

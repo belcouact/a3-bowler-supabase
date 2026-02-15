@@ -740,7 +740,7 @@ Return JSON ONLY with this structure:
 
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="max-w-7xl mx-auto flex flex-col h-full bg-slate-50 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header Controls */}
       <div className="flex justify-between items-center p-4 border-b border-brand-100 bg-white/80 backdrop-blur-md z-20 sticky left-0">
         <div className="flex items-center gap-6">

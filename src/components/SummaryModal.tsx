@@ -1,8 +1,9 @@
 import React from 'react';
-import { X, Download, Copy, Sparkles, TrendingUp, AlertTriangle, Target, Activity, ArrowRight } from 'lucide-react';
+import { X, Download, Copy, Sparkles, TrendingUp, AlertTriangle, Target, Activity, ArrowRight, FileText, CheckCircle2 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { GroupPerformanceRow } from '../types';
+import { clsx } from 'clsx';
 
 interface SummaryModalProps {
   isOpen: boolean;
@@ -119,68 +120,75 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
       const a3Summary =
         parsedData.a3Summary && parsedData.a3Summary.trim() !== ''
           ? `<section class="card card-a3">
-  <h2 class="card-title">A3 Problem Solving Summary</h2>
-  <p>${escapeHtml(parsedData.a3Summary)}</p>
+  <h2 class="card-title">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="title-icon"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+    A3 Problem Solving Summary
+  </h2>
+  <p class="content-text">${escapeHtml(parsedData.a3Summary)}</p>
 </section>`
           : '';
 
       const statsTableHtml =
         groupPerformanceTableData.length > 0
           ? `<section class="card card-stats">
-  <h2 class="card-title">Portfolio Statistical Table</h2>
+  <h2 class="card-title">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="title-icon"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    Portfolio Statistical Table
+  </h2>
   <div class="table-wrapper">
     <table class="stats-table">
       <thead>
         <tr>
           <th>Group</th>
           <th>Metric</th>
-          <th>Latest month</th>
-          <th>Last 2 months</th>
-          <th>Last 3 months</th>
-          <th>Linked A3s</th>
-          <th>Overall target achieving %</th>
+          <th class="text-center">Latest</th>
+          <th class="text-center">Fail 2m</th>
+          <th class="text-center">Fail 3m</th>
+          <th class="text-center">A3s</th>
+          <th class="text-right">Achieve %</th>
         </tr>
       </thead>
       <tbody>
         ${groupPerformanceTableData
           .map(
-            row => `<tr>
-          <td>${escapeHtml(row.groupName)}</td>
-          <td>${escapeHtml(row.metricName)}</td>
-          <td>${
+            row => {
+              const isAtRisk = row.fail2 || row.fail3;
+              return `<tr>
+          <td class="font-medium">${escapeHtml(row.groupName)}</td>
+          <td class="text-muted">${escapeHtml(row.metricName)}</td>
+          <td class="text-center">${
             row.latestMet === null || !row.latestActual
-              ? '—'
+              ? '<span class="empty-val">—</span>'
               : `<span class="status-pill ${
                   row.latestMet === false ? 'status-fail' : 'status-ok'
                 }">${escapeHtml(row.latestActual)}</span>`
           }</td>
-          <td>${
+          <td class="text-center">${
             row.fail2
-              ? '<span class="status-pill status-warn"><span class="status-dot"></span>Failing</span>'
-              : '—'
+              ? '<span class="status-badge status-warn">FAIL</span>'
+              : '<span class="empty-val">—</span>'
           }</td>
-          <td>${
+          <td class="text-center">${
             row.fail3
-              ? '<span class="status-pill status-fail"><span class="status-dot"></span>Failing</span>'
-              : '—'
+              ? '<span class="status-badge status-fail">CRITICAL</span>'
+              : '<span class="empty-val">—</span>'
           }</td>
-          <td>${
-            row.fail2 || row.fail3
-              ? row.linkedA3Count === 0
-                ? '<span class="circle-badge circle-badge-fail">0</span>'
-                : `<span class="circle-badge circle-badge-ok">${row.linkedA3Count}</span>`
-              : '—'
+          <td class="text-center">${
+            isAtRisk
+              ? `<span class="circle-badge ${row.linkedA3Count === 0 ? 'circle-badge-fail' : 'circle-badge-ok'}">${row.linkedA3Count}</span>`
+              : '<span class="empty-val">—</span>'
           }</td>
-          <td>${
+          <td class="text-right">${
             row.achievementRate != null
               ? `<span class="status-pill ${
                   row.achievementRate < (2 / 3) * 100
                     ? 'status-fail'
                     : 'status-ok'
                 }">${row.achievementRate.toFixed(0)}%</span>`
-              : '—'
+              : '<span class="empty-val">—</span>'
           }</td>
-        </tr>`,
+        </tr>`;
+            }
           )
           .join('')}
       </tbody>
@@ -198,292 +206,339 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
     <span class="concern-metric">${escapeHtml(area.metricName)}</span>
     <span class="concern-group">${escapeHtml(area.groupName)}</span>
   </div>
-  <p class="concern-issue">${escapeHtml(area.issue)}</p>
-  <p class="concern-suggestion">${escapeHtml(area.suggestion)}</p>
+  <div class="concern-body">
+    <p class="concern-issue">
+      <span class="concern-icon">⚠️</span>
+      ${escapeHtml(area.issue)}
+    </p>
+    <div class="concern-suggestion">
+      <div class="suggestion-header">RECOMMENDATION</div>
+      <p>${escapeHtml(area.suggestion)}</p>
+    </div>
+  </div>
 </div>`
               )
               .join('')
-          : '<p class="empty-text">No major areas of concern identified. Keep up the good work!</p>';
+          : '<div class="empty-state">No major areas of concern identified. Keep up the good work!</div>';
 
       html = `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Smart Summary & Insights</title>
+  <title>A3 Bowler - Smart Summary & Insights</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
-      --bg: #f3f4f6;
-      --card-bg: #ffffff;
       --primary: #4f46e5;
-      --primary-soft: #eef2ff;
-      --border-subtle: #e5e7eb;
-      --text-main: #111827;
-      --text-muted: #6b7280;
-      --danger: #b91c1c;
+      --primary-dark: #4338ca;
+      --primary-light: #eef2ff;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
+      --border: #e2e8f0;
+      --success: #10b981;
+      --success-bg: #ecfdf5;
+      --warning: #f59e0b;
+      --warning-bg: #fffbeb;
+      --danger: #ef4444;
+      --danger-bg: #fef2f2;
     }
+    
     * { box-sizing: border-box; }
+    
     body {
       margin: 0;
-      padding: 24px;
+      padding: 40px 20px;
       background: var(--bg);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
       color: var(--text-main);
+      line-height: 1.5;
     }
-    .summary-root {
-      max-width: 1100px;
+    
+    .container {
+      max-width: 1000px;
       margin: 0 auto;
     }
-    .summary-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 20px;
-      border-radius: 16px;
-      background: linear-gradient(90deg, #eef2ff, #ffffff);
-      border: 1px solid #e0e7ff;
-      margin-bottom: 20px;
+    
+    .header {
+      margin-bottom: 40px;
+      text-align: center;
     }
-    .summary-title {
-      font-size: 18px;
-      font-weight: 700;
+    
+    .header h1 {
+      font-size: 32px;
+      font-weight: 800;
+      margin: 0 0 8px 0;
+      letter-spacing: -0.025em;
+      color: var(--text-main);
+    }
+    
+    .header p {
+      color: var(--text-muted);
+      font-size: 16px;
       margin: 0;
     }
-    .summary-tag {
-      display: inline-flex;
-      align-items: center;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: #ecfdf3;
-      color: #166534;
-      border: 1px solid #bbf7d0;
-      font-size: 11px;
-      font-weight: 500;
-      margin-top: 4px;
-    }
-    .summary-tag span {
-      margin-left: 4px;
-    }
+    
     .card {
       background: var(--card-bg);
-      border-radius: 16px;
-      border: 1px solid var(--border-subtle);
-      padding: 20px 24px;
-      margin-bottom: 20px;
-      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      padding: 32px;
+      margin-bottom: 32px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     }
+    
     .card-executive {
-      background: linear-gradient(135deg, #eef2ff, #ffffff);
-      border-color: #e0e7ff;
+      background: linear-gradient(135deg, var(--primary-light), #ffffff);
+      border-color: #c7d2fe;
     }
-    .card-a3 {
-      background: linear-gradient(135deg, #eff6ff, #ffffff);
-      border-color: #bfdbfe;
-    }
+    
     .card-title {
-      margin: 0 0 12px 0;
-      font-size: 16px;
+      display: flex;
+      align-items: center;
+      margin: 0 0 20px 0;
+      font-size: 20px;
       font-weight: 700;
+      color: var(--text-main);
+    }
+    
+    .title-icon {
+      margin-right: 12px;
       color: var(--primary);
     }
-    .card p {
+    
+    .executive-text {
+      font-size: 18px;
+      color: var(--text-main);
+      font-style: italic;
+      border-left: 4px solid var(--primary);
+      padding-left: 20px;
       margin: 0;
-      font-size: 14px;
-      line-height: 1.6;
+    }
+    
+    .content-text {
       color: var(--text-muted);
-    }
-    .grid-2 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-    .group-title {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #6b7280;
-      padding-bottom: 4px;
-      margin-bottom: 8px;
-      border-bottom: 1px solid #f3f4f6;
-    }
-    .metrics-list,
-    .metrics-trend-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .metric-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 13px;
-    }
-    .metric-name {
-      color: #374151;
-      font-weight: 500;
-      margin-right: 8px;
-    }
-    .metric-value {
-      font-size: 12px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: #f9fafb;
-      color: #4b5563;
-      white-space: nowrap;
-    }
-    .metric-trend {
-      color: #7c3aed;
-    }
-    .card-concerns {
-      background: #fef2f2;
-      border-color: #fecaca;
-    }
-    .concern-card {
-      background: #ffffff;
-      border-radius: 12px;
-      border: 1px solid #fee2e2;
-      padding: 12px 14px;
-      margin-bottom: 10px;
-    }
-    .concern-header {
-      display: flex;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-    .concern-metric {
-      font-size: 13px;
-      font-weight: 700;
-      margin-right: 6px;
-      color: #111827;
-    }
-    .concern-group {
-      font-size: 11px;
-      padding: 2px 6px;
-      border-radius: 999px;
-      background: #f3f4f6;
-      color: #4b5563;
-    }
-    .concern-issue {
-      font-size: 13px;
-      color: var(--danger);
-      font-weight: 500;
-      margin: 0 0 4px 0;
-    }
-    .concern-suggestion {
-      font-size: 13px;
-      color: #4b5563;
+      font-size: 16px;
       margin: 0;
-      font-style: italic;
     }
-    .empty-text {
-      font-size: 13px;
-      color: #9ca3af;
-      font-style: italic;
-    }
+    
     .table-wrapper {
       overflow-x: auto;
       margin-top: 8px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
     }
+    
     .stats-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 12px;
+      font-size: 14px;
     }
-    .stats-table th,
-    .stats-table td {
-      padding: 8px 10px;
-      border-bottom: 1px solid #e5e7eb;
+    
+    .stats-table th {
+      background: #f1f5f9;
+      padding: 12px 16px;
       text-align: left;
-    }
-    .stats-table thead th {
-      background: #f9fafb;
       font-weight: 600;
-      color: #4b5563;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.05em;
     }
+    
+    .stats-table td {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .stats-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    .text-center { text-align: center !important; }
+    .text-right { text-align: right !important; }
+    .font-medium { font-weight: 600; }
+    .text-muted { color: var(--text-muted); }
+    .empty-val { color: var(--text-light); }
+    
     .status-pill {
       display: inline-flex;
       align-items: center;
-      padding: 2px 8px;
+      padding: 4px 12px;
       border-radius: 999px;
-      font-size: 11px;
-      font-weight: 500;
-      border: 1px solid transparent;
+      font-size: 12px;
+      font-weight: 700;
     }
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      margin-right: 4px;
-      background: currentColor;
-    }
+    
     .status-ok {
-      background: #ecfdf3;
-      color: #166534;
-      border-color: #bbf7d0;
+      background: var(--success-bg);
+      color: var(--success);
     }
+    
     .status-fail {
-      background: #fef2f2;
-      color: #b91c1c;
-      border-color: #fecaca;
+      background: var(--danger-bg);
+      color: var(--danger);
     }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 800;
+    }
+    
     .status-warn {
-      background: #fffbeb;
-      color: #92400e;
-      border-color: #fed7aa;
+      background: var(--warning-bg);
+      color: var(--warning);
     }
+    
     .circle-badge {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       width: 28px;
       height: 28px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 600;
-      border: 1px solid transparent;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 700;
     }
+    
     .circle-badge-ok {
-      background: #ecfdf3;
-      color: #166534;
-      border-color: #bbf7d0;
+      background: var(--success-bg);
+      color: var(--success);
+      border: 1px solid #bbf7d0;
     }
+    
     .circle-badge-fail {
-      background: #fef2f2;
-      color: #b91c1c;
-      border-color: #fecaca;
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid #fecaca;
     }
-    @media (max-width: 640px) {
-      body { padding: 16px; }
-      .summary-header { flex-direction: column; align-items: flex-start; }
+    
+    .concern-card {
+      background: #ffffff;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 20px;
+      margin-bottom: 16px;
+      transition: transform 0.2s;
+    }
+    
+    .concern-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .concern-metric {
+      font-weight: 700;
+      font-size: 16px;
+    }
+    
+    .concern-group {
+      font-size: 11px;
+      font-weight: 700;
+      background: #f1f5f9;
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+    
+    .concern-issue {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--danger);
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: flex-start;
+    }
+    
+    .concern-icon {
+      margin-right: 8px;
+    }
+    
+    .concern-suggestion {
+      background: var(--success-bg);
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid #d1fae5;
+    }
+    
+    .suggestion-header {
+      font-size: 10px;
+      font-weight: 800;
+      color: #065f46;
+      margin-bottom: 4px;
+      letter-spacing: 0.05em;
+    }
+    
+    .concern-suggestion p {
+      margin: 0;
+      font-size: 14px;
+      color: #065f46;
+      font-style: italic;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-light);
+      font-style: italic;
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      color: var(--text-light);
+      font-size: 12px;
+    }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .card { box-shadow: none; border: 1px solid #eee; break-inside: avoid; }
+      .container { max-width: 100%; }
     }
   </style>
 </head>
 <body>
-  <div class="summary-root">
-    <header class="summary-header">
-      <div>
-        <h1 class="summary-title">Smart Summary & Insights</h1>
-        <div class="summary-tag">
-          <span>Consecutive Failing Metrics Focus</span>
-        </div>
-      </div>
+  <div class="container">
+    <header class="header">
+      <h1>A3 Bowler Summary</h1>
+      <p>Intelligent insights and performance report</p>
     </header>
 
     <section class="card card-executive">
-      <h2 class="card-title">Executive Overview</h2>
-      <p>${executive}</p>
+      <h2 class="card-title">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="title-icon"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        Executive Overview
+      </h2>
+      <p class="executive-text">${executive}</p>
     </section>
 
     ${statsTableHtml}
 
     ${a3Summary}
 
-    <section class="card card-concerns">
-      <h2 class="card-title">Areas of Concern & Recommendations</h2>
+    <section class="card">
+      <h2 class="card-title">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="title-icon"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Areas of Concern & Recommendations
+      </h2>
       ${concernsHtml}
     </section>
+    
+    <footer class="footer">
+      Generated on ${new Date().toLocaleDateString()} by A3 Bowler AI • Workspace Insights Report
+    </footer>
   </div>
 </body>
 </html>`;
@@ -498,21 +553,21 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
   <style>
     body {
       margin: 0;
-      padding: 24px;
-      background: #f3f4f6;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: #111827;
+      padding: 40px 20px;
+      background: #f8fafc;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      color: #0f172a;
     }
     .card {
-      max-width: 900px;
+      max-width: 800px;
       margin: 0 auto;
       background: #ffffff;
-      border-radius: 16px;
-      border: 1px solid #e5e7eb;
-      padding: 20px 24px;
-      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+      border-radius: 24px;
+      border: 1px solid #e2e8f0;
+      padding: 40px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
       white-space: pre-wrap;
-      font-size: 14px;
+      font-size: 16px;
       line-height: 1.6;
     }
   </style>
@@ -527,14 +582,14 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `metric_bowler_summary_${new Date()
+    link.download = `a3_bowler_summary_${new Date()
       .toISOString()
       .split('T')[0]}.html`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast.success('HTML downloaded!');
+    toast.success('Professional report downloaded successfully!');
   };
 
   return (
@@ -585,7 +640,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
           </div>
 
           {/* Content */}
-          <div className="px-4 py-5 sm:p-6 bg-white overflow-y-auto custom-scrollbar flex-1">
+          <div className="px-4 py-5 sm:p-8 bg-white overflow-y-auto custom-scrollbar flex-1 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center h-full py-16 space-y-8">
                     <div className="relative w-32 h-32">
@@ -622,133 +677,122 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
                     </div>
                 </div>
             ) : isJson && parsedData ? (
-                <div className="space-y-8">
-                    <div className="bg-gradient-to-br from-indigo-50 to-white p-6 rounded-xl border border-indigo-100 shadow-sm">
-                        <h4 className="text-lg font-semibold text-indigo-900 mb-3 flex items-center">
-                            <Target className="w-5 h-5 mr-2 text-indigo-600" />
+                <div className="space-y-10 max-w-5xl mx-auto">
+                    {/* Executive Summary Card */}
+                    <div className="relative group overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-white p-6 sm:p-8 rounded-2xl border border-indigo-100 shadow-sm hover:shadow-md transition-all duration-300">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <Target className="w-24 h-24 text-indigo-600 -mr-8 -mt-8 rotate-12" />
+                        </div>
+                        <h4 className="text-xl font-bold text-indigo-900 mb-4 flex items-center">
+                            <Target className="w-6 h-6 mr-3 text-indigo-600" />
                             Executive Overview
                         </h4>
-                        <p className="text-gray-700 leading-relaxed text-sm md:text-base">
-                            {parsedData.executiveSummary}
-                        </p>
+                        <div className="prose prose-indigo max-w-none">
+                            <p className="text-gray-700 leading-relaxed text-base md:text-lg font-medium italic border-l-4 border-indigo-200 pl-4 py-1">
+                                {parsedData.executiveSummary}
+                            </p>
+                        </div>
                     </div>
 
+                    {/* Stats Table Section */}
                     {hasStats && (
-                      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-                          <h4 className="text-base font-semibold text-gray-800 flex items-center">
-                            <Activity className="w-4 h-4 mr-2 text-blue-600" />
+                      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
+                        <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <h4 className="text-lg font-bold text-gray-800 flex items-center">
+                            <Activity className="w-5 h-5 mr-2 text-blue-600" />
                             Portfolio Statistical Table
                           </h4>
-                          <span className="text-[11px] text-gray-500">
-                            Latest month, consecutive fails, and achievement %
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                            Performance Insights
                           </span>
                         </div>
-                        <div className="p-4">
-                          <div className="overflow-x-auto">
-                            <table className="min-w-full text-xs md:text-sm">
-                              <thead className="bg-gray-50">
-                                <tr>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
-                                    Group
-                                  </th>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
-                                    Metric
-                                  </th>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
-                                    Latest month
-                                  </th>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
-                                    Last 2 months
-                                  </th>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
-                                    Last 3 months
-                                  </th>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
-                                    Linked A3s
-                                  </th>
-                                  <th className="px-3 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">
-                                    Overall target achieving %
-                                  </th>
+                        <div className="p-0 sm:p-4">
+                          <div className="overflow-x-auto custom-scrollbar">
+                            <table className="min-w-full text-sm">
+                              <thead>
+                                <tr className="bg-gray-50/80">
+                                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Group</th>
+                                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Metric</th>
+                                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Latest</th>
+                                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Fail 2m</th>
+                                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Fail 3m</th>
+                                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider text-center">A3s</th>
+                                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Achieve %</th>
                                 </tr>
                               </thead>
-                              <tbody>
+                              <tbody className="divide-y divide-gray-100 bg-white">
                                 {groupPerformanceTableData.map(row => {
                                   const isAtRisk = row.fail2 || row.fail3;
 
                                   return (
-                                    <tr key={row.metricId} className="border-b border-gray-100 last:border-0">
-                                      <td className="px-3 py-2 text-gray-700">
-                                        {row.groupName}
+                                    <tr key={row.metricId} className="hover:bg-gray-50/50 transition-colors">
+                                      <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{row.groupName}</td>
+                                      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{row.metricName}</td>
+                                      <td className="px-4 py-3 text-center">
+                                        {row.latestMet === null || !row.latestActual ? (
+                                          <span className="text-gray-300">—</span>
+                                        ) : (
+                                          <span className={clsx(
+                                            "inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border shadow-sm",
+                                            row.latestMet === false
+                                              ? "bg-red-50 text-red-700 border-red-200"
+                                              : "bg-green-50 text-green-700 border-green-200"
+                                          )}>
+                                            {row.latestActual}
+                                          </span>
+                                        )}
                                       </td>
-                                      <td className="px-3 py-2 text-gray-700">
-                                        {row.metricName}
-                                      </td>
-                                    <td className="px-3 py-2 text-gray-700">
-                                      {row.latestMet === null || !row.latestActual ? (
-                                        <span>—</span>
-                                      ) : (
-                                        <span
-                                          className={
-                                            'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ' +
-                                            (row.latestMet === false
-                                              ? 'bg-red-50 text-red-700 border-red-200'
-                                              : 'bg-green-50 text-green-700 border-green-200')
-                                          }
-                                        >
-                                          {row.latestActual}
-                                        </span>
-                                      )}
-                                    </td>
-                                      <td className="px-3 py-2 text-gray-700">
+                                      <td className="px-4 py-3 text-center">
                                         {row.fail2 ? (
-                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">
-                                            <span className="mr-1 h-1.5 w-1.5 rounded-full bg-amber-500" />
-                                            Failing
-                                          </span>
+                                          <div className="flex justify-center">
+                                            <span className="flex items-center px-2 py-1 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">
+                                              FAIL
+                                            </span>
+                                          </div>
                                         ) : (
-                                          <span>—</span>
+                                          <span className="text-gray-300">—</span>
                                         )}
                                       </td>
-                                      <td className="px-3 py-2 text-gray-700">
+                                      <td className="px-4 py-3 text-center">
                                         {row.fail3 ? (
-                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-50 text-red-700 border border-red-100">
-                                            <span className="mr-1 h-1.5 w-1.5 rounded-full bg-red-500" />
-                                            Failing
-                                          </span>
+                                          <div className="flex justify-center">
+                                            <span className="flex items-center px-2 py-1 rounded-lg text-[10px] font-bold bg-red-50 text-red-700 border border-red-200 animate-pulse">
+                                              CRITICAL
+                                            </span>
+                                          </div>
                                         ) : (
-                                          <span>—</span>
+                                          <span className="text-gray-300">—</span>
                                         )}
                                       </td>
-                                      <td className="px-3 py-2 text-gray-700">
+                                      <td className="px-4 py-3 text-center">
                                         {isAtRisk ? (
-                                          row.linkedA3Count === 0 ? (
-                                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-semibold bg-red-50 text-red-700 border border-red-200">
-                                              0
-                                            </span>
-                                          ) : (
-                                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-semibold bg-green-50 text-green-700 border border-green-200">
-                                              {row.linkedA3Count}
-                                            </span>
-                                          )
+                                          <div className="flex justify-center">
+                                            {row.linkedA3Count === 0 ? (
+                                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 ring-2 ring-red-50 ring-offset-1">
+                                                0
+                                              </span>
+                                            ) : (
+                                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200 ring-2 ring-green-50 ring-offset-1">
+                                                {row.linkedA3Count}
+                                              </span>
+                                            )}
+                                          </div>
                                         ) : (
-                                          <span>—</span>
+                                          <span className="text-gray-300">—</span>
                                         )}
                                       </td>
-                                      <td className="px-3 py-2 text-gray-700">
+                                      <td className="px-4 py-3 text-right">
                                         {row.achievementRate != null ? (
-                                          <span
-                                            className={
-                                              'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ' +
-                                              (row.achievementRate < (2 / 3) * 100
-                                                ? 'bg-red-50 text-red-700 border-red-200'
-                                                : 'bg-green-50 text-green-700 border-green-200')
-                                            }
-                                          >
+                                          <span className={clsx(
+                                            "inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border",
+                                            row.achievementRate < (2 / 3) * 100
+                                              ? "bg-red-50 text-red-700 border-red-200"
+                                              : "bg-green-50 text-green-700 border-green-200"
+                                          )}>
                                             {row.achievementRate.toFixed(0)}%
                                           </span>
                                         ) : (
-                                          '—'
+                                          <span className="text-gray-300">—</span>
                                         )}
                                       </td>
                                     </tr>
@@ -761,74 +805,109 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
                       </div>
                     )}
 
+                    {/* A3 Summary Card */}
                     {parsedData.a3Summary && parsedData.a3Summary.trim() !== '' && (
-                      <div className="bg-gradient-to-br from-blue-50 to-white p-6 rounded-xl border border-blue-100 shadow-sm">
-                        <h4 className="text-lg font-semibold text-blue-900 mb-3 flex items-center">
-                          <Sparkles className="w-5 h-5 mr-2 text-blue-600" />
+                      <div className="bg-gradient-to-br from-blue-50 via-white to-white p-6 sm:p-8 rounded-2xl border border-blue-100 shadow-sm hover:shadow-md transition-all">
+                        <h4 className="text-lg font-bold text-blue-900 mb-4 flex items-center">
+                          <Sparkles className="w-6 h-6 mr-3 text-blue-600" />
                           A3 Problem Solving Summary
                         </h4>
-                        <p className="text-gray-700 leading-relaxed text-sm md:text-base">
+                        <p className="text-gray-700 leading-relaxed text-base">
                           {parsedData.a3Summary}
                         </p>
                       </div>
                     )}
 
                     {/* Areas of Concern & Suggestions */}
-                    <div className="bg-red-50/30 p-6 rounded-xl border border-red-100">
-                        <h4 className="text-lg font-semibold text-red-900 mb-4 flex items-center">
-                            <AlertTriangle className="w-5 h-5 mr-2 text-red-600" />
+                    <div className="bg-white p-6 sm:p-8 rounded-2xl border border-red-100 shadow-sm relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-red-50 rounded-full -mr-16 -mt-16 opacity-50" />
+                        
+                        <h4 className="text-xl font-bold text-red-900 mb-6 flex items-center relative z-10">
+                            <AlertTriangle className="w-6 h-6 mr-3 text-red-600" />
                             Areas of Concern & Recommendations
                         </h4>
-                        <div className="grid grid-cols-1 gap-4">
+                        
+                        <div className="grid grid-cols-1 gap-6 relative z-10">
                             {parsedData.areasOfConcern.map((area, idx) => (
-                                <div key={idx} className="bg-white p-4 rounded-lg border border-red-100 shadow-sm">
-                                    <div className="flex items-center mb-2">
-                                        <span className="text-sm font-bold text-gray-900 mr-2">{area.metricName}</span>
-                                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{area.groupName}</span>
+                                <div key={idx} className="group bg-white p-5 rounded-xl border border-red-100 shadow-sm hover:border-red-200 hover:shadow-md transition-all duration-200">
+                                    <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                                        <div className="flex items-center">
+                                            <div className="w-2 h-2 rounded-full bg-red-500 mr-2 animate-pulse" />
+                                            <span className="text-base font-bold text-gray-900">{area.metricName}</span>
+                                        </div>
+                                        <span className="text-[10px] font-bold tracking-wider uppercase text-gray-500 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
+                                            {area.groupName}
+                                        </span>
                                     </div>
-                                    <p className="text-sm text-red-700 mb-2 font-medium">
-                                        <span className="mr-1">⚠️</span> {area.issue}
-                                    </p>
-                                    <div className="flex items-start text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
-                                        <ArrowRight className="w-4 h-4 mr-2 text-green-600 flex-shrink-0 mt-0.5" />
-                                        <p className="italic">{area.suggestion}</p>
+                                    <div className="bg-red-50/50 p-3 rounded-lg border border-red-50 mb-4">
+                                        <p className="text-sm text-red-700 font-semibold leading-relaxed">
+                                            {area.issue}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-start text-sm text-gray-600 bg-emerald-50/30 p-4 rounded-xl border border-emerald-100/50">
+                                        <div className="bg-emerald-100 rounded-full p-1 mr-3 flex-shrink-0 mt-0.5">
+                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                        </div>
+                                        <div>
+                                            <span className="text-xs font-bold text-emerald-800 uppercase tracking-tight block mb-1">Recommendation</span>
+                                            <p className="italic leading-relaxed text-gray-700">{area.suggestion}</p>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
                             {parsedData.areasOfConcern.length === 0 && (
-                                <p className="text-sm text-gray-500 italic">No major areas of concern identified. Keep up the good work!</p>
+                                <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                    <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-3 opacity-50" />
+                                    <p className="text-gray-500 font-medium">No major areas of concern identified. Keep up the good work!</p>
+                                </div>
                             )}
                         </div>
                     </div>
                 </div>
-            ) : (
+            ) : content ? (
                 // Fallback for non-JSON content or errors
-                <div className="prose prose-sm max-w-none prose-indigo prose-headings:text-indigo-900 prose-a:text-indigo-600">
-                    <MarkdownRenderer content={content} />
+                <div className="max-w-4xl mx-auto py-8">
+                  <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm prose prose-indigo max-w-none prose-headings:text-indigo-900 prose-a:text-indigo-600">
+                      <MarkdownRenderer content={content} />
+                  </div>
                 </div>
-            )}
+            ) : null}
           </div>
 
           {/* Footer */}
-          <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-200 w-full">
+          <div className="bg-gray-50/80 backdrop-blur-sm px-4 py-4 sm:px-8 flex flex-col sm:flex-row-reverse gap-3 border-t border-gray-200 w-full flex-shrink-0">
             <button
               type="button"
-              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors export-ignore"
+              className={clsx(
+                "inline-flex items-center justify-center px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm active:scale-95",
+                isLoading || !content
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-md ring-1 ring-indigo-600 ring-offset-2 hover:ring-indigo-700"
+              )}
               onClick={handleDownload}
               disabled={isLoading || !content}
             >
               <Download className="w-4 h-4 mr-2" />
-              Download HTML
+              Download Report
             </button>
             <button
               type="button"
-              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors export-ignore"
+              className={clsx(
+                "inline-flex items-center justify-center px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 active:scale-95",
+                isLoading || !content
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200"
+                  : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 shadow-sm"
+              )}
               onClick={handleCopy}
               disabled={isLoading || !content}
             >
               <Copy className="w-4 h-4 mr-2" />
               Copy to Clipboard
             </button>
+            <div className="hidden sm:flex flex-1 items-center text-[11px] text-gray-400 italic">
+              <Sparkles className="w-3 h-3 mr-1 text-indigo-400" />
+              AI-generated summary based on workspace data
+            </div>
           </div>
         </div>
       </div>

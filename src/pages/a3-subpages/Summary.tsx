@@ -33,7 +33,7 @@ const Summary = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500 print-summary-root" ref={contentRef}>
+    <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500 print-summary-root" ref={contentRef}>
       <div className="flex justify-between items-end border-b border-slate-200 pb-8">
         <div className="space-y-2">
           <h2 className="text-3xl font-black text-slate-900 font-display tracking-tight">A3 Problem Solving Report</h2>

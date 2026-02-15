@@ -1,11 +1,12 @@
-import { useState, useMemo, useEffect, Fragment } from 'react';
+import { useState, useMemo, useEffect, Fragment, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
-import { Info, Settings, HelpCircle, Sparkles, Loader2, Calendar, Zap } from 'lucide-react';
+import { Info, Settings, HelpCircle, Sparkles, Loader2, Calendar, Zap, Pencil } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Metric, MindMapNodeData, ActionPlanTaskData } from '../types';
 import { HelpModal } from '../components/HelpModal';
 import { AIAnalysisModal } from '../components/AIAnalysisModal';
+import BowlerModal from '../components/BowlerModal';
 import { analyzeMetric, AnalysisResult, generateA3PlanFromMetric } from '../services/aiService';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { useToast } from '../context/ToastContext';
@@ -48,6 +49,10 @@ const MetricBowler = () => {
   const { bowlers, updateBowler, selectedModel, a3Cases, addA3Case } = useApp();
   const toast = useToast();
   
+  // States for Modals
+  const [isBowlerModalOpen, setIsBowlerModalOpen] = useState(false);
+  const [editingBowler, setEditingBowler] = useState<any>(null);
+
   const [startDate, setStartDate] = useState(() => {
     const today = new Date();
     return `${today.getFullYear()}-04`;
@@ -588,7 +593,18 @@ const MetricBowler = () => {
                      <div>
                          <h1 className="text-2xl md:text-4xl font-black text-slate-900 font-display tracking-tight leading-tight group flex items-center gap-3 truncate">
                              {title}
-                             <Settings className="w-5 h-5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all cursor-pointer hover:text-brand-500" />
+                             <button
+                               onClick={() => {
+                                 if (selectedBowler) {
+                                   setEditingBowler(selectedBowler);
+                                   setIsBowlerModalOpen(true);
+                                 }
+                               }}
+                               className="p-1.5 rounded-lg bg-slate-50 text-slate-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-indigo-50 hover:text-indigo-600 hover:shadow-sm border border-transparent hover:border-indigo-100"
+                               title="Edit Bowler"
+                             >
+                               <Pencil className="w-4 h-4" />
+                             </button>
                          </h1>
                          <div className="mt-2 flex flex-wrap items-center gap-4">
                             {selectedBowler?.champion && (
@@ -1176,6 +1192,23 @@ const MetricBowler = () => {
         result={analysisResult}
         metricName={analyzingMetricName}
       />
+
+      <Suspense fallback={null}>
+        <BowlerModal
+          isOpen={isBowlerModalOpen}
+          onClose={() => {
+            setIsBowlerModalOpen(false);
+            setEditingBowler(null);
+          }}
+          onSave={(data: any) => {
+            if (editingBowler) {
+              updateBowler({ ...editingBowler, ...data });
+              toast.success('Bowler list updated successfully');
+            }
+          }}
+          initialData={editingBowler || undefined}
+        />
+      </Suspense>
 
       {tooltip && createPortal(
         <div 

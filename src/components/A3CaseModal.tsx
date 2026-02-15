@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { X, Trash2, Info } from 'lucide-react';
+import { X, Trash2, Info, FileText, Users, Target, Calendar, LayoutGrid, ClipboardList, TrendingUp, CheckCircle2, Clock, ChevronDown, Plus } from 'lucide-react';
 import { A3Case } from '../context/AppContext';
 import { useApp } from '../context/AppContext';
+import clsx from 'clsx';
 
 interface A3CaseModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface A3CaseModalProps {
 
 const A3CaseModal = ({ isOpen, onClose, onSave, onDelete, initialData }: A3CaseModalProps) => {
   const { bowlers } = useApp();
+  const [activeTab, setActiveTab] = useState<'Core' | 'Context' | 'Alignment'>('Core');
   const [formData, setFormData] = useState<Omit<A3Case, 'id'>>({
     title: '',
     description: '',
@@ -53,7 +55,6 @@ const A3CaseModal = ({ isOpen, onClose, onSave, onDelete, initialData }: A3CaseM
           status: initialData.status || 'In Progress',
         });
       } else {
-        // Reset form on open
         setFormData({
           title: '',
           description: '',
@@ -67,17 +68,11 @@ const A3CaseModal = ({ isOpen, onClose, onSave, onDelete, initialData }: A3CaseM
           status: 'In Progress',
         });
       }
+      setActiveTab('Core');
     }
   }, [isOpen, initialData]);
 
   if (!isOpen) return null;
-
-  const priorityBadgeClass =
-    formData.priority === 'High'
-      ? 'bg-red-50 text-red-700 border-red-200'
-      : formData.priority === 'Medium'
-      ? 'bg-amber-50 text-amber-700 border-amber-200'
-      : 'bg-emerald-50 text-emerald-700 border-emerald-200';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,284 +80,376 @@ const A3CaseModal = ({ isOpen, onClose, onSave, onDelete, initialData }: A3CaseM
     onClose();
   };
 
+  const tabs = [
+    { id: 'Core', label: 'Problem & Scope', icon: ClipboardList, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+    { id: 'Context', label: 'Ownership & Timing', icon: Users, color: 'text-blue-500', bg: 'bg-blue-50' },
+    { id: 'Alignment', label: 'Strategic Alignment', icon: Target, color: 'text-purple-500', bg: 'bg-purple-50' },
+  ] as const;
+
   return (
-    <div className="fixed inset-0 z-[70] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 transition-opacity" aria-hidden="true" onClick={onClose}>
-          <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-        </div>
-
-        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
-          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-start gap-3">
-                <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-md">
-                  <Info className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg leading-6 font-semibold text-gray-900" id="modal-title">
-                    {initialData ? 'Edit A3 Case' : 'New A3 Case'}
-                  </h3>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Capture the problem, ownership, timeline, and priority for this A3.
-                  </p>
-                </div>
-              </div>
-              <button onClick={onClose} className="ml-4 rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition">
-                <X className="w-4 h-4" />
-              </button>
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6">
+      <div 
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-300" 
+        onClick={onClose} 
+      />
+      
+      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl shadow-sm border border-emerald-100/50">
+              <FileText className="w-6 h-6 text-emerald-600" />
             </div>
-
-            <div className="mb-4 flex items-start gap-2 rounded-md border border-emerald-50 bg-emerald-50/80 px-3 py-2 text-xs text-emerald-800">
-              <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500" />
-              <p>
-                Use this card to define a clear problem statement, assign ownership, and align on timing so your A3 stays actionable.
+            <div>
+              <h3 className="text-xl font-bold text-slate-900 leading-none">
+                {initialData ? 'Refine A3 Case' : 'Initialize A3 Case'}
+              </h3>
+              <p className="mt-1.5 text-xs font-medium text-slate-500 flex items-center gap-1.5">
+                <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                Structured problem solving framework
               </p>
             </div>
-            
-            <form id="a3-case-form" onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-3 rounded-lg border border-gray-100 bg-gray-50/60 p-3">
-                <div>
-                  <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Case Overview</label>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Give this A3 a concise, searchable title and describe the problem you are solving.
-                  </p>
+          </div>
+          <button 
+            onClick={onClose}
+            className="p-2 hover:bg-slate-50 rounded-xl text-slate-400 hover:text-slate-600 transition-all border border-transparent hover:border-slate-100 active:scale-95"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className="px-6 bg-slate-50/50 border-b border-slate-100 flex gap-1 pt-3">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={clsx(
+                "px-4 py-2.5 text-sm font-bold rounded-t-xl transition-all flex items-center gap-2 border-x border-t -mb-px relative group",
+                activeTab === tab.id
+                  ? "bg-white text-slate-900 border-slate-100 shadow-[0_-2px_10px_-3px_rgba(0,0,0,0.05)]"
+                  : "text-slate-500 hover:text-slate-700 border-transparent hover:bg-slate-100/50"
+              )}
+            >
+              <div className={clsx(
+                "p-1 rounded-md transition-colors",
+                activeTab === tab.id ? tab.bg : "bg-transparent group-hover:bg-slate-200/50"
+              )}>
+                <tab.icon className={clsx("w-3.5 h-3.5", activeTab === tab.id ? tab.color : "text-slate-400")} />
+              </div>
+              {tab.label}
+              {activeTab === tab.id && (
+                <div className={clsx("absolute bottom-0 left-0 right-0 h-0.5", tab.bg.replace('bg-', 'bg-').replace('-50', '-500'))} />
+              )}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+          <form id="a3-case-form" onSubmit={handleSubmit} className="space-y-6">
+            {activeTab === 'Core' && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                {/* Strategic Context */}
+                <div className="flex items-start gap-4 rounded-xl border border-emerald-100 bg-emerald-50/40 px-4 py-4">
+                  <div className="p-2 bg-white rounded-lg shadow-sm border border-emerald-50">
+                    <Info className="h-5 w-5 text-emerald-500" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-emerald-900">Problem Definition</p>
+                    <p className="text-xs text-emerald-700 leading-relaxed">
+                      Clearly define the gap between current state and target state. This title will be used across all reporting and executive summaries.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <label className="mt-2 block text-sm font-medium text-gray-700">Title</label>
+
+                <div className="grid grid-cols-1 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700 flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        A3 Case Title
+                        <span className="text-red-500">*</span>
+                      </span>
+                      <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Required</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Reduce Logistics Lead Time by 20%"
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-slate-400"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      autoFocus
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">Problem Description</label>
+                    <textarea
+                      rows={4}
+                      placeholder="Provide background on why this problem is being addressed now..."
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium placeholder:text-slate-400 resize-none"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-slate-700">Priority Level</label>
+                      <div className="relative">
+                        <select
+                          className="w-full pl-4 pr-10 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-bold appearance-none cursor-pointer"
+                          value={formData.priority}
+                          onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
+                        >
+                          <option value="Low">Low Priority</option>
+                          <option value="Medium">Medium Priority</option>
+                          <option value="High">High Priority</option>
+                        </select>
+                        <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-slate-700">Current Status</label>
+                      <div className="relative">
+                        <select
+                          className="w-full pl-4 pr-10 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-bold appearance-none cursor-pointer"
+                          value={formData.status}
+                          onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                        >
+                          <option value="Not Started">Not Started</option>
+                          <option value="In Progress">In Progress</option>
+                          <option value="Completed">Completed</option>
+                          <option value="On Hold">On Hold</option>
+                          <option value="Cancelled">Cancelled</option>
+                        </select>
+                        <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'Context' && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">A3 Owner / Lead</label>
+                    <div className="relative group">
+                      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100 group-focus-within:bg-blue-50 group-focus-within:border-blue-100 transition-colors">
+                        <Users className="w-4 h-4 text-slate-400 group-focus-within:text-blue-500" />
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Name of project lead"
+                        className="w-full pl-14 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-medium"
+                        value={formData.owner}
+                        onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">Strategic Group</label>
+                    <div className="relative group">
+                      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100 group-focus-within:bg-blue-50 group-focus-within:border-blue-100 transition-colors">
+                        <LayoutGrid className="w-4 h-4 text-slate-400 group-focus-within:text-blue-500" />
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="e.g. Operations, Quality"
+                        className="w-full pl-14 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-medium"
+                        value={formData.group}
+                        onChange={(e) => setFormData({ ...formData, group: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Strategic Tags</label>
+                  <p className="text-[11px] text-slate-500 font-medium">Use commas to separate multiple tags for cross-functional reporting.</p>
                   <input
                     type="text"
-                    required
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    autoFocus
+                    placeholder="e.g. Safety, Cost-Reduction, Q1-Goal"
+                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-medium"
+                    value={formData.tag}
+                    onChange={(e) => setFormData({ ...formData, tag: e.target.value })}
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Description</label>
-                  <textarea
-                    rows={3}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Optional description of the problem, impact, or background..."
-                  />
+                <div className="pt-6 border-t border-slate-100">
+                  <label className="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-blue-500" />
+                    Project Timeline
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Start Date</label>
+                      <div className="relative group">
+                        <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors pointer-events-none" />
+                        <input
+                          type="date"
+                          className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-bold cursor-pointer"
+                          value={formData.startDate}
+                          onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Target Completion</label>
+                      <div className="relative group">
+                        <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors pointer-events-none" />
+                        <input
+                          type="date"
+                          className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-bold cursor-pointer"
+                          value={formData.endDate}
+                          onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
+            )}
 
-              <div className="space-y-3 rounded-lg border border-gray-100 bg-white p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Ownership & grouping</label>
-                    <p className="mt-1 text-xs text-gray-500">
-                      Clarify who owns this A3 and how it is grouped in your portfolio. Use tags for consolidation across reports, separated by commas.
+            {activeTab === 'Alignment' && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="flex items-start gap-4 rounded-xl border border-purple-100 bg-purple-50/40 px-4 py-4">
+                  <div className="p-2 bg-white rounded-lg shadow-sm border border-purple-50">
+                    <Target className="h-5 w-5 text-purple-500" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-purple-900">Performance Linkage</p>
+                    <p className="text-xs text-purple-700 leading-relaxed">
+                      Connect this A3 to a specific Bowler metric to track how your problem-solving efforts impact high-level performance indicators.
                     </p>
                   </div>
-                  <div className="hidden sm:flex flex-col items-end space-y-1">
-                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
-                      {formData.group || 'Ungrouped'}
-                    </span>
-                    {formData.tag && (
-                      <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700 border border-indigo-100">
-                        {formData.tag}
-                      </span>
-                    )}
-                  </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Owner</label>
-                    <input
-                      type="text"
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      value={formData.owner}
-                      onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 flex items-center" title="Group multiple A3 cases under one group">
-                      Group
-                      <Info className="w-4 h-4 ml-1 text-gray-400 cursor-help" />
-                    </label>
-                    <input
-                      type="text"
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      value={formData.group}
-                      onChange={(e) => setFormData({ ...formData, group: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 flex items-center" title="For consolidation across reports. Enter multiple tags separated by commas.">
-                      Tag
-                      <Info className="w-4 h-4 ml-1 text-gray-400 cursor-help" />
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Technical, Urgent"
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      value={formData.tag}
-                      onChange={(e) => setFormData({ ...formData, tag: e.target.value })}
-                    />
-                  </div>
-                </div>
-              </div>
 
-              <div className="space-y-3 rounded-lg border border-gray-100 bg-white p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Linked metrics</label>
-                    <p className="mt-1 text-xs text-gray-500">
-                      Select a metric this A3 is intended to improve so you can track impact.
-                    </p>
-                  </div>
-                  <span className="text-xs text-gray-400">
-                    {(formData.linkedMetricIds || []).length > 0 ? '1 selected' : 'None selected'}
-                  </span>
-                </div>
-                {metricOptions.length === 0 ? (
-                  <p className="text-xs text-gray-500 italic">
-                    No metrics available yet. Create metrics in the Metric Bowler view first.
-                  </p>
-                ) : (
-                  <div className="max-h-40 overflow-y-auto space-y-1">
-                    <label className="flex items-center gap-2 text-sm text-gray-700">
-                      <input
-                        type="radio"
-                        name="linkedMetric"
-                        className="h-4 w-4 text-blue-600 border-gray-300"
-                        checked={!formData.linkedMetricIds || formData.linkedMetricIds.length === 0}
-                        onChange={() => setFormData({ ...formData, linkedMetricIds: [] })}
-                      />
-                      <span>None</span>
-                    </label>
-                    {metricOptions.map(option => {
-                      const selectedId =
-                        (formData.linkedMetricIds && formData.linkedMetricIds[0]) || '';
-                      const checked = selectedId === option.id;
-                      return (
-                        <label key={option.id} className="flex items-center gap-2 text-sm text-gray-700">
-                          <input
-                            type="radio"
-                            name="linkedMetric"
-                            className="h-4 w-4 text-blue-600 border-gray-300"
-                            checked={checked}
-                            onChange={() =>
-                              setFormData({ ...formData, linkedMetricIds: [option.id] })
-                            }
-                          />
-                          <span>{option.label}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+                <div className="space-y-3">
+                  <label className="text-sm font-bold text-slate-700">Target Metric</label>
+                  {metricOptions.length === 0 ? (
+                    <div className="py-12 text-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50">
+                      <div className="w-12 h-12 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center mx-auto mb-4">
+                        <Target className="w-6 h-6 text-slate-300" />
+                      </div>
+                      <p className="text-sm font-bold text-slate-500">No Metrics Found</p>
+                      <p className="text-xs text-slate-400 mt-1 max-w-[240px] mx-auto">Create metrics in the Metric Bowler first to enable linkage.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
+                      <label className={clsx(
+                        "flex items-center gap-4 p-4 rounded-xl border transition-all cursor-pointer group",
+                        (!formData.linkedMetricIds || formData.linkedMetricIds.length === 0)
+                          ? "bg-purple-50 border-purple-200 shadow-sm"
+                          : "bg-white border-slate-200 hover:border-slate-300"
+                      )}>
+                        <div className={clsx(
+                          "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
+                          (!formData.linkedMetricIds || formData.linkedMetricIds.length === 0)
+                            ? "border-purple-500 bg-purple-500"
+                            : "border-slate-300 group-hover:border-slate-400"
+                        )}>
+                          {(!formData.linkedMetricIds || formData.linkedMetricIds.length === 0) && (
+                            <div className="w-2 h-2 rounded-full bg-white" />
+                          )}
+                        </div>
+                        <input
+                          type="radio"
+                          name="linkedMetric"
+                          className="hidden"
+                          checked={!formData.linkedMetricIds || formData.linkedMetricIds.length === 0}
+                          onChange={() => setFormData({ ...formData, linkedMetricIds: [] })}
+                        />
+                        <div className="flex flex-col">
+                          <span className={clsx(
+                            "text-sm font-bold",
+                            (!formData.linkedMetricIds || formData.linkedMetricIds.length === 0) ? "text-purple-900" : "text-slate-600"
+                          )}>None (Standalone A3)</span>
+                          <span className="text-[10px] font-medium text-slate-400">Independent problem solving</span>
+                        </div>
+                      </label>
 
-              <div className="space-y-3 rounded-lg border border-gray-100 bg-white p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Priority & status</label>
-                    <p className="mt-1 text-xs text-gray-500">
-                      Use priority and status to signal urgency and current progress.
-                    </p>
-                  </div>
-                  <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${priorityBadgeClass}`}>
-                    Priority: {formData.priority}
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Priority</label>
-                    <select
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      value={formData.priority}
-                      onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
-                    >
-                      <option value="Low">Low</option>
-                      <option value="Medium">Medium</option>
-                      <option value="High">High</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Status</label>
-                    <select
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      value={formData.status}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    >
-                      <option value="Not Started">Not Started</option>
-                      <option value="In Progress">In Progress</option>
-                      <option value="Completed">Completed</option>
-                      <option value="On Hold">On Hold</option>
-                      <option value="Cancelled">Cancelled</option>
-                    </select>
-                  </div>
+                      {metricOptions.map(option => {
+                        const selectedId = (formData.linkedMetricIds && formData.linkedMetricIds[0]) || '';
+                        const isSelected = selectedId === option.id;
+                        return (
+                          <label key={option.id} className={clsx(
+                            "flex items-center gap-4 p-4 rounded-xl border transition-all cursor-pointer group",
+                            isSelected ? "bg-purple-50 border-purple-200 shadow-sm" : "bg-white border-slate-200 hover:border-slate-300"
+                          )}>
+                            <div className={clsx(
+                              "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
+                              isSelected ? "border-purple-500 bg-purple-500" : "border-slate-300 group-hover:border-slate-400"
+                            )}>
+                              {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                            </div>
+                            <input
+                              type="radio"
+                              name="linkedMetric"
+                              className="hidden"
+                              checked={isSelected}
+                              onChange={() => setFormData({ ...formData, linkedMetricIds: [option.id] })}
+                            />
+                            <div className="flex flex-col">
+                              <span className={clsx("text-sm font-bold", isSelected ? "text-purple-900" : "text-slate-700")}>
+                                {option.label.split(' – ')[1]}
+                              </span>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded uppercase">
+                                  {option.label.split(' – ')[0]}
+                                </span>
+                              </div>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
+            )}
+          </form>
+        </div>
 
-              <div className="space-y-3 rounded-lg border border-gray-100 bg-white p-3">
-                <div>
-                  <label className="block text-xs font-semibold tracking-wide text-gray-500 uppercase">Timeline</label>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Set realistic start and end dates so the team can track progress.
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Start Date</label>
-                    <input
-                      type="date"
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      value={formData.startDate}
-                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">End Date</label>
-                    <input
-                      type="date"
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      value={formData.endDate}
-                      onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    />
-                  </div>
-                </div>
-              </div>
-            </form>
+        {/* Footer */}
+        <div className="px-6 py-5 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            {initialData && onDelete && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm('Are you sure you want to delete this A3 case? This action cannot be undone.')) {
+                    onDelete(initialData.id);
+                    onClose();
+                  }
+                }}
+                className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100 group"
+                title="Delete A3 Case"
+              >
+                <Trash2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              </button>
+            )}
           </div>
-          <div className="bg-gray-50 px-4 py-3 sm:px-6 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
-             <div className="order-2 sm:order-1 w-full sm:w-auto">
-               {initialData && onDelete && (
-                 <button
-                   type="button"
-                   className="w-full sm:w-auto inline-flex justify-center items-center rounded-md border border-transparent px-4 py-2 text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm font-medium"
-                   onClick={() => onDelete(initialData.id)}
-                 >
-                   <Trash2 className="w-4 h-4 mr-2" />
-                   Delete
-                 </button>
-               )}
-             </div>
-             <div className="order-1 sm:order-2 flex flex-col sm:flex-row-reverse w-full sm:w-auto">
-                <button
-                  type="submit"
-                  form="a3-case-form"
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
-                >
-                  {initialData ? 'Save Changes' : 'Create Case'}
-                </button>
-                <button
-                  type="button"
-                  className="mt-3 sm:mt-0 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:w-auto sm:text-sm"
-                  onClick={onClose}
-                >
-                  Cancel
-                </button>
-             </div>
+          
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-2.5 text-sm font-bold text-slate-600 hover:text-slate-800 hover:bg-white rounded-xl transition-all active:scale-95"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="a3-case-form"
+              className="px-8 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-emerald-200 hover:bg-emerald-700 hover:shadow-emerald-300 transition-all active:scale-95 flex items-center gap-2"
+            >
+              {initialData ? <CheckCircle2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              {initialData ? 'Save Changes' : 'Initialize Case'}
+            </button>
           </div>
         </div>
       </div>

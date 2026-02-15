@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { Upload, X, FileText, AlertCircle, Check } from 'lucide-react';
+import { Upload, X, AlertCircle, Check, Database, Info, ArrowRight } from 'lucide-react';
 import { Metric, Bowler } from '../context/AppContext';
 import { generateShortId } from '../utils/idUtils';
 import { useToast } from '../context/ToastContext';
+import clsx from 'clsx';
 
 interface ImportModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
 
@@ -22,14 +24,36 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      if (selectedFile.type !== 'text/csv' && !selectedFile.name.endsWith('.csv')) {
-        setError('Please upload a valid CSV file.');
-        setFile(null);
-        return;
-      }
-      setFile(selectedFile);
-      setError(null);
-      setSuccess(null);
+      processFile(selectedFile);
+    }
+  };
+
+  const processFile = (selectedFile: File) => {
+    if (selectedFile.type !== 'text/csv' && !selectedFile.name.endsWith('.csv')) {
+      setError('Please upload a valid CSV file.');
+      setFile(null);
+      return;
+    }
+    setFile(selectedFile);
+    setError(null);
+    setSuccess(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const droppedFile = e.dataTransfer.files[0];
+    if (droppedFile) {
+      processFile(droppedFile);
     }
   };
 
@@ -37,7 +61,6 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
     const lines = text.split('\n');
     if (lines.length < 2) throw new Error('File is empty or missing headers');
 
-    // Robust simple CSV parser
     const simpleParseLine = (line: string) => {
         const result = [];
         let current = '';
@@ -87,16 +110,11 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
         throw new Error('Missing required column: "Scope"');
     }
 
-    // Identify month columns
-    // Supports two formats:
-    // 1. Wide: "2024/Jan Target", "2024/Jan Actual"
-    // 2. Long: "2024/Jan" with a separate "Type" column specifying Target/Actual
     const monthMappings: { index: number; type: 'target' | 'actual' | 'dynamic'; key: string }[] = [];
     
     headers.forEach((h, index) => {
         const lower = h.toLowerCase();
         
-        // Helper to parse "YYYY/MMM" to "YYYY-MM"
         const parseDateKey = (dateStr: string) => {
             const parts = dateStr.split('/');
             if (parts.length === 2) {
@@ -114,7 +132,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
 
         if (lower.endsWith(' target') || lower.endsWith(' actual')) {
             const isTarget = lower.endsWith(' target');
-            const datePart = h.substring(0, h.lastIndexOf(' ')); // "2024/Jan"
+            const datePart = h.substring(0, h.lastIndexOf(' ')); 
             const key = parseDateKey(datePart);
             
             if (key) {
@@ -125,7 +143,6 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                 });
             }
         } else {
-            // Check if it's just a date column (for Long format)
             const key = parseDateKey(h);
             if (key) {
                  monthMappings.push({
@@ -140,7 +157,6 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
     const result: Record<string, { bowler: Partial<Bowler>, metrics: Metric[] }> = {};
     let processedRows = 0;
     
-    // Process rows
     for (let i = 1; i < lines.length; i++) {
         if (!lines[i].trim()) continue;
         const row = simpleParseLine(lines[i]);
@@ -172,7 +188,6 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
           }
         }
 
-        // Determine row type if using Long format
         let rowType: 'target' | 'actual' | null = null;
         if (typeIndex !== -1 && row[typeIndex]) {
             const val = row[typeIndex].toLowerCase();
@@ -180,7 +195,6 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
             else if (val.includes('actual')) rowType = 'actual';
         }
 
-        // Initialize bowler entry if not exists
         if (!result[bowlerName]) {
             result[bowlerName] = {
                 bowler: {
@@ -194,8 +208,6 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                 metrics: []
             };
         } else {
-            // Update bowler metadata if available in subsequent rows (last non-empty wins or accumulate?)
-            // Usually metadata is same for all rows of same bowler, but let's update just in case
             const b = result[bowlerName].bowler;
             if (description) b.description = description;
             if (group) b.group = group;
@@ -206,7 +218,6 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
         
         const currentBowlerMetrics = result[bowlerName].metrics;
 
-        // Find existing or create new metric for this bowler
         let metric = currentBowlerMetrics.find(m => m.name === name);
         if (!metric) {
             metric = {
@@ -221,14 +232,12 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
             };
             currentBowlerMetrics.push(metric);
         } else {
-            // Update metric metadata if present
             if (definition) metric.definition = definition;
             if (owner) metric.owner = owner;
             if (attribute) metric.attribute = attribute;
             if (targetMeetingRule) metric.targetMeetingRule = targetMeetingRule;
         }
 
-        // Update monthly data
         const monthlyData = metric.monthlyData || {};
         
         monthMappings.forEach(mapping => {
@@ -236,9 +245,8 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                 const val = row[mapping.index];
                 let effectiveType = mapping.type;
                 
-                // If column is dynamic (just date), use the row's Type column
                 if (effectiveType === 'dynamic') {
-                    if (!rowType) return; // Cannot determine if target or actual
+                    if (!rowType) return; 
                     effectiveType = rowType;
                 }
 
@@ -246,7 +254,6 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
                     monthlyData[mapping.key] = { target: '', actual: '' };
                 }
                 
-                // Only update if value is present
                 monthlyData[mapping.key][effectiveType] = val;
             }
         });
@@ -267,7 +274,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
         const text = e.target?.result as string;
         const { data, rowCount, colCount } = parseCSV(text);
         onImport(data);
-        const successMsg = `Successfully imported data: ${rowCount} rows and ${colCount} columns processed.`;
+        const successMsg = `Successfully imported ${rowCount} rows across ${colCount} columns.`;
         setSuccess(successMsg);
         toast.success(successMsg);
         setTimeout(() => {
@@ -285,110 +292,149 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImp
   };
 
   return (
-    <div className="fixed inset-0 z-[70] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={onClose}></div>
-
-        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-        <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-          <div className="hidden sm:block absolute top-0 right-0 pt-4 pr-4">
-            <button
-              type="button"
-              className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              onClick={onClose}
-            >
-              <span className="sr-only">Close</span>
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-
-          <div className="sm:flex sm:items-start">
-            <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
-              <Upload className="h-6 w-6 text-blue-600" />
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6">
+      <div 
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-300" 
+        onClick={onClose} 
+      />
+      
+      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-in fade-in scale-in-95 duration-500">
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl shadow-sm border border-indigo-100/50">
+              <Database className="w-6 h-6 text-indigo-600" />
             </div>
-            <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-              <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+            <div>
+              <h3 className="text-xl font-bold text-slate-900 leading-none">
                 Import Metrics Data
               </h3>
-              <div className="mt-2">
-                <p className="text-sm text-gray-500 mb-4">
-                  Upload a CSV file to update metrics. New metrics will be created if they don't exist.
-                </p>
-                
-                <div className="bg-gray-50 p-3 rounded-md mb-4 text-left">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                    <AlertCircle className="h-4 w-4 mr-1.5 text-blue-500" />
-                    Required Columns
-                  </h4>
-                  <ul className="text-xs text-gray-600 list-disc list-inside space-y-1">
-                    <li><span className="font-mono font-medium">Bowler Name</span> (Required)</li>
-                    <li><span className="font-mono font-medium">Metric Name</span> (Required)</li>
-                    <li><span className="font-mono font-medium">Scope</span> (Required)</li>
-                    <li><span className="font-mono font-medium">Type</span> (Required)</li>
-                    <li><span className="font-mono font-medium">Bowler Description, Group, Champion, Commitment, Tag</span> (Optional)</li>
-                    <li><span className="font-mono font-medium">Definition, Owner, Attribute, Target Meeting Rule</span> (Optional)</li>
-                    <li>
-                      Recommended format (matches Download CSV):
-                      <br />
-                      <span className="font-mono font-medium">Type</span> column with values <span className="font-mono">Target</span> or <span className="font-mono">Actual</span>, plus date columns <span className="font-mono">YYYY/MMM</span>.
-                      <br />
-                      <span className="text-gray-400 italic">Example header: "Bowler Name","Bowler Description","Group","Tag","Metric Name","Definition","Owner","Scope","Attribute","Target Meeting Rule","Type","2024/Jan","2024/Feb",...</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="mt-4">
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept=".csv"
-                        onChange={handleFileChange}
-                        className="hidden"
-                    />
-                    <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                        <FileText className="h-5 w-5 mr-2 text-gray-400" />
-                        {file ? file.name : 'Select CSV File'}
-                    </button>
-                </div>
-
-                {error && (
-                  <div className="mt-2 text-sm text-red-600 flex items-center">
-                    <AlertCircle className="h-4 w-4 mr-1" />
-                    {error}
-                  </div>
-                )}
-                
-                {success && (
-                  <div className="mt-2 text-sm text-green-600 flex items-center">
-                    <Check className="h-4 w-4 mr-1" />
-                    {success}
-                  </div>
-                )}
-              </div>
+              <p className="mt-1.5 text-xs font-medium text-slate-500 flex items-center gap-1.5">
+                <Upload className="w-3.5 h-3.5 text-indigo-500" />
+                Bulk synchronize performance dashboards
+              </p>
             </div>
           </div>
-          <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-            <button
-              type="button"
-              onClick={handleUpload}
-              disabled={!file || !!success}
-              className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm ${(!file || !!success) ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              Import
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm"
-            >
-              Cancel
-            </button>
+          <button 
+            onClick={onClose}
+            className="p-2 hover:bg-slate-50 rounded-xl text-slate-400 hover:text-slate-600 transition-all border border-transparent hover:border-slate-100 active:scale-95"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-6">
+          {/* Instructions */}
+          <div className="space-y-3">
+            <div className="flex items-start gap-4 rounded-xl border border-blue-100 bg-blue-50/40 px-4 py-4">
+              <div className="p-2 bg-white rounded-lg shadow-sm border border-blue-50">
+                <Info className="h-5 w-5 text-blue-500" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-blue-900">Format Guide</p>
+                <p className="text-xs text-blue-700 leading-relaxed">
+                  Upload a CSV file containing <span className="font-bold">Bowler Name</span>, <span className="font-bold">Metric Name</span>, and <span className="font-bold">Type</span>. The system will auto-map dates in YYYY/MMM format.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              {['Bowler Name', 'Metric Name', 'Scope', 'Type'].map((col) => (
+                <div key={col} className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-100">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  <span className="text-[11px] font-bold text-slate-600 uppercase tracking-tight">{col}</span>
+                </div>
+              ))}
+            </div>
           </div>
+
+          {/* Upload Zone */}
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+            className={clsx(
+              "relative border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center transition-all cursor-pointer group",
+              isDragging 
+                ? "bg-indigo-50 border-indigo-400 shadow-inner" 
+                : file 
+                  ? "bg-emerald-50 border-emerald-300 shadow-sm" 
+                  : "bg-slate-50 border-slate-200 hover:bg-slate-100 hover:border-slate-300 hover:shadow-md"
+            )}
+          >
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept=".csv"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            
+            <div className={clsx(
+              "w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-sm",
+              file 
+                ? "bg-gradient-to-br from-emerald-100 to-teal-100 text-emerald-600 ring-4 ring-emerald-50" 
+                : "bg-gradient-to-br from-indigo-100 to-blue-100 text-indigo-600 ring-4 ring-indigo-50"
+            )}>
+              {file ? <Check className="w-8 h-8" /> : <Upload className="w-8 h-8" />}
+            </div>
+
+            <div className="text-center">
+              <p className="text-sm font-bold text-slate-700">
+                {file ? file.name : 'Drop your CSV file here'}
+              </p>
+              <p className="text-xs text-slate-500 mt-1 font-medium">
+                {file ? `${(file.size / 1024).toFixed(1)} KB` : 'or click to browse from files'}
+              </p>
+            </div>
+
+            {file && !success && !error && (
+              <div className="mt-4 px-3 py-1 bg-white border border-emerald-200 rounded-full text-[10px] font-bold text-emerald-600 animate-bounce shadow-sm">
+                File ready for import
+              </div>
+            )}
+          </div>
+
+          {/* Messages */}
+          {error && (
+            <div className="flex items-center gap-3 p-3 bg-red-50 border border-red-100 rounded-xl text-red-700 animate-in fade-in slide-in-from-top-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <p className="text-xs font-bold">{error}</p>
+            </div>
+          )}
+          
+          {success && (
+            <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-700 animate-in fade-in slide-in-from-top-2">
+              <Check className="w-4 h-4 flex-shrink-0" />
+              <p className="text-xs font-bold">{success}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-5 bg-slate-50 border-t border-slate-100 flex gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-6 py-2.5 text-sm font-bold text-slate-600 hover:text-slate-800 hover:bg-white rounded-xl transition-all border border-slate-200 hover:border-slate-300 active:scale-95"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleUpload}
+            disabled={!file || !!success}
+            className={clsx(
+              "flex-[2] px-6 py-2.5 text-sm font-bold rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-indigo-100",
+              (!file || !!success)
+                ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                : "bg-indigo-600 text-white hover:bg-indigo-700"
+            )}
+          >
+            Start Processing
+            <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </div>

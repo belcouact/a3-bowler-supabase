@@ -304,7 +304,7 @@ For each bullet, be specific and actionable, but concise.`
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-12">
+    <div className="max-w-7xl mx-auto space-y-12">
       <div className="space-y-2">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-brand-50 rounded-lg text-brand-600">
