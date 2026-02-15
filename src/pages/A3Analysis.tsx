@@ -39,20 +39,20 @@ const A3Analysis = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-6">
+    <div className="w-full">
       {/* Header Section */}
-      <div className="bg-white rounded-3xl shadow-soft border border-slate-100 overflow-hidden">
-        <div className="p-6 md:p-10">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="flex items-center gap-5">
-              <div className="w-14 h-14 rounded-2xl bg-brand-600 flex items-center justify-center text-white shadow-lg shadow-brand-200">
-                <FileText className="w-7 h-7" />
+      <div className="bg-white border-b border-slate-100 overflow-hidden">
+        <div className="p-4 md:p-5">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-lg shadow-brand-200">
+                <FileText className="w-5 h-5" />
               </div>
               <div>
-                <h1 className="text-2xl md:text-4xl font-black text-slate-900 font-display tracking-tight leading-none">
+                <h1 className="text-xl md:text-2xl font-black text-slate-900 font-display tracking-tight leading-none">
                   {title}
                 </h1>
-                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-500 font-medium">
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 font-medium">
                   <span className="flex items-center gap-2 px-2 py-1 bg-slate-50 rounded-lg">
                     <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
                     Owner: <span className="font-bold text-slate-700">{selectedCase.owner || 'Unassigned'}</span>
@@ -79,12 +79,12 @@ const A3Analysis = () => {
         </div>
 
         {/* Stepper Navigation */}
-        <div className="bg-slate-50/50 border-t border-slate-100 px-6 py-12 md:px-12">
+        <div className="bg-slate-50/50 border-t border-slate-100 px-6 py-4 md:px-12">
           <div className="relative">
             {/* Connector Line */}
-            <div className="absolute top-1/2 left-0 w-full h-1 bg-slate-200 -translate-y-1/2 rounded-full" />
+            <div className="absolute top-1/2 left-0 w-full h-0.5 bg-slate-200 -translate-y-1/2 rounded-full" />
             
-            <div className="relative flex justify-between items-center gap-2 max-w-4xl mx-auto">
+            <div className="relative flex justify-between items-center gap-2 max-w-6xl mx-auto">
               {tabs.map((tab, index) => {
                 const activeIndex = tabs.findIndex(t => location.pathname.includes(t.path));
                 const isActive = activeIndex === index;
@@ -97,28 +97,28 @@ const A3Analysis = () => {
                     className="group relative flex flex-col items-center z-10"
                   >
                     <div className={clsx(
-                      "w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center transition-all duration-500 ring-8 ring-white shadow-md",
+                      "w-9 h-9 md:w-11 md:h-11 rounded-xl flex items-center justify-center transition-all duration-500 ring-4 ring-white shadow-sm",
                       isActive 
-                        ? "bg-brand-600 text-white scale-110 shadow-xl shadow-brand-200 -translate-y-1" 
+                        ? "bg-brand-600 text-white scale-110 shadow-lg shadow-brand-200 -translate-y-0.5" 
                         : isPast 
                           ? "bg-accent-500 text-white" 
-                          : "bg-white text-slate-400 border-2 border-slate-100 group-hover:border-brand-200 group-hover:text-brand-500 group-hover:-translate-y-0.5"
+                          : "bg-white text-slate-400 border border-slate-100 group-hover:border-brand-200 group-hover:text-brand-500 group-hover:-translate-y-0.5"
                     )}>
                       {isPast ? (
-                        <CheckCircle className="w-6 h-6 md:w-7 md:h-7" />
+                        <CheckCircle className="w-4 h-4 md:w-5 md:h-5" />
                       ) : (
-                        <tab.icon className="w-6 h-6 md:w-7 md:h-7" />
+                        <tab.icon className="w-4 h-4 md:w-5 md:h-5" />
                       )}
                     </div>
-                    <div className="absolute -bottom-10 flex flex-col items-center">
+                    <div className="absolute -bottom-6 flex flex-col items-center">
                       <span className={clsx(
-                        "whitespace-nowrap text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300",
+                        "whitespace-nowrap text-[8px] md:text-[9px] font-black uppercase tracking-wider transition-all duration-300",
                         isActive ? "text-brand-700 translate-y-0 opacity-100" : "text-slate-400 group-hover:text-slate-600 translate-y-1 opacity-0 group-hover:opacity-100 md:opacity-100 md:translate-y-0"
                       )}>
                         {tab.label}
                       </span>
                       {isActive && (
-                        <div className="w-1 h-1 rounded-full bg-brand-600 mt-1 animate-ping" />
+                        <div className="w-1 h-1 rounded-full bg-brand-600 mt-0.5 animate-ping" />
                       )}
                     </div>
                   </Link>
@@ -130,22 +130,22 @@ const A3Analysis = () => {
       </div>
 
       {/* Content Area */}
-      <div className="bg-white rounded-[2.5rem] shadow-medium border border-slate-100 overflow-hidden min-h-[600px] relative">
-        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-600 to-accent-500 opacity-10" />
+      <div className="bg-white min-h-[600px] relative">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-600 to-accent-500 opacity-10" />
         <Suspense fallback={
           <div className="flex items-center justify-center h-96">
             <div className="flex flex-col items-center gap-4">
               <div className="relative">
-                <div className="w-12 h-12 rounded-xl border-4 border-brand-100 border-t-brand-600 animate-spin" />
+                <div className="w-10 h-10 rounded-xl border-2 border-brand-100 border-t-brand-600 animate-spin" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-2 h-2 rounded-full bg-brand-600 animate-pulse" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-brand-600 animate-pulse" />
                 </div>
               </div>
-              <p className="text-slate-400 text-sm font-bold uppercase tracking-widest animate-pulse">Initializing Workspace</p>
+              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest animate-pulse">Initializing Workspace</p>
             </div>
           </div>
         }>
-          <div className="p-6 md:p-12 lg:p-16">
+          <div className="p-4 md:p-6 lg:p-8">
             <Outlet />
           </div>
         </Suspense>
