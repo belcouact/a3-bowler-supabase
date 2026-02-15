@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, Fragment, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
-import { Info, Settings, HelpCircle, Sparkles, Loader2, Calendar, Zap, Pencil } from 'lucide-react';
+import { Info, Settings, HelpCircle, Sparkles, Loader2, Calendar, Zap, Pencil, LayoutGrid, Square } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Metric, MindMapNodeData, ActionPlanTaskData } from '../types';
 import { HelpModal } from '../components/HelpModal';
@@ -69,6 +69,7 @@ const MetricBowler = () => {
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [chartSettingsOpen, setChartSettingsOpen] = useState<Record<string, boolean>>({});
   const [chartScales, setChartScales] = useState<Record<string, { min: string; max: string }>>({});
+  const [isCompactView, setIsCompactView] = useState(true);
 
   // Bowler Edit State
   const [isEditingBowler, setIsEditingBowler] = useState(false);
@@ -645,6 +646,13 @@ const MetricBowler = () => {
 
               <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <button 
+                  onClick={() => setIsCompactView(!isCompactView)}
+                  className="w-11 h-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-brand-600 hover:border-brand-200 transition-all active:scale-95 bg-white shadow-sm"
+                  title={isCompactView ? "Switch to Large View" : "Switch to Compact View"}
+                >
+                  {isCompactView ? <Square className="w-5 h-5" /> : <LayoutGrid className="w-5 h-5" />}
+                </button>
+                <button 
                   onClick={() => setIsHelpModalOpen(true)}
                   className="w-11 h-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-brand-600 hover:border-brand-200 transition-all active:scale-95 bg-white shadow-sm"
                   title="How to use"
@@ -839,7 +847,7 @@ const MetricBowler = () => {
               Metric Trends
             </h3>
           </div>
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 md:gap-10">
+          <div className={`grid gap-8 md:gap-10 ${isCompactView ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
             {metrics.map(metric => {
               const chartData = displayMonths.map(month => {
                 const rawTarget = metric.monthlyData?.[month.key]?.target;
@@ -1011,7 +1019,7 @@ const MetricBowler = () => {
                     </div>
                   )}
 
-                  <div className="h-[500px] w-full relative">
+                  <div className={`w-full relative transition-all duration-300 ${isCompactView ? 'h-[300px]' : 'h-[500px]'}`}>
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={chartData} margin={{ top: 10, right: 30, bottom: 5, left: -25 }}>
                         <defs>

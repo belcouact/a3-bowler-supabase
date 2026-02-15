@@ -114,7 +114,7 @@ export const AppInfoModal: FC<AppInfoModalProps> = ({ isOpen, onClose }) => {
                   <span>Mobile Optimized</span>
                </div>
                <div className="text-xs text-slate-400">
-                  v1.2.0 • Build 2024.10
+                  v1.2.0 • Build 2026.2
                </div>
             </div>
           </div>
