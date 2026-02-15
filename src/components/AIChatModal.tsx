@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, Bot, Loader2, Sparkles } from 'lucide-react';
+import { X, Send, Bot, Loader2, Sparkles, Database, Zap, FileText, TrendingUp } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { generateAIContext } from '../services/aiService';
@@ -22,12 +22,44 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initi
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasProcessedPrompt = useRef(false);
+  
+  // Resizable Sidebar State
+  const [width, setWidth] = useState(600);
+  const [isResizing, setIsResizing] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+
+  // Resize Logic
+  const startResizing = (e: React.MouseEvent) => {
+    setIsResizing(true);
+    e.preventDefault();
+  };
+
+  useEffect(() => {
+    const stopResizing = () => setIsResizing(false);
+    const resize = (e: MouseEvent) => {
+      if (isResizing) {
+        const newWidth = window.innerWidth - e.clientX;
+        if (newWidth > 400 && newWidth < window.innerWidth - 50) {
+          setWidth(newWidth);
+        }
+      }
+    };
+
+    if (isResizing) {
+      window.addEventListener('mousemove', resize);
+      window.addEventListener('mouseup', stopResizing);
+    }
+    return () => {
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResizing);
+    };
+  }, [isResizing]);
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
@@ -102,8 +134,20 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initi
         <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
 
         <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
-          <div className="pointer-events-auto w-screen max-w-xl transform transition-transform duration-300 ease-in-out">
-            <div className="flex h-full flex-col overflow-hidden bg-white shadow-2xl">
+          <div 
+            ref={sidebarRef}
+            className="pointer-events-auto relative h-full transform transition-none ease-in-out bg-white shadow-2xl flex flex-col"
+            style={{ width: `${width}px` }}
+          >
+            {/* Resize Handle */}
+            <div
+                className="absolute left-0 top-0 bottom-0 w-1.5 cursor-ew-resize hover:bg-brand-400/50 transition-colors z-50 flex items-center justify-center group"
+                onMouseDown={startResizing}
+            >
+                <div className="h-8 w-1 bg-slate-300 rounded-full group-hover:bg-brand-400 transition-colors" />
+            </div>
+
+            <div className="flex h-full flex-col overflow-hidden bg-white">
               {/* Header */}
               <div className="bg-gradient-to-r from-brand-600 to-accent-600 px-6 py-5">
                 <div className="flex items-center justify-between">
@@ -134,27 +178,53 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initi
               {/* Chat Area */}
               <div className="flex-1 flex flex-col p-6 overflow-y-auto bg-slate-50 scroll-smooth custom-scrollbar">
                  {messages.length === 0 && (
-                    <div className="flex flex-col items-center justify-center h-full text-center p-8 opacity-0 animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-forwards">
-                        <div className="w-20 h-20 bg-white rounded-3xl shadow-lg shadow-brand-100 flex items-center justify-center mb-6 ring-1 ring-slate-100">
-                          <Bot className="w-10 h-10 text-brand-500" />
+                    <div className="flex flex-col items-center justify-center h-full text-center p-8 opacity-0 animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-forwards max-w-2xl mx-auto">
+                        <div className="w-16 h-16 bg-white rounded-2xl shadow-lg shadow-brand-100 flex items-center justify-center mb-6 ring-1 ring-slate-100">
+                          <Bot className="w-8 h-8 text-brand-500" />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-800 mb-2">How can I help you today?</h3>
-                        <p className="text-sm text-slate-500 max-w-xs mx-auto leading-relaxed">
-                          I have access to your performance data. Ask me to analyze trends, summarize A3s, or suggest countermeasures.
-                        </p>
+                        <h3 className="text-xl font-bold text-slate-800 mb-6">AI Coach Assistant</h3>
                         
-                        <div className="grid grid-cols-1 gap-2 mt-8 w-full max-w-xs">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full mb-8 text-left">
+                            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                                <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2 text-sm">
+                                    <Database className="w-4 h-4 text-blue-500"/> What it knows
+                                </h4>
+                                <ul className="text-xs text-slate-500 space-y-2 list-disc pl-4 leading-relaxed">
+                                    <li>Your Bowler metrics and performance trends</li>
+                                    <li>Details of your A3 problem-solving cases</li>
+                                    <li>Linked relationships between metrics and cases</li>
+                                </ul>
+                            </div>
+                            
+                            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                                <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2 text-sm">
+                                    <Zap className="w-4 h-4 text-amber-500"/> What it can do
+                                </h4>
+                                <ul className="text-xs text-slate-500 space-y-2 list-disc pl-4 leading-relaxed">
+                                    <li>Analyze performance trends and outliers</li>
+                                    <li>Summarize A3 cases and their status</li>
+                                    <li>Suggest countermeasures for failing metrics</li>
+                                    <li>Draft A3 content based on metric data</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <p className="text-sm text-slate-400 font-medium mb-3">Try asking...</p>
+                        
+                        <div className="grid grid-cols-1 gap-2 w-full max-w-xs">
                           <button 
                             onClick={() => sendMessage("What are my top failing metrics?")}
-                            className="text-xs text-left px-4 py-3 bg-white hover:bg-brand-50 hover:text-brand-700 text-slate-600 rounded-xl border border-slate-200 hover:border-brand-200 transition-all shadow-sm"
+                            className="text-xs text-left px-4 py-3 bg-white hover:bg-brand-50 hover:text-brand-700 text-slate-600 rounded-xl border border-slate-200 hover:border-brand-200 transition-all shadow-sm group flex items-center justify-between"
                           >
-                            What are my top failing metrics?
+                            <span>What are my top failing metrics?</span>
+                            <TrendingUp className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                           </button>
                           <button 
                             onClick={() => sendMessage("Summarize my open A3 cases")}
-                            className="text-xs text-left px-4 py-3 bg-white hover:bg-brand-50 hover:text-brand-700 text-slate-600 rounded-xl border border-slate-200 hover:border-brand-200 transition-all shadow-sm"
+                            className="text-xs text-left px-4 py-3 bg-white hover:bg-brand-50 hover:text-brand-700 text-slate-600 rounded-xl border border-slate-200 hover:border-brand-200 transition-all shadow-sm group flex items-center justify-between"
                           >
-                            Summarize my open A3 cases
+                            <span>Summarize my open A3 cases</span>
+                            <FileText className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                           </button>
                         </div>
                     </div>
