@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, Lightbulb, Filter, Inbox, Users, X, Calendar, FlaskConical, Activity, Clock3, PieChart as PieChartIcon, AlertCircle } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, ChevronDown, LogOut, User as UserIcon, Save, Loader2, Sparkles, Info, Zap, FileText, ExternalLink, Upload, Download, MoreVertical, TrendingUp, Layers, Lightbulb, Filter, Users, X, Calendar, FlaskConical, Activity, Clock3, PieChart as PieChartIcon, AlertCircle, Combine, Pencil, Mail } from 'lucide-react';
 import clsx from 'clsx';
 import { useApp, A3Case } from '../context/AppContext';
 import {
@@ -2499,46 +2499,66 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                   className="fixed inset-0 z-30" 
                   onClick={() => setIsMobileMenuOpen(false)}
                 />
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-[100] border border-gray-200">
+                <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl py-2 z-[100] border border-slate-100 p-1.5 animate-in fade-in slide-in-from-top-2">
+                  <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50 mb-1">
+                    Workspace Actions
+                  </div>
                   <button
                     onClick={() => {
                       handleExit();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-red-600"
+                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-red-600 transition-colors group"
                   >
-                    <ExternalLink className="w-4 h-4 mr-3" />
-                    Exit App
+                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center mr-3 group-hover:bg-red-50 transition-colors">
+                      <ExternalLink className="w-4 h-4" />
+                    </div>
+                    <span className="font-medium">Exit App</span>
                   </button>
                   <button
                     onClick={() => {
                       setIsImportModalOpen(true);
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-green-600"
+                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-emerald-600 transition-colors group"
                   >
-                    <Upload className="w-4 h-4 mr-3" />
-                    Import CSV
+                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mr-3 group-hover:bg-emerald-100 transition-colors shadow-sm">
+                      <Upload className="w-4 h-4" />
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <span className="font-bold">Import CSV</span>
+                      <span className="text-[10px] text-slate-400">Bulk metric upload</span>
+                    </div>
                   </button>
                   <button
                     onClick={() => {
                       handleDownloadAllCSV();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600"
+                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-blue-600 transition-colors group"
                   >
-                    <Download className="w-4 h-4 mr-3" />
-                    Download
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3 group-hover:bg-blue-100 transition-colors shadow-sm">
+                      <Download className="w-4 h-4" />
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <span className="font-bold">Download</span>
+                      <span className="text-[10px] text-slate-400">Export workspace data</span>
+                    </div>
                   </button>
                   <button
                     onClick={() => {
                       setIsDataChartingOpen(true);
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-emerald-600"
+                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors group"
                   >
-                    <Activity className="w-4 h-4 mr-3" />
-                    Data Charting
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3 group-hover:bg-indigo-100 transition-colors shadow-sm">
+                      <Activity className="w-4 h-4" />
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <span className="font-bold">Data Analysis</span>
+                      <span className="text-[10px] text-slate-400">AI data insights</span>
+                    </div>
                   </button>
                   {isSuperAdmin && (
                     <button
@@ -2546,10 +2566,12 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                         setIsAdminPanelOpen(true);
                         setIsMobileMenuOpen(false);
                       }}
-                      className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-slate-700"
+                      className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-slate-900 transition-colors group"
                     >
-                      <Users className="w-4 h-4 mr-3" />
-                      User Mgmt
+                      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center mr-3 group-hover:bg-slate-100 transition-colors">
+                        <Users className="w-4 h-4" />
+                      </div>
+                      <span className="font-medium">User Mgmt</span>
                     </button>
                   )}
                   <button
@@ -2557,10 +2579,15 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       handleOpenConsolidateModal();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-purple-600"
+                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-purple-600 transition-colors group"
                   >
-                    <Inbox className="w-4 h-4 mr-3" />
-                    Consolidate
+                    <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mr-3 group-hover:bg-purple-100 transition-colors shadow-sm">
+                      <Combine className="w-4 h-4" />
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <span className="font-bold">Consolidate</span>
+                      <span className="text-[10px] text-slate-400">Merge tagged data</span>
+                    </div>
                   </button>
 
                   <button
@@ -2568,10 +2595,12 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       setIsMobileMenuOpen(false);
                       await handleOpenAllA3Modal();
                     }}
-                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-slate-700"
+                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-slate-900 transition-colors group"
                   >
-                    <FileText className="w-4 h-4 mr-3" />
-                    All A3 Cases
+                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center mr-3 group-hover:bg-slate-100 transition-colors">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <span className="font-medium">All A3 Cases</span>
                   </button>
 
                   <button
@@ -2579,50 +2608,66 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                       setIsEmailSettingsOpen(true);
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-rose-600"
+                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-rose-600 transition-colors group"
                   >
-                    <Calendar className="w-4 h-4 mr-3" />
-                    Email Scheduling
+                    <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center mr-3 group-hover:bg-rose-100 transition-colors shadow-sm">
+                      <Mail className="w-4 h-4" />
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <span className="font-bold">Scheduling</span>
+                      <span className="text-[10px] text-slate-400">Auto email reports</span>
+                    </div>
                   </button>
-
                   <button
                     onClick={() => {
                       setIsAIChatOpen(true);
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-indigo-600"
+                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors group"
                   >
-                    <Sparkles className="w-4 h-4 mr-3" />
-                    Ask AI
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3 group-hover:bg-indigo-100 transition-colors shadow-sm">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <span className="font-bold">Ask AI</span>
+                      <span className="text-[10px] text-slate-400">Intelligent coach</span>
+                    </div>
                   </button>
-
                   <button
                     onClick={() => {
                       navigate('/mindmap');
                       setIsMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-amber-600"
+                    className="flex w-full items-center px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-50 hover:text-amber-600 transition-colors group"
                   >
-                    <Lightbulb className="w-4 h-4 mr-3" />
-                    Map Ideas
+                    <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center mr-3 group-hover:bg-amber-100 transition-colors shadow-sm">
+                      <Lightbulb className="w-4 h-4" />
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <span className="font-bold">Map Ideas</span>
+                      <span className="text-[10px] text-slate-400">Visual brainstorming</span>
+                    </div>
                   </button>
 
-                  <button
-                    onClick={() => {
-                      handleSaveData();
-                      setIsMobileMenuOpen(false);
-                    }}
-                    disabled={isSaving}
-                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-green-700 disabled:opacity-50"
-                  >
-                    {isSaving ? (
-                      <Loader2 className="w-4 h-4 mr-3 animate-spin" />
-                    ) : (
-                      <Save className="w-4 h-4 mr-3" />
-                    )}
-                    Save Data
-                  </button>
-
+                  <div className="border-t border-slate-50 my-1 pt-1">
+                    <button
+                      onClick={() => {
+                        handleSaveData();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      disabled={isSaving}
+                      className="flex w-full items-center px-3 py-2 text-sm text-emerald-600 rounded-lg hover:bg-emerald-50 transition-colors group disabled:opacity-50"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center mr-3 group-hover:bg-emerald-100 transition-colors">
+                        {isSaving ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Save className="w-4 h-4" />
+                        )}
+                      </div>
+                      <span className="font-bold">Save Data</span>
+                    </button>
+                  </div>
                 </div>
               </>
             )}
@@ -2631,7 +2676,12 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
           <button
             onClick={handleSaveData}
             disabled={isSaving}
-            className="hidden md:inline-flex p-2 bg-green-600 text-white rounded-md shadow-sm hover:bg-green-700 transition-colors disabled:opacity-50"
+            className={clsx(
+              "hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm disabled:opacity-50",
+              isSaving 
+                ? "bg-slate-100 text-slate-400" 
+                : "bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-md hover:shadow-emerald-100 active:scale-95"
+            )}
             title={isSaving ? "Saving..." : "Save Data"}
           >
             {isSaving ? (
@@ -2639,6 +2689,7 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
             ) : (
               <Save className="w-4 h-4" />
             )}
+            <span className="hidden lg:inline">Save</span>
           </button>
 
           {user ? (
@@ -2646,21 +2697,24 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
               <div className="relative">
                 <button
                   onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
-                  className="h-8 w-8 rounded-full border border-pink-500 text-pink-600 bg-white shadow-sm hover:bg-pink-50 transition-colors flex items-center justify-center text-[10px] font-semibold"
+                  className="h-9 w-9 rounded-xl border-2 border-slate-100 text-slate-600 bg-white shadow-sm hover:border-pink-200 hover:bg-pink-50 transition-all flex items-center justify-center overflow-hidden group"
                   title={`AI Model: ${modelOptions.find(option => option.key === selectedModel)?.label || ''}`}
                 >
                   {modelLogos[selectedModel] ? (
                     <img
                       src={modelLogos[selectedModel]}
                       alt="AI model logo"
-                      className="w-5 h-5"
+                      className="w-5 h-5 transition-transform group-hover:scale-110"
                     />
                   ) : (
-                    modelShortLabels[selectedModel]
+                    <span className="text-[10px] font-bold text-pink-600">{modelShortLabels[selectedModel]}</span>
                   )}
                 </button>
                 {isModelMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-[80]">
+                  <div className="absolute right-0 mt-3 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 z-[80] p-1.5 animate-in fade-in slide-in-from-top-2">
+                    <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50 mb-1">
+                      Select Model
+                    </div>
                     {modelOptions.map(option => (
                       <button
                         key={option.key}
@@ -2669,36 +2723,44 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                           setIsModelMenuOpen(false);
                         }}
                         className={clsx(
-                          'w-full text-left px-3 py-2 text-sm hover:bg-gray-100',
-                          option.key === selectedModel ? 'bg-gray-100 font-semibold text-gray-900' : 'text-gray-700'
+                          'w-full text-left px-3 py-2 text-sm rounded-lg transition-colors flex items-center justify-between group',
+                          option.key === selectedModel 
+                            ? 'bg-pink-50 text-pink-700 font-bold' 
+                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                         )}
                       >
-                        {option.label}
+                        <div className="flex items-center gap-2">
+                          <img src={modelLogos[option.key]} alt="" className="w-4 h-4 opacity-70 group-hover:opacity-100" />
+                          {option.label}
+                        </div>
+                        {option.key === selectedModel && <div className="w-1.5 h-1.5 rounded-full bg-pink-500" />}
                       </button>
                     ))}
                   </div>
                 )}
               </div>
 
-              <div className="flex items-center space-x-2 text-sm cursor-pointer hover:opacity-80 transition-opacity" 
-                title={user.username || 'User'}
-                onClick={() => setIsAccountSettingsOpen(true)}
-              >
-                <div className="h-8 px-3 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-700 font-bold text-xs">
-                  {user.username ? user.username.substring(0, 3).toUpperCase() : <UserIcon className="w-4 h-4" />}
-                </div>
-              </div>
-              <div 
-                className="flex items-center"
-              >
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setIsAccountSettingsOpen(true)}
+                  className="group flex items-center gap-2 pl-1 pr-3 py-1 rounded-xl bg-slate-50 border border-slate-100 hover:bg-white hover:border-blue-200 hover:shadow-sm transition-all"
+                  title={user.username || 'User Settings'}
+                >
+                  <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-[10px] shadow-sm group-hover:shadow-md transition-all">
+                    {user.username ? user.username.substring(0, 2).toUpperCase() : <UserIcon className="w-3.5 h-3.5" />}
+                  </div>
+                  <span className="text-xs font-bold text-slate-700 hidden sm:inline">{user.username}</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 transition-colors" />
+                </button>
+                
                 <button 
                   onClick={() => {
                     if (window.confirm("Are you sure you want to logout? Unsaved changes may be lost.")) {
                       logout();
                     }
                   }}
-                disabled={isLoading}
-                className="text-gray-500 hover:text-red-600 transition-colors p-1 rounded-full hover:bg-gray-100 disabled:opacity-50"
+                  disabled={isLoading}
+                  className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all disabled:opacity-50"
                   title="Logout"
                 >
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
@@ -2923,6 +2985,20 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                               </div>
                                               {isSidebarOpen && <span className="truncate">{bowler.name}</span>}
                                           </div>
+                                          {isSidebarOpen && (
+                                            <button
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setEditingBowler(bowler);
+                                                setIsBowlerModalOpen(true);
+                                              }}
+                                              className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white rounded-md transition-all text-slate-400 hover:text-primary-600"
+                                              title="Edit Bowler"
+                                            >
+                                              <Pencil className="w-3.5 h-3.5" />
+                                            </button>
+                                          )}
                                       </Link>
                                     </div>
                                   )}
@@ -3031,6 +3107,20 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                                               </div>
                                                               {isSidebarOpen && <span className="truncate">{bowler.name}</span>}
                                                           </div>
+                                                          {isSidebarOpen && (
+                                                              <button
+                                                                  onClick={(e) => {
+                                                                      e.preventDefault();
+                                                                      e.stopPropagation();
+                                                                      setEditingBowler(bowler);
+                                                                      setIsBowlerModalOpen(true);
+                                                                  }}
+                                                                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white rounded-md transition-all text-slate-400 hover:text-primary-600"
+                                                                  title="Edit Bowler"
+                                                              >
+                                                                  <Pencil className="w-3.5 h-3.5" />
+                                                              </button>
+                                                          )}
                                                       </Link>
                                                     </div>
                                                   )}
@@ -3135,6 +3225,20 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                                 <FileText className={clsx("w-4 h-4 flex-shrink-0", isSidebarOpen ? "mr-3" : "mr-0", location.pathname.includes(`/a3-analysis/${a3.id}`) ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
                                                 {isSidebarOpen && <span className="truncate">{a3.title}</span>}
                                             </div>
+                                            {isSidebarOpen && (
+                                              <button
+                                                onClick={(e) => {
+                                                  e.preventDefault();
+                                                  e.stopPropagation();
+                                                  setEditingA3Case(a3);
+                                                  setIsA3ModalOpen(true);
+                                                }}
+                                                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white rounded-md transition-all text-slate-400 hover:text-blue-600"
+                                                title="Edit A3 Case"
+                                              >
+                                                <Pencil className="w-3.5 h-3.5" />
+                                              </button>
+                                            )}
                                         </Link>
                                     </div>
                                   )}
@@ -3237,6 +3341,20 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                                                                 <FileText className={clsx("w-4 h-4 flex-shrink-0", isSidebarOpen ? "mr-3" : "mr-0", location.pathname.includes(`/a3-analysis/${a3.id}`) ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500")} />
                                                                 {isSidebarOpen && <span className="truncate">{a3.title}</span>}
                                                             </div>
+                                                            {isSidebarOpen && (
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.preventDefault();
+                                                                        e.stopPropagation();
+                                                                        setEditingA3Case(a3);
+                                                                        setIsA3ModalOpen(true);
+                                                                    }}
+                                                                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white rounded-md transition-all text-slate-400 hover:text-blue-600"
+                                                                    title="Edit A3 Case"
+                                                                >
+                                                                    <Pencil className="w-3.5 h-3.5" />
+                                                                </button>
+                                                            )}
                                                         </Link>
                                                     </div>
                                                   )}
