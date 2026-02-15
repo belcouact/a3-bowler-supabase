@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { Info, Settings, HelpCircle, Sparkles, Loader2, Calendar, Zap } from 'lucide-react';
@@ -543,218 +543,258 @@ const MetricBowler = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      <div className="px-6 py-5 border-b border-gray-200 bg-white flex justify-between items-center">
-        <div 
-            onDoubleClick={() => {
-                if (selectedBowler) {
-                    setEditBowlerName(selectedBowler.name);
-                    setEditBowlerDesc(selectedBowler.description || '');
-                    setIsEditingBowler(true);
-                }
-            }}
-            className="flex-1 mr-4"
-        >
-           {isEditingBowler ? (
-               <div 
-                 className="flex flex-col space-y-2 max-w-md"
-                 onBlur={(e) => {
-                     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                         handleBowlerSave();
-                     }
-                 }}
-               >
-                   <input 
-                       type="text" 
-                       value={editBowlerName}
-                       onChange={(e) => setEditBowlerName(e.target.value)}
-                       onKeyDown={(e) => e.key === 'Enter' && handleBowlerSave()}
-                       className="text-xl font-semibold text-gray-900 border-b border-gray-300 focus:border-blue-500 outline-none"
-                       autoFocus
-                   />
-                   <input 
-                       type="text" 
-                       value={editBowlerDesc}
-                       onChange={(e) => setEditBowlerDesc(e.target.value)}
-                       onKeyDown={(e) => e.key === 'Enter' && handleBowlerSave()}
-                       className="text-sm text-gray-500 border-b border-gray-300 focus:border-blue-500 outline-none w-full"
-                       placeholder="Description"
-                   />
-               </div>
-           ) : (
-               <>
-                  <h3 className="text-xl font-semibold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors" title="Double-click to edit">{title}</h3>
-                   <p className="hidden md:block text-sm text-gray-500 mt-1 cursor-pointer hover:text-gray-700" title="Double-click to edit">
-                     {selectedBowler?.description || 'Track key performance indicators and monthly targets.'}
-                   </p>
-               </>
-           )}
-        </div>
-        <div className="text-right flex flex-col items-end">
-             {selectedBowler?.champion && <p className="text-sm text-gray-600 mb-2">Champion: {selectedBowler.champion}</p>}
-            
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setIsHelpModalOpen(true)}
-                className="inline-flex items-center p-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                title="Help Guide"
-              >
-                <HelpCircle className="h-4 w-4" />
-              </button>
-              <div className="hidden sm:flex items-center space-x-2">
-                <input 
-                  type="month" 
-                  id="startDate"
-                  value={startDate}
-                  onChange={(e) => handleStartDateChange(e.target.value)}
-                  className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-1 border"
-                  title="Start Date"
-                />
-                <span className="text-gray-400">-</span>
-                <input 
-                  type="month" 
-                  id="stopDate"
-                  value={stopDate}
-                  onChange={(e) => handleStopDateChange(e.target.value)}
-                  className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-1 border"
-                  title="Stop Date"
-                />
+    <div className="w-full">
+      {/* Header Section */}
+      <div className="bg-white border-b border-slate-100 overflow-hidden">
+        <div className="px-4 py-6 md:p-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="flex items-start gap-4 md:gap-5">
+              <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-brand-600 flex items-center justify-center text-white shadow-xl shadow-brand-100 shrink-0">
+                <Zap className="w-6 h-6 md:w-7 md:h-7" />
               </div>
-              <div className="flex sm:hidden items-center space-x-1">
-                <label className="relative inline-flex items-center">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 bg-white text-gray-700 shadow-sm">
-                    <Calendar className="w-4 h-4" />
-                  </span>
-                  <input
-                    type="month"
-                    value={startDate}
-                    onChange={(e) => handleStartDateChange(e.target.value)}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    title="Start Date"
-                  />
-                </label>
-                <span className="text-gray-400">-</span>
-                <label className="relative inline-flex items-center">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 bg-white text-gray-700 shadow-sm">
-                    <Calendar className="w-4 h-4" />
-                  </span>
-                  <input
-                    type="month"
-                    value={stopDate}
-                    onChange={(e) => handleStopDateChange(e.target.value)}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    title="Stop Date"
-                  />
-                </label>
+              <div 
+                  onDoubleClick={() => {
+                      if (selectedBowler) {
+                          setEditBowlerName(selectedBowler.name);
+                          setEditBowlerDesc(selectedBowler.description || '');
+                          setIsEditingBowler(true);
+                      }
+                  }}
+                  className="flex-1 min-w-0"
+              >
+                 {isEditingBowler ? (
+                     <div 
+                       className="flex flex-col space-y-2 w-full max-w-xl"
+                       onBlur={(e) => {
+                           if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                               handleBowlerSave();
+                           }
+                       }}
+                     >
+                         <input 
+                             type="text" 
+                             value={editBowlerName}
+                             onChange={(e) => setEditBowlerName(e.target.value)}
+                             onKeyDown={(e) => e.key === 'Enter' && handleBowlerSave()}
+                             className="text-xl md:text-3xl font-bold text-slate-900 bg-slate-50 border-b-2 border-brand-500 focus:outline-none w-full px-1 py-0.5"
+                             autoFocus
+                         />
+                         <input 
+                             type="text" 
+                             value={editBowlerDesc}
+                             onChange={(e) => setEditBowlerDesc(e.target.value)}
+                             onKeyDown={(e) => e.key === 'Enter' && handleBowlerSave()}
+                             className="text-sm text-slate-500 bg-transparent border-none focus:outline-none w-full px-1"
+                             placeholder="Add description..."
+                         />
+                     </div>
+                 ) : (
+                     <div>
+                         <h1 className="text-2xl md:text-4xl font-black text-slate-900 font-display tracking-tight leading-tight group flex items-center gap-3 truncate">
+                             {title}
+                             <Settings className="w-5 h-5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all cursor-pointer hover:text-brand-500" />
+                         </h1>
+                         <div className="mt-2 flex flex-wrap items-center gap-4">
+                            {selectedBowler?.champion && (
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Owner</span>
+                                  <span className="text-xs font-bold text-slate-700 px-2 py-0.5 bg-slate-100 rounded">
+                                      {selectedBowler.champion}
+                                  </span>
+                                </div>
+                            )}
+                            {selectedBowler?.description && (
+                                <p className="text-sm text-slate-500 font-medium max-w-2xl leading-relaxed truncate">
+                                    {selectedBowler.description}
+                                </p>
+                            )}
+                         </div>
+                     </div>
+                 )}
               </div>
             </div>
+
+            <div className="flex flex-wrap items-center gap-3 md:gap-5">
+              <div className="flex items-center bg-slate-100/50 rounded-xl p-1.5 border border-slate-200/60 shadow-inner w-full sm:w-auto justify-between sm:justify-start">
+                <div className="flex items-center gap-2.5 px-3 py-1.5 bg-white rounded-lg shadow-sm border border-slate-200/50 flex-1 sm:flex-none">
+                  <Calendar className="w-4 h-4 text-brand-500" />
+                  <input 
+                    type="month" 
+                    value={startDate}
+                    onChange={(e) => handleStartDateChange(e.target.value)}
+                    className="bg-transparent border-none text-sm font-black text-slate-800 focus:ring-0 cursor-pointer p-0 font-display w-full sm:w-auto"
+                  />
+                </div>
+                <div className="w-px h-5 bg-slate-300 mx-1 hidden sm:block"></div>
+                <div className="flex items-center gap-2.5 px-3 py-1.5 bg-white rounded-lg shadow-sm border border-slate-200/50 flex-1 sm:flex-none opacity-60">
+                  <input 
+                    type="month" 
+                    value={stopDate}
+                    disabled
+                    className="bg-transparent border-none text-sm font-black text-slate-800 focus:ring-0 cursor-not-allowed p-0 font-display w-full sm:w-auto"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button 
+                  onClick={() => setIsHelpModalOpen(true)}
+                  className="w-11 h-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-brand-600 hover:border-brand-200 transition-all active:scale-95 bg-white shadow-sm"
+                  title="How to use"
+                >
+                  <HelpCircle className="w-5 h-5" />
+                </button>
+                <button className="h-11 px-5 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200 flex items-center gap-2 flex-1 sm:flex-none justify-center">
+                  <Settings className="w-4 h-4" />
+                  <span>Settings</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div className="overflow-x-auto overflow-y-hidden scrollbar-hide border-t border-slate-200">
-        <table className="min-w-full divide-y divide-slate-100 table-auto">
-          <thead className="bg-slate-50/80 backdrop-blur-sm">
-            <tr>
-              <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider sticky left-0 bg-slate-50/95 z-20 border-r border-slate-200 shadow-soft w-48 font-display">
-                Metric Name
-              </th>
-              <th scope="col" className="px-2 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider w-24 border-r border-slate-200 font-display">
-                Scope
-              </th>
-              <th scope="col" className="px-2 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider w-20 border-r border-slate-200 font-display">
-                Type
-              </th>
-              {displayMonths.map((month) => (
-                <th
-                  key={month.key}
-                  scope="col"
-                  className="px-1 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-normal break-words min-w-[3rem] border-r border-slate-200 font-display"
+                <button 
+                  onClick={() => setIsHelpModalOpen(true)}
+                  className="w-11 h-11 flex items-center justify-center text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all border border-transparent hover:border-brand-100"
+                  title="Help & Documentation"
                 >
-                  {month.label.replace('/', ' ')}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-slate-100">
-            {metrics.length === 0 ? (
-                <tr>
-                    <td colSpan={3 + displayMonths.length} className="px-6 py-10 text-center text-slate-400 italic font-medium">
-                        No metrics added yet. Use the + button to add metrics.
-                    </td>
-                </tr>
-            ) : (
-                metrics.map((metric, metricIndex) => (
-                  <>
-                  <tr
-                    key={`${metric.id}-row1`}
-                    className="hover:bg-slate-50/50 transition-colors border-b-0 group/row"
-                  >
-                    <td rowSpan={2} className="px-4 py-4 text-sm font-medium text-slate-900 sticky left-0 bg-white z-10 group-hover/row:bg-slate-50/50 border-r border-slate-200 shadow-soft align-top break-words transition-colors">
-                      <div className="flex items-start justify-between">
-                        <div className="flex flex-col">
-                            <div className="flex items-center flex-wrap">
-                                <span className="mr-2 font-semibold tracking-tight">{metric.name}</span>
-                                <div 
-                                    className="inline-block"
-                                    onMouseEnter={(e) => {
-                                        const rect = e.currentTarget.getBoundingClientRect();
-                                        setTooltip({
-                                            x: rect.right + 8,
-                                            y: rect.top,
-                                            content: (
-                                                <>
-                                                    <p className="font-semibold mb-1 text-white">Definition:</p>
-                                                    <p className="mb-2 text-slate-200">{metric.definition || 'N/A'}</p>
-                                                    
-                                                    <p className="font-semibold mb-1 text-white">Owner:</p>
-                                                    <p className="mb-2 text-slate-200">{metric.owner || 'N/A'}</p>
-                                                    
-                                                    <p className="font-semibold mb-1 text-white">Attribute:</p>
-                                                    <p className="text-slate-200">{metric.attribute || 'N/A'}</p>
-                                                </>
-                                            )
-                                        });
-                                    }}
-                                    onMouseLeave={() => setTooltip(null)}
-                                >
-                                    <Info className="w-3.5 h-3.5 text-slate-400 hover:text-primary-500 cursor-help transition-colors" />
-                                </div>
-                            </div>
-                        </div>
-                      </div>
-                    </td>
-                    
-                    <td rowSpan={2} className="px-2 py-4 whitespace-nowrap text-xs text-slate-600 bg-white border-r border-slate-200 border-b-0 align-top group-hover/row:bg-slate-50/50 transition-colors">
-                        {metric.scope || '-'}
-                    </td>
+                  <HelpCircle className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-                    <td className="px-2 py-2 whitespace-nowrap text-xs font-semibold text-slate-500 bg-slate-50/30 border-b border-slate-100 h-8">
-                      Target
-                    </td>
+      {/* Main Content Area */}
+      <div className="bg-[#f8fafc] px-3 py-6 md:px-8 md:py-10 lg:px-10">
+        <div className="max-w-[1600px] mx-auto space-y-10 md:space-y-16">
+          
+          {/* Table Section */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden transition-all duration-300 hover:shadow-md">
+            <div className="overflow-x-auto overflow-y-hidden scrollbar-hide">
+              <table className="min-w-full divide-y divide-slate-100 table-auto border-collapse">
+                <thead className="bg-slate-50/50">
+                  <tr>
+                    <th scope="col" className="px-4 md:px-6 py-5 text-left text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] sticky left-0 bg-slate-50/95 z-20 border-r border-slate-200/60 w-48 md:w-64 font-display">
+                      Metric Name
+                    </th>
+                    <th scope="col" className="hidden sm:table-cell px-3 py-5 text-left text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] w-28 border-r border-slate-200/60 font-display">
+                      Scope
+                    </th>
+                    <th scope="col" className="hidden md:table-cell px-3 py-5 text-left text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] w-24 border-r border-slate-200/60 font-display">
+                      Type
+                    </th>
+                    {displayMonths.map((month) => (
+                      <th
+                        key={month.key}
+                        scope="col"
+                        className="px-2 py-5 text-center text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] whitespace-normal break-words min-w-[4rem] border-r border-slate-200/60 font-display"
+                      >
+                        {month.label.replace('/', ' ')}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-slate-100">
+                  {metrics.length === 0 ? (
+                      <tr>
+                          <td colSpan={3 + displayMonths.length} className="px-6 py-10 text-center text-slate-400 italic font-medium">
+                              No metrics added yet. Use the + button to add metrics.
+                          </td>
+                      </tr>
+                  ) : (
+                      metrics.map((metric, metricIndex) => (
+                        <React.Fragment key={metric.id}>
+                        <tr
+                          key={`${metric.id}-row1`}
+                          className="hover:bg-slate-50/40 transition-colors border-b-0 group/row"
+                        >
+                          <td rowSpan={2} className="px-4 md:px-6 py-6 text-sm font-semibold text-slate-800 sticky left-0 bg-white z-10 group-hover/row:bg-slate-50/40 border-r border-slate-200/60 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.05)] align-top break-words transition-colors">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex flex-col min-w-0">
+                                  <div className="flex items-center flex-wrap gap-2">
+                                      <span className="font-display tracking-tight text-sm md:text-base leading-tight truncate">{metric.name}</span>
+                                      <div 
+                                          className="inline-flex items-center justify-center shrink-0"
+                                          onMouseEnter={(e) => {
+                                              const rect = e.currentTarget.getBoundingClientRect();
+                                              setTooltip({
+                                                  x: rect.right + 8,
+                                                  y: rect.top,
+                                                  content: (
+                                                      <div className="space-y-3">
+                                                          <div>
+                                                              <p className="font-bold text-[10px] uppercase tracking-wider text-slate-400 mb-1">Definition</p>
+                                                              <p className="text-sm text-white leading-relaxed">{metric.definition || 'N/A'}</p>
+                                                          </div>
+                                                          <div className="grid grid-cols-2 gap-4">
+                                                              <div>
+                                                                  <p className="font-bold text-[10px] uppercase tracking-wider text-slate-400 mb-1">Owner</p>
+                                                                  <p className="text-sm text-white">{metric.owner || 'N/A'}</p>
+                                                              </div>
+                                                              <div>
+                                                                  <p className="font-bold text-[10px] uppercase tracking-wider text-slate-400 mb-1">Attribute</p>
+                                                                  <p className="text-sm text-white">{metric.attribute || 'N/A'}</p>
+                                                              </div>
+                                                          </div>
+                                                      </div>
+                                                  )
+                                              });
+                                          }}
+                                          onMouseLeave={() => setTooltip(null)}
+                                      >
+                                          <Info className="w-3.5 h-3.5 text-slate-300 hover:text-brand-500 cursor-help transition-colors" />
+                                      </div>
+                                  </div>
+                                  {metric.champion && (
+                                    <div className="mt-1 flex items-center gap-1.5 opacity-60">
+                                      <div className="w-1 h-1 rounded-full bg-slate-400"></div>
+                                      <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">{metric.champion}</span>
+                                    </div>
+                                  )}
+                              </div>
+                            </div>
+                          </td>
+                          <td rowSpan={2} className="hidden sm:table-cell px-3 py-6 align-top border-r border-slate-200/60 group-hover/row:bg-slate-50/40 transition-colors">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200/50 uppercase tracking-wide">
+                              {metric.scope || 'N/A'}
+                            </span>
+                          </td>
+                          <td rowSpan={2} className="hidden md:table-cell px-3 py-6 align-top border-r border-slate-200/60 group-hover/row:bg-slate-50/40 transition-colors">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                              {metric.type || 'N/A'}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3 whitespace-nowrap text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/30 border-b border-slate-100/80 h-10">
+                            Target
+                          </td>
 
                     {displayMonths.map((month, monthIndex) => (
                       <td
                         key={`${month.key}-target`}
-                        className="px-0 py-0 whitespace-nowrap text-xs text-slate-500 bg-slate-50/30 border-b border-r border-slate-100 h-8 p-0 relative group/cell"
+                        className="px-0 py-0 whitespace-nowrap text-xs text-slate-500 bg-slate-50/30 border-b border-r border-slate-100/80 h-10 p-0 relative group/cell"
                         onContextMenu={(e) => handleRightClick(e, metric.id, month.key, 'target', metric.monthlyData?.[month.key]?.targetNote || '')}
                       >
                         <input
                             id={`cell-${metric.id}-${month.key}-target`}
                             type="text"
-                            className="w-full h-full bg-transparent text-center focus:outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary-500 px-1 min-w-[3rem] transition-all font-medium text-slate-700 placeholder-slate-300"
+                            inputMode="decimal"
+                            className="w-full h-full bg-transparent text-center focus:outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-brand-500/30 px-1 min-w-[4.5rem] md:min-w-[4rem] transition-all font-medium text-slate-600 placeholder-slate-300"
                             defaultValue={metric.monthlyData?.[month.key]?.target || ''}
                             onBlur={(e) => handleCellUpdate(metric.id, month.key, 'target', e.target.value)}
                             onKeyDown={(e) => handleKeyDown(e, 'target', metricIndex, monthIndex)}
                             title={metric.monthlyData?.[month.key]?.targetNote || ''}
                         />
                         {metric.monthlyData?.[month.key]?.targetNote && (
-                          <div className="absolute top-0 right-0 w-0 h-0 border-t-[6px] border-l-[6px] border-t-red-500 border-l-transparent pointer-events-none" />
+                          <div className="absolute top-0 right-0 w-0 h-0 border-t-[6px] border-l-[6px] border-t-red-500/80 border-l-transparent pointer-events-none" />
                         )}
                       </td>
                     ))}
                   </tr>
 
-                  <tr key={`${metric.id}-row2`} className="hover:bg-slate-50/50 transition-colors group/row">
-                     <td className="px-2 py-2 whitespace-nowrap text-xs font-semibold text-slate-500 h-8 border-b border-r border-slate-100">
+                  <tr key={`${metric.id}-row2`} className="hover:bg-slate-50/40 transition-colors group/row">
+                     <td className="px-3 py-3 whitespace-nowrap text-[11px] font-bold text-slate-400 uppercase tracking-wider h-10 border-b border-r border-slate-100/80">
                         Actual
                      </td>
                      {displayMonths.map((month, monthIndex) => {
@@ -766,17 +806,18 @@ const MetricBowler = () => {
                        return (
                        <td
                          key={`${month.key}-actual`}
-                         className="px-0 py-0 whitespace-nowrap text-xs text-slate-500 h-8 p-0 relative group/cell border-b border-r border-slate-100"
+                         className="px-0 py-0 whitespace-nowrap text-xs text-slate-500 h-10 p-0 relative group/cell border-b border-r border-slate-100/80"
                          onContextMenu={(e) => handleRightClick(e, metric.id, month.key, 'actual', metric.monthlyData?.[month.key]?.actualNote || '')}
                        >
                          <input
                              id={`cell-${metric.id}-${month.key}-actual`}
                              type="text"
-                             className={`w-full h-full bg-transparent text-center focus:outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary-500 px-1 min-w-[3rem] transition-all ${
+                             inputMode="decimal"
+                             className={`w-full h-full bg-transparent text-center focus:outline-none focus:bg-white focus:ring-2 focus:ring-inset focus:ring-brand-500/30 px-1 min-w-[4.5rem] md:min-w-[4rem] transition-all ${
                                !metric.monthlyData?.[month.key]?.actual 
                                  ? 'text-slate-300' 
                                  : violation 
-                                   ? 'text-red-600 font-bold bg-red-50/50' 
+                                   ? 'text-rose-600 font-bold bg-rose-50/30' 
                                    : 'text-slate-900 font-bold'
                              }`}
                              defaultValue={metric.monthlyData?.[month.key]?.actual || ''}
@@ -785,23 +826,29 @@ const MetricBowler = () => {
                              title={metric.monthlyData?.[month.key]?.actualNote || ''}
                          />
                          {metric.monthlyData?.[month.key]?.actualNote && (
-                           <div className="absolute top-0 right-0 w-0 h-0 border-t-[6px] border-l-[6px] border-t-red-500 border-l-transparent pointer-events-none" />
+                           <div className="absolute top-0 right-0 w-0 h-0 border-t-[6px] border-l-[6px] border-t-red-500/80 border-l-transparent pointer-events-none" />
                          )}
                        </td>
                        );
                      })}
                   </tr>
-                  </>
+                  </React.Fragment>
                 ))
             )}
           </tbody>
         </table>
       </div>
+    </div>
 
       {metrics.length > 0 && (
-        <div className="p-6 bg-gray-50 border-t border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Metric Trends</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="space-y-10 md:space-y-12">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl md:text-2xl font-black text-slate-900 font-display tracking-tight flex items-center gap-4">
+              <div className="w-2 h-8 bg-brand-600 rounded-full shadow-sm shadow-brand-100"></div>
+              Metric Trends
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 md:gap-10">
             {metrics.map(metric => {
               const chartData = displayMonths.map(month => {
                 const rawTarget = metric.monthlyData?.[month.key]?.target;
@@ -882,14 +929,21 @@ const MetricBowler = () => {
               ];
 
               return (
-                <div key={`${metric.id}-chart`} className="bg-white p-5 rounded-xl shadow-soft border border-slate-100 hover:shadow-medium transition-shadow duration-300">
-                  <div className="flex justify-between items-start mb-5">
-                    <h4 className="text-base font-bold text-slate-800 font-display tracking-tight">{metric.name}</h4>
-                    <div className="flex items-center space-x-1">
+                <div key={`${metric.id}-chart`} className="bg-white p-5 md:p-8 rounded-2xl shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-slate-200/40 transition-all duration-500 group/card">
+                  <div className="flex justify-between items-start mb-8">
+                    <div>
+                        <h4 className="text-lg font-black text-slate-900 font-display tracking-tight mb-1 group-hover/card:text-brand-600 transition-colors">{metric.name}</h4>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{metric.type || 'N/A'}</span>
+                            <div className="w-1 h-1 rounded-full bg-slate-200"></div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{metric.scope || 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-100">
                       <button
                         onClick={() => handleAIAnalysis(metric)}
                         disabled={analyzingMetrics[metric.id]}
-                        className="p-1.5 rounded-lg transition-all text-primary-500 hover:text-primary-700 hover:bg-primary-50 disabled:opacity-50"
+                        className="p-2.5 rounded-lg transition-all text-brand-500 hover:text-brand-600 hover:bg-white hover:shadow-sm disabled:opacity-50"
                         title="AI Analysis"
                       >
                         {analyzingMetrics[metric.id] ? (
@@ -902,10 +956,10 @@ const MetricBowler = () => {
                         onClick={() =>
                           setChartSettingsOpen(prev => ({ ...prev, [metric.id]: !prev[metric.id] }))
                         }
-                        className={`p-1.5 rounded-lg transition-all ${
+                        className={`p-2.5 rounded-lg transition-all ${
                           isSettingsOpen
-                            ? 'bg-slate-100 text-primary-600'
-                            : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+                            ? 'bg-white text-slate-900 shadow-sm border-slate-200'
+                            : 'text-slate-400 hover:text-slate-600 hover:bg-white hover:shadow-sm'
                         }`}
                         title="Adjust Scale"
                       >
@@ -914,7 +968,7 @@ const MetricBowler = () => {
                       <button
                         onClick={() => handleCreateA3FromMetric(metric)}
                         disabled={creatingA3FromMetric[metric.id]}
-                        className="p-1.5 rounded-lg transition-all text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                        className="p-2.5 rounded-lg transition-all text-emerald-600 hover:text-emerald-700 hover:bg-white hover:shadow-sm disabled:opacity-50"
                         title="Create A3 with AI"
                       >
                         {creatingA3FromMetric[metric.id] ? (
@@ -927,54 +981,67 @@ const MetricBowler = () => {
                   </div>
                   
                   {isSettingsOpen && (
-                    <div className="mb-4 p-3 bg-slate-50 rounded-lg text-xs border border-slate-100">
-                        <div className="flex items-center space-x-4">
-                            <span className="font-medium text-slate-600">Y-Axis Scale:</span>
-                            <div className="flex items-center space-x-2">
-                                <label className="text-slate-500">Min:</label>
-                                <input 
-                                    type="number" 
-                                    className="w-20 p-1 border border-slate-300 rounded focus:ring-primary-500 focus:border-primary-500"
-                                    placeholder="Auto"
-                                    value={scale.min}
-                                    onChange={(e) => setChartScales(prev => ({
-                                        ...prev,
-                                        [metric.id]: { ...prev[metric.id], min: e.target.value }
-                                    }))}
-                                />
+                    <div className="mb-8 p-5 bg-slate-50/80 rounded-2xl text-xs border border-slate-200/50 shadow-inner animate-in slide-in-from-top-2 duration-300">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+                            <div className="flex items-center gap-2 shrink-0">
+                                <Settings className="w-3.5 h-3.5 text-slate-400" />
+                                <span className="font-black text-slate-500 uppercase tracking-wider text-[10px]">Scale Controls</span>
                             </div>
-                            <div className="flex items-center space-x-2">
-                                <label className="text-slate-500">Max:</label>
-                                <input 
-                                    type="number" 
-                                    className="w-20 p-1 border border-slate-300 rounded focus:ring-primary-500 focus:border-primary-500"
-                                    placeholder="Auto"
-                                    value={scale.max}
-                                    onChange={(e) => setChartScales(prev => ({
-                                        ...prev,
-                                        [metric.id]: { ...prev[metric.id], max: e.target.value }
-                                    }))}
-                                />
+                            <div className="flex items-center gap-6">
+                                <div className="flex items-center gap-3">
+                                    <label className="text-slate-500 font-bold uppercase tracking-tighter text-[10px]">Min</label>
+                                    <input 
+                                        type="number" 
+                                        className="w-24 px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all font-bold text-slate-700"
+                                        placeholder="Auto"
+                                        value={scale.min}
+                                        onChange={(e) => setChartScales(prev => ({
+                                            ...prev,
+                                            [metric.id]: { ...prev[metric.id], min: e.target.value }
+                                        }))}
+                                    />
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <label className="text-slate-500 font-bold uppercase tracking-tighter text-[10px]">Max</label>
+                                    <input 
+                                        type="number" 
+                                        className="w-24 px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all font-bold text-slate-700"
+                                        placeholder="Auto"
+                                        value={scale.max}
+                                        onChange={(e) => setChartScales(prev => ({
+                                            ...prev,
+                                            [metric.id]: { ...prev[metric.id], max: e.target.value }
+                                        }))}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
                   )}
 
-                  <div className="h-64 w-full">
+                  <div className="h-80 w-full relative">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <LineChart data={chartData} margin={{ top: 20, right: 10, bottom: 0, left: -20 }}>
+                        <defs>
+                          <linearGradient id={`gradient-actual-${metric.id}`} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.1}/>
+                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="8 8" vertical={false} stroke="#f1f5f9" />
                         <XAxis
                           dataKey="name"
-                          tick={{ fontSize: 10, fill: '#64748b' }}
+                          tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 700, fontVariant: 'small-caps' }}
                           axisLine={false}
                           tickLine={false}
+                          dy={15}
                         />
                         <YAxis
-                          tick={{ fontSize: 10, fill: '#64748b' }}
+                          tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 700 }}
                           axisLine={false}
                           tickLine={false}
                           domain={yDomain}
+                          dx={-5}
                         />
                         {metricA3Markers.map((marker, index) => (
                           <ReferenceLine
@@ -993,59 +1060,74 @@ const MetricBowler = () => {
                             const a3ForMonth = a3MarkersByMonth[label as string] || [];
 
                             return (
-                              <div className="bg-white border border-gray-200 rounded-md shadow-md p-2 text-xs text-gray-700">
-                                <div className="font-semibold text-gray-900 mb-1">{label}</div>
-                                {rows.map((entry: any) => {
-                                  if (!entry || entry.value == null || Number.isNaN(entry.value)) {
-                                    return null;
-                                  }
-                                  return (
-                                    <div
-                                      key={entry.dataKey}
-                                      className="flex items-center justify-between gap-2"
-                                    >
-                                      <span className="text-gray-500">
-                                        {entry.name || entry.dataKey}
-                                      </span>
-                                      <span className="font-medium text-gray-900">
-                                        {entry.value}
-                                      </span>
-                                    </div>
-                                  );
-                                })}
-                                {a3ForMonth.length > 0 && (
-                                  <div className="mt-2 border-t border-gray-100 pt-1">
-                                    <div className="text-[10px] font-semibold text-emerald-700 mb-1">
-                                      A3s ending this month
-                                    </div>
-                                    {a3ForMonth.map((a3, index) => (
+                              <div className="bg-white/95 backdrop-blur-sm border border-slate-200 rounded-xl shadow-xl p-3 min-w-[160px] animate-in fade-in zoom-in duration-200">
+                                <div className="font-bold text-slate-800 mb-2 border-b border-slate-100 pb-1 text-[13px] font-display">{label}</div>
+                                <div className="space-y-1.5">
+                                  {rows.map((entry: any) => {
+                                    if (!entry || entry.value == null || Number.isNaN(entry.value)) {
+                                      return null;
+                                    }
+                                    return (
                                       <div
-                                        key={index}
-                                        className="text-[10px] text-emerald-800 leading-snug"
+                                        key={entry.dataKey}
+                                        className="flex items-center justify-between gap-4"
                                       >
-                                        {a3.title}
-                                        {a3.endDate && (
-                                          <span className="text-[10px] text-gray-500">
-                                            {' '}
-                                            ({a3.endDate})
+                                        <div className="flex items-center gap-1.5">
+                                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></div>
+                                          <span className="text-slate-500 font-medium text-[11px]">
+                                            {entry.name || entry.dataKey}
                                           </span>
-                                        )}
+                                        </div>
+                                        <span className="font-bold text-slate-900 text-[11px]">
+                                          {entry.value}
+                                        </span>
                                       </div>
-                                    ))}
+                                    );
+                                  })}
+                                </div>
+                                {a3ForMonth.length > 0 && (
+                                  <div className="mt-3 pt-2 border-t border-emerald-100">
+                                    <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1.5">
+                                      A3 Completions
+                                    </div>
+                                    <div className="space-y-1">
+                                      {a3ForMonth.map((a3, index) => (
+                                        <div
+                                          key={index}
+                                          className="text-[11px] text-emerald-700 leading-snug flex items-start gap-1.5 font-medium bg-emerald-50/50 p-1.5 rounded-lg border border-emerald-100/50"
+                                        >
+                                          <Zap className="w-3 h-3 mt-0.5 shrink-0" />
+                                          <span>{a3.title}</span>
+                                        </div>
+                                      ))}
+                                    </div>
                                   </div>
                                 )}
                               </div>
                             );
                           }}
                         />
-                        <Legend wrapperStyle={{ fontSize: '12px' }} />
+                        <Legend 
+                          verticalAlign="top" 
+                          align="right" 
+                          iconType="circle"
+                          iconSize={8}
+                          wrapperStyle={{ 
+                            fontSize: '11px', 
+                            fontWeight: 700, 
+                            color: '#64748b',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.1em',
+                            paddingBottom: '30px'
+                          }} 
+                        />
                         <Line 
                           type="monotone" 
                           dataKey="actual" 
-                          stroke="#3b82f6" 
-                          strokeWidth={2} 
+                          stroke="#6366f1" 
+                          strokeWidth={4} 
                           dot={<CustomizedDot />} 
-                          activeDot={{ r: 5 }} 
+                          activeDot={{ r: 8, strokeWidth: 4, stroke: '#fff', fill: '#6366f1' }} 
                           name="Actual"
                           connectNulls
                         />
@@ -1054,9 +1136,9 @@ const MetricBowler = () => {
                         <Line 
                           type="monotone" 
                           dataKey="minTarget" 
-                          stroke="#ef4444" 
+                          stroke="#f43f5e" 
                           strokeWidth={2} 
-                          strokeDasharray="3 3" 
+                          strokeDasharray="4 4" 
                           dot={false}
                           activeDot={false}
                           name="Min Target"
@@ -1065,9 +1147,9 @@ const MetricBowler = () => {
                         <Line 
                           type="monotone" 
                           dataKey="maxTarget" 
-                          stroke="#ef4444" 
+                          stroke="#f43f5e" 
                           strokeWidth={2} 
-                          strokeDasharray="3 3" 
+                          strokeDasharray="4 4" 
                           dot={false}
                           activeDot={false}
                           name="Max Target"
@@ -1078,9 +1160,9 @@ const MetricBowler = () => {
                         <Line 
                           type="monotone" 
                           dataKey="target" 
-                          stroke="#ef4444" 
+                          stroke="#f43f5e" 
                           strokeWidth={2} 
-                          strokeDasharray="5 5" 
+                          strokeDasharray="8 8" 
                           dot={false}
                           name="Target"
                           connectNulls 
