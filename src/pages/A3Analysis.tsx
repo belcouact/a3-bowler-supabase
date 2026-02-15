@@ -1,17 +1,13 @@
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense } from 'react';
 import { Link, Outlet, useLocation, useParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { useApp } from '../context/AppContext';
-import { AlertCircle, BarChart2, GitBranch, Calendar, CheckCircle, FileText, Bot, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { AlertCircle, BarChart2, GitBranch, Calendar, CheckCircle, FileText, Bot } from 'lucide-react';
 
 const A3Analysis = () => {
   const location = useLocation();
   const { id } = useParams();
   const { a3Cases } = useApp();
-
-  const tabsContainerRef = useRef<HTMLDivElement | null>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
 
   const selectedCase = a3Cases.find(c => c.id === id);
   const title = selectedCase ? selectedCase.title : 'A3 Problem Solving';
@@ -25,36 +21,6 @@ const A3Analysis = () => {
     { path: 'summary', label: 'A3 Report', icon: FileText },
     { path: 'ai-coach', label: 'AI Coach', icon: Bot },
   ];
-
-  const updateScrollButtons = () => {
-    const el = tabsContainerRef.current;
-    if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 0);
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
-  };
-
-  const handleScrollTabs = (direction: 'left' | 'right') => {
-    const el = tabsContainerRef.current;
-    if (!el) return;
-    const amount = el.clientWidth * 0.6;
-    el.scrollBy({
-      left: direction === 'left' ? -amount : amount,
-      behavior: 'smooth',
-    });
-  };
-
-  useEffect(() => {
-    const el = tabsContainerRef.current;
-    if (!el) return;
-    const handleScroll = () => updateScrollButtons();
-    handleScroll();
-    el.addEventListener('scroll', handleScroll);
-    window.addEventListener('resize', handleScroll);
-    return () => {
-      el.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleScroll);
-    };
-  }, [location.pathname]);
 
   if (!id) {
     return (

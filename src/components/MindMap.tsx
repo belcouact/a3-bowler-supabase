@@ -23,13 +23,15 @@ const MindMapNode = ({
   onUpdate, 
   onAdd, 
   onDelete, 
-  onMouseDown 
+  onMouseDown,
+  selectedNodeId
 }: { 
   node: Node, 
   onUpdate: (id: string, updates: Partial<Node>) => void,
   onAdd: (id: string, direction: 'right' | 'bottom') => void,
   onDelete: (id: string) => void,
-  onMouseDown: (e: ReactMouseEvent, id: string) => void
+  onMouseDown: (e: ReactMouseEvent, id: string) => void,
+  selectedNodeId: string | null
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const nodeRef = useRef<HTMLDivElement>(null);
@@ -272,6 +274,7 @@ export const MindMap = ({ initialNodes, onChange, autoHeight, initialScale, fixe
   
   const [scale, setScale] = useState(initialScale ?? 1);
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const panStartRef = useRef({ x: 0, y: 0 });
@@ -354,6 +357,7 @@ export const MindMap = ({ initialNodes, onChange, autoHeight, initialScale, fixe
 
   const handleMouseDown = (e: ReactMouseEvent, id: string) => {
     e.stopPropagation();
+    setSelectedNodeId(id);
     const node = nodes.find(n => n.id === id);
     if (!node || !containerRef.current) return;
 
@@ -597,6 +601,7 @@ export const MindMap = ({ initialNodes, onChange, autoHeight, initialScale, fixe
                         onAdd={addNode}
                         onDelete={deleteNode}
                         onMouseDown={handleMouseDown}
+                        selectedNodeId={selectedNodeId}
                     />
                 ))}
               </div>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { useParams } from 'react-router-dom';
+import clsx from 'clsx';
 import { Sparkles, Loader2, CheckCircle, AlertCircle, X, ClipboardList } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 

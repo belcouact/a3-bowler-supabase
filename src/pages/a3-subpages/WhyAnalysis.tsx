@@ -11,9 +11,6 @@ const WhyAnalysis = () => {
   const currentCase = a3Cases.find(c => c.id === id);
 
   const [rootCause, setRootCause] = useState('');
-  const [isGeneratingActions, setIsGeneratingActions] = useState(false);
-  const [actionsPlan, setActionsPlan] = useState<string | null>(null);
-  const [actionsError, setActionsError] = useState<string | null>(null);
   const [isGeneratingWhy, setIsGeneratingWhy] = useState(false);
   const [whyError, setWhyError] = useState<string | null>(null);
 
@@ -268,78 +265,6 @@ ${observations || '(none provided)'}
       setIsGeneratingWhy(false);
     }
   };
-
-  const handleGenerateActions = async () => {
-    if (!currentCase) return;
-
-    const problem = currentCase.problemStatement || '';
-    const contextText = currentCase.problemContext || '';
-    const observations = currentCase.dataAnalysisObservations || '';
-    const root = rootCause || currentCase.rootCause || '';
-
-    if (!problem.trim() || !root.trim()) return;
-
-    setIsGeneratingActions(true);
-    setActionsError(null);
-    setActionsPlan(null);
-
-    try {
-      const messages = [
-        {
-          role: 'system',
-          content: `You are an expert continuous improvement and operations coach.
-
-You will receive:
-- A3 Problem Statement
-- Key observations from data analysis
-- Identified root cause
-
-Your task is to propose practical improvement actions that address the root cause.
-
-Respond in English, even if the user's inputs are in another language.
-
-Structure the answer with markdown headings:
-## Short-term Actions
-## Long-term Actions
-
-Under each heading, list concise, actionable bullet points. Focus on actions that are realistic in a manufacturing or service environment.`
-        },
-        {
-          role: 'user',
-          content:
-            `Problem Statement:\n${problem}` +
-            (contextText ? `\n\nAdditional Context:\n${contextText}` : '') +
-            `\n\nKey Observations from Data:\n${observations}\n\nIdentified Root Cause:\n${root}`
-        }
-      ];
-
-      const response = await fetch('https://multi-model-worker.study-llm.me/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'deepseek',
-          messages,
-          stream: false
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to generate improvement actions');
-
-      const data = await response.json();
-      let content = data.choices?.[0]?.message?.content || '';
-      content = content.replace(/^```[\s\S]*?```/g, '').trim();
-
-      setActionsPlan(content);
-    } catch (err) {
-      setActionsError('Failed to generate improvement actions. Please try again.');
-    } finally {
-      setIsGeneratingActions(false);
-    }
-  };
-
-
 
   if (!currentCase) {
     return (

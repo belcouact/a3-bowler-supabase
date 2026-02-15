@@ -200,8 +200,8 @@ const Summary = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                          task.status === 'completed' ? 'bg-accent-100 text-accent-700' :
-                          task.status === 'in-progress' ? 'bg-brand-100 text-brand-700' :
+                          task.status === 'Completed' ? 'bg-accent-100 text-accent-700' :
+                          task.status === 'In Progress' ? 'bg-brand-100 text-brand-700' :
                           'bg-slate-100 text-slate-600'
                         }`}>
                           {task.status}
