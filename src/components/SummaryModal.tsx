@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Download, Copy, Sparkles, TrendingUp, AlertTriangle, Target, Activity, ArrowRight, FileText, CheckCircle2 } from 'lucide-react';
+import { X, Download, Copy, Sparkles, TrendingUp, AlertTriangle, Target, Activity, CheckCircle2 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { GroupPerformanceRow } from '../types';
