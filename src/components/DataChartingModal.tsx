@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { X } from 'lucide-react';
+import { useEffect, useMemo, useState, useRef } from 'react';
+import { X, Database, Zap, FileText, TrendingUp, Bot } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useApp } from '../context/AppContext';
 import type { AIModelKey } from '../types';
@@ -189,6 +189,9 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
   const [chartRequirement, setChartRequirement] = useState('');
   const [codeOutput, setCodeOutput] = useState('');
   const [chartVisible, setChartVisible] = useState(false);
+  const [width, setWidth] = useState(800);
+  const [isResizing, setIsResizing] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -206,8 +209,36 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
       setCodeOutput('');
       setChartVisible(false);
       setDataSourceTab('upload');
+      setWidth(800);
     }
   }, [isOpen]);
+
+  // Resize Logic
+  const startResizing = (e: React.MouseEvent) => {
+    setIsResizing(true);
+    e.preventDefault();
+  };
+
+  useEffect(() => {
+    const stopResizing = () => setIsResizing(false);
+    const resize = (e: MouseEvent) => {
+      if (isResizing) {
+        const newWidth = window.innerWidth - e.clientX;
+        if (newWidth > 600 && newWidth < window.innerWidth - 50) {
+          setWidth(newWidth);
+        }
+      }
+    };
+
+    if (isResizing) {
+      window.addEventListener('mousemove', resize);
+      window.addEventListener('mouseup', stopResizing);
+    }
+    return () => {
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResizing);
+    };
+  }, [isResizing]);
 
   const workbookSheetsAvailable = useMemo(
     () => workbook && workbook.length > 0,
@@ -757,51 +788,148 @@ ${JSON.stringify(structuredData, null, 2)}
   }
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-stretch justify-center overflow-hidden">
-      <div
-        className="absolute inset-0 bg-gray-900/60"
-        onClick={handleOverlayClick}
-      />
-      <div className="relative z-[95] flex h-full w-full flex-col bg-white shadow-2xl border-t border-gray-200 rounded-none overflow-hidden">
-        <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 bg-slate-50">
-          <div className="flex items-center gap-3">
-            <div className="flex flex-col">
-              <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                <span className="text-base">📊</span>
-                <span>Data Analysis</span>
-              </h2>
-              <p className="text-xs text-gray-500">
-                Integrated workspace for file upload, data preview, AI analysis and chart generation.
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+    <div className="fixed inset-0 z-[90] overflow-hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-gray-900/60 transition-opacity"
+          onClick={handleOverlayClick}
+        />
+        
+        <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+          <div 
+            ref={modalRef}
+            className="pointer-events-auto relative h-full transform transition-none ease-in-out bg-white shadow-2xl flex flex-col"
+            style={{ width: `${width}px` }}
           >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        <div className="flex flex-1 flex-col overflow-hidden bg-slate-50/60">
-          {status && (
-            <div className="px-4 pt-3 sm:px-6">
-              <div
-                className={[
-                  'flex items-center gap-2 rounded-md px-3 py-2 text-xs',
-                  status.type === 'success' && 'bg-emerald-50 text-emerald-700 border border-emerald-100',
-                  status.type === 'error' && 'bg-red-50 text-red-700 border border-red-100',
-                  status.type === 'info' && 'bg-sky-50 text-sky-700 border border-sky-100',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
-              >
-                <span>{status.text}</span>
-              </div>
+            {/* Resize Handle */}
+            <div
+                className="absolute left-0 top-0 bottom-0 w-1.5 cursor-ew-resize hover:bg-brand-400/50 transition-colors z-50 flex items-center justify-center group"
+                onMouseDown={startResizing}
+            >
+                <div className="h-8 w-1 bg-slate-300 rounded-full group-hover:bg-brand-400 transition-colors" />
             </div>
-          )}
-          <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 sm:px-6">
+
+            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 bg-slate-50">
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col">
+                  <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                    <span className="text-base">📊</span>
+                    <span>Data Analysis</span>
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    Integrated workspace for file upload, data preview, AI analysis and chart generation.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="flex flex-1 flex-col overflow-hidden bg-slate-50/60">
+              {/* Introduction Section - Show only when no data is loaded */}
+              {!workbookSheetsAvailable && (
+                <div className="flex-1 flex flex-col items-center justify-center p-8 overflow-y-auto">
+                    <div className="w-16 h-16 bg-white rounded-2xl shadow-lg shadow-blue-100 flex items-center justify-center mb-6 ring-1 ring-slate-100">
+                      <Bot className="w-8 h-8 text-blue-600" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-800 mb-6">AI Data Analyst</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl mb-8 text-left">
+                        <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                            <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2 text-sm">
+                                <Database className="w-4 h-4 text-blue-500"/> What it knows
+                            </h4>
+                            <ul className="text-xs text-slate-500 space-y-2 list-disc pl-4 leading-relaxed">
+                                <li>Parses CSV and Excel (.xls, .xlsx) files</li>
+                                <li>Understands tabular data structures</li>
+                                <li>Identifies patterns, trends, and outliers</li>
+                            </ul>
+                        </div>
+                        
+                        <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                            <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2 text-sm">
+                                <Zap className="w-4 h-4 text-amber-500"/> What it can do
+                            </h4>
+                            <ul className="text-xs text-slate-500 space-y-2 list-disc pl-4 leading-relaxed">
+                                <li>Generate comprehensive data analysis reports</li>
+                                <li>Create interactive ECharts visualizations</li>
+                                <li>Provide actionable business recommendations</li>
+                                <li>Clean and normalize messy datasets</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div className="w-full max-w-xl bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                      <h4 className="font-semibold text-slate-700 mb-4 text-sm text-center">Get Started</h4>
+                      
+                      <div className="flex flex-col gap-4">
+                        <div className="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center hover:bg-slate-50 transition-colors cursor-pointer relative">
+                          <input
+                            type="file"
+                            accept=".csv, .xls, .xlsx"
+                            onChange={(e) => e.target.files && handleFileSelect(e.target.files[0])}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          />
+                          <div className="flex flex-col items-center gap-2">
+                             <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                               <FileText className="w-6 h-6" />
+                             </div>
+                             <span className="text-sm font-medium text-slate-600">Upload Data File</span>
+                             <span className="text-xs text-slate-400">CSV, Excel (max 10MB)</span>
+                          </div>
+                        </div>
+
+                        <div className="relative">
+                          <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-slate-200"></div>
+                          </div>
+                          <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-white px-2 text-slate-400">Or try sample data</span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          {SAMPLE_DATASETS.slice(0, 4).map((dataset) => (
+                            <button
+                              key={dataset.id}
+                              onClick={() => applySampleDataset(dataset)}
+                              className="text-xs text-left px-3 py-2 bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-600 rounded-lg border border-slate-200 hover:border-blue-200 transition-all flex items-center gap-2 group"
+                            >
+                              <TrendingUp className="w-3 h-3 text-slate-400 group-hover:text-blue-500" />
+                              <span className="truncate">{dataset.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                </div>
+              )}
+
+              {/* Main Content Area - Show only when data is loaded */}
+              {workbookSheetsAvailable && (
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+                  {status && (
+                    <div
+                      className={[
+                        'flex items-center gap-2 rounded-md px-3 py-2 text-xs mb-4',
+                        status.type === 'success' && 'bg-emerald-50 text-emerald-700 border border-emerald-100',
+                        status.type === 'error' && 'bg-red-50 text-red-700 border border-red-100',
+                        status.type === 'info' && 'bg-sky-50 text-sky-700 border border-sky-100',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                    >
+                      {status.type === 'success' && <span>✅</span>}
+                      {status.type === 'error' && <span>❌</span>}
+                      {status.type === 'info' && <span>ℹ️</span>}
+                      {status.text}
+                    </div>
+                  )}
             <section className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 space-y-4">
               <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-600 text-xs font-medium">
@@ -1152,8 +1280,11 @@ ${JSON.stringify(structuredData, null, 2)}
               </div>
             </section>
           </div>
-        </div>
+        )}
       </div>
     </div>
+  </div>
+</div>
+</div>
   );
 };

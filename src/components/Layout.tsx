@@ -2781,8 +2781,10 @@ Do not include any markdown formatting (like \`\`\`json). Just the raw JSON obje
                     <div className="w-7 h-7 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center mr-2 group-hover:bg-brand-100 transition-all shadow-sm ring-1 ring-brand-200/50">
                       <FileText className="w-4 h-4" />
                     </div>
-                    <span className="font-bold">A3 Cases</span>
-                    <span className="text-[10px] text-slate-400 leading-none mt-0.5">Show all cases</span>
+                    <div className="flex flex-col items-start">
+                      <span className="font-bold">A3 Cases</span>
+                      <span className="text-[10px] text-slate-400 leading-none mt-0.5">Show all cases</span>
+                    </div>
                   </button>
 
                   <button
