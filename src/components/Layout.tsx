@@ -47,7 +47,13 @@ const MindmapModal = lazy(() =>
   import('./MindmapModal').then(module => ({ default: module.MindmapModal })),
 );
 const DataChartingModal = lazy(() =>
-  import('./DataChartingModal').then(module => ({ default: module.DataChartingModal })),
+  import('./DataChartingModal')
+    .then(module => ({ default: module.DataChartingModal }))
+    .catch(error => {
+      console.error('Failed to load DataChartingModal chunk, reloading page...', error);
+      window.location.reload();
+      return new Promise(() => {});
+    }),
 );
 
 const modelOptions: { key: AIModelKey; label: string }[] = [
