@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, Layers, Merge, Database, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { useToast } from '../context/ToastContext';
@@ -126,53 +126,107 @@ export const ConsolidateModal: React.FC<ConsolidateModalProps> = ({ isOpen, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-        <div className="flex justify-between items-center p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Consolidate Bowlers</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-500 transition-colors">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+      <div 
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-300" 
+        onClick={onClose} 
+      />
+      
+      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-in fade-in scale-in-95 duration-500">
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl shadow-sm border border-cyan-100/50">
+              <Merge className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-slate-900 leading-none">
+                Consolidate Workspace
+              </h3>
+              <p className="mt-1.5 text-xs font-medium text-slate-500 flex items-center gap-1.5">
+                <Database className="w-3.5 h-3.5 text-cyan-500" />
+                Merge and synchronize data sources
+              </p>
+            </div>
+          </div>
+          <button 
+            onClick={onClose}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-all"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-4">
-          <div className="mb-4">
-            <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-1">
-              Tag (comma separated)
-            </label>
-            <input
-              type="text"
-              id="tags"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              placeholder="e.g. Technical, Urgent, Q1"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              autoFocus
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Enter tags to filter and consolidate bowlers and A3 cases from the database.
-            </p>
-          </div>
+        <div className="p-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+                
+                {/* Info Box */}
+                <div className="flex items-start gap-3 rounded-xl border border-cyan-100 bg-cyan-50/40 px-4 py-3">
+                    <div className="p-1 bg-white rounded-lg shadow-sm border border-cyan-50 mt-0.5">
+                        <Layers className="h-3.5 w-3.5 text-cyan-600" />
+                    </div>
+                    <div className="space-y-1">
+                        <p className="text-xs font-bold text-cyan-900">Smart Consolidation</p>
+                        <p className="text-[10px] text-cyan-700 leading-relaxed">
+                            This process will fetch Bowlers and A3 Cases matching your tags and merge them into your current workspace, preserving your local modifications where possible.
+                        </p>
+                    </div>
+                </div>
 
-          <div className="flex justify-end space-x-3 mt-6">
+                <div className="space-y-3">
+                    <label htmlFor="tags" className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        Filter Tags
+                    </label>
+                    <div className="relative">
+                        <input
+                            type="text"
+                            id="tags"
+                            value={tagInput}
+                            onChange={(e) => setTagInput(e.target.value)}
+                            placeholder="e.g. Technical, Urgent, Q1"
+                            className="w-full bg-white border border-slate-200 rounded-xl shadow-sm py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all text-sm font-medium placeholder:text-slate-300"
+                            autoFocus
+                        />
+                        <div className="absolute right-3 top-2.5 text-slate-300">
+                            <Sparkles className="w-4 h-4" />
+                        </div>
+                    </div>
+                    <p className="text-[10px] text-slate-400 font-medium ml-1">
+                        Use comma-separated tags to filter the dataset.
+                    </p>
+                </div>
+            </form>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-5 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
             <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              disabled={isLoading}
+                type="button"
+                onClick={onClose}
+                disabled={isLoading}
+                className="px-5 py-2.5 text-sm font-bold text-slate-600 hover:text-slate-800 hover:bg-white rounded-xl transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
             >
-              Cancel
+                Cancel
             </button>
             <button
-              type="submit"
-              disabled={isLoading}
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center"
+                type="button"
+                onClick={handleSubmit}
+                disabled={isLoading}
+                className="px-6 py-2.5 bg-cyan-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-cyan-200 hover:bg-cyan-700 hover:shadow-cyan-300 transition-all active:scale-95 flex items-center gap-2 disabled:opacity-70 disabled:pointer-events-none"
             >
-              {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Consolidate
+                {isLoading ? (
+                    <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Consolidating...</span>
+                    </>
+                ) : (
+                    <>
+                        <Merge className="w-4 h-4" />
+                        <span>Consolidate</span>
+                    </>
+                )}
             </button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   );
