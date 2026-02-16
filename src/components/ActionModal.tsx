@@ -101,40 +101,40 @@ const ActionModal = ({ isOpen, onClose, onSave, onDelete, initialData, defaultSt
             )}
         >
           {/* Header */}
-          <div className="bg-gradient-to-r from-slate-50 to-white px-6 py-5 border-b border-slate-100 flex justify-between items-start">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                {initialData ? <Sparkles className="w-6 h-6" /> : <LayoutGrid className="w-6 h-6" />}
+          <div className="bg-gradient-to-r from-slate-50 to-white px-3 py-2 border-b border-slate-100 flex justify-between items-start">
+            <div className="flex items-center gap-2.5">
+              <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                {initialData ? <Sparkles className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
               </div>
               <div>
-                <h3 className="text-xl font-bold text-slate-900 tracking-tight">
+                <h3 className="text-base font-bold text-slate-900 tracking-tight">
                   {initialData ? 'Edit Action Item' : 'New Action Item'}
                 </h3>
-                <p className="mt-1 text-sm text-slate-500 font-medium">
+                <p className="text-xs text-slate-500 font-medium leading-tight">
                   Define tasks, assign ownership, and track progress.
                 </p>
               </div>
             </div>
             <button
               onClick={handleClose}
-              className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+              className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
 
-          <form id="action-form" onSubmit={handleSubmit} className="px-6 py-6 space-y-6 bg-white/50">
+          <form id="action-form" onSubmit={handleSubmit} className="px-3 py-3 space-y-3 bg-white/50">
             
             {/* Task Overview Section */}
-            <div className="space-y-4">
+            <div className="space-y-2.5">
                 <div className="relative">
-                    <label className="absolute -top-2 left-3 bg-white px-1 text-xs font-bold text-indigo-600 uppercase tracking-wider">
+                    <label className="absolute -top-1.5 left-2.5 bg-white px-1 text-[10px] font-bold text-indigo-600 uppercase tracking-wider">
                         Task Name
                     </label>
                     <input
                         type="text"
                         required
-                        className="block w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-lg font-semibold py-3 px-4 bg-slate-50/50 transition-all hover:bg-white focus:bg-white"
+                        className="block w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm font-semibold py-1.5 px-2.5 bg-slate-50/50 transition-all hover:bg-white focus:bg-white"
                         placeholder="e.g., Conduct root cause analysis workshop"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -143,8 +143,8 @@ const ActionModal = ({ isOpen, onClose, onSave, onDelete, initialData, defaultSt
                 </div>
                 <div className="relative">
                      <textarea
-                        rows={3}
-                        className="block w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3 px-4 bg-slate-50/50 transition-all hover:bg-white focus:bg-white resize-none"
+                        rows={2}
+                        className="block w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs py-1.5 px-2.5 bg-slate-50/50 transition-all hover:bg-white focus:bg-white resize-none"
                         placeholder="Describe the deliverables and acceptance criteria..."
                         value={formData.description || ''}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -153,31 +153,31 @@ const ActionModal = ({ isOpen, onClose, onSave, onDelete, initialData, defaultSt
             </div>
 
             {/* Grid Layout for Details */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 
                 {/* Ownership */}
-                <div className="space-y-4 p-4 bg-slate-50/50 rounded-2xl border border-slate-100/80">
-                    <div className="flex items-center gap-2 text-slate-800 font-bold text-sm border-b border-slate-200 pb-2 mb-2">
-                        <User className="w-4 h-4 text-indigo-500" />
+                <div className="space-y-2.5 p-2.5 bg-slate-50/50 rounded-2xl border border-slate-100/80">
+                    <div className="flex items-center gap-2 text-slate-800 font-bold text-xs border-b border-slate-200 pb-1.5 mb-1.5">
+                        <User className="w-3.5 h-3.5 text-indigo-500" />
                         <span>Ownership</span>
                     </div>
                     
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                         <div>
-                            <label className="block text-xs font-semibold text-slate-500 mb-1">Owner</label>
+                            <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">Owner</label>
                             <input
                                 type="text"
-                                className="block w-full rounded-lg border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2"
+                                className="block w-full rounded-lg border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs py-1"
                                 placeholder="e.g., John Doe"
                                 value={formData.owner}
                                 onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-semibold text-slate-500 mb-1">Group / Workstream</label>
+                            <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">Group / Workstream</label>
                             <input
                                 type="text"
-                                className="block w-full rounded-lg border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2"
+                                className="block w-full rounded-lg border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs py-1"
                                 placeholder="e.g., Engineering"
                                 value={formData.group || ''}
                                 onChange={(e) => setFormData({ ...formData, group: e.target.value })}
@@ -187,29 +187,29 @@ const ActionModal = ({ isOpen, onClose, onSave, onDelete, initialData, defaultSt
                 </div>
 
                 {/* Timeline */}
-                <div className="space-y-4 p-4 bg-slate-50/50 rounded-2xl border border-slate-100/80">
-                    <div className="flex items-center gap-2 text-slate-800 font-bold text-sm border-b border-slate-200 pb-2 mb-2">
-                        <Calendar className="w-4 h-4 text-indigo-500" />
+                <div className="space-y-2.5 p-2.5 bg-slate-50/50 rounded-2xl border border-slate-100/80">
+                    <div className="flex items-center gap-2 text-slate-800 font-bold text-xs border-b border-slate-200 pb-1.5 mb-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-indigo-500" />
                         <span>Timeline</span>
                     </div>
                     
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                         <div>
-                            <label className="block text-xs font-semibold text-slate-500 mb-1">Start Date</label>
+                            <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">Start Date</label>
                             <input
                                 type="date"
                                 required
-                                className="block w-full rounded-lg border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2"
+                                className="block w-full rounded-lg border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs py-1"
                                 value={formData.startDate}
                                 onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-semibold text-slate-500 mb-1">End Date</label>
+                            <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">End Date</label>
                             <input
                                 type="date"
                                 required
-                                className="block w-full rounded-lg border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2"
+                                className="block w-full rounded-lg border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs py-1"
                                 value={formData.endDate}
                                 onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                             />
@@ -218,20 +218,20 @@ const ActionModal = ({ isOpen, onClose, onSave, onDelete, initialData, defaultSt
                 </div>
 
                 {/* Status & Progress - Full Width */}
-                <div className="sm:col-span-2 space-y-4 p-4 bg-gradient-to-r from-slate-50 to-white rounded-2xl border border-slate-100/80">
-                    <div className="flex items-center justify-between border-b border-slate-200 pb-2 mb-2">
-                        <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
-                            <Clock className="w-4 h-4 text-indigo-500" />
+                <div className="sm:col-span-2 space-y-2.5 p-2.5 bg-gradient-to-r from-slate-50 to-white rounded-2xl border border-slate-100/80">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-1.5 mb-1.5">
+                        <div className="flex items-center gap-2 text-slate-800 font-bold text-xs">
+                            <Clock className="w-3.5 h-3.5 text-indigo-500" />
                             <span>Status & Progress</span>
                         </div>
-                        <div className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">
+                        <div className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-full">
                             {formData.progress}% Complete
                         </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
                         <div>
-                             <label className="block text-xs font-semibold text-slate-500 mb-2">Current Status</label>
+                             <label className="block text-[10px] font-semibold text-slate-500 mb-1.5">Current Status</label>
                              <div className="flex gap-2">
                                 {[
                                     { value: 'Not Started', icon: Circle, color: 'text-slate-400', bg: 'bg-slate-100' },
@@ -243,14 +243,14 @@ const ActionModal = ({ isOpen, onClose, onSave, onDelete, initialData, defaultSt
                                         type="button"
                                         onClick={() => setFormData({ ...formData, status: status.value as any })}
                                         className={clsx(
-                                            "flex-1 flex flex-col items-center justify-center p-2 rounded-xl border transition-all duration-200",
+                                            "flex-1 flex flex-col items-center justify-center p-1.5 rounded-xl border transition-all duration-200",
                                             formData.status === status.value
                                                 ? `border-${status.color.split('-')[1]}-500 ${status.bg} ring-1 ring-${status.color.split('-')[1]}-500`
                                                 : "border-slate-200 hover:bg-slate-50 hover:border-slate-300"
                                         )}
                                     >
-                                        <status.icon className={clsx("w-5 h-5 mb-1", formData.status === status.value ? status.color : "text-slate-400")} />
-                                        <span className={clsx("text-[10px] font-bold uppercase", formData.status === status.value ? "text-slate-900" : "text-slate-500")}>
+                                        <status.icon className={clsx("w-4 h-4 mb-1", formData.status === status.value ? status.color : "text-slate-400")} />
+                                        <span className={clsx("text-[9px] font-bold uppercase", formData.status === status.value ? "text-slate-900" : "text-slate-500")}>
                                             {status.value}
                                         </span>
                                     </button>
@@ -259,8 +259,8 @@ const ActionModal = ({ isOpen, onClose, onSave, onDelete, initialData, defaultSt
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold text-slate-500 mb-2">Progress Bar</label>
-                            <div className="relative h-4 bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                            <label className="block text-[10px] font-semibold text-slate-500 mb-1.5">Progress Bar</label>
+                            <div className="relative h-3 bg-slate-100 rounded-full overflow-hidden shadow-inner">
                                 <div 
                                     className={clsx(
                                         "absolute top-0 left-0 h-full transition-all duration-500 ease-out rounded-full",
@@ -274,7 +274,7 @@ const ActionModal = ({ isOpen, onClose, onSave, onDelete, initialData, defaultSt
                                 min="0"
                                 max="100"
                                 step="5"
-                                className="w-full mt-3 accent-indigo-600 cursor-pointer"
+                                className="w-full mt-2 accent-indigo-600 cursor-pointer"
                                 value={formData.progress}
                                 onChange={(e) => setFormData({ ...formData, progress: parseInt(e.target.value) })}
                             />
@@ -287,18 +287,18 @@ const ActionModal = ({ isOpen, onClose, onSave, onDelete, initialData, defaultSt
           </form>
 
           {/* Footer */}
-          <div className="bg-slate-50 px-6 py-4 flex flex-col sm:flex-row-reverse gap-3 border-t border-slate-100">
+          <div className="bg-slate-50 px-3 py-2 flex flex-col sm:flex-row-reverse gap-2 border-t border-slate-100">
             <button
               type="submit"
               form="action-form"
-              className="w-full sm:w-auto inline-flex justify-center items-center rounded-xl border border-transparent shadow-lg shadow-indigo-500/30 px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-base font-bold text-white hover:from-indigo-700 hover:to-violet-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-[1.02]"
+              className="w-full sm:w-auto inline-flex justify-center items-center rounded-xl border border-transparent shadow-lg shadow-indigo-500/30 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-xs font-bold text-white hover:from-indigo-700 hover:to-violet-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-[1.02]"
             >
               {initialData ? 'Save Changes' : 'Create Task'}
             </button>
             <button
               type="button"
               onClick={handleClose}
-              className="w-full sm:w-auto inline-flex justify-center items-center rounded-xl border border-slate-200 shadow-sm px-6 py-2.5 bg-white text-base font-bold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-all"
+              className="w-full sm:w-auto inline-flex justify-center items-center rounded-xl border border-slate-200 shadow-sm px-3 py-1.5 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-all"
             >
               Cancel
             </button>
@@ -311,7 +311,7 @@ const ActionModal = ({ isOpen, onClose, onSave, onDelete, initialData, defaultSt
                      handleClose();
                    }
                 }}
-                className="w-full sm:w-auto sm:mr-auto inline-flex justify-center items-center rounded-xl border border-transparent px-4 py-2.5 text-base font-bold text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all"
+                className="w-full sm:w-auto sm:mr-auto inline-flex justify-center items-center rounded-xl border border-transparent px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all"
               >
                 Delete
               </button>
