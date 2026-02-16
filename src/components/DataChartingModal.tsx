@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
-import { X, Database, Zap, FileText, TrendingUp, Bot } from 'lucide-react';
+import { X, FileText, TrendingUp, Bot } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useApp } from '../context/AppContext';
 import type { AIModelKey } from '../types';
@@ -189,8 +189,7 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
   const [chartRequirement, setChartRequirement] = useState('');
   const [codeOutput, setCodeOutput] = useState('');
   const [chartVisible, setChartVisible] = useState(false);
-  const [width, setWidth] = useState(800);
-  const [isResizing, setIsResizing] = useState(false);
+  // Resize logic removed
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -209,36 +208,8 @@ export const DataChartingModal = ({ isOpen, onClose }: DataChartingModalProps) =
       setCodeOutput('');
       setChartVisible(false);
       setDataSourceTab('upload');
-      setWidth(800);
     }
   }, [isOpen]);
-
-  // Resize Logic
-  const startResizing = (e: React.MouseEvent) => {
-    setIsResizing(true);
-    e.preventDefault();
-  };
-
-  useEffect(() => {
-    const stopResizing = () => setIsResizing(false);
-    const resize = (e: MouseEvent) => {
-      if (isResizing) {
-        const newWidth = window.innerWidth - e.clientX;
-        if (newWidth > 600 && newWidth < window.innerWidth - 50) {
-          setWidth(newWidth);
-        }
-      }
-    };
-
-    if (isResizing) {
-      window.addEventListener('mousemove', resize);
-      window.addEventListener('mouseup', stopResizing);
-    }
-    return () => {
-      window.removeEventListener('mousemove', resize);
-      window.removeEventListener('mouseup', stopResizing);
-    };
-  }, [isResizing]);
 
   const workbookSheetsAvailable = useMemo(
     () => workbook && workbook.length > 0,
@@ -795,19 +766,12 @@ ${JSON.stringify(structuredData, null, 2)}
           onClick={handleOverlayClick}
         />
         
-        <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+        <div className="pointer-events-none fixed inset-0 flex items-center justify-center p-4">
           <div 
             ref={modalRef}
-            className="pointer-events-auto relative h-full transform transition-none ease-in-out bg-white shadow-2xl flex flex-col"
-            style={{ width: `${width}px` }}
+            className="pointer-events-auto relative w-full h-full bg-white shadow-2xl flex flex-col rounded-2xl overflow-hidden"
           >
-            {/* Resize Handle */}
-            <div
-                className="absolute left-0 top-0 bottom-0 w-1.5 cursor-ew-resize hover:bg-brand-400/50 transition-colors z-50 flex items-center justify-center group"
-                onMouseDown={startResizing}
-            >
-                <div className="h-8 w-1 bg-slate-300 rounded-full group-hover:bg-brand-400 transition-colors" />
-            </div>
+            {/* Resize Handle removed */}
 
             <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6 bg-slate-50">
               <div className="flex items-center gap-3">

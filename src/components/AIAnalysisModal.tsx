@@ -104,7 +104,7 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({ isOpen, onClos
             ${isOpen ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-4 opacity-0 scale-95'}`}
         >
           {/* Decorative Header Background */}
-          <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-br from-brand-500/10 via-primary-500/5 to-transparent pointer-events-none" />
+          <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-br from-brand-500/10 via-primary-500/5 to-transparent pointer-events-none" />
           <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
           {/* Close Button */}
@@ -117,69 +117,69 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({ isOpen, onClos
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
           
-          <div className="relative px-6 pt-5 pb-4 sm:px-8 overflow-y-auto flex-1">
+          <div className="relative px-4 pt-4 pb-4 sm:px-5 overflow-y-auto flex-1">
             {/* Header Content */}
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-3">
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-brand-600 to-primary-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-200" />
-                <div className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-white ring-1 ring-slate-900/5 shadow-sm">
-                    <Sparkles className="h-5 w-5 text-brand-600" />
+                <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-white ring-1 ring-slate-900/5 shadow-sm">
+                    <Sparkles className="h-4 w-4 text-brand-600" />
                 </div>
               </div>
               <div>
-                <h3 className="font-display text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent" id="modal-title">
+                <h3 className="font-display text-base font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent" id="modal-title">
                   AI Analysis
                 </h3>
-                <p className="text-sm font-medium text-slate-500 mt-0.5">
+                <p className="text-xs font-medium text-slate-500 mt-0.5">
                   Insights for <span className="text-brand-600 font-semibold">{metricName}</span>
                 </p>
               </div>
             </div>
             
             {result ? (
-              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 
                 {/* Summary Card */}
-                <div className="group relative overflow-hidden rounded-2xl bg-slate-50 border border-slate-100 p-4 transition-all hover:shadow-md hover:border-brand-200/50">
+                <div className="group relative overflow-hidden rounded-xl bg-slate-50 border border-slate-100 p-3 transition-all hover:shadow-md hover:border-brand-200/50">
                   <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-brand-500 to-primary-500" />
-                  <div className="flex items-start gap-3">
-                    <div className="mt-1 p-2 bg-white rounded-xl shadow-sm ring-1 ring-slate-900/5 text-brand-600 shrink-0">
-                        <Lightbulb className="h-4 w-4" />
+                  <div className="flex items-start gap-2.5">
+                    <div className="mt-0.5 p-1.5 bg-white rounded-lg shadow-sm ring-1 ring-slate-900/5 text-brand-600 shrink-0">
+                        <Lightbulb className="h-3.5 w-3.5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-display text-sm font-bold text-slate-900">Executive Summary</h4>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <h4 className="font-display text-xs font-bold text-slate-900">Executive Summary</h4>
                         <button 
                             onClick={handleCopy}
-                            className="text-slate-400 hover:text-brand-600 transition-colors p-1.5 rounded-lg hover:bg-brand-50 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none"
+                            className="text-slate-400 hover:text-brand-600 transition-colors p-1 rounded-md hover:bg-brand-50 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none"
                             title="Copy summary"
                         >
-                            {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                            {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                         </button>
                       </div>
-                      <p className="text-sm text-slate-600 leading-relaxed">{result.summary}</p>
+                      <p className="text-xs text-slate-600 leading-relaxed">{result.summary}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2.5">
                     {/* Trend Card */}
-                    <div className={`rounded-2xl p-3 flex flex-col items-center justify-center text-center ring-1 transition-all hover:shadow-md ${getTrendColor()}`}>
-                        <span className="text-[10px] font-bold uppercase tracking-wider opacity-60 mb-1">Current Trend</span>
-                        <div className="flex items-center gap-2">
+                    <div className={`rounded-xl p-2.5 flex flex-col items-center justify-center text-center ring-1 transition-all hover:shadow-md ${getTrendColor()}`}>
+                        <span className="text-[9px] font-bold uppercase tracking-wider opacity-60 mb-0.5">Current Trend</span>
+                        <div className="flex items-center gap-1.5">
                             {getTrendIcon()}
-                            <span className="font-display text-base font-bold">{getTrendLabel()}</span>
+                            <span className="font-display text-sm font-bold">{getTrendLabel()}</span>
                         </div>
                     </div>
 
                     {/* Achievement Card */}
-                    <div className="rounded-2xl bg-white p-3 flex flex-col items-center justify-center text-center ring-1 ring-slate-100 shadow-sm hover:shadow-md transition-all group">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Target Achievement</span>
-                        <div className="flex items-center gap-2">
-                            <div className={`p-1 rounded-full ${result.achievementRate >= 80 ? 'bg-emerald-100 text-emerald-600' : result.achievementRate >= 50 ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600'}`}>
-                                <Target className="w-3.5 h-3.5" />
+                    <div className="rounded-xl bg-white p-2.5 flex flex-col items-center justify-center text-center ring-1 ring-slate-100 shadow-sm hover:shadow-md transition-all group">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Target Achievement</span>
+                        <div className="flex items-center gap-1.5">
+                            <div className={`p-0.5 rounded-full ${result.achievementRate >= 80 ? 'bg-emerald-100 text-emerald-600' : result.achievementRate >= 50 ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600'}`}>
+                                <Target className="w-3 h-3" />
                             </div>
-                            <span className={`font-display text-base font-bold ${result.achievementRate >= 80 ? 'text-emerald-600' : result.achievementRate >= 50 ? 'text-amber-600' : 'text-rose-600'}`}>
+                            <span className={`font-display text-sm font-bold ${result.achievementRate >= 80 ? 'text-emerald-600' : result.achievementRate >= 50 ? 'text-amber-600' : 'text-rose-600'}`}>
                               {result.achievementRate.toFixed(1)}%
                             </span>
                         </div>
@@ -187,38 +187,38 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({ isOpen, onClos
                 </div>
 
                 {/* Suggestions Section */}
-                <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
-                    <h4 className="font-display text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center ring-1 ring-amber-100">
-                          <Zap className="w-3.5 h-3.5" />
+                <div className="bg-white rounded-xl border border-slate-100 p-3 shadow-sm">
+                    <h4 className="font-display text-xs font-bold text-slate-900 mb-2 flex items-center gap-1.5">
+                        <div className="h-5 w-5 rounded-md bg-amber-50 text-amber-600 flex items-center justify-center ring-1 ring-amber-100">
+                          <Zap className="w-3 h-3" />
                         </div>
                         Strategic Recommendations
                     </h4>
                     {result.suggestion.length > 0 ? (
-                        <ul className="space-y-3">
+                        <ul className="space-y-2">
                             {result.suggestion.map((item, index) => (
-                                <li key={index} className="flex items-start gap-3 text-sm text-slate-600 group">
-                                    <ArrowRight className="w-4 h-4 text-amber-500 mt-0.5 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                                <li key={index} className="flex items-start gap-2 text-xs text-slate-600 group">
+                                    <ArrowRight className="w-3 h-3 text-amber-500 mt-0.5 shrink-0 group-hover:translate-x-0.5 transition-transform" />
                                     <span className="leading-relaxed">{item}</span>
                                 </li>
                             ))}
                         </ul>
                     ) : (
-                        <p className="text-sm text-slate-500 italic px-4 text-center py-2">No specific suggestions detected at this time.</p>
+                        <p className="text-xs text-slate-500 italic px-4 text-center py-2">No specific suggestions detected at this time.</p>
                     )}
                 </div>
 
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-16 text-slate-400">
-                <div className="relative mb-8">
+              <div className="flex flex-col items-center justify-center py-10 text-slate-400">
+                <div className="relative mb-6">
                     <div className="absolute inset-0 bg-brand-500/20 blur-xl rounded-full animate-pulse" />
-                    <div className="relative bg-white rounded-2xl p-4 shadow-lg ring-1 ring-slate-100">
-                        <Sparkles className="w-8 h-8 text-brand-600 animate-pulse" />
+                    <div className="relative bg-white rounded-xl p-3 shadow-lg ring-1 ring-slate-100">
+                        <Sparkles className="w-6 h-6 text-brand-600 animate-pulse" />
                     </div>
                 </div>
-                <h3 className="font-display text-lg font-bold text-slate-900 mb-2">Analyzing Performance</h3>
-                <p className="text-sm text-slate-500 max-w-xs text-center leading-relaxed">
+                <h3 className="font-display text-base font-bold text-slate-900 mb-1.5">Analyzing Performance</h3>
+                <p className="text-xs text-slate-500 max-w-xs text-center leading-relaxed">
                     Our AI is crunching the numbers to generate actionable insights...
                 </p>
               </div>
