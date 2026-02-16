@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, Bot, Loader2, Sparkles, Database, Zap, FileText, TrendingUp } from 'lucide-react';
+import { X, Send, Bot, Loader2, Sparkles, FileText, TrendingUp } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { generateAIContext } from '../services/aiService';
@@ -23,10 +23,9 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initi
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasProcessedPrompt = useRef(false);
   
-  // Resizable Sidebar State removed
-  // const [width, setWidth] = useState(600);
-  // const [isResizing, setIsResizing] = useState(false);
-  // const sidebarRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(400);
+  const [isResizing, setIsResizing] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -34,7 +33,29 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initi
     }
   }, [messages]);
 
-  // Resize Logic removed
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return;
+      const newWidth = window.innerWidth - e.clientX;
+      if (newWidth > 300 && newWidth < 800) {
+        setWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
 
 
   const sendMessage = async (text: string) => {
@@ -107,113 +128,100 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initi
   return (
     <div className="fixed inset-0 z-[70] overflow-hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
+        <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
 
-        <div className="pointer-events-none fixed inset-0 flex items-center justify-center p-4">
+        <div className="fixed inset-y-0 right-0 flex max-w-full pointer-events-none">
           <div 
-            className="pointer-events-auto relative w-full h-full bg-white shadow-2xl flex flex-col rounded-2xl overflow-hidden"
+            ref={sidebarRef}
+            style={{ width: `${width}px` }}
+            className="pointer-events-auto relative h-full bg-white shadow-2xl flex flex-col transform transition-transform ease-in-out duration-300"
           >
-            {/* Resize Handle removed */}
+            {/* Resize Handle */}
+            <div
+                className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-brand-500/50 transition-colors z-50 flex items-center justify-center group"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setIsResizing(true);
+                }}
+            >
+              <div className="h-8 w-0.5 bg-slate-300 rounded-full group-hover:bg-brand-500 transition-colors" />
+            </div>
 
             <div className="flex h-full flex-col overflow-hidden bg-white">
               {/* Header */}
-              <div className="bg-gradient-to-r from-brand-600 to-accent-600 px-6 py-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm border border-white/10">
-                      <Sparkles className="w-5 h-5 text-white" />
+              <div className="bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between shadow-sm z-10">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-brand-50 rounded-lg border border-brand-100">
+                      <Bot className="w-4 h-4 text-brand-600" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-bold text-white tracking-tight" id="modal-title">
+                      <h2 className="text-sm font-bold text-slate-800" id="modal-title">
                         AI Coach
                       </h2>
-                      <p className="text-xs text-brand-50 font-medium opacity-90">
-                        Analyzing your Bowler metrics & A3 cases
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <p className="text-[10px] text-slate-500 font-medium">Online</p>
+                      </div>
                     </div>
                   </div>
                   <button
                     type="button"
-                    className="rounded-lg p-2 text-white/70 hover:text-white hover:bg-white/10 transition-all focus:outline-none focus:ring-2 focus:ring-white/50"
+                    className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
                     onClick={onClose}
                   >
                     <span className="sr-only">Close panel</span>
-                    <X className="h-5 w-5" />
+                    <X className="h-4 w-4" />
                   </button>
-                </div>
               </div>
 
               {/* Chat Area */}
-              <div className="flex-1 flex flex-col p-6 overflow-y-auto bg-slate-50 scroll-smooth custom-scrollbar">
+              <div className="flex-1 flex flex-col p-4 overflow-y-auto bg-slate-50 scroll-smooth custom-scrollbar">
                  {messages.length === 0 && (
-                    <div className="flex flex-col items-center justify-center h-full text-center p-8 animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-forwards max-w-2xl mx-auto">
-                        <div className="w-16 h-16 bg-white rounded-2xl shadow-lg shadow-brand-100 flex items-center justify-center mb-6 ring-1 ring-slate-100">
-                          <Bot className="w-8 h-8 text-brand-500" />
+                    <div className="flex flex-col items-center justify-center h-full text-center p-6 text-slate-500">
+                        <div className="w-10 h-10 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center mb-3">
+                          <Sparkles className="w-5 h-5 text-brand-500" />
                         </div>
-                        <h3 className="text-xl font-bold text-slate-800 mb-6">AI Coach Assistant</h3>
+                        <h3 className="text-sm font-bold text-slate-800 mb-1">How can I help?</h3>
+                        <p className="text-xs text-slate-500 max-w-[240px] mx-auto mb-6 leading-relaxed">
+                          I can analyze your metrics, suggest countermeasures, or draft A3 content.
+                        </p>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full mb-8 text-left">
-                            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                                <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2 text-sm">
-                                    <Database className="w-4 h-4 text-blue-500"/> What it knows
-                                </h4>
-                                <ul className="text-xs text-slate-500 space-y-2 list-disc pl-4 leading-relaxed">
-                                    <li>Your Bowler metrics and performance trends</li>
-                                    <li>Details of your A3 problem-solving cases</li>
-                                    <li>Linked relationships between metrics and cases</li>
-                                </ul>
-                            </div>
-                            
-                            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                                <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2 text-sm">
-                                    <Zap className="w-4 h-4 text-amber-500"/> What it can do
-                                </h4>
-                                <ul className="text-xs text-slate-500 space-y-2 list-disc pl-4 leading-relaxed">
-                                    <li>Analyze performance trends and outliers</li>
-                                    <li>Summarize A3 cases and their status</li>
-                                    <li>Suggest countermeasures for failing metrics</li>
-                                    <li>Draft A3 content based on metric data</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <p className="text-sm text-slate-400 font-medium mb-3">Try asking...</p>
-                        
-                        <div className="grid grid-cols-1 gap-2 w-full max-w-xs">
+                        <div className="flex flex-col gap-2 w-full max-w-xs">
                           <button 
                             onClick={() => sendMessage("What are my top failing metrics?")}
-                            className="text-xs text-left px-4 py-3 bg-white hover:bg-brand-50 hover:text-brand-700 text-slate-600 rounded-xl border border-slate-200 hover:border-brand-200 transition-all shadow-sm group flex items-center justify-between"
+                            className="text-xs text-left px-3 py-2 bg-white hover:bg-brand-50 hover:text-brand-700 text-slate-600 rounded-lg border border-slate-200 hover:border-brand-200 transition-all shadow-sm flex items-center justify-between group"
                           >
-                            <span>What are my top failing metrics?</span>
-                            <TrendingUp className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <span>Top failing metrics?</span>
+                            <TrendingUp className="w-3 h-3 text-slate-300 group-hover:text-brand-400 transition-colors" />
                           </button>
                           <button 
                             onClick={() => sendMessage("Summarize my open A3 cases")}
-                            className="text-xs text-left px-4 py-3 bg-white hover:bg-brand-50 hover:text-brand-700 text-slate-600 rounded-xl border border-slate-200 hover:border-brand-200 transition-all shadow-sm group flex items-center justify-between"
+                            className="text-xs text-left px-3 py-2 bg-white hover:bg-brand-50 hover:text-brand-700 text-slate-600 rounded-lg border border-slate-200 hover:border-brand-200 transition-all shadow-sm flex items-center justify-between group"
                           >
-                            <span>Summarize my open A3 cases</span>
-                            <FileText className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <span>Summarize open A3 cases</span>
+                            <FileText className="w-3 h-3 text-slate-300 group-hover:text-brand-400 transition-colors" />
                           </button>
                         </div>
                     </div>
                  )}
                  
-                 <div className="space-y-6">
+                 <div className="space-y-4">
                  {messages.map((msg, idx) => (
                     <div key={idx} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-                        <div className={`flex max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} gap-3`}>
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            msg.role === 'user' 
-                              ? 'bg-brand-100 text-brand-600' 
-                              : 'bg-accent-100 text-accent-600'
-                          }`}>
-                            {msg.role === 'user' ? <div className="text-xs font-bold">You</div> : <Bot className="w-4 h-4" />}
-                          </div>
+                        <div className={`flex max-w-[90%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} gap-2`}>
+                          {msg.role !== 'user' && (
+                            <div className="w-6 h-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center flex-shrink-0 mt-1">
+                              <Bot className="w-3.5 h-3.5" />
+                            </div>
+                          )}
 
-                          <div className={`rounded-2xl px-5 py-4 shadow-sm text-sm leading-relaxed ${
+                          <div className={`rounded-2xl px-4 py-2.5 shadow-sm text-sm leading-relaxed ${
                               msg.role === 'user' 
                               ? 'bg-brand-600 text-white rounded-tr-none' 
-                              : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none shadow-slate-100'
+                              : 'bg-white text-slate-700 border border-slate-200 rounded-tl-none'
                           }`}>
                               {msg.role === 'user' ? (
                                   <div className="whitespace-pre-wrap">{msg.content}</div>
@@ -229,27 +237,27 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initi
                  
                  {isLoading && (
                     <div className="flex justify-start w-full animate-in fade-in slide-in-from-bottom-2">
-                        <div className="flex max-w-[85%] flex-row gap-3">
-                          <div className="w-8 h-8 rounded-full bg-accent-100 text-accent-600 flex items-center justify-center flex-shrink-0">
-                            <Bot className="w-4 h-4" />
+                        <div className="flex max-w-[85%] flex-row gap-2">
+                          <div className="w-6 h-6 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center flex-shrink-0 mt-1">
+                            <Bot className="w-3.5 h-3.5" />
                           </div>
-                          <div className="bg-white border border-slate-100 rounded-2xl rounded-tl-none px-5 py-4 shadow-sm flex items-center gap-3">
-                              <Loader2 className="w-4 h-4 animate-spin text-accent-500" />
-                              <span className="text-sm font-medium text-slate-500">Analyzing data...</span>
+                          <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-none px-4 py-2.5 shadow-sm flex items-center gap-2">
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-500" />
+                              <span className="text-xs font-medium text-slate-500">Thinking...</span>
                           </div>
                         </div>
                     </div>
                  )}
-                 <div ref={messagesEndRef} className="h-4" />
+                 <div ref={messagesEndRef} className="h-2" />
                  </div>
               </div>
 
               {/* Input Area */}
-              <div className="p-4 bg-white border-t border-slate-100">
-                <div className="relative flex items-end gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-200 focus-within:border-brand-300 focus-within:ring-4 focus-within:ring-brand-50 transition-all">
+              <div className="p-3 bg-white border-t border-slate-100">
+                <div className="relative flex items-end gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200 focus-within:border-brand-300 focus-within:ring-2 focus-within:ring-brand-50 transition-all">
                     <textarea
-                        className="flex-1 bg-transparent border-0 focus:ring-0 text-slate-800 placeholder:text-slate-400 text-sm resize-none py-2.5 px-3 max-h-32 min-h-[44px]"
-                        placeholder="Ask a question about your metrics..."
+                        className="flex-1 bg-transparent border-0 focus:ring-0 text-slate-800 placeholder:text-slate-400 text-sm resize-none py-2 px-2 max-h-32 min-h-[40px]"
+                        placeholder="Type a message..."
                         rows={1}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
@@ -264,12 +272,12 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initi
                     <button
                         onClick={handleSend}
                         disabled={isLoading || !input.trim()}
-                        className="mb-1 mr-1 p-2 rounded-xl bg-brand-600 text-white hover:bg-brand-700 disabled:bg-slate-200 disabled:text-slate-400 transition-all shadow-sm active:scale-95 flex items-center justify-center"
+                        className="mb-0.5 mr-0.5 p-1.5 rounded-lg bg-brand-600 text-white hover:bg-brand-700 disabled:bg-slate-200 disabled:text-slate-400 transition-all shadow-sm active:scale-95 flex items-center justify-center shrink-0"
                     >
-                        <Send className="h-4 w-4" />
+                        <Send className="h-3.5 w-3.5" />
                     </button>
                 </div>
-                <p className="text-[10px] text-center text-slate-400 mt-3 font-medium">
+                <p className="text-[9px] text-center text-slate-400 mt-2 font-medium">
                   AI can make mistakes. Verify important information.
                 </p>
               </div>
