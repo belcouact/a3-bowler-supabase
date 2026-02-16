@@ -839,30 +839,7 @@ ${JSON.stringify(structuredData, null, 2)}
                     </div>
                     <h3 className="text-xl font-bold text-slate-800 mb-6">AI Data Analyst</h3>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl mb-8 text-left">
-                        <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                            <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2 text-sm">
-                                <Database className="w-4 h-4 text-blue-500"/> What it knows
-                            </h4>
-                            <ul className="text-xs text-slate-500 space-y-2 list-disc pl-4 leading-relaxed">
-                                <li>Parses CSV and Excel (.xls, .xlsx) files</li>
-                                <li>Understands tabular data structures</li>
-                                <li>Identifies patterns, trends, and outliers</li>
-                            </ul>
-                        </div>
-                        
-                        <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                            <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2 text-sm">
-                                <Zap className="w-4 h-4 text-amber-500"/> What it can do
-                            </h4>
-                            <ul className="text-xs text-slate-500 space-y-2 list-disc pl-4 leading-relaxed">
-                                <li>Generate comprehensive data analysis reports</li>
-                                <li>Create interactive ECharts visualizations</li>
-                                <li>Provide actionable business recommendations</li>
-                                <li>Clean and normalize messy datasets</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {/* Intro removed */}
 
                     <div className="w-full max-w-xl bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                       <h4 className="font-semibold text-slate-700 mb-4 text-sm text-center">Get Started</h4>

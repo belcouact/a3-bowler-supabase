@@ -23,10 +23,10 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initi
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasProcessedPrompt = useRef(false);
   
-  // Resizable Sidebar State
-  const [width, setWidth] = useState(600);
-  const [isResizing, setIsResizing] = useState(false);
-  const sidebarRef = useRef<HTMLDivElement>(null);
+  // Resizable Sidebar State removed
+  // const [width, setWidth] = useState(600);
+  // const [isResizing, setIsResizing] = useState(false);
+  // const sidebarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -34,32 +34,8 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initi
     }
   }, [messages]);
 
-  // Resize Logic
-  const startResizing = (e: React.MouseEvent) => {
-    setIsResizing(true);
-    e.preventDefault();
-  };
+  // Resize Logic removed
 
-  useEffect(() => {
-    const stopResizing = () => setIsResizing(false);
-    const resize = (e: MouseEvent) => {
-      if (isResizing) {
-        const newWidth = window.innerWidth - e.clientX;
-        if (newWidth > 400 && newWidth < window.innerWidth - 50) {
-          setWidth(newWidth);
-        }
-      }
-    };
-
-    if (isResizing) {
-      window.addEventListener('mousemove', resize);
-      window.addEventListener('mouseup', stopResizing);
-    }
-    return () => {
-      window.removeEventListener('mousemove', resize);
-      window.removeEventListener('mouseup', stopResizing);
-    };
-  }, [isResizing]);
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
@@ -133,19 +109,11 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initi
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
 
-        <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+        <div className="pointer-events-none fixed inset-0 flex items-center justify-center p-4">
           <div 
-            ref={sidebarRef}
-            className="pointer-events-auto relative h-full transform transition-none ease-in-out bg-white shadow-2xl flex flex-col"
-            style={{ width: `${width}px` }}
+            className="pointer-events-auto relative w-full h-full bg-white shadow-2xl flex flex-col rounded-2xl overflow-hidden"
           >
-            {/* Resize Handle */}
-            <div
-                className="absolute left-0 top-0 bottom-0 w-1.5 cursor-ew-resize hover:bg-brand-400/50 transition-colors z-50 flex items-center justify-center group"
-                onMouseDown={startResizing}
-            >
-                <div className="h-8 w-1 bg-slate-300 rounded-full group-hover:bg-brand-400 transition-colors" />
-            </div>
+            {/* Resize Handle removed */}
 
             <div className="flex h-full flex-col overflow-hidden bg-white">
               {/* Header */}
@@ -178,7 +146,7 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose, initi
               {/* Chat Area */}
               <div className="flex-1 flex flex-col p-6 overflow-y-auto bg-slate-50 scroll-smooth custom-scrollbar">
                  {messages.length === 0 && (
-                    <div className="flex flex-col items-center justify-center h-full text-center p-8 opacity-0 animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-forwards max-w-2xl mx-auto">
+                    <div className="flex flex-col items-center justify-center h-full text-center p-8 animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-forwards max-w-2xl mx-auto">
                         <div className="w-16 h-16 bg-white rounded-2xl shadow-lg shadow-brand-100 flex items-center justify-center mb-6 ring-1 ring-slate-100">
                           <Bot className="w-8 h-8 text-brand-500" />
                         </div>
